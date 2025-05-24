@@ -1,1 +1,20 @@
-<p>journal-entry-list works!</p>
+<!-- src/app/journal-entry-list/journal-entry-list.component.html -->
+<mat-accordion *ngIf="entries.length">
+  <mat-expansion-panel *ngFor="let e of entries">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        {{ e.date }} — ES {{ e.esPrice }} — Δ {{ e.delta }}
+      </mat-panel-title>
+    </mat-expansion-panel-header>
+    <p>{{ e.notes }}</p>
+    <h4>Events</h4>
+    <ul>
+      <li *ngFor="let ev of e.events">
+        {{ ev.time }} &#64; {{ ev.price }} — {{ ev.note }}
+      </li>
+    </ul>
+  </mat-expansion-panel>
+</mat-accordion>
+<ng-container *ngIf="!entries.length">
+  <p>No journal entries yet.</p>
+</ng-container>

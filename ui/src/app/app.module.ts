@@ -15,6 +15,7 @@ import { JournalEntryFormComponent } from './journal-entry-form/journal-entry-fo
 import { JournalEntryListComponent } from './journal-entry-list/journal-entry-list.component';
 import { JournalStorageService } from './journal-storage.service';
 import {MatIcon} from '@angular/material/icon';
+import {MatExpansionModule, MatExpansionPanelHeader, MatExpansionPanelTitle} from '@angular/material/expansion';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import {MatIcon} from '@angular/material/icon';
     MatInputModule,
     MatButtonModule,
     MatIcon,
+    MatExpansionModule,
   ],
   providers: [JournalStorageService],
   bootstrap: [AppComponent]
