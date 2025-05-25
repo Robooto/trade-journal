@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  ui:
+    build:
+      context: .
+      dockerfile: ui/Dockerfile
+    ports:
+      - "8080:80"         # host 8080 → container 80
+    restart: unless-stopped
