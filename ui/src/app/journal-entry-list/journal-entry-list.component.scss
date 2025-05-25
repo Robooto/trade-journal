@@ -1,0 +1,13 @@
+/* ensure the description flex box aligns to the start */
+.mat-expansion-panel-header .mat-panel-description {
+  justify-content: flex-start;
+}
+
+/* left-justify the text and keep your ellipsis rules */
+.notes-snippet {
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px; /* or whatever fits your layout */
+}

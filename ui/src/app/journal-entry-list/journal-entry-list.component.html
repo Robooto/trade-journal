@@ -5,12 +5,17 @@
       <mat-panel-title>
         {{ e.date }} — ES {{ e.esPrice }} — Δ {{ e.delta }}
       </mat-panel-title>
+      <mat-panel-description>
+        <div class="notes-snippet">
+          {{ e.notes }}
+        </div>
+      </mat-panel-description>
     </mat-expansion-panel-header>
     <p>{{ e.notes }}</p>
-    <h4>Events</h4>
+    <h4>Additional Notes and Trades</h4>
     <ul>
       <li *ngFor="let ev of e.events">
-        {{ ev.time }} &#64; {{ ev.price }} — {{ ev.note }}
+        {{ ev.time }} — ES {{ ev.price }} — {{ ev.note }}
       </li>
     </ul>
   </mat-expansion-panel>

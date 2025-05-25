@@ -17,11 +17,11 @@
 
   <mat-sidenav-content>
     <div class="content">
+      <app-journal-entry-list class="journal-list"></app-journal-entry-list>
+
       <ng-container [ngSwitch]="view">
-        <app-journal-entry-form *ngSwitchCase="'journal'"></app-journal-entry-form>
-        <!-- future views can go here -->
+        <app-journal-entry-form *ngSwitchCase="'journal'" class="journal-form"></app-journal-entry-form>
       </ng-container>
-      <app-journal-entry-list></app-journal-entry-list>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

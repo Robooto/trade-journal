@@ -1,43 +1,73 @@
-<!-- src/app/journal-entry-form/journal-entry-form.component.html -->
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-form-field appearance="fill">
-    <mat-label>Date</mat-label>
-    <input matInput type="date" formControlName="date">
-  </mat-form-field>
+  <!-- top row: date, ES price, delta -->
+  <div class="row-fields">
+    <mat-form-field appearance="fill">
+      <mat-label>Date</mat-label>
+      <input matInput type="date" formControlName="date" />
+    </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>ES Price</mat-label>
-    <input matInput type="number" formControlName="esPrice">
-  </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>ES Price</mat-label>
+      <input matInput type="number" formControlName="esPrice" />
+    </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Delta</mat-label>
-    <input matInput type="number" formControlName="delta">
-  </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Delta</mat-label>
+      <input matInput type="number" formControlName="delta" />
+    </mat-form-field>
+  </div>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Notes</mat-label>
-    <textarea matInput formControlName="notes"></textarea>
-  </mat-form-field>
+  <!-- main notes below -->
+  <div class="full-row">
+    <mat-form-field appearance="fill">
+      <mat-label>Notes</mat-label>
+      <textarea
+        matInput
+        formControlName="notes"
+        rows="4"
+        placeholder="Morning thoughts…"
+      ></textarea>
+    </mat-form-field>
+  </div>
+
 
   <h3>Intra-day Events</h3>
   <div formArrayName="events">
-    <div *ngFor="let ev of events.controls; let i=index" [formGroupName]="i" class="event-row">
-      <mat-form-field appearance="fill">
-        <mat-label>Time</mat-label>
-        <input matInput formControlName="time">
-      </mat-form-field>
-      <mat-form-field appearance="fill">
-        <mat-label>Price</mat-label>
-        <input matInput type="number" formControlName="price">
-      </mat-form-field>
-      <mat-form-field appearance="fill">
+    <div
+      *ngFor="let ev of events.controls; let i = index"
+      [formGroupName]="i"
+      class="event-group"
+    >
+      <!-- time & price side by side -->
+      <div class="row-fields">
+        <mat-form-field appearance="fill">
+          <mat-label>Time</mat-label>
+          <input matInput formControlName="time" />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Price</mat-label>
+          <input matInput type="number" formControlName="price" />
+        </mat-form-field>
+      </div>
+
+      <!-- intra-day note below those -->
+      <mat-form-field appearance="fill" class="full-width">
         <mat-label>Note</mat-label>
-        <input matInput formControlName="note">
+        <textarea
+          matInput
+          formControlName="note"
+          rows="2"
+          placeholder="What happened at this time…"
+        ></textarea>
       </mat-form-field>
     </div>
   </div>
-  <button mat-button type="button" (click)="addEvent()">Add Event</button>
 
-  <button mat-raised-button color="primary" type="submit">Save Entry</button>
+  <button mat-button type="button" (click)="addEvent()">
+    Add Event
+  </button>
+  <button mat-raised-button color="primary" type="submit">
+    Save Entry
+  </button>
 </form>

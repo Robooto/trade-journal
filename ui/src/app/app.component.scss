@@ -1,10 +1,25 @@
-/* src/app/app.component.css */
-.full-height {
-  height: 100vh;
-}
-.content {
-  padding: 16px;
+/* make the container fill available height */
+mat-sidenav-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  height: 100%;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;              /* fill the space under the toolbar */
+  padding: 16px;
+  gap: 16px;
+}
+
+/* give the list area room to grow & scroll */
+.journal-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* the form just sits below */
+.journal-form {
+  flex: none;
 }
