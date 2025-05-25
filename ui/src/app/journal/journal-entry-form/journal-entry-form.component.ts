@@ -1,5 +1,5 @@
 // src/app/journal-entry-form/journal-entry-form.component.ts
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import {
   FormBuilder,
   FormArray,
@@ -13,10 +13,14 @@ import { JournalEntry } from '../journal-entry.model';
 @Component({
   selector: 'app-journal-entry-form',
   templateUrl: './journal-entry-form.component.html',
+  styleUrls: ['./journal-entry-form.component.scss'],
   standalone: false,
 })
-export class JournalEntryFormComponent implements OnInit {
-  form!: FormGroup;   // <-- declare without initializer
+export class JournalEntryFormComponent implements OnInit, OnChanges  {
+  @Input() entry?: JournalEntry;
+  @Output() saved = new EventEmitter<JournalEntry>();
+
+  form!: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -24,10 +28,44 @@ export class JournalEntryFormComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.buildForm();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['entry']) {
+      if (this.entry) {
+        // patch existing
+        this.form.patchValue({
+          date: this.entry.date,
+          esPrice: this.entry.esPrice,
+          delta: this.entry.delta,
+          notes: this.entry.notes
+        });
+        // rebuild events array
+        const arr = this.form.get('events') as FormArray;
+        arr.clear();
+        this.entry.events.forEach(ev =>
+          arr.push(this.fb.group({
+            time: [ev.time, Validators.required],
+            price: [ev.price, Validators.required],
+            note: [ev.note]
+          }))
+        );
+      } else {
+        // reset to blank
+        this.resetForm();
+      }
+    }
+  }
+
+  get events() {
+    return this.form.get('events') as FormArray;
+  }
+
+  buildForm() {
     this.form = this.fb.group({
       date: [
-        new Date().toISOString().substring(0, 10),
-        Validators.required
+        new Date().toISOString().substring(0, 10), Validators.required
       ],
       esPrice: [null, Validators.required],
       delta: [null, Validators.required],
@@ -36,59 +74,42 @@ export class JournalEntryFormComponent implements OnInit {
     });
   }
 
-  get events(): FormArray {
-    return this.form.get('events') as FormArray;
+  resetForm() {
+    this.buildForm();
   }
 
   addEvent() {
-    this.events.push(
-      this.fb.group({
-        time: [
-          new Date().toLocaleTimeString(),
-          Validators.required
-        ],
-        price: [null, Validators.required],
-        note: [''],
-      })
-    );
+    this.events.push(this.fb.group({
+      time: [new Date().toLocaleTimeString(), Validators.required],
+      price: [null, Validators.required],
+      note: ['']
+    }));
   }
 
   submit() {
-    if (this.form.invalid) {
-      return;
+    if (this.form.invalid) return;
+
+    const formValue = this.form.value;
+    let all = this.store.getAll();
+    let savedEntry: JournalEntry;
+
+    if (this.entry) {
+      // editing
+      savedEntry = {
+        id: this.entry.id,
+        ...formValue
+      };
+      all = all.map(e => e.id === this.entry!.id ? savedEntry : e);
+    } else {
+      // new
+      savedEntry = {
+        id: uuid(),
+        ...formValue
+      };
+      all = [...all, savedEntry];
     }
 
-    // pull out the typed values
-    const {
-      date,
-      esPrice,
-      delta,
-      notes,
-      events
-    } = this.form.value;
-
-    const entry: JournalEntry = {
-      id: uuid(),
-      // because we used Validators.required,
-      // we can assert these non-nullable:
-      date: date!,
-      esPrice: esPrice!,
-      delta: delta!,
-      notes: notes ?? '',
-      // and events is already the right shape
-      events: events as JournalEntry['events'],
-    };
-
-    const all = this.store.getAll();
-    this.store.save([entry, ...all]);
-
-    // reset
-    this.form.reset({
-      date: new Date().toISOString().substring(0, 10),
-      esPrice: null,
-      delta: null,
-      notes: '',
-      events: [],
-    });
+    this.store.save(all);
+    this.saved.emit(savedEntry);
   }
 }

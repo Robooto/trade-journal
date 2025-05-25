@@ -1,4 +1,14 @@
+<!-- src/app/journal/journal-page/journal-page.component.html -->
 <div class="journal-container">
-  <app-journal-entry-list class="journal-list"></app-journal-entry-list>
-  <app-journal-entry-form class="journal-form"></app-journal-entry-form>
+  <app-journal-entry-list
+    [entries]="entries"
+    (entrySelected)="onEntrySelected($event)"
+    class="journal-list"
+  ></app-journal-entry-list>
+
+  <app-journal-entry-form
+    [entry]="selectedEntry"
+    (saved)="onEntrySaved($event)"
+    class="journal-form"
+  ></app-journal-entry-form>
 </div>

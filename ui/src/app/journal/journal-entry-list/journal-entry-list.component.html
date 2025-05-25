@@ -1,22 +1,21 @@
+<!-- src/app/journal/journal-entry-list/journal-entry-list.component.html -->
 <mat-accordion *ngIf="entries.length">
-  <mat-expansion-panel #panel *ngFor="let e of entries">
+  <mat-expansion-panel #panel
+    *ngFor="let e of entries"
+    (opened)="onPanelOpen(e)"
+  >
     <mat-expansion-panel-header>
       <mat-panel-title>
         {{ e.date }} — ES {{ e.esPrice }} — Δ {{ e.delta }}
       </mat-panel-title>
-
-      <!-- only show the snippet when collapsed -->
       <mat-panel-description *ngIf="!panel.expanded">
-        {{ e.notes | slice:0:80 }}
-        <span *ngIf="e.notes.length > 80">…</span>
+        {{ e.notes | slice:0:80 }}<span *ngIf="e.notes.length>80">…</span>
       </mat-panel-description>
     </mat-expansion-panel-header>
 
-    <!-- full note always lives in the content area -->
     <div class="full-note">
       <p>{{ e.notes }}</p>
     </div>
-
     <h4>Events</h4>
     <ul>
       <li *ngFor="let ev of e.events">
@@ -25,3 +24,6 @@
     </ul>
   </mat-expansion-panel>
 </mat-accordion>
+<ng-container *ngIf="!entries.length">
+  <p>No journal entries yet.</p>
+</ng-container>

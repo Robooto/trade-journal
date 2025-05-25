@@ -1,25 +1,23 @@
 // src/app/journal-entry-list/journal-entry-list.component.ts
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import { JournalEntry } from '../journal-entry.model';
-import { JournalStorageService } from '../journal-storage.service';
 
 @Component({
   selector: 'app-journal-entry-list',
   templateUrl: './journal-entry-list.component.html',
+  styleUrls: ['./journal-entry-list.component.scss'],
   standalone: false,
 })
 export class JournalEntryListComponent implements OnInit {
-  entries: JournalEntry[] = [];
 
-  constructor(private store: JournalStorageService) {}
+  @Input() entries: JournalEntry[] = [];
+  @Output() entrySelected = new EventEmitter<JournalEntry>();
 
-  ngOnInit() {
-    const all = this.store.getAll();
+  onPanelOpen(entry: JournalEntry) {
+    this.entrySelected.emit(entry);
+  }
 
-    // Sort by date ascending (oldest first, newest last)
-    this.entries = all.sort((a, b) =>
-      new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+  ngOnInit(): void {
   }
 
 }

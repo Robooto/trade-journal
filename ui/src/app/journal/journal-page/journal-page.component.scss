@@ -1,25 +1,19 @@
-/* Make this component fill whatever space <router-outlet> gives it */
+/* journal-page.component.css */
 :host {
   display: flex;
   flex-direction: column;
-  flex: 1;                /* <––– critical so your page stretches under the shell */
+  flex: 1;
 }
-
-/* Container holds list 👇 and form 👇 in a column */
 .journal-container {
   display: flex;
   flex-direction: column;
-  flex: 1;                /* fill the host’s space */
+  flex: 1;
   gap: 16px;
 }
-
-/* Only this scrolls */
 .journal-list {
-  flex: 1;                /* take all remaining room */
+  flex: 1;
   overflow-y: auto;
 }
-
-/* Always visible at bottom */
 .journal-form {
-  flex: none;             /* size to content, never flex */
+  flex: none;
 }
