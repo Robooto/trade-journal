@@ -18,20 +18,18 @@
   </div>
 
   <!-- main notes below -->
-  <div class="full-row">
-    <mat-form-field appearance="fill">
-      <mat-label>Notes</mat-label>
-      <textarea
-        matInput
-        formControlName="notes"
-        rows="4"
-        placeholder="Morning thoughts…"
-      ></textarea>
-    </mat-form-field>
-  </div>
+  <mat-form-field appearance="fill" style="--mat-form-field-min-width: 0; width: 40%; min-width: 360px;">
+    <mat-label>Notes</mat-label>
+    <textarea
+      matInput
+      formControlName="notes"
+      rows="4"
+      placeholder="Morning thoughts…"
+    ></textarea>
+  </mat-form-field>
 
 
-  <h3>Intra-day Events</h3>
+  <h3>Intra-day Notes</h3>
   <div formArrayName="events">
     <div
       *ngFor="let ev of events.controls; let i = index"
@@ -52,12 +50,12 @@
       </div>
 
       <!-- intra-day note below those -->
-      <mat-form-field appearance="fill" class="full-width">
+      <mat-form-field appearance="fill" style="--mat-form-field-min-width: 0; width: 40%; min-width: 360px;">
         <mat-label>Note</mat-label>
         <textarea
           matInput
           formControlName="note"
-          rows="2"
+          rows="3"
           placeholder="What happened at this time…"
         ></textarea>
       </mat-form-field>
@@ -65,7 +63,7 @@
   </div>
 
   <button mat-button type="button" (click)="addEvent()">
-    Add Event
+    Add Intra-day Note
   </button>
   <button mat-raised-button color="primary" type="submit">
     Save Entry

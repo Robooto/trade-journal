@@ -14,6 +14,12 @@ export class JournalEntryListComponent implements OnInit {
   constructor(private store: JournalStorageService) {}
 
   ngOnInit() {
-    this.entries = this.store.getAll();
+    const all = this.store.getAll();
+
+    // Sort by date ascending (oldest first, newest last)
+    this.entries = all.sort((a, b) =>
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
   }
+
 }
