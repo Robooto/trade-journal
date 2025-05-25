@@ -1,27 +1,21 @@
-<!-- src/app/app.component.html -->
 <mat-toolbar color="primary">
   <button mat-icon-button (click)="sidenav.toggle()">
     <mat-icon>menu</mat-icon>
   </button>
-  <span>Trade Journal</span>
+  <span>My Trading App</span>
 </mat-toolbar>
 
 <mat-sidenav-container class="full-height">
   <mat-sidenav #sidenav mode="side" opened>
     <mat-nav-list>
-      <mat-list-item (click)="view='journal'">
-        Journal
-      </mat-list-item>
+      <a mat-list-item routerLink="/journal" (click)="sidenav.close()">Journal</a>
+      <!-- future nav items -->
     </mat-nav-list>
   </mat-sidenav>
 
   <mat-sidenav-content>
     <div class="content">
-      <app-journal-entry-list class="journal-list"></app-journal-entry-list>
-
-      <ng-container [ngSwitch]="view">
-        <app-journal-entry-form *ngSwitchCase="'journal'" class="journal-form"></app-journal-entry-form>
-      </ng-container>
+      <router-outlet></router-outlet>
     </div>
   </mat-sidenav-content>
 </mat-sidenav-container>

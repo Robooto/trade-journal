@@ -1,0 +1,15 @@
+.journal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;  /* fill the available content area */
+  gap: 16px;
+}
+
+.journal-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.journal-form {
+  flex: none;
+}
