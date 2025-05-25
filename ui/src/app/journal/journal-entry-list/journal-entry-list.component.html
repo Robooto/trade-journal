@@ -9,7 +9,7 @@
         {{ e.date }} — ES {{ e.esPrice }} — Δ {{ e.delta }}
       </mat-panel-title>
       <mat-panel-description *ngIf="!panel.expanded">
-        {{ e.notes | slice:0:80 }}<span *ngIf="e.notes.length>80">…</span>
+        {{ e.notes | slice:0:120 }}<span *ngIf="e.notes.length>120">…</span>
       </mat-panel-description>
     </mat-expansion-panel-header>
 
