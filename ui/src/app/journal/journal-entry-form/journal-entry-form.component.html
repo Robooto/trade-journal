@@ -11,6 +11,22 @@
       <input matInput type="number" formControlName="esPrice" />
     </mat-form-field>
 
+    <mat-button-toggle-group
+      formControlName="marketDirection"
+      aria-label="Market Up or Down"
+      appearance="legacy"
+      class="market-toggle"
+    >
+      <mat-button-toggle value="up">
+        <mat-icon>arrow_upward</mat-icon>
+        Up
+      </mat-button-toggle>
+      <mat-button-toggle value="down">
+        <mat-icon>arrow_downward</mat-icon>
+        Down
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+
     <mat-form-field appearance="fill">
       <mat-label>Delta</mat-label>
       <input matInput type="number" formControlName="delta" />

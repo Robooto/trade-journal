@@ -10,4 +10,5 @@ export interface JournalEntry {
     price: number;
     note: string;
   }[];
+  marketDirection: 'up' | 'down';
 }

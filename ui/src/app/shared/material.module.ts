@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
+import {MatButtonToggleModule} from '@angular/material/button-toggle';
 
 @NgModule({
   imports: [
@@ -22,6 +23,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatButtonModule,
     MatExpansionModule,
     MatIconModule,
+    MatButtonToggleModule,
   ],
   exports: [
     // re-export so other modules just import SharedMaterialModule
@@ -33,6 +35,7 @@ import { MatIconModule } from '@angular/material/icon';
     MatButtonModule,
     MatExpansionModule,
     MatIconModule,
+    MatButtonToggleModule,
   ]
 })
 export class SharedMaterialModule {}

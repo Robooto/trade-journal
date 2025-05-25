@@ -39,6 +39,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
           date: this.entry.date,
           esPrice: this.entry.esPrice,
           delta: this.entry.delta,
+          marketDirection: this.entry.marketDirection,
           notes: this.entry.notes
         });
         // rebuild events array
@@ -69,6 +70,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
       ],
       esPrice: [null, Validators.required],
       delta: [null, Validators.required],
+      marketDirection: ['up' as const, Validators.required],
       notes: [''],
       events: this.fb.array([]),
     });

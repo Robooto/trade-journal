@@ -33,3 +33,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+:host {
+  .es-price {
+    /* default to neutral if you like */
+    &.up   { color: green; }
+    &.down { color: red;   }
+  }
+}
