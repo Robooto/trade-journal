@@ -1,5 +1,5 @@
-.full-height {
-  height: 100vh;
+mat-sidenav-container.full-height {
+  height: 90vh;
 }
 
 mat-sidenav-content {
@@ -8,7 +8,8 @@ mat-sidenav-content {
 }
 
 .content {
-  flex: 1;
+  flex: 1;                /* fill below the toolbar */
+  display: flex;
+  flex-direction: column;
   padding: 16px;
-  /* don’t set display:flex here—your feature modules will handle their own layout */
 }
