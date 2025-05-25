@@ -1,19 +1,21 @@
-/* journal-page.component.css */
 :host {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  height: 100%;        // ← critical so it fills the shell’s .content
 }
+
 .journal-container {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 1;             // ← take all the host’s height
   gap: 16px;
 }
+
 .journal-list {
-  flex: 1;
+  flex: 1;             // ← list grows & scrolls
   overflow-y: auto;
 }
+
 .journal-form {
-  flex: none;
+  flex: none;          // ← form sizes to its content and stays pinned
 }

@@ -1,5 +1,5 @@
 mat-sidenav-container.full-height {
-  height: 90vh;
+  height: 91vh;
 }
 
 mat-sidenav-content {
@@ -8,7 +8,7 @@ mat-sidenav-content {
 }
 
 .content {
-  flex: 1;                /* fill below the toolbar */
+  flex: 1;             // ← fills below the toolbar
   display: flex;
   flex-direction: column;
   padding: 16px;
