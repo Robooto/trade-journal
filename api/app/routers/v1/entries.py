@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from uuid import UUID
 
 from ...models import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event
-
+from typing import Dict, List
 
 router = APIRouter(
     prefix="/v1/entries",
@@ -10,10 +10,10 @@ router = APIRouter(
 )
 
 # in-memory store for now
-_db: dict[UUID, JournalEntry] = {}
+_db: Dict[UUID, JournalEntry] = {}
 
 
-@router.get("/", response_model=list[JournalEntry])
+@router.get("/", response_model=List[JournalEntry])
 async def list_entries():
     return list(_db.values())
 
