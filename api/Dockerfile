@@ -1,0 +1,13 @@
+# 1) Base image with Python
+FROM python:3.11-slim AS base
+WORKDIR /app
+
+# 2) Install dependencies
+COPY api/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3) Bundle the app
+COPY api/app ./app
+
+# 4) Launch with Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]
