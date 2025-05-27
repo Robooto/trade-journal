@@ -81,7 +81,15 @@
   <button mat-button type="button" (click)="addEvent()">
     Add Intra-day Note
   </button>
-  <button mat-raised-button color="primary" type="submit">
-    Save Entry
+  <button mat-button
+          type="button"
+          (click)="cancel()"
+          *ngIf="entry">
+    Clear
+  </button>
+  <button mat-raised-button
+          color="primary"
+          type="submit">
+    {{ entry ? 'Update' : 'Save' }} Entry
   </button>
 </form>

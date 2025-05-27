@@ -13,18 +13,18 @@ router = APIRouter(
 _db: Dict[UUID, JournalEntry] = {}
 
 
-@router.get("/", response_model=List[JournalEntry])
+@router.get("", response_model=List[JournalEntry])
 async def list_entries():
     return list(_db.values())
 
 
 @router.post(
-    "/",
+    "",
     response_model=JournalEntry,
     status_code=status.HTTP_201_CREATED
 )
 async def create_entry(entry: JournalEntryCreate):
-    new = JournalEntry(**entry.dict(by_alias=True))
+    new = JournalEntry(**entry.model_dump(by_alias=True))
     _db[new.id] = new
     return new
 
@@ -42,7 +42,16 @@ async def update_entry(entry_id: UUID, changes: JournalEntryUpdate):
     existing = _db.get(entry_id)
     if not existing:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entry not found")
-    updated = existing.copy(update=changes.dict(by_alias=True, exclude_unset=True))
+
+    update_data = changes.model_dump(by_alias=True, exclude_unset=True)
+
+    if "events" in update_data:
+        update_data["events"] = [
+            Event(**ev) for ev in update_data["events"]  # ev was a dict
+        ]
+
+    updated = existing.model_copy(update=update_data)
+
     _db[entry_id] = updated
     return updated
 
@@ -61,9 +70,6 @@ async def delete_entry(entry_id: UUID):
     summary="Add an intra-day event to a journal entry"
 )
 async def add_event_to_entry(entry_id: UUID, event: Event):
-    """
-    Append a single Event (time, price, note) to the given entry's events list.
-    """
     entry = _db.get(entry_id)
     if not entry:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entry not found")

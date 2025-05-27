@@ -9,6 +9,7 @@ import {
 import { v4 as uuid } from 'uuid';
 import { JournalStorageService } from '../journal-storage.service';
 import { JournalEntry } from '../journal-entry.model';
+import {JournalApiService} from '../journal-api.service';
 
 @Component({
   selector: 'app-journal-entry-form',
@@ -19,12 +20,14 @@ import { JournalEntry } from '../journal-entry.model';
 export class JournalEntryFormComponent implements OnInit, OnChanges  {
   @Input() entry?: JournalEntry;
   @Output() saved = new EventEmitter<JournalEntry>();
+  @Output() cancelled = new EventEmitter<void>();
 
   form!: FormGroup;
 
   constructor(
     private fb: FormBuilder,
-    private store: JournalStorageService
+    private store: JournalStorageService,
+    private api: JournalApiService
   ) {}
 
   ngOnInit() {
@@ -92,26 +95,36 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
     if (this.form.invalid) return;
 
     const formValue = this.form.value;
-    let all = this.store.getAll();
-    let savedEntry: JournalEntry;
+    //let all = this.store.getAll();
+    //let savedEntry: JournalEntry;
+
+    //if (this.entry) {
+    //  savedEntry = {
+    //    id: this.entry.id,
+    //    ...formValue
+    //  };
+    //  all = all.map(e => e.id === this.entry!.id ? savedEntry : e);
+    //} else {
+    //  savedEntry = {
+    //    id: uuid(),
+    //    ...formValue
+    //  };
+    //  all = [...all, savedEntry];
+    //}
+    //this.store.save(all);
+    //this.saved.emit(savedEntry);
 
     if (this.entry) {
-      // editing
-      savedEntry = {
-        id: this.entry.id,
-        ...formValue
-      };
-      all = all.map(e => e.id === this.entry!.id ? savedEntry : e);
+      const updated: JournalEntry = { id: this.entry.id, ...formValue };
+      this.api.update(updated).subscribe(e => this.saved.emit(e));
     } else {
-      // new
-      savedEntry = {
-        id: uuid(),
-        ...formValue
-      };
-      all = [...all, savedEntry];
+      this.api.create(formValue).subscribe(e => this.saved.emit(e));
     }
 
-    this.store.save(all);
-    this.saved.emit(savedEntry);
+  }
+
+  cancel() {
+    this.resetForm();            // clear out the controls
+    this.cancelled.emit();       // let the parent know
   }
 }

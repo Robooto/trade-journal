@@ -2,6 +2,7 @@
 import {Component, OnInit} from '@angular/core';
 import {JournalEntry} from '../journal-entry.model';
 import {JournalStorageService} from '../journal-storage.service';
+import {JournalApiService} from '../journal-api.service';
 
 @Component({
   selector: 'app-journal-page',
@@ -13,10 +14,19 @@ export class JournalPageComponent implements OnInit {
   entries: JournalEntry[] = [];
   selectedEntry?: JournalEntry;
 
-  constructor(private store: JournalStorageService) {}
+  constructor(private api: JournalApiService, private store: JournalStorageService) {}
 
   ngOnInit() {
-    this.loadEntries();
+    //this.loadEntries();
+    this.load();
+  }
+
+  load() {
+    this.api.list().subscribe(entries => {
+      this.entries = entries.sort((a, b) =>
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+    });
   }
 
   loadEntries() {
@@ -32,6 +42,11 @@ export class JournalPageComponent implements OnInit {
 
   onEntrySaved(_entry: JournalEntry) {
     this.selectedEntry = undefined;
-    this.loadEntries();
+    //this.loadEntries();
+    this.load();
+  }
+
+  onEditCancelled() {
+    this.selectedEntry = undefined;
   }
 }

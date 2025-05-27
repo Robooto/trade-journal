@@ -9,6 +9,7 @@
   <app-journal-entry-form
     [entry]="selectedEntry"
     (saved)="onEntrySaved($event)"
+    (cancelled)="onEditCancelled()"
     class="journal-form"
   ></app-journal-entry-form>
 </div>
