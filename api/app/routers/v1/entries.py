@@ -1,21 +1,22 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Depends, status
 from uuid import UUID
+from typing import List
+from sqlalchemy.orm import Session
 
-from ...models import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event
-from typing import Dict, List
+from db import get_db
+from schema import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event
+
+from app import crud
 
 router = APIRouter(
     prefix="/v1/entries",
     tags=["v1 – journal entries"],
 )
 
-# in-memory store for now
-_db: Dict[UUID, JournalEntry] = {}
-
-
 @router.get("", response_model=List[JournalEntry])
-async def list_entries():
-    return list(_db.values())
+async def list_entries(*, skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
+    orm_entries = crud.get_entries(db, skip=skip, limit=limit)
+    return orm_entries
 
 
 @router.post(
@@ -23,44 +24,46 @@ async def list_entries():
     response_model=JournalEntry,
     status_code=status.HTTP_201_CREATED
 )
-async def create_entry(entry: JournalEntryCreate):
-    new = JournalEntry(**entry.model_dump(by_alias=True))
-    _db[new.id] = new
-    return new
+async def create_entry(entry: JournalEntryCreate, db: Session = Depends(get_db)):
+    new_entry = crud.create_entry(db, entry)
+    return new_entry
 
 
 @router.get("/{entry_id}", response_model=JournalEntry)
-async def get_entry(entry_id: UUID):
-    entry = _db.get(entry_id)
-    if not entry:
+async def get_entry(entry_id: UUID, db: Session = Depends(get_db)):
+    """
+    Fetch a single entry by its UUID (including events).
+    """
+    orm_entry = crud.get_entry(db, entry_id)
+    if not orm_entry:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entry not found")
-    return entry
+    return orm_entry
 
 
 @router.put("/{entry_id}", response_model=JournalEntry)
-async def update_entry(entry_id: UUID, changes: JournalEntryUpdate):
-    existing = _db.get(entry_id)
-    if not existing:
+async def update_entry(
+    entry_id: UUID,
+    changes: JournalEntryUpdate,
+    db: Session = Depends(get_db)
+):
+    """
+    Update an entry’s fields. If `events` is provided, it will replace all events.
+    """
+    updated = crud.update_entry(db, entry_id, changes)
+    if not updated:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entry not found")
-
-    update_data = changes.model_dump(by_alias=True, exclude_unset=True)
-
-    if "events" in update_data:
-        update_data["events"] = [
-            Event(**ev) for ev in update_data["events"]  # ev was a dict
-        ]
-
-    updated = existing.model_copy(update=update_data)
-
-    _db[entry_id] = updated
     return updated
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_entry(entry_id: UUID):
-    if entry_id not in _db:
+async def delete_entry(entry_id: UUID, db: Session = Depends(get_db)):
+    """
+    Delete an entry and all its nested events.
+    """
+    success = crud.delete_entry(db, entry_id)
+    if not success:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entry not found")
-    del _db[entry_id]
+    return None
 
 
 @router.post(
@@ -69,11 +72,15 @@ async def delete_entry(entry_id: UUID):
     status_code=status.HTTP_201_CREATED,
     summary="Add an intra-day event to a journal entry"
 )
-async def add_event_to_entry(entry_id: UUID, event: Event):
-    entry = _db.get(entry_id)
-    if not entry:
+async def add_event_to_entry(
+    entry_id: UUID,
+    event: Event,
+    db: Session = Depends(get_db)
+):
+    """
+    Append a single Event (time, price, note) to the given entry’s events list.
+    """
+    updated = crud.add_event_to_entry(db, entry_id, event)
+    if not updated:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entry not found")
-
-    entry.events.append(event)
-    _db[entry_id] = entry
-    return entry
+    return updated

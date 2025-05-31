@@ -1,43 +1,40 @@
-from datetime import date
-from enum import Enum
-from typing import List, Optional
-from uuid import UUID, uuid4
+import uuid
+from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
-from pydantic import BaseModel, Field
+from schema import MarketDirection
 
-
-class MarketDirection(str, Enum):
-    up = "up"
-    down = "down"
+Base = declarative_base()
 
 
-class Event(BaseModel):
-    time: str
-    price: float
-    note: str
+class JournalEntryORM(Base):
+    __tablename__ = "journal_entries"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    date = Column(Date, nullable=False)
+    es_price = Column("es_price", Float, nullable=False)
+    delta = Column(Float, nullable=False)
+    notes = Column(String, nullable=False)
+    market_direction = Column(
+        SAEnum(MarketDirection, name="market_direction_enum"),
+        nullable=False
+    )
+
+    events = relationship(
+        "EventORM",
+        back_populates="entry",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
 
 
-class JournalEntryBase(BaseModel):
-    date: date
-    es_price: float = Field(..., alias="esPrice")
-    delta: float
-    notes: str
-    market_direction: MarketDirection = Field(..., alias="marketDirection")
-    events: List[Event] = []
+class EventORM(Base):
+    __tablename__ = "events"
 
-
-class JournalEntryCreate(JournalEntryBase):
-    pass
-
-
-class JournalEntryUpdate(BaseModel):
-    date: Optional[date]
-    es_price: Optional[float] = Field(None, alias="esPrice")
-    delta: Optional[float]
-    notes: Optional[str]
-    market_direction: Optional[MarketDirection] = Field(None, alias="marketDirection")
-    events: Optional[List[Event]]
-
-
-class JournalEntry(JournalEntryBase):
-    id: UUID = Field(default_factory=uuid4)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entry_id = Column(String(36), ForeignKey("journal_entries.id"), nullable=False)
+    time = Column(String, nullable=False)
+    price = Column(Float, nullable=False)
+    note = Column(String, nullable=False)
+    entry = relationship("JournalEntryORM", back_populates="events")
