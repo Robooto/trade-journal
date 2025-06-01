@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ui/package*.json ./
 RUN npm ci
 COPY ui/ .
-RUN npm run build --configuration=production
+RUN npm run build -- --configuration=production
 
 # Debug: list the dist directory structure
 #RUN echo "===== DIST CONTENTS =====" && ls -R /app/dist
