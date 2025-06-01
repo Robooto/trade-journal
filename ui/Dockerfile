@@ -1,10 +1,11 @@
 # build step
 FROM node:18-buster-slim AS builder
 WORKDIR /app
+RUN npm install -g @angular/cli
 COPY ui/package*.json ./
 RUN npm ci
 COPY ui/ .
-RUN npm run build --configuration=production
+RUN ng build --configuration=production
 
 # Debug: list the dist directory structure
 #RUN echo "===== DIST CONTENTS =====" && ls -R /app/dist
@@ -16,7 +17,7 @@ FROM nginx:stable-alpine
 # put your custom config in its place
 #COPY ui/nginx.conf /etc/nginx/conf.d/
 # copy the built app _contents_ into nginx’s html folder
-COPY --from=builder /app/dist/ui/browser/ /usr/share/nginx/html/
+COPY --from=builder /app/dist/ui/browser /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
