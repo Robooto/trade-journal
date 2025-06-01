@@ -1,5 +1,5 @@
 # 1) Base image with Python
-FROM python:3.11-bullseye AS base
+FROM python:3.11-slim-buster AS base
 WORKDIR /app
 
 # 2) Install dependencies
