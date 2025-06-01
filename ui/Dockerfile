@@ -13,9 +13,9 @@ RUN npm run build --configuration=production
 # serve step
 FROM nginx:stable-alpine
 # remove the default nginx site config
-#RUN rm /etc/nginx/conf.d/default.conf
+RUN rm /etc/nginx/conf.d/default.conf
 # put your custom config in its place
-#COPY ui/nginx.conf /etc/nginx/conf.d/
+COPY ui/nginx.conf /etc/nginx/conf.d/
 # copy the built app _contents_ into nginx’s html folder
 COPY --from=builder /app/dist/ui/browser /usr/share/nginx/html
 
