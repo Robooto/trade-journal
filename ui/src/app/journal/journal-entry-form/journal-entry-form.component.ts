@@ -6,7 +6,7 @@ import {
   FormGroup,
   Validators
 } from '@angular/forms';
-import { JournalEntry } from '../journal-entry.model';
+import { JournalEntry } from '../journal.models';
 import {JournalApiService} from '../journal-api.service';
 
 @Component({

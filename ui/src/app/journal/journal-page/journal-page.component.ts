@@ -1,5 +1,5 @@
 import {Component, OnInit} from '@angular/core';
-import {JournalEntry} from '../journal-entry.model';
+import {JournalEntry, PaginatedJournalEntries } from '../journal.models';
 import {JournalApiService} from '../journal-api.service';
 
 @Component({
@@ -10,19 +10,25 @@ import {JournalApiService} from '../journal-api.service';
 })
 export class JournalPageComponent implements OnInit {
   entries: JournalEntry[] = [];
+  totalEntries = 0;
+  pageSkip = 0;
+  pageLimit = 20;
   selectedEntry?: JournalEntry;
 
   constructor(private api: JournalApiService) {}
 
   ngOnInit() {
-    this.load();
+    this.loadNextPage();
   }
 
-  load() {
-    this.api.list().subscribe(entries => {
-      this.entries = entries.sort((a, b) =>
+  loadNextPage() {
+    this.api.list(this.pageSkip, this.pageLimit).subscribe((result: PaginatedJournalEntries) => {
+      let sortedResults = result.items.sort((a, b) =>
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
+      this.entries = [...this.entries, ...sortedResults];
+      this.totalEntries = result.total;
+      this.pageSkip += this.pageLimit;
     });
   }
 
@@ -32,7 +38,9 @@ export class JournalPageComponent implements OnInit {
 
   onEntrySaved(_entry: JournalEntry) {
     this.selectedEntry = undefined;
-    this.load();
+    this.entries = [];
+    this.pageSkip = 0;
+    this.loadNextPage();
   }
 
   onEditCancelled() {

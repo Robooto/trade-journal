@@ -1,4 +1,11 @@
-<!-- src/app/journal/journal-page/journal-page.component.html -->
+<button
+  mat-button
+  (click)="loadNextPage()"
+  *ngIf="entries.length < totalEntries"
+  style="margin: 16px auto; display: block;"
+>
+  Load Older Entries
+</button>
 <div class="journal-container">
   <app-journal-entry-list
     [entries]="entries"

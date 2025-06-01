@@ -1,6 +1,6 @@
 // src/app/journal-entry-list/journal-entry-list.component.ts
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
-import { JournalEntry } from '../journal-entry.model';
+import { JournalEntry } from '../journal.models';
 
 @Component({
   selector: 'app-journal-entry-list',

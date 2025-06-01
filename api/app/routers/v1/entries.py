@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from db import get_db
-from schema import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event
+from schema import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event, PaginatedEntries
 
 from app import crud
 
@@ -13,10 +13,11 @@ router = APIRouter(
     tags=["v1 – journal entries"],
 )
 
-@router.get("", response_model=List[JournalEntry])
+@router.get("", response_model=PaginatedEntries)
 async def list_entries(*, skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
-    orm_entries = crud.get_entries(db, skip=skip, limit=limit)
-    return orm_entries
+    total = crud.count_entries(db)
+    items = crud.get_entries(db, skip=skip, limit=limit)
+    return PaginatedEntries(total=total, items=items, skip=skip, limit=limit)
 
 
 @router.post(

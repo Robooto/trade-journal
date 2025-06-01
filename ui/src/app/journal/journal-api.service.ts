@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient }   from '@angular/common/http';
 import { Observable }   from 'rxjs';
 import { environment }  from '../../environments/environment';
-import { JournalEntry } from './journal-entry.model';
+import {JournalEntry, PaginatedJournalEntries} from './journal.models';
 
 @Injectable({ providedIn: 'root' })
 export class JournalApiService {
@@ -10,8 +10,10 @@ export class JournalApiService {
 
   constructor(private http: HttpClient) {}
 
-  list(): Observable<JournalEntry[]> {
-    return this.http.get<JournalEntry[]>(this.base);
+  list(skip: number = 0, limit: number = 20): Observable<PaginatedJournalEntries> {
+    return this.http.get<PaginatedJournalEntries>(
+      `${this.base}?skip=${skip}&limit=${limit}`
+    );
   }
 
   create(entry: Omit<JournalEntry,'id'>): Observable<JournalEntry> {

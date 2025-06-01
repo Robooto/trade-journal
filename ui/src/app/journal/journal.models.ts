@@ -11,3 +11,10 @@ export interface JournalEntry {
   }[];
   marketDirection: 'up' | 'down';
 }
+
+export interface PaginatedJournalEntries {
+  total: number;
+  items: JournalEntry[];
+  skip: number;
+  limit: number;
+}

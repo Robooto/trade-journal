@@ -60,3 +60,14 @@ class JournalEntry(JournalEntryBase):
         "populate_by_name": True,
         "from_attributes": True
     }
+
+class PaginatedEntries(BaseModel):
+    total: int
+    items: List[JournalEntry]
+    skip: int
+    limit: int
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True
+    }
