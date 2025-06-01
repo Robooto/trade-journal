@@ -1,12 +1,12 @@
-<button
-  mat-button
-  (click)="loadNextPage()"
-  *ngIf="entries.length < totalEntries"
-  style="margin: 16px auto; display: block;"
->
-  Load Older Entries
-</button>
 <div class="journal-container">
+  <button
+    mat-button
+    (click)="loadNextPage()"
+    *ngIf="entries.length < totalEntries"
+    style="margin: 16px 0; display: block; width: fit-content;"
+  >
+    Load Older Entries
+  </button>
   <app-journal-entry-list
     [entries]="entries"
     (entrySelected)="onEntrySelected($event)"
