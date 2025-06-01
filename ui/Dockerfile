@@ -1,5 +1,5 @@
 # build step
-FROM node:18-alpine AS builder
+FROM node:18-bullseye-slim AS builder
 WORKDIR /app
 COPY ui/package*.json ./
 RUN npm ci
