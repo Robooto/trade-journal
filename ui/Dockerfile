@@ -1,5 +1,5 @@
 # build step
-FROM node:18-buster-slim AS builder
+FROM node:20-buster-slim AS builder
 WORKDIR /app
 RUN npm install -g @angular/cli
 COPY ui/package*.json ./
