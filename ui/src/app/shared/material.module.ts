@@ -1,7 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-// Angular Material modules you use across the app:
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatListModule } from '@angular/material/list';
@@ -26,7 +25,6 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
     MatButtonToggleModule,
   ],
   exports: [
-    // re-export so other modules just import SharedMaterialModule
     MatSidenavModule,
     MatToolbarModule,
     MatListModule,

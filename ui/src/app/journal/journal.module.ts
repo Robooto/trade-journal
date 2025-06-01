@@ -8,7 +8,6 @@ import { JournalRoutingModule } from './journal-routing.module';
 import { JournalPageComponent } from './journal-page/journal-page.component';
 import { JournalEntryFormComponent } from './journal-entry-form/journal-entry-form.component';
 import { JournalEntryListComponent } from './journal-entry-list/journal-entry-list.component';
-import { JournalStorageService } from './journal-storage.service';
 
 @NgModule({
   declarations: [
@@ -22,6 +21,6 @@ import { JournalStorageService } from './journal-storage.service';
     SharedMaterialModule,
     JournalRoutingModule
   ],
-  providers: [JournalStorageService]
+  providers: []
 })
 export class JournalModule {}

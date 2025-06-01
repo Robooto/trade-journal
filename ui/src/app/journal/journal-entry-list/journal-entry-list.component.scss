@@ -36,8 +36,15 @@
 
 :host {
   .es-price {
+    padding: 0 4px;
     /* default to neutral if you like */
     &.up   { color: green; }
     &.down { color: red;   }
   }
+}
+
+.event-count {
+  margin-left: 8px;
+  font-size: 0.875rem;    /* slightly smaller text so it doesn’t dominate */
+  color: rgba(166, 166, 166, 0.6); /* a bit muted so it’s informative but not “loud” */
 }

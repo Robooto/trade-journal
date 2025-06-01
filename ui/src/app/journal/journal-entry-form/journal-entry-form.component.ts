@@ -1,4 +1,4 @@
-// src/app/journal-entry-form/journal-entry-form.component.ts
+
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import {
   FormBuilder,
@@ -6,8 +6,6 @@ import {
   FormGroup,
   Validators
 } from '@angular/forms';
-import { v4 as uuid } from 'uuid';
-import { JournalStorageService } from '../journal-storage.service';
 import { JournalEntry } from '../journal-entry.model';
 import {JournalApiService} from '../journal-api.service';
 
@@ -26,7 +24,6 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   constructor(
     private fb: FormBuilder,
-    private store: JournalStorageService,
     private api: JournalApiService
   ) {}
 
@@ -95,24 +92,6 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
     if (this.form.invalid) return;
 
     const formValue = this.form.value;
-    //let all = this.store.getAll();
-    //let savedEntry: JournalEntry;
-
-    //if (this.entry) {
-    //  savedEntry = {
-    //    id: this.entry.id,
-    //    ...formValue
-    //  };
-    //  all = all.map(e => e.id === this.entry!.id ? savedEntry : e);
-    //} else {
-    //  savedEntry = {
-    //    id: uuid(),
-    //    ...formValue
-    //  };
-    //  all = [...all, savedEntry];
-    //}
-    //this.store.save(all);
-    //this.saved.emit(savedEntry);
 
     if (this.entry) {
       const updated: JournalEntry = { id: this.entry.id, ...formValue };
@@ -124,7 +103,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   }
 
   cancel() {
-    this.resetForm();            // clear out the controls
-    this.cancelled.emit();       // let the parent know
+    this.resetForm();
+    this.cancelled.emit();
   }
 }

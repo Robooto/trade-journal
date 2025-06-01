@@ -12,6 +12,9 @@
       up:   e.marketDirection === 'up',
       down: e.marketDirection === 'down'
     }"> ES {{ e.esPrice }} </span> — Δ {{ e.delta }}
+        <span class="event-count" *ngIf="e.events?.length">
+          ({{ e.events.length }} {{ e.events.length === 1 ? 'event' : 'events' }})
+        </span>
       </mat-panel-title>
       <mat-panel-description *ngIf="!panel.expanded">
         {{ e.notes | slice:0:240 }}<span *ngIf="e.notes.length>240">…</span>
