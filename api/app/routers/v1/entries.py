@@ -1,10 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from uuid import UUID
-from typing import List
 from sqlalchemy.orm import Session
 
-from db import get_db
-from schema import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event, PaginatedEntries
+from app.db import get_db
+from app.schema import JournalEntry, JournalEntryCreate, JournalEntryUpdate, Event, PaginatedEntries
 
 from app import crud
 

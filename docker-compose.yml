@@ -18,3 +18,5 @@ services:
     restart: unless-stopped
     ports:
       - "8876:5000"
+    volumes:
+      - ./api:/app

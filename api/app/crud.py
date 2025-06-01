@@ -6,8 +6,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from models import JournalEntryORM, EventORM
-from schema import JournalEntryCreate, JournalEntryUpdate, Event
+from app.models import JournalEntryORM, EventORM
+from app.schema import JournalEntryCreate, JournalEntryUpdate, Event
 
 
 def count_entries(db: Session) -> int:
