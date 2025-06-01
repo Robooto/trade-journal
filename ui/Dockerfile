@@ -1,11 +1,11 @@
 # build step
-FROM node:20-buster-slim AS builder
+FROM node:18-buster-slim AS builder
 WORKDIR /app
-RUN npm install -g @angular/cli
+
 COPY ui/package*.json ./
 RUN npm ci
 COPY ui/ .
-RUN ng build --configuration=production
+RUN npm run build --configuration=production
 
 # Debug: list the dist directory structure
 #RUN echo "===== DIST CONTENTS =====" && ls -R /app/dist
