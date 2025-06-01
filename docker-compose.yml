@@ -17,4 +17,4 @@ services:
       dockerfile: api/Dockerfile
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "8876:5000"
