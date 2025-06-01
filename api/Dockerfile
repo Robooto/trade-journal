@@ -7,17 +7,19 @@ RUN apt-get update && \
       build-essential \
       python3-dev \
       libssl-dev \
-      libuv1-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 2) Install dependencies
 COPY api/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
 # 3) Bundle the app
 COPY api/app ./app
 
-RUN apt-get purge -y --auto-remove build-essential python3-dev libssl-dev libuv1-dev
+RUN apt-get purge -y --auto-remove \
+      build-essential python3-dev libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # 4) Launch with Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]
