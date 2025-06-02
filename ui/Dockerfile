@@ -1,5 +1,5 @@
 # build step
-FROM node:18-buster-slim AS builder
+FROM node:18-bullseye-slim AS builder
 WORKDIR /app
 
 COPY ui/package*.json ./

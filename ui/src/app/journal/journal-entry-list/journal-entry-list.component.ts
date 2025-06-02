@@ -20,4 +20,50 @@ export class JournalEntryListComponent implements OnInit {
   ngOnInit(): void {
   }
 
+  copyEntry(entry: JournalEntry) {
+    let text = `${entry.date} - ES ${entry.esPrice} - ${entry.marketDirection} (My account's delta ${entry.delta})\n`;
+
+    // 2) Add the main notes
+    text += `Notes: ${entry.notes}\n`;
+
+    if (entry.events && entry.events.length) {
+      text += `Events:\n`;
+      for (const ev of entry.events) {
+        text += `  • ${ev.time} @ ${ev.price} → ${ev.note}\n`;
+      }
+    }
+
+    // 4) Finally, write to the clipboard (modern browsers only)
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          console.log('Entry copied to clipboard!');
+        })
+        .catch((err) => {
+          console.error('Failed to copy to clipboard:', err);
+        });
+    } else {
+      this.fallbackCopy(text);
+    }
+  }
+
+  private fallbackCopy(str: string) {
+    const txt = document.createElement('textarea');
+    txt.style.position = 'fixed';
+    txt.style.opacity = '0';
+    txt.value = str;
+    document.body.appendChild(txt);
+    txt.select();
+
+    try {
+      document.execCommand('copy');
+      console.log('Entry copied via fallback!');
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+    } finally {
+      document.body.removeChild(txt);
+    }
+  }
+
 }

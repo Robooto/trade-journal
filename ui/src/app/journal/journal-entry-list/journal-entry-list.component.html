@@ -24,12 +24,17 @@
     <div class="full-note">
       <p>{{ e.notes }}</p>
     </div>
-    <h4>Events</h4>
-    <ul>
-      <li *ngFor="let ev of e.events">
-        {{ ev.time }} &#64; {{ ev.price }} — {{ ev.note }}
-      </li>
-    </ul>
+    <ng-container *ngIf="e.events?.length">
+      <b>Events</b>
+      <ul>
+        <li *ngFor="let ev of e.events">
+          {{ ev.time }} &#64; {{ ev.price }} — {{ ev.note }}
+        </li>
+      </ul>
+    </ng-container>
+    <button mat-stroked-button (click)="copyEntry(e)">
+      Copy to Clipboard
+    </button>
   </mat-expansion-panel>
 </mat-accordion>
 <ng-container *ngIf="!entries.length">

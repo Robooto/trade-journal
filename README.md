@@ -10,11 +10,11 @@ Building out a trade journal and some analysis tools
 Initial
 ```
 git clone
-docker-compose up --build -d
+docker compose up --build -d
 ```
 Subsequent updates
 ```
 cd trade-journal
 git pull
 docker compose down
-docker-compose up --build -d
+docker compose up --build -d
