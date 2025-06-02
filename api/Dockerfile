@@ -1,5 +1,5 @@
 # 1) Base image with Python
-FROM python:3.11-slim-bullseye AS base
+FROM python:3.11-slim-bookworm AS base
 WORKDIR /app
 
 RUN apt-get update && \
