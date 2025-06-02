@@ -95,9 +95,9 @@ def update_entry(
 
         for ev in data["events"] or []:
             orm_ev = EventORM(
-                time=ev.time,
-                price=ev.price,
-                note=ev.note,
+                time=ev["time"],
+                price=ev["price"],
+                note=ev["note"],
                 entry=orm_entry
             )
             orm_entry.events.append(orm_ev)
