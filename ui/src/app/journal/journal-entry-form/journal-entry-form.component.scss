@@ -24,3 +24,19 @@ form {
   gap: 8px;
 }
 
+.button-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+.left-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.right-buttons {
+  display: flex;
+  gap: 8px;
+}
+

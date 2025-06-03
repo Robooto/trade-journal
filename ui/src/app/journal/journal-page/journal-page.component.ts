@@ -46,4 +46,10 @@ export class JournalPageComponent implements OnInit {
   onEditCancelled() {
     this.selectedEntry = undefined;
   }
+
+  onEntryDeleted(id: string) {
+    this.entries = this.entries.filter(e => e.id !== id);
+    this.totalEntries = Math.max(this.totalEntries - 1, 0);
+    this.selectedEntry = undefined;
+  }
 }
