@@ -1,14 +1,16 @@
+export interface JournalEvent {
+  time: string;
+  price: number;
+  note: string;
+}
+
 export interface JournalEntry {
   id: string;            // uuid
   date: string;
   esPrice: number;
   delta: number;
   notes: string;
-  events: {
-    time: string;
-    price: number;
-    note: string;
-  }[];
+  events: JournalEvent[];
   marketDirection: 'up' | 'down';
 }
 

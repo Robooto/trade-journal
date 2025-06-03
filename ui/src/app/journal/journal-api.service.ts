@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient }   from '@angular/common/http';
 import { Observable }   from 'rxjs';
 import { environment }  from '../../environments/environment';
-import {JournalEntry, PaginatedJournalEntries} from './journal.models';
+import {JournalEntry, JournalEvent, PaginatedJournalEntries} from './journal.models';
 
 @Injectable({ providedIn: 'root' })
 export class JournalApiService {
@@ -26,7 +26,7 @@ export class JournalApiService {
     );
   }
 
-  addEvent(entryId: string, ev: Event): Observable<JournalEntry> {
+  addEvent(entryId: string, ev: JournalEvent): Observable<JournalEntry> {
     return this.http.post<JournalEntry>(
       `${this.base}/${entryId}/events`, ev
     );
