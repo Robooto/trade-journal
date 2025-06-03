@@ -6,7 +6,7 @@ Building out a trade journal and some analysis tools
 
 ``docker compose up --build``
 
-## Pie deployment
+## Pi deployment
 Initial
 ```
 git clone
