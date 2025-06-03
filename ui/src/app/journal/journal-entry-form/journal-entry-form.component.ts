@@ -19,6 +19,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   @Input() entry?: JournalEntry;
   @Output() saved = new EventEmitter<JournalEntry>();
   @Output() cancelled = new EventEmitter<void>();
+  @Output() deleted = new EventEmitter<string>();
 
   form!: FormGroup;
 
@@ -109,5 +110,17 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   cancel() {
     this.resetForm();
     this.cancelled.emit();
+  }
+
+  confirmDelete() {
+    const id = this.form.get('id')?.value;
+    if (!id) return;
+
+    if (confirm('Delete this entry?')) {
+      this.api.delete(id).subscribe(() => {
+        this.deleted.emit(id);
+        this.resetForm();
+      });
+    }
   }
 }

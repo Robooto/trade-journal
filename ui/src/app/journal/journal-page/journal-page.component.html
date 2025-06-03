@@ -17,6 +17,7 @@
     [entry]="selectedEntry"
     (saved)="onEntrySaved($event)"
     (cancelled)="onEditCancelled()"
+    (deleted)="onEntryDeleted($event)"
     class="journal-form"
   ></app-journal-entry-form>
 </div>
