@@ -84,12 +84,12 @@
   <button mat-button
           type="button"
           (click)="cancel()"
-          *ngIf="entry">
+          *ngIf="form.get('id')?.value">
     Clear
   </button>
   <button mat-raised-button
           color="primary"
           type="submit">
-    {{ entry ? 'Update' : 'Save' }} Entry
+    {{ form.get('id')?.value ? 'Update' : 'Save' }} Entry
   </button>
 </form>

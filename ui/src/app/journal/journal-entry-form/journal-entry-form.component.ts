@@ -36,6 +36,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
       if (this.entry) {
         // patch existing
         this.form.patchValue({
+          id: this.entry.id,
           date: this.entry.date,
           esPrice: this.entry.esPrice,
           delta: this.entry.delta,
@@ -65,6 +66,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   buildForm() {
     this.form = this.fb.group({
+      id: [null],
       date: [
         new Date().toISOString().substring(0, 10), Validators.required
       ],
@@ -91,13 +93,15 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   submit() {
     if (this.form.invalid) return;
 
-    const formValue = this.form.value;
+    const formValue : JournalEntry = this.form.value;
 
-    if (this.entry) {
-      const updated: JournalEntry = { id: this.entry.id, ...formValue };
-      this.api.update(updated).subscribe(e => this.saved.emit(e));
+    if (formValue.id) {
+      this.api.update(formValue).subscribe(e => this.saved.emit(e));
     } else {
-      this.api.create(formValue).subscribe(e => this.saved.emit(e));
+      this.api.create(formValue).subscribe(e => {
+        this.form.patchValue({ id: e.id });
+        this.saved.emit(e);
+      });
     }
 
   }
