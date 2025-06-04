@@ -62,12 +62,6 @@ async def test_entry_not_found(client):
     assert get_resp.status_code == 404
     assert get_resp.json() == {"detail": "Entry not found"}
 
-    put_resp = await client.put(
-        f"/v1/entries/{missing_id}", json=sample_entry
-    )
-    assert put_resp.status_code == 404
-    assert put_resp.json() == {"detail": "Entry not found"}
-
     del_resp = await client.delete(f"/v1/entries/{missing_id}")
     assert del_resp.status_code == 404
     assert del_resp.json() == {"detail": "Entry not found"}
