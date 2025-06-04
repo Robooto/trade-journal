@@ -34,6 +34,33 @@ async def test_create_entry(client):
     assert len(list_data["items"]) == 1
 
 @pytest.mark.asyncio
+async def test_add_event(client):
+    # Create a new entry first
+    resp = await client.post("/v1/entries", json=sample_entry)
+    assert resp.status_code == 201
+    entry = resp.json()
+    entry_id = entry["id"]
+
+    # Record current event count
+    start_len = len(entry["events"])
+
+    new_event = {"time": "10:00", "price": 5050.0, "note": "added"}
+    ev_resp = await client.post(f"/v1/entries/{entry_id}/events", json=new_event)
+    assert ev_resp.status_code == 201
+
+    # Fetch entry again to check events list
+    fetch = await client.get(f"/v1/entries/{entry_id}")
+    assert fetch.status_code == 200
+    updated = fetch.json()
+    assert len(updated["events"]) == start_len + 1
+    assert any(
+        e["time"] == new_event["time"]
+        and e["price"] == new_event["price"]
+        and e["note"] == new_event["note"]
+        for e in updated["events"]
+    )
+
+@pytest.mark.asyncio
 async def test_get_created_entry(client):
     """Create an entry then fetch it by id."""
     create_resp = await client.post("/v1/entries", json=sample_entry)
