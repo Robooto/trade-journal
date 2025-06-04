@@ -33,3 +33,24 @@ async def test_create_entry(client):
     assert list_data["total"] == 1
     assert len(list_data["items"]) == 1
 
+
+@pytest.mark.asyncio
+async def test_pagination_skip_limit(client):
+    """Verify skip/limit pagination returns the correct slice and total."""
+    # add three more entries so we have at least four total
+    for i in range(3):
+        entry = sample_entry.copy()
+        entry["date"] = f"2024-01-0{i+2}"
+        entry["esPrice"] = 5000.0 + i
+        resp = await client.post("/v1/entries", json=entry)
+        assert resp.status_code == 201
+
+    resp = await client.get("/v1/entries?skip=1&limit=1")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 4
+    assert len(data["items"]) == 1
+    # second most recent date should be 2024-01-03
+    assert data["items"][0]["date"] == "2024-01-03"
+
+
