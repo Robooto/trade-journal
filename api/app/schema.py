@@ -40,12 +40,12 @@ class JournalEntryCreate(JournalEntryBase):
 
 
 class JournalEntryUpdate(BaseModel):
-    date: Optional[date]
+    date: Optional[date] = None
     es_price: Optional[float] = Field(None, alias="esPrice")
-    delta: Optional[float]
-    notes: Optional[str]
+    delta: Optional[float] = None
+    notes: Optional[str] = None
     market_direction: Optional[MarketDirection] = Field(None, alias="marketDirection")
-    events: Optional[List[Event]]
+    events: Optional[List[Event]] = None
 
     model_config = {
         "populate_by_name": True,
