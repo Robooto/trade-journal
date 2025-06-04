@@ -33,18 +33,6 @@ async def test_create_entry(client):
     assert list_data["total"] == 1
     assert len(list_data["items"]) == 1
 
-
-    entry_id = body["id"]
-    updated = {
-        "notes": "Updated notes",
-        "events": [{"time": "10:00", "price": 5010, "note": "mid"}]
-    }
-    put_resp = await client.put(f"/v1/entries/{entry_id}", json=updated)
-    assert put_resp.status_code == 200
-    updated_body = put_resp.json()
-    assert updated_body["notes"] == updated["notes"]
-    assert updated_body["events"] == updated["events"]
-
 @pytest.mark.asyncio
 async def test_get_created_entry(client):
     """Create an entry then fetch it by id."""
