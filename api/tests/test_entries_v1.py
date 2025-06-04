@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 
 sample_entry = {
     "date": "2024-01-01",
@@ -33,7 +34,6 @@ async def test_create_entry(client):
     assert list_data["total"] == 1
     assert len(list_data["items"]) == 1
 
-
 @pytest.mark.asyncio
 async def test_pagination_skip_limit(client):
     """Verify skip/limit pagination returns the correct slice and total."""
@@ -53,4 +53,76 @@ async def test_pagination_skip_limit(client):
     # second most recent date should be 2024-01-03
     assert data["items"][0]["date"] == "2024-01-03"
 
+@pytest.mark.asyncio
+async def test_entry_not_found(client):
+    """Operations on a missing entry return 404 with 'Entry not found'."""
+    missing_id = uuid4()
+
+    get_resp = await client.get(f"/v1/entries/{missing_id}")
+    assert get_resp.status_code == 404
+    assert get_resp.json() == {"detail": "Entry not found"}
+
+    put_resp = await client.put(
+        f"/v1/entries/{missing_id}", json=sample_entry
+    )
+    assert put_resp.status_code == 404
+    assert put_resp.json() == {"detail": "Entry not found"}
+
+    del_resp = await client.delete(f"/v1/entries/{missing_id}")
+    assert del_resp.status_code == 404
+    assert del_resp.json() == {"detail": "Entry not found"}
+
+    event_resp = await client.post(
+        f"/v1/entries/{missing_id}/events",
+        json={"time": "10:00", "price": 1.0, "note": "foo"},
+    )
+    assert event_resp.status_code == 404
+    assert event_resp.json() == {"detail": "Entry not found"}
+
+@pytest.mark.asyncio
+async def test_add_event(client):
+    # Create a new entry first
+    resp = await client.post("/v1/entries", json=sample_entry)
+    assert resp.status_code == 201
+    entry = resp.json()
+    entry_id = entry["id"]
+
+    # Record current event count
+    start_len = len(entry["events"])
+
+    new_event = {"time": "10:00", "price": 5050.0, "note": "added"}
+    ev_resp = await client.post(f"/v1/entries/{entry_id}/events", json=new_event)
+    assert ev_resp.status_code == 201
+
+    # Fetch entry again to check events list
+    fetch = await client.get(f"/v1/entries/{entry_id}")
+    assert fetch.status_code == 200
+    updated = fetch.json()
+    assert len(updated["events"]) == start_len + 1
+    assert any(
+        e["time"] == new_event["time"]
+        and e["price"] == new_event["price"]
+        and e["note"] == new_event["note"]
+        for e in updated["events"]
+    )
+
+@pytest.mark.asyncio
+async def test_get_created_entry(client):
+    """Create an entry then fetch it by id."""
+    create_resp = await client.post("/v1/entries", json=sample_entry)
+    assert create_resp.status_code == 201
+    created = create_resp.json()
+    entry_id = created["id"]
+
+    get_resp = await client.get(f"/v1/entries/{entry_id}")
+    assert get_resp.status_code == 200
+    fetched = get_resp.json()
+
+    assert fetched["id"] == entry_id
+    assert fetched["date"] == sample_entry["date"]
+    assert fetched["esPrice"] == sample_entry["esPrice"]
+    assert fetched["delta"] == sample_entry["delta"]
+    assert fetched["notes"] == sample_entry["notes"]
+    assert fetched["marketDirection"] == sample_entry["marketDirection"]
+    assert fetched["events"] == sample_entry["events"]
 
