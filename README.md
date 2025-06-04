@@ -20,13 +20,3 @@ git pull
 docker compose down
 docker compose up --build -d
 ```
-
-## Running unit tests
-
-Unit tests are managed with [pytest](https://docs.pytest.org/).
-Install the API requirements and run `pytest` from the repository root:
-
-```
-pip install -r api/requirements.txt
-pytest
-```
