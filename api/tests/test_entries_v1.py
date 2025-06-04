@@ -1,4 +1,5 @@
 import pytest
+from uuid import uuid4
 
 sample_entry = {
     "date": "2024-01-01",
@@ -32,6 +33,32 @@ async def test_create_entry(client):
     list_data = list_resp.json()
     assert list_data["total"] == 1
     assert len(list_data["items"]) == 1
+
+@pytest.mark.asyncio
+async def test_entry_not_found(client):
+    """Operations on a missing entry return 404 with 'Entry not found'."""
+    missing_id = uuid4()
+
+    get_resp = await client.get(f"/v1/entries/{missing_id}")
+    assert get_resp.status_code == 404
+    assert get_resp.json() == {"detail": "Entry not found"}
+
+    put_resp = await client.put(
+        f"/v1/entries/{missing_id}", json=sample_entry
+    )
+    assert put_resp.status_code == 404
+    assert put_resp.json() == {"detail": "Entry not found"}
+
+    del_resp = await client.delete(f"/v1/entries/{missing_id}")
+    assert del_resp.status_code == 404
+    assert del_resp.json() == {"detail": "Entry not found"}
+
+    event_resp = await client.post(
+        f"/v1/entries/{missing_id}/events",
+        json={"time": "10:00", "price": 1.0, "note": "foo"},
+    )
+    assert event_resp.status_code == 404
+    assert event_resp.json() == {"detail": "Entry not found"}
 
 @pytest.mark.asyncio
 async def test_add_event(client):
