@@ -33,7 +33,6 @@ async def test_create_entry(client):
     assert list_data["total"] == 1
     assert len(list_data["items"]) == 1
 
-
 @pytest.mark.asyncio
 async def test_get_created_entry(client):
     """Create an entry then fetch it by id."""
