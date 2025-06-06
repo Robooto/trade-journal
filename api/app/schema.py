@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import List, Optional
+from typing import Any, List, Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
@@ -85,5 +85,51 @@ class SessionToken(SessionTokenBase):
 
     model_config = {
         "from_attributes": True
+    }
+
+
+class Position(BaseModel):
+    """Generic position data with arbitrary fields."""
+
+    approximate_p_l: Optional[float] = Field(None, alias="approximate-p-l")
+
+    model_config = {
+        "populate_by_name": True,
+        "extra": "allow",
+        "from_attributes": True,
+    }
+
+
+class GroupedPositions(BaseModel):
+    underlying_symbol: str
+    expires_at: str
+    total_credit_received: float
+    current_group_price: float
+    group_approximate_p_l: float
+    percent_credit_received: Optional[int] = Field(None, alias="percent-credit-received")
+    positions: List[Position]
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
+    }
+
+
+class AccountPositions(BaseModel):
+    account_number: str
+    groups: List[GroupedPositions]
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
+    }
+
+
+class PositionsResponse(BaseModel):
+    accounts: List[AccountPositions]
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
     }
 
