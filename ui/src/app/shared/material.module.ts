@@ -9,7 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
-import {MatButtonToggleModule} from '@angular/material/button-toggle';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatTableModule } from '@angular/material/table';
 
 @NgModule({
   imports: [
@@ -23,6 +24,7 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
     MatExpansionModule,
     MatIconModule,
     MatButtonToggleModule,
+    MatTableModule,
   ],
   exports: [
     MatSidenavModule,
@@ -34,6 +36,7 @@ import {MatButtonToggleModule} from '@angular/material/button-toggle';
     MatExpansionModule,
     MatIconModule,
     MatButtonToggleModule,
+    MatTableModule,
   ]
 })
 export class SharedMaterialModule {}
