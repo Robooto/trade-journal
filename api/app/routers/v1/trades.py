@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Dict, List, Tuple
 
+from app.schema import PositionsResponse
+
 from app.db import get_db
 from app import tastytrade
 
@@ -13,7 +15,11 @@ router = APIRouter(
     tags=["v1 – trades"]
 )
 
-@router.get("", summary="Get all non-equity positions grouped by underlying-symbol and expiration")
+@router.get(
+    "",
+    summary="Get all non-equity positions grouped by underlying-symbol and expiration",
+    response_model=PositionsResponse,
+)
 def get_all_positions(db: Session = Depends(get_db)):
     """
     Retrieve all positions across all accounts, excluding:
@@ -133,4 +139,4 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "groups": groups_list
             })
 
-    return {"accounts": accounts_data}
+    return PositionsResponse(accounts=accounts_data)
