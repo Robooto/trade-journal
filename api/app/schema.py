@@ -106,7 +106,7 @@ class GroupedPositions(BaseModel):
     total_credit_received: float
     current_group_price: float
     group_approximate_p_l: float
-    percent_credit_received: Optional[int] = Field(None, alias="percent-credit-received")
+    percent_credit_received: Optional[int] = None
     positions: List[Position]
 
     model_config = {
