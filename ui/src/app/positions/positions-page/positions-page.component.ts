@@ -16,6 +16,7 @@ export class PositionsPageComponent implements OnInit {
     'credit',
     'price',
     'pl',
+    'percent',
     'positions'
   ];
 

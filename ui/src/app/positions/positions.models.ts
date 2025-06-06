@@ -8,7 +8,7 @@ export interface PositionGroup {
   total_credit_received: number;
   current_group_price: number;
   group_approximate_p_l: number;
-  'percent-credit-received': number | null;
+  percent_credit_received: number | null;
   positions: Position[];
 }
 

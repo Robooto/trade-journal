@@ -32,7 +32,7 @@ def get_all_positions(db: Session = Depends(get_db)):
          - total_credit_received (rounded to 2 decimals)
          - current_group_price (rounded to 2 decimals)
          - group_approximate_p_l = total_credit_received - current_group_price (rounded to 2 decimals)
-         - percent-credit-received = int((group_approximate_p_l / total_credit_received) * 100), or None
+         - percent_credit_received = int((group_approximate_p_l / total_credit_received) * 100), or None
     """
     try:
         token = tastytrade.get_active_token(db)
@@ -117,7 +117,7 @@ def get_all_positions(db: Session = Depends(get_db)):
             current_group_price = round(current_credit_unrounded, 2)
             group_pl = round(total_credit_received - current_group_price, 2)
 
-            # Compute percent-credit-received = int((group_pl / total_credit_received) * 100)
+            # Compute percent_credit_received = int((group_pl / total_credit_received) * 100)
             if total_credit_received != 0:
                 percent_credit_received = int((group_pl / total_credit_received) * 100)
             else:
@@ -129,7 +129,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "total_credit_received": total_credit_received,
                 "current_group_price": current_group_price,
                 "group_approximate_p_l": group_pl,
-                "percent-credit-received": percent_credit_received,
+                "percent_credit_received": percent_credit_received,
                 "positions": pos_list
             })
 

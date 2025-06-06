@@ -67,7 +67,7 @@ async def test_trades_grouped(client, monkeypatch):
                         "total_credit_received": -3.5,
                         "current_group_price": -0.7,
                         "group_approximate_p_l": -2.8,
-                        "percent-credit-received": 80,
+                        "percent_credit_received": 80,
                         "positions": [
                             {
                                 "instrument-type": "Option",
