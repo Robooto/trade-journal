@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List
 from uuid import UUID
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models import JournalEntryORM, EventORM
+from app.models import JournalEntryORM, EventORM, SessionTokenORM
 from app.schema import JournalEntryCreate, JournalEntryUpdate, Event
 
 
@@ -147,3 +148,28 @@ def add_event_to_entry(
     db.commit()
     db.refresh(orm_entry)
     return orm_entry
+
+def get_session_token(db: Session):
+    """Retrieve the stored session token record (if any) from the database."""
+    return db.query(SessionTokenORM).first()
+
+def save_session_token(db: Session, token: str, expiration: datetime):
+    """
+    Create or update the session token record in the database.
+    If a token record already exists, update it; otherwise insert a new record.
+    Returns the saved SessionTokenORM object.
+    """
+    record = get_session_token(db)
+    if record:
+        # Update existing record
+        record.token = token
+        record.expiration = expiration
+        db.commit()
+        db.refresh(record)
+    else:
+        # Create new record
+        record = SessionTokenORM(token=token, expiration=expiration)
+        db.add(record)
+        db.commit()
+        db.refresh(record)
+    return record

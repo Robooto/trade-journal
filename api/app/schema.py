@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -71,3 +71,19 @@ class PaginatedEntries(BaseModel):
         "populate_by_name": True,
         "from_attributes": True
     }
+
+class SessionTokenBase(BaseModel):
+    token: str
+    expiration: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class SessionToken(SessionTokenBase):
+    id: int
+
+    model_config = {
+        "from_attributes": True
+    }
+

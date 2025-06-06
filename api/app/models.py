@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer
+from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -38,3 +38,10 @@ class EventORM(Base):
     price = Column(Float, nullable=False)
     note = Column(String, nullable=False)
     entry = relationship("JournalEntryORM", back_populates="events")
+
+
+class SessionTokenORM(Base):
+    __tablename__ = "session_tokens"
+    id = Column(Integer, primary_key=True, index=True)
+    token = Column(String(128), nullable=False)       # session token string
+    expiration = Column(DateTime, nullable=False)     # expiration timestamp (UTC)
