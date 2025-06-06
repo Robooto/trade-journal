@@ -8,6 +8,11 @@ const routes: Routes = [
       import('./journal/journal.module').then(m => m.JournalModule)
   },
   {
+    path: 'positions',
+    loadChildren: () =>
+      import('./positions/positions.module').then(m => m.PositionsModule)
+  },
+  {
     path: '',
     redirectTo: 'journal',
     pathMatch: 'full'
