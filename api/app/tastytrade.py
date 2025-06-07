@@ -2,7 +2,7 @@ import os
 import requests
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from app import crud
 
@@ -57,15 +57,16 @@ def get_active_token(db: Session) -> str:
     crud.save_session_token(db, new_token, new_expiration)
     return new_token
 
-def fetch_account_numbers(token: str) -> List[str]:
+def fetch_accounts(token: str) -> List[Dict[str, str]]:
     """
-    Fetch all account numbers for the logged-in user via Tastytrade API.
-    Returns a list of account number strings.
+    Fetch all accounts for the logged-in user via the Tastytrade API.
+
+    Returns a list of dicts with ``account_number`` and ``nickname`` keys.
     """
     headers = {
         "Authorization": token,
         "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json"
+        "Accept": "application/json",
     }
     url = f"{BASE_URL}/customers/me/accounts"
     response = requests.get(url, headers=headers)
@@ -74,9 +75,11 @@ def fetch_account_numbers(token: str) -> List[str]:
 
     accounts = []
     for item in data["data"]["items"]:
-        # Each item contains an 'account' object with an 'account-number' field
-        acct_num = item["account"]["account-number"]
-        accounts.append(acct_num)
+        acct = item.get("account", {})
+        accounts.append({
+            "account_number": acct.get("account-number", ""),
+            "nickname": acct.get("nickname", ""),
+        })
     return accounts
 
 def fetch_positions(token: str, account_number: str) -> List[dict]:

@@ -41,18 +41,20 @@ def get_all_positions(db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Authentication to Tastytrade failed: {e}")
 
     try:
-        account_numbers = tastytrade.fetch_account_numbers(token)
+        accounts = tastytrade.fetch_accounts(token)
     except Exception as e:
         logging.error(f"Failed to fetch accounts: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch accounts: {e}")
 
     accounts_data = []
-    for acct in account_numbers:
+    for acct in accounts:
+        acct_num = acct.get("account_number")
+        nickname = acct.get("nickname", "")
         try:
-            raw_positions = tastytrade.fetch_positions(token, acct)
+            raw_positions = tastytrade.fetch_positions(token, acct_num)
         except Exception as e:
-            logging.error(f"Failed to fetch positions for account {acct}: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to fetch positions for account {acct}: {e}")
+            logging.error(f"Failed to fetch positions for account {acct_num}: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to fetch positions for account {acct_num}: {e}")
 
         # 1) Filter out any position where instrument-type == "Equity"
         filtered_positions = [
@@ -135,8 +137,9 @@ def get_all_positions(db: Session = Depends(get_db)):
 
         if groups_list:
             accounts_data.append({
-                "account_number": acct,
-                "groups": groups_list
+                "account_number": acct_num,
+                "nickname": nickname,
+                "groups": groups_list,
             })
 
     return PositionsResponse(accounts=accounts_data)

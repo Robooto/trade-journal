@@ -10,7 +10,10 @@ async def test_trades_grouped(client, monkeypatch):
         return "FAKE"
 
     def fake_accounts(token):
-        return ["123", "456"]
+        return [
+            {"account_number": "123", "nickname": "Main"},
+            {"account_number": "456", "nickname": "Other"},
+        ]
 
     def fake_positions(token, acct):
         if acct == "123":
@@ -46,7 +49,7 @@ async def test_trades_grouped(client, monkeypatch):
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
     monkeypatch.setattr(
-        "app.routers.v1.trades.tastytrade.fetch_account_numbers", fake_accounts
+        "app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts
     )
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_positions", fake_positions
@@ -60,6 +63,7 @@ async def test_trades_grouped(client, monkeypatch):
         "accounts": [
             {
                 "account_number": "123",
+                "nickname": "Main",
                 "groups": [
                     {
                         "underlying_symbol": "SPY",
