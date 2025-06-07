@@ -19,3 +19,8 @@ mat-sidenav-content {
   min-width: 200px;   /* ensure it never shrinks below */
   max-width: 200px;   /* optional if you want to lock it */
 }
+
+/* Highlight active sidebar link */
+a.active-link {
+  background-color: rgba(0, 0, 0, 0.1);
+}
