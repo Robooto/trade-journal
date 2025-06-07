@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { PositionsApiService } from '../positions-api.service';
-import { AccountPositions } from '../positions.models';
+import { AccountPositions, PositionGroup } from '../positions.models';
 import { evaluateRules } from '../positions.rules';
 
 @Component({
@@ -29,9 +29,24 @@ export class PositionsPageComponent implements OnInit {
   ngOnInit() {
     this.api.getAll().subscribe(res => {
       this.accounts = res.accounts;
-      this.accounts.forEach(acct =>
-        acct.groups.forEach(g => (g.rules = evaluateRules(g)));
-      );
+      this.accounts.forEach(acct => {
+        acct.groups.forEach(g => {
+          g.rules = evaluateRules(g);
+        });
+      });
     });
+  }
+
+  getRuleClass(group: PositionGroup): string {
+    if (!group.rules) {
+      return '';
+    }
+    if (group.rules.some(r => r.level === 'alert')) {
+      return 'alert';
+    }
+    if (group.rules.some(r => r.level === 'warning')) {
+      return 'warning';
+    }
+    return '';
   }
 }
