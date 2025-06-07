@@ -1,5 +1,5 @@
 <div *ngFor="let account of accounts" class="account-section">
-  <h2>Account {{ account.account_number }}</h2>
+  <h2>Account {{ account.nickname ? account.nickname + ' (' + account.account_number + ')' : account.account_number }}</h2>
   <table mat-table [dataSource]="account.groups" class="mat-elevation-z1 full-width">
     <ng-container matColumnDef="underlying">
       <th mat-header-cell *matHeaderCellDef>Underlying</th>

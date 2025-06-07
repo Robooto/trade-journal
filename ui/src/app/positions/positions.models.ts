@@ -15,6 +15,7 @@ export interface PositionGroup {
 
 export interface AccountPositions {
   account_number: string;
+  nickname?: string;
   groups: PositionGroup[];
 }
 
