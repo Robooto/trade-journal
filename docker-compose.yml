@@ -18,3 +18,7 @@ services:
       - "8876:5000"
     volumes:
       - ./api:/app
+    environment:
+      - TASTYTRADE_USERNAME
+      - TASTYTRADE_PASSWORD
+      - TASTYTRADE_URL

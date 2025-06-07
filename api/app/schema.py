@@ -117,7 +117,7 @@ class GroupedPositions(BaseModel):
 
 class AccountPositions(BaseModel):
     account_number: str
-    nickname: str | None = None
+    nickname: str
     groups: List[GroupedPositions]
 
     model_config = {
