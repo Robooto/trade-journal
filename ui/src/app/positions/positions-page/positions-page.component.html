@@ -67,7 +67,7 @@
     <tr
       mat-row
       *matRowDef="let row; columns: groupCols"
-      [ngClass]="row.rules?.some(r => r.level === 'alert') ? 'alert' : row.rules?.some(r => r.level === 'warning') ? 'warning' : ''"
+      [ngClass]="getRuleClass(row)"
     ></tr>
   </table>
 </div>
