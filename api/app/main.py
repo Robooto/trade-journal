@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import models
-from app.db import engine, Base
+from app.db import engine
 from app.routers.v1 import hello as hello_v1, entries as entries_v1, trades as trades_v1
 
 models.Base.metadata.create_all(bind=engine)
