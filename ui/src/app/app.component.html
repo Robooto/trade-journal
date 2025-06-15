@@ -4,6 +4,7 @@
   </button>
   <span>My Trading App</span>
 </mat-toolbar>
+<mat-progress-bar mode="indeterminate" *ngIf="loading$ | async"></mat-progress-bar>
 
 <mat-sidenav-container class="full-height">
   <mat-sidenav #sidenav mode="side" opened class="app-sidenav">
