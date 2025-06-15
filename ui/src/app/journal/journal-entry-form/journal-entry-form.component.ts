@@ -30,6 +30,23 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   ngOnInit() {
     this.buildForm();
+
+    this.api
+      .getMarketData([], [], ['/ESU5'], [])
+      .subscribe((data) => {
+        if (!data || !data.length) return;
+        const item = data[0];
+        const mark = parseFloat(item['mark']);
+        const close = parseFloat(item['close']);
+        if (!isNaN(mark)) {
+          this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
+        }
+        if (!isNaN(mark) && !isNaN(close)) {
+          this.form.patchValue({
+            marketDirection: mark > close ? 'up' : 'down'
+          });
+        }
+      });
   }
 
   ngOnChanges(changes: SimpleChanges) {

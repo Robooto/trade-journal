@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient }   from '@angular/common/http';
 import { Observable }   from 'rxjs';
 import { environment }  from '../../environments/environment';
-import {JournalEntry, JournalEvent, PaginatedJournalEntries} from './journal.models';
+import {JournalEntry, JournalEvent, PaginatedJournalEntries, MarketData} from './journal.models';
 
 @Injectable({ providedIn: 'root' })
 export class JournalApiService {
@@ -34,5 +34,24 @@ export class JournalApiService {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.base}/${id}`);
+  }
+
+  getMarketData(
+    equity: string[] = [],
+    equityOption: string[] = [],
+    future: string[] = [],
+    futureOption: string[] = []
+  ): Observable<MarketData[]> {
+    const body = {
+      equity,
+      equity_option: equityOption,
+      future,
+      future_option: futureOption,
+    };
+
+    return this.http.post<MarketData[]>(
+      `${environment.apiUrl}/trades/market-data`,
+      body
+    );
   }
 }

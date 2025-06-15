@@ -101,3 +101,34 @@ async def test_trades_grouped(client, monkeypatch):
             }
         ]
     }
+
+
+@pytest.mark.asyncio
+async def test_market_data(client, monkeypatch):
+    """Verify /v1/trades/market-data returns data from tastytrade helper."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_market(token, equity, equity_option, future, future_option):
+        assert future == ["/ESU5"]
+        return [{"symbol": "/ESU5", "mark": "100", "close": "90"}]
+
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.get_active_token", fake_token
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+
+    resp = await client.post(
+        "/v1/trades/market-data",
+        json={
+            "equity": [],
+            "equity_option": [],
+            "future": ["/ESU5"],
+            "future_option": []
+        }
+    )
+    assert resp.status_code == 200
+    assert resp.json() == [{"symbol": "/ESU5", "mark": "100", "close": "90"}]
