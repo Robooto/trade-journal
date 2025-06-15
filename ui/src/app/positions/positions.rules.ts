@@ -57,10 +57,10 @@ export const lossRule: Rule = g => {
     pct = total ? Math.round((g.group_approximate_p_l / total) * 100) : 0;
   }
 
-  if (pct >= -150) {
+  if (pct <= -150) {
     return { id: '2x loss', level: 'warning' };
   }
-  if (pct >= -200) {
+  if (pct <= -200) {
     return { id: '2x loss', level: 'alert' };
   }
   return null;
