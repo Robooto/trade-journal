@@ -101,11 +101,23 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   }
 
   addEvent() {
-    this.events.push(this.fb.group({
+    const group = this.fb.group({
       time: [new Date().toLocaleTimeString(), Validators.required],
       price: [null, Validators.required],
       note: ['']
-    }));
+    });
+    this.events.push(group);
+
+    this.api
+      .getMarketData([], [], ['/ESU5'], [])
+      .subscribe((data) => {
+        if (!data || !data.length) return;
+        const item = data[0];
+        const mark = parseFloat(item['mark']);
+        if (!isNaN(mark)) {
+          group.patchValue({ price: parseInt(String(mark), 10) as any });
+        }
+      });
   }
 
   submit() {

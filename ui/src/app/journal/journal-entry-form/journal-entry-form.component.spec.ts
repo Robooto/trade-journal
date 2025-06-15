@@ -90,13 +90,14 @@ describe('JournalEntryFormComponent', () => {
     expect(component.events.at(0).value).toEqual(entry.events[0]);
   });
 
-  it('addEvent adds new form group', () => {
+  it('addEvent adds new form group with latest price', () => {
     const len = component.events.length;
     component.addEvent();
+    expect(apiSpy.getMarketData).toHaveBeenCalled();
     expect(component.events.length).toBe(len + 1);
     const group = component.events.at(len) as any;
     expect(group.get('time')).toBeTruthy();
-    expect(group.get('price')).toBeTruthy();
+    expect(group.get('price')?.value).toBe(6000);
     expect(group.get('note')).toBeTruthy();
   });
 
