@@ -1,4 +1,4 @@
-import { dteRule, profitRule, evaluateRules } from './positions.rules';
+import { dteRule, profitRule, lossRule, evaluateRules } from './positions.rules';
 import { PositionGroup } from './positions.models';
 
 function makeGroup(overrides: Partial<PositionGroup> = {}): PositionGroup {
@@ -33,11 +33,30 @@ describe('positions rules', () => {
     expect(profitRule(g)).toEqual({ id: '50% profit', level: 'warning' });
   });
 
+  it('lossRule uses percent_credit_received when available', () => {
+    const g = makeGroup({ percent_credit_received: -200 });
+    expect(lossRule(g)).toEqual({ id: '2x loss', level: 'alert' });
+  });
+
+  it('lossRule calculates percent when not provided', () => {
+    const g = makeGroup({ percent_credit_received: null, group_approximate_p_l: -15, total_credit_received: 10 });
+    expect(lossRule(g)).toEqual({ id: '2x loss', level: 'warning' });
+  });
+
   it('evaluateRules runs all rules', () => {
     const g = makeGroup({ percent_credit_received: 55, expires_at: '2025-01-15' });
     const results = evaluateRules(g, new Date('2025-01-01'));
-    expect(results.length).toBe(2);
+    expect(results.length).toBe(3);
     expect(results[0].id).toBe('21 dte');
     expect(results[1].id).toBe('50% profit');
+    expect(results[2].id).toBe('2x loss');
+  });
+
+  it('evaluateRules includes lossRule when triggered', () => {
+    const g = makeGroup({ percent_credit_received: -195, expires_at: '2025-01-15' });
+    const results = evaluateRules(g, new Date('2025-01-01'));
+    expect(results.length).toBe(2);
+    expect(results[0]).toEqual({ id: '21 dte', level: 'alert' });
+    expect(results[1]).toEqual({ id: '2x loss', level: 'alert' });
   });
 });

@@ -45,7 +45,7 @@ describe('PositionsPageComponent', () => {
     component.ngOnInit();
 
     expect(component.accounts.length).toBe(1);
-    expect(component.accounts[0].groups[0].rules?.length).toBe(2);
+    expect(component.accounts[0].groups[0].rules?.length).toBe(3);
   });
 
   it('getRuleClass returns expected class', () => {

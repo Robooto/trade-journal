@@ -50,4 +50,20 @@ export const profitRule: Rule = g => {
   return null;
 };
 
-export const rules: Rule[] = [dteRule, profitRule];
+export const lossRule: Rule = g => {
+  const total = g.total_credit_received;
+  let pct = g.percent_credit_received;
+  if (pct === null || pct === undefined) {
+    pct = total ? Math.round((g.group_approximate_p_l / total) * 100) : 0;
+  }
+
+  if (pct >= -150) {
+    return { id: '2x loss', level: 'warning' };
+  }
+  if (pct >= -200) {
+    return { id: '2x loss', level: 'alert' };
+  }
+  return null;
+};
+
+export const rules: Rule[] = [dteRule, profitRule, lossRule];
