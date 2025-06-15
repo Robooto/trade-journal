@@ -9,7 +9,9 @@ import { LoadingService } from './shared/loading.service';
 })
 export class AppComponent {
   view: 'journal' = 'journal';
-  loading$ = this.loadingService.loading$;
+  get loading$() {
+    return this.loadingService.loading$;
+  }
 
   constructor(private loadingService: LoadingService) {}
 }
