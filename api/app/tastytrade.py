@@ -99,3 +99,44 @@ def fetch_positions(token: str, account_number: str) -> List[dict]:
 
     positions = data["data"]["items"]
     return positions
+
+def fetch_market_data(token: str, equity: List[str], equity_option: List[str], future: List[str], future_option: List[str]) -> List[dict]:
+    """
+    Fetch market data for the given symbols from the Tastytrade API.
+    Returns a list of market data dictionaries.
+    """
+    headers = {
+        "Authorization": token,
+        "User-Agent": "trade-journal/0.1",
+        "Accept": "application/json"
+    }
+    url = f"{BASE_URL}/market-data/by-type"
+    params = {
+        "equity": ",".join(equity),
+        "equity-option": ",".join(equity_option),
+        "future": ",".join(future),
+        "future-option": ",".join(future_option)
+    }
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    data = response.json()
+    return data["data"]["items"]
+
+def fetch_volatility_data(token: str, symbols: List[str]) -> List[dict]:
+    """
+    Fetch volatility data for the given symbols from the Tastytrade API.
+    Returns a list of volatility data dictionaries.
+    """
+    headers = {
+        "Authorization": token,
+        "User-Agent": "trade-journal/0.1",
+        "Accept": "application/json"
+    }
+    url = f"{BASE_URL}/market-metrics"
+    params = {
+        "symbols": ",".join(symbols)
+    }
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    data = response.json()
+    return data["data"]["items"]

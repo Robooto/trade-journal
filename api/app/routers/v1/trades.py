@@ -143,3 +143,23 @@ def get_all_positions(db: Session = Depends(get_db)):
             })
 
     return PositionsResponse(accounts=accounts_data)
+
+@router.post("/market-data",summary="Get market data for symbols", response_model=List[dict])
+def get_market_data(equity: List[str], equity_option: List[str], future: List[str], future_option: List[str], db: Session = Depends(get_db)):
+    """
+    Fetch market data for the given symbols from the Tastytrade API.
+    Returns a list of market data dictionaries.
+    """
+    try:
+        token = tastytrade.get_active_token(db)
+    except Exception as e:
+        logging.error(f"Authentication to Tastytrade failed: {e}")
+        raise HTTPException(status_code=403, detail=f"Authentication to Tastytrade failed: {e}")
+
+    try:
+        market_data = tastytrade.fetch_market_data(token, equity, equity_option, future, future_option)
+    except Exception as e:
+        logging.error(f"Failed to fetch market data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch market data: {e}")
+
+    return market_data
