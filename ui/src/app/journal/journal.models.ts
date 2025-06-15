@@ -20,3 +20,7 @@ export interface PaginatedJournalEntries {
   skip: number;
   limit: number;
 }
+
+export interface MarketData {
+  [key: string]: any;
+}

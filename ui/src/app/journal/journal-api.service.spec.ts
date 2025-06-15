@@ -66,4 +66,15 @@ describe('JournalApiService', () => {
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
   });
+
+  it('getMarketData should perform POST request with body', () => {
+    const marketUrl = `${environment.apiUrl}/trades/market-data`;
+    const resp = [{ symbol: '/ESU5' }];
+
+    service.getMarketData([], [], ['/ESU5'], []).subscribe(res => expect(res).toEqual(resp));
+    const req = http.expectOne(marketUrl);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.future).toEqual(['/ESU5']);
+    req.flush(resp);
+  });
 });

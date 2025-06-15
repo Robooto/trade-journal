@@ -15,7 +15,8 @@ describe('JournalEntryFormComponent', () => {
   let apiSpy: jasmine.SpyObj<JournalApiService>;
 
   beforeEach(async () => {
-    apiSpy = jasmine.createSpyObj('JournalApiService', ['create', 'update', 'delete']);
+    apiSpy = jasmine.createSpyObj('JournalApiService', ['create', 'update', 'delete', 'getMarketData']);
+    apiSpy.getMarketData.and.returnValue(of([{ mark: '6000', close: '5990' }]));
 
     await TestBed.configureTestingModule({
       declarations: [JournalEntryFormComponent],
@@ -31,6 +32,14 @@ describe('JournalEntryFormComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('ngOnInit populates form with market data', () => {
+    apiSpy.getMarketData.and.returnValue(of([{ mark: '6010.7', close: '6000' }]));
+    component.ngOnInit();
+    expect(apiSpy.getMarketData).toHaveBeenCalled();
+    expect(component.form.get('esPrice')?.value).toBe(6010);
+    expect(component.form.get('marketDirection')?.value).toBe('up');
   });
 
   it('buildForm creates expected controls with validators', () => {
