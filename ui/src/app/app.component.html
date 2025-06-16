@@ -2,8 +2,10 @@
   <button mat-icon-button (click)="sidenav.toggle()">
     <mat-icon>menu</mat-icon>
   </button>
-  <span>My Trading App</span>
-  <span class="contract">{{ currentContract }}</span>
+  <span>Robin's Roost</span>
+  <span class="contract" matTooltip="Current ES contract">{{ currentContract }}</span>
+  <span class="spacer"></span>
+  <img src="assets/robin.png" alt="Robin icon" class="robin-icon" />
 </mat-toolbar>
 <mat-progress-bar mode="indeterminate" *ngIf="loading$ | async"></mat-progress-bar>
 
