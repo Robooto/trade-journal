@@ -3,6 +3,7 @@
     <mat-icon>menu</mat-icon>
   </button>
   <span>My Trading App</span>
+  <span class="contract">{{ currentContract }}</span>
 </mat-toolbar>
 <mat-progress-bar mode="indeterminate" *ngIf="loading$ | async"></mat-progress-bar>
 

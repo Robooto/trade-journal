@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { LoadingService } from './shared/loading.service';
+import { FuturesService } from './shared/futures.service';
 
 @Component({
   selector: 'app-root',
@@ -9,9 +10,15 @@ import { LoadingService } from './shared/loading.service';
 })
 export class AppComponent {
   view: 'journal' = 'journal';
+  currentContract: string;
   get loading$() {
     return this.loadingService.loading$;
   }
 
-  constructor(private loadingService: LoadingService) {}
+  constructor(
+    private loadingService: LoadingService,
+    private futures: FuturesService
+  ) {
+    this.currentContract = this.futures.getCurrentESContract();
+  }
 }
