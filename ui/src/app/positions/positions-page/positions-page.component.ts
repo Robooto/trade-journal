@@ -18,6 +18,7 @@ export class PositionsPageComponent implements OnInit {
     'price',
     'pl',
     'percent',
+    'ivrank',
     'rules',
     'positions',
   ];

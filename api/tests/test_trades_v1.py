@@ -45,6 +45,10 @@ async def test_trades_grouped(client, monkeypatch):
                 {"instrument-type": "Equity", "underlying-symbol": "AAPL"}
             ]
 
+    def fake_vol(token, symbols):
+        assert symbols == ["SPY"]
+        return [{"symbol": "SPY", "implied-volatility-index-rank": "0.191"}]
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -53,6 +57,9 @@ async def test_trades_grouped(client, monkeypatch):
     )
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_positions", fake_positions
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
     )
 
     resp = await client.get("/v1/trades")
@@ -72,6 +79,7 @@ async def test_trades_grouped(client, monkeypatch):
                         "current_group_price": -0.7,
                         "group_approximate_p_l": -2.8,
                         "percent_credit_received": 80,
+                        "iv_rank": 19.1,
                         "positions": [
                             {
                                 "instrument-type": "Option",
