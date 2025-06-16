@@ -1,4 +1,4 @@
-import { dteRule, profitRule, lossRule, evaluateRules } from './positions.rules';
+import { dteRule, profitRule, lossRule, ivRankRule, evaluateRules } from './positions.rules';
 import { PositionGroup } from './positions.models';
 
 function makeGroup(overrides: Partial<PositionGroup> = {}): PositionGroup {
@@ -47,6 +47,13 @@ describe('positions rules', () => {
     expect(lossRule(g)).toEqual({ id: '2x loss', level: 'warning' });
   });
 
+  it('ivRankRule flags alerts and warnings correctly', () => {
+    const warning = makeGroup({ iv_rank: 12 });
+    const alert = makeGroup({ iv_rank: 9 });
+    expect(ivRankRule(warning)).toEqual({ id: '14 iv rank', level: 'warning' });
+    expect(ivRankRule(alert)).toEqual({ id: '14 iv rank', level: 'alert' });
+  });
+
   it('evaluateRules runs only triggered rules', () => {
     const g = makeGroup({ percent_credit_received: 55, expires_at: '2025-01-15' });
     const results = evaluateRules(g, new Date('2025-01-01'));
@@ -64,5 +71,17 @@ describe('positions rules', () => {
     expect(results.length).toBe(2);
     expect(results[0]).toEqual({ id: '21 dte', level: 'alert' });
     expect(results[1]).toEqual({ id: '2x loss', level: 'warning' });
+  });
+
+  it('evaluateRules includes ivRankRule when triggered', () => {
+    const g = makeGroup({
+      iv_rank: 12,
+      expires_at: '2025-01-15',
+      percent_credit_received: 0
+    });
+    const results = evaluateRules(g, new Date('2025-01-01'));
+    expect(results.length).toBe(2);
+    expect(results[0]).toEqual({ id: '21 dte', level: 'alert' });
+    expect(results[1]).toEqual({ id: '14 iv rank', level: 'warning' });
   });
 });

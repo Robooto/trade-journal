@@ -66,4 +66,17 @@ export const lossRule: Rule = g => {
   return null;
 };
 
-export const rules: Rule[] = [dteRule, profitRule, lossRule];
+export const ivRankRule: Rule = g => {
+  if (g.iv_rank === null || g.iv_rank === undefined) {
+    return null;
+  }
+  if (g.iv_rank < 10) {
+    return { id: '14 iv rank', level: 'alert' };
+  }
+  if (g.iv_rank < 14) {
+    return { id: '14 iv rank', level: 'warning' };
+  }
+  return null;
+};
+
+export const rules: Rule[] = [dteRule, profitRule, lossRule, ivRankRule];
