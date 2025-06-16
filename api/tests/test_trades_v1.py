@@ -140,3 +140,63 @@ async def test_market_data(client, monkeypatch):
     )
     assert resp.status_code == 200
     assert resp.json() == [{"symbol": "/ESU5", "mark": "100", "close": "90"}]
+
+
+@pytest.mark.asyncio
+async def test_volatility_future_dedup(client, monkeypatch):
+    """Verify futures symbols are normalized and deduplicated when fetching IV rank."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_accounts(token):
+        return [{"account_number": "789", "nickname": "Fut"}]
+
+    def fake_positions(token, acct):
+        # Two different contracts for the same underlying
+        return [
+            {
+                "instrument-type": "Option",
+                "underlying-symbol": "/ESU5",
+                "expires-at": "2025-06-20",
+                "cost-effect": "Credit",
+                "average-open-price": "1.0",
+                "close-price": "0.5",
+                "average-daily-market-close-price": "0.75",
+                "quantity": "1",
+            },
+            {
+                "instrument-type": "Option",
+                "underlying-symbol": "/ESZ5",
+                "expires-at": "2025-12-20",
+                "cost-effect": "Credit",
+                "average-open-price": "2.0",
+                "close-price": "1.0",
+                "average-daily-market-close-price": "1.5",
+                "quantity": "1",
+            },
+        ]
+
+    def fake_vol(token, symbols):
+        # Should be deduplicated to just the root symbol
+        assert symbols == ["/ES"]
+        return [{"symbol": "/ES", "implied-volatility-index-rank": "0.25"}]
+
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.get_active_token", fake_token
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_positions", fake_positions
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
+    )
+
+    resp = await client.get("/v1/trades")
+    assert resp.status_code == 200
+    data = resp.json()["accounts"][0]["groups"]
+    assert len(data) == 2
+    assert all(g["iv_rank"] == 25.0 for g in data)
