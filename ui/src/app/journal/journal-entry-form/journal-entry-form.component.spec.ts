@@ -6,6 +6,7 @@ import { SharedMaterialModule } from '../../shared/material.module';
 
 import { JournalEntryFormComponent } from './journal-entry-form.component';
 import { JournalApiService } from '../journal-api.service';
+import { FuturesService } from '../../shared/futures.service';
 import { JournalEntry } from '../journal.models';
 
 describe('JournalEntryFormComponent', () => {
@@ -13,15 +14,21 @@ describe('JournalEntryFormComponent', () => {
   let fixture: ComponentFixture<JournalEntryFormComponent>;
 
   let apiSpy: jasmine.SpyObj<JournalApiService>;
+  let futuresSpy: jasmine.SpyObj<FuturesService>;
 
   beforeEach(async () => {
     apiSpy = jasmine.createSpyObj('JournalApiService', ['create', 'update', 'delete', 'getMarketData']);
     apiSpy.getMarketData.and.returnValue(of([{ mark: '6000', close: '5990' }]));
+    futuresSpy = jasmine.createSpyObj('FuturesService', ['getCurrentESContract']);
+    futuresSpy.getCurrentESContract.and.returnValue('/ESU5');
 
     await TestBed.configureTestingModule({
       declarations: [JournalEntryFormComponent],
       imports: [ReactiveFormsModule, SharedMaterialModule],
-      providers: [{ provide: JournalApiService, useValue: apiSpy }],
+      providers: [
+        { provide: JournalApiService, useValue: apiSpy },
+        { provide: FuturesService, useValue: futuresSpy }
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
     }).compileComponents();
 
@@ -37,7 +44,8 @@ describe('JournalEntryFormComponent', () => {
   it('ngOnInit populates form with market data', () => {
     apiSpy.getMarketData.and.returnValue(of([{ mark: '6010.7', close: '6000' }]));
     component.ngOnInit();
-    expect(apiSpy.getMarketData).toHaveBeenCalled();
+    expect(futuresSpy.getCurrentESContract).toHaveBeenCalled();
+    expect(apiSpy.getMarketData).toHaveBeenCalledWith([], [], ['/ESU5'], []);
     expect(component.form.get('esPrice')?.value).toBe(6010);
     expect(component.form.get('marketDirection')?.value).toBe('up');
   });
@@ -93,7 +101,8 @@ describe('JournalEntryFormComponent', () => {
   it('addEvent adds new form group with latest price', () => {
     const len = component.events.length;
     component.addEvent();
-    expect(apiSpy.getMarketData).toHaveBeenCalled();
+    expect(futuresSpy.getCurrentESContract).toHaveBeenCalled();
+    expect(apiSpy.getMarketData).toHaveBeenCalledWith([], [], ['/ESU5'], []);
     expect(component.events.length).toBe(len + 1);
     const group = component.events.at(len) as any;
     expect(group.get('time')).toBeTruthy();

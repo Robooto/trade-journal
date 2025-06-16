@@ -8,6 +8,7 @@ import {
 } from '@angular/forms';
 import { JournalEntry } from '../journal.models';
 import {JournalApiService} from '../journal-api.service';
+import { FuturesService } from '../../shared/futures.service';
 
 @Component({
   selector: 'app-journal-entry-form',
@@ -25,14 +26,16 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   constructor(
     private fb: FormBuilder,
-    private api: JournalApiService
+    private api: JournalApiService,
+    private futures: FuturesService
   ) {}
 
   ngOnInit() {
     this.buildForm();
 
+    const symbol = this.futures.getCurrentESContract();
     this.api
-      .getMarketData([], [], ['/ESU5'], [])
+      .getMarketData([], [], [symbol], [])
       .subscribe((data) => {
         if (!data || !data.length) return;
         const item = data[0];
@@ -108,8 +111,9 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
     });
     this.events.push(group);
 
+    const symbol = this.futures.getCurrentESContract();
     this.api
-      .getMarketData([], [], ['/ESU5'], [])
+      .getMarketData([], [], [symbol], [])
       .subscribe((data) => {
         if (!data || !data.length) return;
         const item = data[0];
