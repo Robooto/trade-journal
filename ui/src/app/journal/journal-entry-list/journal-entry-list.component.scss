@@ -1,12 +1,4 @@
-/* journal-entry-list.component.scss */
-
-:host ::ng-deep mat-expansion-panel-header {
-  display: flex !important;
-  align-items: center !important;
-}
-
 :host ::ng-deep .mat-expansion-panel-header-title {
-  /* force title to take ~33% */
   flex: 0 0 20% !important;
   max-width: 20% !important;
   overflow: hidden;
@@ -15,13 +7,10 @@
 }
 
 :host ::ng-deep .mat-expansion-panel-header-description {
-  /* force description to take ~66% */
-  flex: 0 0 80% !important;
-  max-width: 80% !important;
-  justify-content: flex-start !important;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
 :host {
