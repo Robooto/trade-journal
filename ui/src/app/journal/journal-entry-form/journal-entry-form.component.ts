@@ -40,13 +40,13 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
         if (!data || !data.length) return;
         const item = data[0];
         const mark = parseFloat(item['mark']);
-        const close = parseFloat(item['close']);
+        const open = parseFloat(item['open']);
         if (!isNaN(mark)) {
           this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
         }
-        if (!isNaN(mark) && !isNaN(close)) {
+        if (!isNaN(mark) && !isNaN(open)) {
           this.form.patchValue({
-            marketDirection: mark > close ? 'up' : 'down'
+            marketDirection: mark > open ? 'up' : 'down'
           });
         }
       });
