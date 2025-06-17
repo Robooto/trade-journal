@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { guidelines, resources, ResourceLink } from '../dashboard-data';
+import {resources, ResourceLink, dailyGuidelines, tradeGuidelines} from '../dashboard-data';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -8,6 +8,7 @@ import { guidelines, resources, ResourceLink } from '../dashboard-data';
   standalone: false,
 })
 export class DashboardPageComponent {
-  guidelines = guidelines;
   resources: ResourceLink[] = resources;
+  protected readonly dailyGuidelines = dailyGuidelines;
+  protected readonly tradeGuidelines = tradeGuidelines;
 }

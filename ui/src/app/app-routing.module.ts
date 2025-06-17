@@ -13,10 +13,15 @@ const routes: Routes = [
       import('./positions/positions.module').then(m => m.PositionsModule)
   },
   {
-    path: '',
+    path: 'dashboard',
     loadChildren: () =>
       import('./dashboard/dashboard.module').then(m => m.DashboardModule)
   },
+  {
+    path: '',
+    redirectTo: '/dashboard',
+    pathMatch: 'full'
+  }
   // future feature modules here...
 ];
 
