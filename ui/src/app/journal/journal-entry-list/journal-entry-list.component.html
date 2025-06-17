@@ -17,7 +17,7 @@
         </span>
       </mat-panel-title>
       <mat-panel-description *ngIf="!panel.expanded">
-        {{ e.notes | slice:0:175 }}<span *ngIf="e.notes.length>175">…</span>
+        {{ e.notes }}
       </mat-panel-description>
     </mat-expansion-panel-header>
 
