@@ -40,7 +40,7 @@ class JournalEntryCreate(JournalEntryBase):
 
 
 class JournalEntryUpdate(BaseModel):
-    date: Optional[date] = None
+    date: Optional[date]
     es_price: Optional[float] = Field(None, alias="esPrice")
     delta: Optional[float] = None
     notes: Optional[str] = None
