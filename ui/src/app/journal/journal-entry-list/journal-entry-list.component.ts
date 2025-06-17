@@ -1,5 +1,5 @@
 // src/app/journal-entry-list/journal-entry-list.component.ts
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output, HostListener} from '@angular/core';
 import { JournalEntry } from '../journal.models';
 
 @Component({
@@ -13,11 +13,24 @@ export class JournalEntryListComponent implements OnInit {
   @Input() entries: JournalEntry[] = [];
   @Output() entrySelected = new EventEmitter<JournalEntry>();
 
+  maxSnippetLength = 175;
+
   onPanelOpen(entry: JournalEntry) {
     this.entrySelected.emit(entry);
   }
 
   ngOnInit(): void {
+    this.updateSnippetLength();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.updateSnippetLength();
+  }
+
+  private updateSnippetLength() {
+    const width = window.innerWidth;
+    this.maxSnippetLength = Math.min(Math.max(Math.floor(width / 6), 50), 400);
   }
 
   copyEntry(entry: JournalEntry) {
