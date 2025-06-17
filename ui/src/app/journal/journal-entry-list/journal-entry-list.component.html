@@ -16,8 +16,8 @@
           ({{ e.events.length }} {{ e.events.length === 1 ? 'event' : 'events' }})
         </span>
       </mat-panel-title>
-      <mat-panel-description *ngIf="!panel.expanded">
-        {{ e.notes | slice:0:charLimit }}<span *ngIf="e.notes.length>charLimit">…</span>
+      <mat-panel-description *ngIf="!panel.expanded" class="notes-snippet">
+        {{ e.notes }}
       </mat-panel-description>
     </mat-expansion-panel-header>
 
