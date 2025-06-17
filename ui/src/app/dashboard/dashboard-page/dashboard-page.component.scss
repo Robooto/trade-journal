@@ -1,0 +1,16 @@
+.dashboard {
+  padding: 1rem;
+}
+
+section h2 {
+  margin-top: 0;
+}
+
+.dashboard {
+  display: flex;
+  padding: 1rem;
+
+  > section {
+    flex: 1;
+  }
+}
