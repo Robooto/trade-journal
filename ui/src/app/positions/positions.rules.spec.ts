@@ -50,8 +50,8 @@ describe('positions rules', () => {
   it('ivRankRule flags alerts and warnings correctly', () => {
     const warning = makeGroup({ iv_rank: 12 });
     const alert = makeGroup({ iv_rank: 9 });
-    expect(ivRankRule(warning)).toEqual({ id: '14 iv rank', level: 'warning' });
-    expect(ivRankRule(alert)).toEqual({ id: '14 iv rank', level: 'alert' });
+    expect(ivRankRule(warning)).toEqual({ id: 'low iv rank', level: 'warning' });
+    expect(ivRankRule(alert)).toEqual({ id: 'low iv rank', level: 'alert' });
   });
 
   it('evaluateRules runs only triggered rules', () => {
@@ -82,6 +82,6 @@ describe('positions rules', () => {
     const results = evaluateRules(g, new Date('2025-01-01'));
     expect(results.length).toBe(2);
     expect(results[0]).toEqual({ id: '21 dte', level: 'alert' });
-    expect(results[1]).toEqual({ id: '14 iv rank', level: 'warning' });
+    expect(results[1]).toEqual({ id: 'low iv rank', level: 'warning' });
   });
 });
