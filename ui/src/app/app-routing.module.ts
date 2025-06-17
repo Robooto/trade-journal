@@ -14,8 +14,8 @@ const routes: Routes = [
   },
   {
     path: '',
-    redirectTo: 'journal',
-    pathMatch: 'full'
+    loadChildren: () =>
+      import('./dashboard/dashboard.module').then(m => m.DashboardModule)
   },
   // future feature modules here...
 ];

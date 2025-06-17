@@ -1,0 +1,17 @@
+<div class="dashboard">
+  <section class="guidelines">
+    <h2>Daily Trading Guidelines</h2>
+    <ul>
+      <li *ngFor="let rule of guidelines">{{ rule }}</li>
+    </ul>
+  </section>
+
+  <section class="resources">
+    <h2>Analysis Links</h2>
+    <ul>
+      <li *ngFor="let r of resources">
+        <a [href]="r.url" target="_blank" rel="noopener">{{ r.name }}</a>
+      </li>
+    </ul>
+  </section>
+</div>
