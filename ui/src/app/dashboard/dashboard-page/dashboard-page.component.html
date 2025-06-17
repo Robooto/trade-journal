@@ -7,9 +7,20 @@
   </section>
 
   <section class="resources">
-    <h2>Analysis Links</h2>
+    <h2>Daily Overview Analysis</h2>
+    <button mat-raised-button color="primary" (click)="openAll(dailyOverview)">Open All</button>
     <ul>
-      <li *ngFor="let r of resources">
+      <li *ngFor="let r of dailyOverview">
+        <a [href]="r.url" target="_blank" rel="noopener">{{ r.name }}</a>
+      </li>
+    </ul>
+  </section>
+
+  <section class="resources">
+    <h2>SpotGamma Tools</h2>
+    <button mat-raised-button color="primary" (click)="openAll(spotGammaTools)">Open All</button>
+    <ul>
+      <li *ngFor="let r of spotGammaTools">
         <a [href]="r.url" target="_blank" rel="noopener">{{ r.name }}</a>
       </li>
     </ul>

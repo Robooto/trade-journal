@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {resources, ResourceLink, dailyGuidelines, tradeGuidelines} from '../dashboard-data';
+import {dailyOverviewAnalysis, spotGammaToolLinks, ResourceLink, dailyGuidelines, tradeGuidelines} from '../dashboard-data';
 
 @Component({
   selector: 'app-dashboard-page',
@@ -8,7 +8,12 @@ import {resources, ResourceLink, dailyGuidelines, tradeGuidelines} from '../dash
   standalone: false,
 })
 export class DashboardPageComponent {
-  resources: ResourceLink[] = resources;
-  protected readonly dailyGuidelines = dailyGuidelines;
-  protected readonly tradeGuidelines = tradeGuidelines;
+  dailyOverview: ResourceLink[] = dailyOverviewAnalysis;
+  spotGammaTools: ResourceLink[] = spotGammaToolLinks;
+  readonly dailyGuidelines = dailyGuidelines;
+  readonly tradeGuidelines = tradeGuidelines;
+
+  openAll(links: ResourceLink[]): void {
+    links.forEach(link => window.open(link.url, '_blank'));
+  }
 }
