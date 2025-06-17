@@ -71,10 +71,10 @@ export const ivRankRule: Rule = g => {
     return null;
   }
   if (g.iv_rank < 10) {
-    return { id: '14 iv rank', level: 'alert' };
+    return { id: 'low iv rank', level: 'alert' };
   }
   if (g.iv_rank < 14) {
-    return { id: '14 iv rank', level: 'warning' };
+    return { id: 'low iv rank', level: 'warning' };
   }
   return null;
 };

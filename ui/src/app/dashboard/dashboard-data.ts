@@ -24,10 +24,12 @@ export const dailyGuidelines: string[] = [
 
 export const resources: ResourceLink[] = [
   { name: 'SpotGamma Founders Notes', url: 'https://dashboard.spotgamma.com/foundersNotes' },
-  { name: 'SpotGamma Dashboard', url: 'https://dashboard.spotgamma.com/home?eh-model=legacy' },
   { name: 'TradingView ES1!', url: 'https://www.tradingview.com/chart/HJq2QPjq/?symbol=CME_MINI%3AES1%21' },
   { name: 'Market News', url: 'https://www.forexfactory.com/calendar'},
   { name: 'Financial Juice', url: 'https://www.financialjuice.com/' },
+  { name: 'SpotGamma Dashboard', url: 'https://dashboard.spotgamma.com/home?eh-model=legacy' },
+  { name: 'SpotGamma Trace', url: 'https://dashboard.spotgamma.com/trace?lense=1&traceSym=SPX' },
+  { name: 'SpotGamma Hero', url: 'https://dashboard.spotgamma.com/hiro?eh-model=legacy'},
   { name: 'SG Equity Hub', url: 'https://dashboard.spotgamma.com/equityhub?sym=SPX&eh-model=synthoi' },
   { name: 'SG Scanners', url: 'https://dashboard.spotgamma.com/scanners?eh-model=legacy' },
 ];
