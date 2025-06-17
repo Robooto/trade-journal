@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { DashboardPageComponent } from './dashboard-page.component';
-import { guidelines, resources } from '../dashboard-data';
+import { dailyOverviewAnalysis, spotGammaToolLinks, dailyGuidelines, tradeGuidelines } from '../dashboard-data';
 
 describe('DashboardPageComponent', () => {
   let component: DashboardPageComponent;
@@ -18,8 +18,10 @@ describe('DashboardPageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should expose guidelines and resources', () => {
-    expect(component.guidelines).toBe(guidelines);
-    expect(component.resources).toBe(resources);
+  it('should expose links and guidelines', () => {
+    expect(component.dailyOverview).toBe(dailyOverviewAnalysis);
+    expect(component.spotGammaTools).toBe(spotGammaToolLinks);
+    expect(component.dailyGuidelines).toBe(dailyGuidelines);
+    expect(component.tradeGuidelines).toBe(tradeGuidelines);
   });
 });
