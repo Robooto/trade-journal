@@ -14,6 +14,6 @@ export class DashboardPageComponent {
   readonly tradeGuidelines = tradeGuidelines;
 
   openAll(links: ResourceLink[]): void {
-    links.forEach(link => window.open(link.url, '_blank'));
+    links.slice().reverse().forEach(link => window.open(link.url, '_blank'));
   }
 }
