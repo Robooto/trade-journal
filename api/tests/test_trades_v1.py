@@ -91,6 +91,7 @@ async def test_trades_grouped(client, monkeypatch):
                         "current_group_price": -0.7,
                         "group_approximate_p_l": -2.8,
                         "percent_credit_received": 80,
+                        "total_delta": -1.0,
                         "iv_rank": 19.1,
                         "positions": [
                             {

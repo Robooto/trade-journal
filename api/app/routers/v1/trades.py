@@ -156,6 +156,7 @@ def get_all_positions(db: Session = Depends(get_db)):
         for (underlying, expires), plist in grouping.items():
             total_credit_unrounded = 0.0
             current_credit_unrounded = 0.0
+            delta_sum_unrounded = 0.0
 
             for p in plist:
                 cost_effect = p.get("cost-effect", "")
@@ -175,6 +176,12 @@ def get_all_positions(db: Session = Depends(get_db)):
                     total_credit_unrounded -= avg_open
                     current_credit_unrounded -= close_price
 
+                md = p.get("market_data", {})
+                try:
+                    delta_sum_unrounded += float(md.get("computed_delta", 0))
+                except (TypeError, ValueError):
+                    pass
+
             total_credit_received = round(total_credit_unrounded, 2)
             current_group_price = round(current_credit_unrounded, 2)
             group_pl = round(total_credit_received - current_group_price, 2)
@@ -184,6 +191,8 @@ def get_all_positions(db: Session = Depends(get_db)):
             else:
                 percent_credit_received = None
 
+            total_delta = round(delta_sum_unrounded, 2)
+
             groups_list.append({
                 "underlying_symbol": underlying,
                 "expires_at": expires,
@@ -191,6 +200,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "current_group_price": current_group_price,
                 "group_approximate_p_l": group_pl,
                 "percent_credit_received": percent_credit_received,
+                "total_delta": total_delta,
                 "positions": plist,
             })
 
