@@ -204,7 +204,7 @@ def get_all_positions(db: Session = Depends(get_db)):
             group_pl = round(total_credit_received - current_group_price, 2)
 
             if total_credit_received != 0:
-                percent_credit_received = int((group_pl / total_credit_received) * 100)
+                percent_credit_received = int((current_group_price / total_credit_received) * 100)
             else:
                 percent_credit_received = None
 
