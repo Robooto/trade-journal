@@ -29,6 +29,7 @@ async def test_trades_grouped(client, monkeypatch):
                     "close-price": "0.5",
                     "average-daily-market-close-price": "0.75",
                     "quantity": "1",
+                    "quantity-direction": "Short",
                 },
                 {
                     "instrument-type": "Equity Option",
@@ -40,6 +41,7 @@ async def test_trades_grouped(client, monkeypatch):
                     "close-price": "0.2",
                     "average-daily-market-close-price": "0.30",
                     "quantity": "2",
+                    "quantity-direction": "Short",
                 },
             ]
         else:
@@ -54,7 +56,7 @@ async def test_trades_grouped(client, monkeypatch):
     def fake_market(token, eq, eq_opt, future, future_opt):
         assert eq_opt == ["SPY_C"]
         assert future_opt == []
-        return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
+        return [{"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"}]
 
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
@@ -101,8 +103,15 @@ async def test_trades_grouped(client, monkeypatch):
                                 "close-price": "0.5",
                                 "average-daily-market-close-price": "0.75",
                                 "quantity": "1",
+                                "quantity-direction": "Short",
                                 "approximate-p-l": 1.75,
-                                "market_data": {"symbol": "SPY_C", "mark": "10", "close": "9"},
+                                "market_data": {
+                                    "symbol": "SPY_C",
+                                    "mark": "10",
+                                    "close": "9",
+                                    "delta": "0.5",
+                                    "computed_delta": -0.5,
+                                },
                             },
                             {
                                 "instrument-type": "Equity Option",
@@ -114,8 +123,15 @@ async def test_trades_grouped(client, monkeypatch):
                                 "close-price": "0.2",
                                 "average-daily-market-close-price": "0.30",
                                 "quantity": "2",
+                                "quantity-direction": "Short",
                                 "approximate-p-l": 1.4,
-                                "market_data": {"symbol": "SPY_C", "mark": "10", "close": "9"},
+                                "market_data": {
+                                    "symbol": "SPY_C",
+                                    "mark": "10",
+                                    "close": "9",
+                                    "delta": "0.5",
+                                    "computed_delta": -0.5,
+                                },
                             },
                         ],
                     }
