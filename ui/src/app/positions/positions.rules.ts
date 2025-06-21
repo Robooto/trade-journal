@@ -38,7 +38,7 @@ export const profitRule: Rule = g => {
   const total = g.total_credit_received;
   let pct = g.percent_credit_received;
   if (pct === null || pct === undefined) {
-    pct = total ? Math.round((g.group_approximate_p_l / total) * 100) : 0;
+    pct = total ? Math.round(((total - g.current_group_price) / total) * 100) : 0;
   }
 
   if (pct >= 50) {
@@ -54,7 +54,7 @@ export const lossRule: Rule = g => {
   const total = g.total_credit_received;
   let pct = g.percent_credit_received;
   if (pct === null || pct === undefined) {
-    pct = total ? Math.round((g.group_approximate_p_l / total) * 100) : 0;
+    pct = total ? Math.round(((total - g.current_group_price) / total) * 100) : 0;
   }
 
   if (pct <= -150) {

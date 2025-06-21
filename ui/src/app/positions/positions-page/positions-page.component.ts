@@ -16,7 +16,6 @@ export class PositionsPageComponent implements OnInit {
     'expires',
     'credit',
     'price',
-    'pl',
     'percent',
     'delta',
     'ivrank',
