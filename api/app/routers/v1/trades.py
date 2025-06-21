@@ -144,10 +144,18 @@ def get_all_positions(db: Session = Depends(get_db)):
                 mark = float(md_item.get("mark"))
                 quantity = int(p.get("quantity", 1))
                 multiplier = int(p.get("multiplier", 1))
+                qty_dir = p.get("quantity-direction")
             except (TypeError, ValueError):
                 approximate_pl = 0.0
             else:
-                approximate_pl = (avg_open - mark) * quantity * multiplier
+                # Long positions profit when the mark is above the open price,
+                # while short positions profit when the mark is below.  If the
+                # direction is missing, fall back to the short calculation so
+                # the value remains negative when mark > average price.
+                if qty_dir == "Long":
+                    approximate_pl = (mark - avg_open) * quantity * multiplier
+                else:
+                    approximate_pl = (avg_open - mark) * quantity * multiplier
 
             p["approximate-p-l"] = approximate_pl
 

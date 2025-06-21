@@ -244,3 +244,60 @@ async def test_volatility_future_dedup(client, monkeypatch):
     data = resp.json()["accounts"][0]["groups"]
     assert len(data) == 2
     assert all(g["iv_rank"] == 25.0 for g in data)
+
+
+@pytest.mark.asyncio
+async def test_approximate_pl_long(client, monkeypatch):
+    """Verify approximate P/L calculation for long positions."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_accounts(token):
+        return [{"account_number": "111", "nickname": "Long"}]
+
+    def fake_positions(token, acct):
+        return [
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_C",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "cost-effect": "Debit",
+                "average-open-price": "2",
+                "close-price": "1",
+                "average-daily-market-close-price": "1.5",
+                "quantity": "1",
+                "quantity-direction": "Long",
+                "multiplier": "100",
+            }
+        ]
+
+    def fake_vol(token, symbols):
+        assert symbols == ["SPY"]
+        return [{"symbol": "SPY", "implied-volatility-index-rank": "0.2"}]
+
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        assert eq_opt == ["SPY_C"]
+        return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
+
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.get_active_token", fake_token
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_positions", fake_positions
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+
+    resp = await client.get("/v1/trades")
+    assert resp.status_code == 200
+    pos = resp.json()["accounts"][0]["groups"][0]["positions"][0]
+    assert pos["approximate-p-l"] == 800.0
