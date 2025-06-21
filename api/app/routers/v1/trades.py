@@ -30,8 +30,8 @@ def get_all_positions(db: Session = Depends(get_db)):
       1. Compute an 'approximate-p-l'.
       2. Group by 'underlying-symbol' and 'expires-at'.
       3. For each group, compute:
-         - total_credit_received (rounded to 2 decimals)
-         - current_group_price (rounded to 2 decimals)
+         - total_credit_received using the quantity direction sign and group multiplier
+         - current_group_price as the sum of the positions' approximate P/L values
          - group_approximate_p_l = total_credit_received - current_group_price (rounded to 2 decimals)
          - percent_credit_received = int((group_approximate_p_l / total_credit_received) * 100), or None
     """
@@ -168,26 +168,30 @@ def get_all_positions(db: Session = Depends(get_db)):
         groups_list = []
         for (underlying, expires), plist in grouping.items():
             total_credit_unrounded = 0.0
-            current_credit_unrounded = 0.0
+            current_price_unrounded = 0.0
             delta_sum_unrounded = 0.0
 
-            for p in plist:
-                cost_effect = p.get("cost-effect", "")
+            multiplier = 1
+            for idx, p in enumerate(plist):
+                qty_dir = p.get("quantity-direction")
                 try:
                     avg_open = float(p.get("average-open-price", "0"))
                 except (ValueError, TypeError):
                     avg_open = 0.0
                 try:
-                    close_price = float(p.get("close-price", "0"))
+                    pl_val = float(p.get("approximate-p-l", 0))
                 except (ValueError, TypeError):
-                    close_price = 0.0
+                    pl_val = 0.0
 
-                if cost_effect == "Debit":
-                    total_credit_unrounded += avg_open
-                    current_credit_unrounded += close_price
-                elif cost_effect == "Credit":
-                    total_credit_unrounded -= avg_open
-                    current_credit_unrounded -= close_price
+                if idx == 0:
+                    try:
+                        multiplier = int(p.get("multiplier", 1))
+                    except (TypeError, ValueError):
+                        multiplier = 1
+
+                sign = -1 if qty_dir == "Long" else 1
+                total_credit_unrounded += sign * avg_open
+                current_price_unrounded += pl_val
 
                 md = p.get("market_data", {})
                 try:
@@ -195,12 +199,12 @@ def get_all_positions(db: Session = Depends(get_db)):
                 except (TypeError, ValueError):
                     pass
 
-            total_credit_received = round(total_credit_unrounded, 2)
-            current_group_price = round(current_credit_unrounded, 2)
+            total_credit_received = round(total_credit_unrounded * multiplier, 2)
+            current_group_price = round(current_price_unrounded, 2)
             group_pl = round(total_credit_received - current_group_price, 2)
 
             if total_credit_received != 0:
-                percent_credit_received = int((group_pl / total_credit_received) * 100)
+                percent_credit_received = int((current_group_price / total_credit_received) * 100)
             else:
                 percent_credit_received = None
 
