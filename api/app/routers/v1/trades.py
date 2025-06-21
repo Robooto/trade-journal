@@ -132,7 +132,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                             sign = 1 if qty_dir == "Short" else -1
                         else:
                             sign = 1
-                        md_item["computed_delta"] = sign * delta_float
+                        md_item["computed_delta"] = round(sign * delta_float, 2)
             else:
                 md_item = {}
 
@@ -156,7 +156,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                 else:
                     approximate_pl = (avg_open - mark) * quantity * multiplier
 
-            p["approximate-p-l"] = approximate_pl
+            p["approximate-p-l"] = round(approximate_pl, 2)
 
         grouping: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
         for p in pos_list:
