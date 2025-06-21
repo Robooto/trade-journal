@@ -71,17 +71,7 @@ def get_all_positions(db: Session = Depends(get_db)):
 
         augmented: List[Dict] = []
         for pos in filtered_positions:
-            try:
-                avg_open = float(pos.get("average-open-price", "0"))
-                avg_close = float(pos.get("average-daily-market-close-price", "0"))
-                quantity = int(pos.get("quantity", 1))
-            except (ValueError, TypeError):
-                approximate_pl = 0.0
-            else:
-                approximate_pl = (avg_open - avg_close) * quantity
-
             p = pos.copy()
-            p["approximate-p-l"] = approximate_pl
 
             symbol = p.get("symbol")
             inst_type = p.get("instrument-type", "")
@@ -124,7 +114,7 @@ def get_all_positions(db: Session = Depends(get_db)):
         nickname = acct["nickname"]
         pos_list = acct["positions"]
 
-        # attach market data
+        # attach market data and compute approximate P/L
         for p in pos_list:
             sym = p.get("symbol")
             if sym and sym in market_map:
@@ -144,7 +134,22 @@ def get_all_positions(db: Session = Depends(get_db)):
                         else:
                             sign = 1
                         md_item["computed_delta"] = sign * delta_float
-                p["market_data"] = md_item
+            else:
+                md_item = {}
+
+            p["market_data"] = md_item
+
+            try:
+                avg_open = float(p.get("average-open-price", "0"))
+                mark = float(md_item.get("mark"))
+                quantity = int(p.get("quantity", 1))
+                multiplier = int(p.get("multiplier", 1))
+            except (TypeError, ValueError):
+                approximate_pl = 0.0
+            else:
+                approximate_pl = (avg_open - mark) * quantity * multiplier
+
+            p["approximate-p-l"] = approximate_pl
 
         grouping: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
         for p in pos_list:
