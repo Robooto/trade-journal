@@ -30,6 +30,7 @@ async def test_trades_grouped(client, monkeypatch):
                     "average-daily-market-close-price": "0.75",
                     "quantity": "1",
                     "quantity-direction": "Short",
+                    "multiplier": "100",
                 },
                 {
                     "instrument-type": "Equity Option",
@@ -42,6 +43,7 @@ async def test_trades_grouped(client, monkeypatch):
                     "average-daily-market-close-price": "0.30",
                     "quantity": "2",
                     "quantity-direction": "Short",
+                    "multiplier": "100",
                 },
             ]
         else:
@@ -105,7 +107,8 @@ async def test_trades_grouped(client, monkeypatch):
                                 "average-daily-market-close-price": "0.75",
                                 "quantity": "1",
                                 "quantity-direction": "Short",
-                                "approximate-p-l": 1.75,
+                                "multiplier": "100",
+                                "approximate-p-l": -750.0,
                                 "market_data": {
                                     "symbol": "SPY_C",
                                     "mark": "10",
@@ -125,7 +128,8 @@ async def test_trades_grouped(client, monkeypatch):
                                 "average-daily-market-close-price": "0.30",
                                 "quantity": "2",
                                 "quantity-direction": "Short",
-                                "approximate-p-l": 1.4,
+                                "multiplier": "100",
+                                "approximate-p-l": -1800.0,
                                 "market_data": {
                                     "symbol": "SPY_C",
                                     "mark": "10",
