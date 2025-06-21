@@ -20,7 +20,8 @@ async def test_trades_grouped(client, monkeypatch):
             return [
                 {"instrument-type": "Equity", "underlying-symbol": "MSFT"},
                 {
-                    "instrument-type": "Option",
+                    "instrument-type": "Equity Option",
+                    "symbol": "SPY_C",
                     "underlying-symbol": "SPY",
                     "expires-at": "2024-01-19",
                     "cost-effect": "Credit",
@@ -30,7 +31,8 @@ async def test_trades_grouped(client, monkeypatch):
                     "quantity": "1",
                 },
                 {
-                    "instrument-type": "Option",
+                    "instrument-type": "Equity Option",
+                    "symbol": "SPY_C",
                     "underlying-symbol": "SPY",
                     "expires-at": "2024-01-19",
                     "cost-effect": "Credit",
@@ -49,6 +51,11 @@ async def test_trades_grouped(client, monkeypatch):
         assert symbols == ["SPY"]
         return [{"symbol": "SPY", "implied-volatility-index-rank": "0.191"}]
 
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        assert eq_opt == ["SPY_C"]
+        assert future_opt == []
+        return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -60,6 +67,9 @@ async def test_trades_grouped(client, monkeypatch):
     )
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
     )
 
     resp = await client.get("/v1/trades")
@@ -82,7 +92,8 @@ async def test_trades_grouped(client, monkeypatch):
                         "iv_rank": 19.1,
                         "positions": [
                             {
-                                "instrument-type": "Option",
+                                "instrument-type": "Equity Option",
+                                "symbol": "SPY_C",
                                 "underlying-symbol": "SPY",
                                 "expires-at": "2024-01-19",
                                 "cost-effect": "Credit",
@@ -91,9 +102,11 @@ async def test_trades_grouped(client, monkeypatch):
                                 "average-daily-market-close-price": "0.75",
                                 "quantity": "1",
                                 "approximate-p-l": 1.75,
+                                "market_data": {"symbol": "SPY_C", "mark": "10", "close": "9"},
                             },
                             {
-                                "instrument-type": "Option",
+                                "instrument-type": "Equity Option",
+                                "symbol": "SPY_C",
                                 "underlying-symbol": "SPY",
                                 "expires-at": "2024-01-19",
                                 "cost-effect": "Credit",
@@ -102,6 +115,7 @@ async def test_trades_grouped(client, monkeypatch):
                                 "average-daily-market-close-price": "0.30",
                                 "quantity": "2",
                                 "approximate-p-l": 1.4,
+                                "market_data": {"symbol": "SPY_C", "mark": "10", "close": "9"},
                             },
                         ],
                     }
@@ -156,7 +170,8 @@ async def test_volatility_future_dedup(client, monkeypatch):
         # Two different contracts for the same underlying
         return [
             {
-                "instrument-type": "Option",
+                "instrument-type": "Future Option",
+                "symbol": "/ESU5O",
                 "underlying-symbol": "/ESU5",
                 "expires-at": "2025-06-20",
                 "cost-effect": "Credit",
@@ -166,7 +181,8 @@ async def test_volatility_future_dedup(client, monkeypatch):
                 "quantity": "1",
             },
             {
-                "instrument-type": "Option",
+                "instrument-type": "Future Option",
+                "symbol": "/ESZ5O",
                 "underlying-symbol": "/ESZ5",
                 "expires-at": "2025-12-20",
                 "cost-effect": "Credit",
@@ -182,6 +198,10 @@ async def test_volatility_future_dedup(client, monkeypatch):
         assert symbols == ["/ES"]
         return [{"symbol": "/ES", "implied-volatility-index-rank": "0.25"}]
 
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        assert future_opt == ["/ESU5O", "/ESZ5O"]
+        return []
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -193,6 +213,9 @@ async def test_volatility_future_dedup(client, monkeypatch):
     )
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
     )
 
     resp = await client.get("/v1/trades")
