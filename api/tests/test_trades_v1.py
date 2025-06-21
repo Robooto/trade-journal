@@ -92,7 +92,7 @@ async def test_trades_grouped(client, monkeypatch):
                         "total_credit_received": 350.0,
                         "current_group_price": -2550.0,
                         "group_approximate_p_l": 2900.0,
-                        "percent_credit_received": 828,
+                        "percent_credit_received": -728,
                         "total_delta": -1.0,
                         "iv_rank": 19.1,
                         "positions": [
