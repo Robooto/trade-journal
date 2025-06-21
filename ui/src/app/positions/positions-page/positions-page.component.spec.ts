@@ -36,7 +36,6 @@ describe('PositionsPageComponent', () => {
       expires_at: '2025-01-15',
       total_credit_received: 10,
       current_group_price: 5,
-      group_approximate_p_l: 5,
       percent_credit_received: 55,
       total_delta: 0,
       positions: []
@@ -55,7 +54,6 @@ describe('PositionsPageComponent', () => {
       expires_at: '',
       total_credit_received: 0,
       current_group_price: 0,
-      group_approximate_p_l: 0,
       percent_credit_received: null,
       total_delta: 0,
       positions: [],

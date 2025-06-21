@@ -7,7 +7,6 @@ function makeGroup(overrides: Partial<PositionGroup> = {}): PositionGroup {
     expires_at: '2025-01-10',
     total_credit_received: 10,
     current_group_price: 5,
-    group_approximate_p_l: 5,
     percent_credit_received: 50,
     total_delta: 0,
     positions: [],
@@ -30,7 +29,7 @@ describe('positions rules', () => {
   });
 
   it('profitRule calculates percent when not provided', () => {
-    const g = makeGroup({ percent_credit_received: null, group_approximate_p_l: 4, total_credit_received: 10 });
+    const g = makeGroup({ percent_credit_received: null, current_group_price: 6, total_credit_received: 10 });
     expect(profitRule(g)).toEqual({ id: '50% profit', level: 'warning' });
   });
 
@@ -42,7 +41,7 @@ describe('positions rules', () => {
   it('lossRule calculates percent when not provided', () => {
     const g = makeGroup({
       percent_credit_received: null,
-      group_approximate_p_l: -15,
+      current_group_price: 25,
       total_credit_received: 10
     });
     expect(lossRule(g)).toEqual({ id: '2x loss', level: 'warning' });

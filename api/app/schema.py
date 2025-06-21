@@ -105,7 +105,6 @@ class GroupedPositions(BaseModel):
     expires_at: str
     total_credit_received: float
     current_group_price: float
-    group_approximate_p_l: float
     percent_credit_received: Optional[int] = None
     total_delta: Optional[float] = None
     iv_rank: Optional[float] = Field(None, alias="iv_rank")
