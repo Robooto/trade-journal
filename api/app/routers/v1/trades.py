@@ -47,7 +47,11 @@ def get_all_positions(db: Session = Depends(get_db)):
         logging.error(f"Failed to fetch accounts: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to fetch accounts: {e}")
 
-    accounts_data = []
+    # Gather positions and unique symbols for market data
+    positions_by_account = []
+    equity_option_syms: set[str] = set()
+    future_option_syms: set[str] = set()
+
     for acct in accounts:
         acct_num = acct.get("account_number")
         nickname = acct.get("nickname", "")
@@ -57,18 +61,15 @@ def get_all_positions(db: Session = Depends(get_db)):
             logging.error(f"Failed to fetch positions for account {acct_num}: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to fetch positions for account {acct_num}: {e}")
 
-        # 1) Filter out any position where instrument-type == "Equity"
         filtered_positions = [
             pos for pos in raw_positions
             if pos.get("instrument-type", "") != "Equity"
         ]
 
-        # If no positions remain after filtering, skip this account
         if not filtered_positions:
             continue
 
-        # 2) Compute approximate P/L on each remaining position
-        augmented_positions = []
+        augmented: List[Dict] = []
         for pos in filtered_positions:
             try:
                 avg_open = float(pos.get("average-open-price", "0"))
@@ -81,23 +82,66 @@ def get_all_positions(db: Session = Depends(get_db)):
 
             p = pos.copy()
             p["approximate-p-l"] = approximate_pl
-            augmented_positions.append(p)
 
-        # 3) Group by (underlying-symbol, expires-at)
+            symbol = p.get("symbol")
+            inst_type = p.get("instrument-type", "")
+            if symbol:
+                if inst_type == "Equity Option":
+                    equity_option_syms.add(symbol)
+                elif inst_type == "Future Option":
+                    future_option_syms.add(symbol)
+
+            augmented.append(p)
+
+        positions_by_account.append({
+            "account_number": acct_num,
+            "nickname": nickname,
+            "positions": augmented,
+        })
+
+    # Fetch market data once for all unique option symbols
+    market_map: Dict[str, Dict] = {}
+    if equity_option_syms or future_option_syms:
+        try:
+            md_list = tastytrade.fetch_market_data(
+                token,
+                [],
+                sorted(equity_option_syms),
+                [],
+                sorted(future_option_syms),
+            )
+            for item in md_list:
+                sym = item.get("symbol")
+                if sym:
+                    market_map[sym] = item
+        except Exception as e:
+            logging.error(f"Failed to fetch market data: {e}")
+
+    # Build response per account with groups and market/volatility data
+    accounts_data = []
+    for acct in positions_by_account:
+        acct_num = acct["account_number"]
+        nickname = acct["nickname"]
+        pos_list = acct["positions"]
+
+        # attach market data
+        for p in pos_list:
+            sym = p.get("symbol")
+            if sym and sym in market_map:
+                p["market_data"] = market_map[sym]
+
         grouping: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
-        for p in augmented_positions:
+        for p in pos_list:
             underlying = p.get("underlying-symbol", "") or ""
             expires = p.get("expires-at", "") or ""
             grouping[(underlying, expires)].append(p)
 
-        # 4) Build each group’s metrics
         groups_list = []
-        for (underlying, expires), pos_list in grouping.items():
-            # Accumulate unrounded totals
+        for (underlying, expires), plist in grouping.items():
             total_credit_unrounded = 0.0
             current_credit_unrounded = 0.0
 
-            for p in pos_list:
+            for p in plist:
                 cost_effect = p.get("cost-effect", "")
                 try:
                     avg_open = float(p.get("average-open-price", "0"))
@@ -115,12 +159,10 @@ def get_all_positions(db: Session = Depends(get_db)):
                     total_credit_unrounded -= avg_open
                     current_credit_unrounded -= close_price
 
-            # Round money values to 2 decimals
             total_credit_received = round(total_credit_unrounded, 2)
             current_group_price = round(current_credit_unrounded, 2)
             group_pl = round(total_credit_received - current_group_price, 2)
 
-            # Compute percent_credit_received = int((group_pl / total_credit_received) * 100)
             if total_credit_received != 0:
                 percent_credit_received = int((group_pl / total_credit_received) * 100)
             else:
@@ -133,15 +175,11 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "current_group_price": current_group_price,
                 "group_approximate_p_l": group_pl,
                 "percent_credit_received": percent_credit_received,
-                "positions": pos_list
+                "positions": plist,
             })
 
-        # Fetch IV rank for underlying symbols in this account. Futures symbols
-        # returned by the API omit contract codes (e.g. "/ESU5" becomes "/ES"),
-        # so we strip the codes before querying and when mapping results back.
         def root_symbol(sym: str) -> str:
             if sym and sym.startswith("/"):
-                # Remove trailing month letter + year digits
                 return re.sub(r"[FGHJKMNQUVXZ]\d+$", "", sym)
             return sym
 
