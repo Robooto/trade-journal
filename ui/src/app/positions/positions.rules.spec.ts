@@ -9,6 +9,7 @@ function makeGroup(overrides: Partial<PositionGroup> = {}): PositionGroup {
     current_group_price: 5,
     group_approximate_p_l: 5,
     percent_credit_received: 50,
+    total_delta: 0,
     positions: [],
     ...overrides
   };

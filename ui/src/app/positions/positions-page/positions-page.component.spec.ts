@@ -38,6 +38,7 @@ describe('PositionsPageComponent', () => {
       current_group_price: 5,
       group_approximate_p_l: 5,
       percent_credit_received: 55,
+      total_delta: 0,
       positions: []
     };
     api.response = { accounts: [{ account_number: '1', groups: [group] }] };
@@ -56,6 +57,7 @@ describe('PositionsPageComponent', () => {
       current_group_price: 0,
       group_approximate_p_l: 0,
       percent_credit_received: null,
+      total_delta: 0,
       positions: [],
       rules: [{ id: 'r1', level: 'warning' }]
     };
