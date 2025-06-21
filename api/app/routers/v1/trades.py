@@ -191,7 +191,7 @@ def get_all_positions(db: Session = Depends(get_db)):
             else:
                 percent_credit_received = None
 
-            total_delta = round(delta_sum_unrounded, 2)
+            total_delta = round(delta_sum_unrounded * 100, 2)
 
             groups_list.append({
                 "underlying_symbol": underlying,
