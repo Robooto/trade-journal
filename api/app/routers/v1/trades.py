@@ -191,7 +191,12 @@ def get_all_positions(db: Session = Depends(get_db)):
             else:
                 percent_credit_received = None
 
-            total_delta = round(delta_sum_unrounded * 100, 2)
+            # total delta should be expressed as the sum of individual option
+            # deltas without any additional scaling. Each position's delta is
+            # already reported as a decimal value (e.g. 0.5 for 50 deltas), so
+            # we simply sum the computed deltas for the group and round to two
+            # decimals.
+            total_delta = round(delta_sum_unrounded, 2)
 
             groups_list.append({
                 "underlying_symbol": underlying,

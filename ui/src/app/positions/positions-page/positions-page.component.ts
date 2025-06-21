@@ -24,7 +24,7 @@ export class PositionsPageComponent implements OnInit {
     'positions',
   ];
 
-  positionCols = ['symbol', 'qty', 'type', 'plpos'];
+  positionCols = ['symbol', 'qty', 'type', 'plpos', 'cdelta'];
 
   constructor(private api: PositionsApiService) {}
 
