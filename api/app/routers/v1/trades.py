@@ -31,8 +31,8 @@ def get_all_positions(db: Session = Depends(get_db)):
       2. Group by 'underlying-symbol' and 'expires-at'.
       3. For each group, compute:
          - total_credit_received using the quantity direction sign and group multiplier
-        - current_group_price as the sum of the positions' approximate P/L values
-        - percent_credit_received = int((current_group_price / total_credit_received) * 100), or None
+        - current_group_p_l as the sum of the positions' approximate P/L values
+        - percent_credit_received = int((current_group_p_l / total_credit_received) * 100), or None
     """
     try:
         token = tastytrade.get_active_token(db)
@@ -199,9 +199,9 @@ def get_all_positions(db: Session = Depends(get_db)):
                     pass
 
             total_credit_received = round(total_credit_unrounded * multiplier, 2)
-            current_group_price = round(current_price_unrounded, 2)
+            current_group_p_l = round(current_price_unrounded, 2)
             if total_credit_received != 0:
-                percent_credit_received = int((current_group_price / total_credit_received) * 100)
+                percent_credit_received = int((current_group_p_l / total_credit_received) * 100)
             else:
                 percent_credit_received = None
 
@@ -216,7 +216,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "underlying_symbol": underlying,
                 "expires_at": expires,
                 "total_credit_received": total_credit_received,
-                "current_group_price": current_group_price,
+                "current_group_p_l": current_group_p_l,
                 "percent_credit_received": percent_credit_received,
                 "total_delta": total_delta,
                 "positions": plist,
