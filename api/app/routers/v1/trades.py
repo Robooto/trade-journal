@@ -128,7 +128,23 @@ def get_all_positions(db: Session = Depends(get_db)):
         for p in pos_list:
             sym = p.get("symbol")
             if sym and sym in market_map:
-                p["market_data"] = market_map[sym]
+                md_item = market_map[sym].copy()
+                qty_dir = p.get("quantity-direction")
+                delta_val = md_item.get("delta")
+                if qty_dir and delta_val is not None:
+                    try:
+                        delta_float = abs(float(delta_val))
+                    except (TypeError, ValueError):
+                        pass
+                    else:
+                        if "C" in sym:
+                            sign = 1 if qty_dir == "Long" else -1
+                        elif "P" in sym:
+                            sign = 1 if qty_dir == "Short" else -1
+                        else:
+                            sign = 1
+                        md_item["computed_delta"] = sign * delta_float
+                p["market_data"] = md_item
 
         grouping: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
         for p in pos_list:
