@@ -12,6 +12,7 @@ export interface PositionGroup {
   total_delta?: number | null;
   beta_delta?: number | null;
   iv_rank?: number | null;
+  iv_5d_change?: number | null;
   rules?: import('./positions.rules').RuleResult[];
   positions: Position[];
 }

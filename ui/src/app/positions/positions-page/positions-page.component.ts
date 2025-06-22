@@ -20,6 +20,7 @@ export class PositionsPageComponent implements OnInit {
     'delta',
     'betadelta',
     'ivrank',
+    'ivchange',
     'rules',
     'positions',
   ];

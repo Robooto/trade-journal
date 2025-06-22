@@ -39,6 +39,16 @@
       <th mat-header-cell *matHeaderCellDef>IV Rank</th>
       <td mat-cell *matCellDef="let g">{{ g.iv_rank }}</td>
     </ng-container>
+    <ng-container matColumnDef="ivchange">
+      <th mat-header-cell *matHeaderCellDef>IV 5d %</th>
+      <td
+        mat-cell
+        *matCellDef="let g"
+        [ngClass]="{ positive: g.iv_5d_change > 0, negative: g.iv_5d_change < 0 }"
+      >
+        {{ g.iv_5d_change }}
+      </td>
+    </ng-container>
     <ng-container matColumnDef="rules">
       <th mat-header-cell *matHeaderCellDef>Rules</th>
       <td mat-cell *matCellDef="let g">

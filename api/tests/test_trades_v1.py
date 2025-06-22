@@ -53,7 +53,11 @@ async def test_trades_grouped(client, monkeypatch):
 
     def fake_vol(token, symbols):
         assert symbols == ["SPY"]
-        return [{"symbol": "SPY", "implied-volatility-index-rank": "0.191"}]
+        return [{
+            "symbol": "SPY",
+            "implied-volatility-index-rank": "0.191",
+            "implied-volatility-index-5-day-change": "0.0123",
+        }]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
         if eq_opt or future_opt:
@@ -101,6 +105,7 @@ async def test_trades_grouped(client, monkeypatch):
                         "total_delta": -1.0,
                         "beta_delta": -1.2,
                         "iv_rank": 19.1,
+                        "iv_5d_change": 1.23,
                         "positions": [
                             {
                                 "instrument-type": "Equity Option",
@@ -225,7 +230,11 @@ async def test_volatility_future_dedup(client, monkeypatch):
     def fake_vol(token, symbols):
         # Should be deduplicated to just the root symbol
         assert symbols == ["/ES"]
-        return [{"symbol": "/ES", "implied-volatility-index-rank": "0.25"}]
+        return [{
+            "symbol": "/ES",
+            "implied-volatility-index-rank": "0.25",
+            "implied-volatility-index-5-day-change": "-0.034",
+        }]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
         if eq_opt or future_opt:
@@ -259,6 +268,7 @@ async def test_volatility_future_dedup(client, monkeypatch):
     data = resp.json()["accounts"][0]["groups"]
     assert len(data) == 2
     assert all(g["iv_rank"] == 25.0 for g in data)
+    assert all(g["iv_5d_change"] == -3.4 for g in data)
 
 
 @pytest.mark.asyncio
@@ -290,7 +300,11 @@ async def test_approximate_pl_long(client, monkeypatch):
 
     def fake_vol(token, symbols):
         assert symbols == ["SPY"]
-        return [{"symbol": "SPY", "implied-volatility-index-rank": "0.2"}]
+        return [{
+            "symbol": "SPY",
+            "implied-volatility-index-rank": "0.2",
+            "implied-volatility-index-5-day-change": "0.005",
+        }]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
         if eq_opt or future_opt:
