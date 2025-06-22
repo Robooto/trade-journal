@@ -120,6 +120,7 @@ class AccountPositions(BaseModel):
     account_number: str
     nickname: str
     groups: List[GroupedPositions]
+    total_beta_delta: Optional[float] = None
 
     model_config = {
         "populate_by_name": True,
