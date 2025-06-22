@@ -50,6 +50,8 @@ def get_all_positions(db: Session = Depends(get_db)):
     positions_by_account = []
     equity_option_syms: set[str] = set()
     future_option_syms: set[str] = set()
+    equity_underlyings: set[str] = set()
+    future_underlyings: set[str] = set()
 
     for acct in accounts:
         acct_num = acct.get("account_number")
@@ -80,6 +82,13 @@ def get_all_positions(db: Session = Depends(get_db)):
                 elif inst_type == "Future Option":
                     future_option_syms.add(symbol)
 
+            underlying = p.get("underlying-symbol")
+            if underlying:
+                if underlying.startswith("/"):
+                    future_underlyings.add(underlying)
+                else:
+                    equity_underlyings.add(underlying)
+
             augmented.append(p)
 
         positions_by_account.append({
@@ -106,12 +115,36 @@ def get_all_positions(db: Session = Depends(get_db)):
         except Exception as e:
             logging.error(f"Failed to fetch market data: {e}")
 
+    # Fetch betas for unique underlyings
+    beta_map: Dict[str, float] = {}
+    if equity_underlyings or future_underlyings:
+        try:
+            md_list = tastytrade.fetch_market_data(
+                token,
+                sorted(equity_underlyings),
+                [],
+                sorted(future_underlyings),
+                [],
+            )
+            for item in md_list:
+                sym = item.get("symbol")
+                beta_val = item.get("beta")
+                if sym is not None and beta_val is not None:
+                    try:
+                        beta_map[sym] = float(beta_val)
+                    except (ValueError, TypeError):
+                        pass
+        except Exception as e:
+            logging.error(f"Failed to fetch beta data: {e}")
+
     # Build response per account with groups and market/volatility data
     accounts_data = []
     for acct in positions_by_account:
         acct_num = acct["account_number"]
         nickname = acct["nickname"]
         pos_list = acct["positions"]
+
+        account_beta_delta = 0.0
 
         # attach market data and compute approximate P/L
         for p in pos_list:
@@ -212,6 +245,10 @@ def get_all_positions(db: Session = Depends(get_db)):
             # decimals.
             total_delta = round(delta_sum_unrounded, 2)
 
+            beta_val = beta_map.get(underlying)
+            if beta_val is not None:
+                account_beta_delta += beta_val * total_delta
+
             groups_list.append({
                 "underlying_symbol": underlying,
                 "expires_at": expires,
@@ -250,6 +287,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "account_number": acct_num,
                 "nickname": nickname,
                 "groups": groups_list,
+                "total_beta_delta": round(account_beta_delta, 2),
             })
 
     return PositionsResponse(accounts=accounts_data)

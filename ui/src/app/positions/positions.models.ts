@@ -18,6 +18,7 @@ export interface AccountPositions {
   account_number: string;
   nickname?: string;
   groups: PositionGroup[];
+  total_beta_delta?: number | null;
 }
 
 export interface PositionsResponse {

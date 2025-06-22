@@ -56,9 +56,14 @@ async def test_trades_grouped(client, monkeypatch):
         return [{"symbol": "SPY", "implied-volatility-index-rank": "0.191"}]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        assert eq_opt == ["SPY_C"]
-        assert future_opt == []
-        return [{"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"}]
+        if eq_opt or future_opt:
+            assert eq_opt == ["SPY_C"]
+            assert future_opt == []
+            return [{"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"}]
+        else:
+            assert eq == ["SPY"]
+            assert future == []
+            return [{"symbol": "SPY", "beta": "1.2"}]
 
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
@@ -85,6 +90,7 @@ async def test_trades_grouped(client, monkeypatch):
             {
                 "account_number": "123",
                 "nickname": "Main",
+                "total_beta_delta": -1.2,
                 "groups": [
                     {
                         "underlying_symbol": "SPY",
@@ -219,8 +225,15 @@ async def test_volatility_future_dedup(client, monkeypatch):
         return [{"symbol": "/ES", "implied-volatility-index-rank": "0.25"}]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        assert future_opt == ["/ESU5O", "/ESZ5O"]
-        return []
+        if eq_opt or future_opt:
+            assert future_opt == ["/ESU5O", "/ESZ5O"]
+            return []
+        else:
+            assert future == ["/ESU5", "/ESZ5"]
+            return [
+                {"symbol": "/ESU5", "beta": "1.0"},
+                {"symbol": "/ESZ5", "beta": "1.1"},
+            ]
 
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
@@ -277,8 +290,12 @@ async def test_approximate_pl_long(client, monkeypatch):
         return [{"symbol": "SPY", "implied-volatility-index-rank": "0.2"}]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        assert eq_opt == ["SPY_C"]
-        return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
+        if eq_opt or future_opt:
+            assert eq_opt == ["SPY_C"]
+            return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
+        else:
+            assert eq == ["SPY"]
+            return [{"symbol": "SPY", "beta": "1"}]
 
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
@@ -300,3 +317,85 @@ async def test_approximate_pl_long(client, monkeypatch):
     assert resp.status_code == 200
     pos = resp.json()["accounts"][0]["groups"][0]["positions"][0]
     assert pos["approximate-p-l"] == 800.0
+
+
+@pytest.mark.asyncio
+async def test_total_beta_delta(client, monkeypatch):
+    """Verify total_beta_delta calculation per account."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_accounts(token):
+        return [{"account_number": "222", "nickname": "Beta"}]
+
+    def fake_positions(token, acct):
+        return [
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_C",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "cost-effect": "Credit",
+                "average-open-price": "1.0",
+                "close-price": "0.5",
+                "average-daily-market-close-price": "0.75",
+                "quantity": "1",
+                "quantity-direction": "Short",
+                "multiplier": "100",
+            },
+            {
+                "instrument-type": "Future Option",
+                "symbol": "/ESZ4O",
+                "underlying-symbol": "/ESZ4",
+                "expires-at": "2024-12-20",
+                "cost-effect": "Credit",
+                "average-open-price": "2.0",
+                "close-price": "1.0",
+                "average-daily-market-close-price": "1.5",
+                "quantity": "1",
+                "quantity-direction": "Long",
+                "multiplier": "50",
+            },
+        ]
+
+    def fake_vol(token, symbols):
+        return []
+
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        if eq_opt or future_opt:
+            assert eq_opt == ["SPY_C"]
+            assert future_opt == ["/ESZ4O"]
+            return [
+                {"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"},
+                {"symbol": "/ESZ4O", "mark": "10", "close": "9", "delta": "0.1"},
+            ]
+        else:
+            assert eq == ["SPY"]
+            assert future == ["/ESZ4"]
+            return [
+                {"symbol": "SPY", "beta": "1"},
+                {"symbol": "/ESZ4", "beta": "2"},
+            ]
+
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.get_active_token", fake_token
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_positions", fake_positions
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+
+    resp = await client.get("/v1/trades")
+    assert resp.status_code == 200
+    acct = resp.json()["accounts"][0]
+    assert acct["total_beta_delta"] == -0.3
+
