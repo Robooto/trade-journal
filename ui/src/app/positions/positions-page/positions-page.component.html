@@ -31,6 +31,10 @@
       <th mat-header-cell *matHeaderCellDef>Delta</th>
       <td mat-cell *matCellDef="let g">{{ g.total_delta }}</td>
     </ng-container>
+    <ng-container matColumnDef="betadelta">
+      <th mat-header-cell *matHeaderCellDef>Beta Δ</th>
+      <td mat-cell *matCellDef="let g">{{ g.beta_delta }}</td>
+    </ng-container>
     <ng-container matColumnDef="ivrank">
       <th mat-header-cell *matHeaderCellDef>IV Rank</th>
       <td mat-cell *matCellDef="let g">{{ g.iv_rank }}</td>
