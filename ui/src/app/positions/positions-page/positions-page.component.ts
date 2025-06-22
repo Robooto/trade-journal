@@ -18,6 +18,7 @@ export class PositionsPageComponent implements OnInit {
     'price',
     'percent',
     'delta',
+    'betadelta',
     'ivrank',
     'rules',
     'positions',
