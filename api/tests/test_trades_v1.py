@@ -99,6 +99,7 @@ async def test_trades_grouped(client, monkeypatch):
                         "current_group_p_l": -2550.0,
                         "percent_credit_received": -728,
                         "total_delta": -1.0,
+                        "beta_delta": -1.2,
                         "iv_rank": 19.1,
                         "positions": [
                             {
@@ -114,6 +115,7 @@ async def test_trades_grouped(client, monkeypatch):
                                 "quantity-direction": "Short",
                                 "multiplier": "100",
                                 "approximate-p-l": -750.0,
+                                "beta": 1.2,
                                 "market_data": {
                                     "symbol": "SPY_C",
                                     "mark": "10",
@@ -135,6 +137,7 @@ async def test_trades_grouped(client, monkeypatch):
                                 "quantity-direction": "Short",
                                 "multiplier": "100",
                                 "approximate-p-l": -1800.0,
+                                "beta": 1.2,
                                 "market_data": {
                                     "symbol": "SPY_C",
                                     "mark": "10",
@@ -397,5 +400,9 @@ async def test_total_beta_delta(client, monkeypatch):
     resp = await client.get("/v1/trades")
     assert resp.status_code == 200
     acct = resp.json()["accounts"][0]
-    assert acct["total_beta_delta"] == -0.3
+    groups = acct["groups"]
+    assert groups[0]["beta_delta"] == -0.5
+    assert groups[1]["beta_delta"] == 0.2
+    total = round(sum(g["beta_delta"] for g in groups if g["beta_delta"] is not None), 2)
+    assert acct["total_beta_delta"] == total
 
