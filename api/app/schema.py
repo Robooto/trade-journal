@@ -92,6 +92,7 @@ class Position(BaseModel):
     """Generic position data with arbitrary fields."""
 
     approximate_p_l: Optional[float] = Field(None, alias="approximate-p-l")
+    beta: Optional[float] = None
 
     model_config = {
         "populate_by_name": True,
@@ -107,6 +108,7 @@ class GroupedPositions(BaseModel):
     current_group_p_l: float
     percent_credit_received: Optional[int] = None
     total_delta: Optional[float] = None
+    beta_delta: Optional[float] = None
     iv_rank: Optional[float] = Field(None, alias="iv_rank")
     positions: List[Position]
 

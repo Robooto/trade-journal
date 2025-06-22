@@ -190,6 +190,9 @@ def get_all_positions(db: Session = Depends(get_db)):
                     approximate_pl = (avg_open - mark) * quantity * multiplier
 
             p["approximate-p-l"] = round(approximate_pl, 2)
+            underlying_sym = p.get("underlying-symbol")
+            if underlying_sym in beta_map:
+                p["beta"] = beta_map[underlying_sym]
 
         grouping: Dict[Tuple[str, str], List[Dict]] = defaultdict(list)
         for p in pos_list:
@@ -246,8 +249,10 @@ def get_all_positions(db: Session = Depends(get_db)):
             total_delta = round(delta_sum_unrounded, 2)
 
             beta_val = beta_map.get(underlying)
+            beta_delta = None
             if beta_val is not None:
-                account_beta_delta += beta_val * total_delta
+                beta_delta = round(beta_val * total_delta, 2)
+                account_beta_delta += beta_delta
 
             groups_list.append({
                 "underlying_symbol": underlying,
@@ -256,6 +261,7 @@ def get_all_positions(db: Session = Depends(get_db)):
                 "current_group_p_l": current_group_p_l,
                 "percent_credit_received": percent_credit_received,
                 "total_delta": total_delta,
+                "beta_delta": beta_delta,
                 "positions": plist,
             })
 

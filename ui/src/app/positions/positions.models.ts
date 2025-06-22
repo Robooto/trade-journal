@@ -1,4 +1,5 @@
 export interface Position {
+  beta?: number | null;
   [key: string]: any;
 }
 
@@ -9,6 +10,7 @@ export interface PositionGroup {
   current_group_p_l: number;
   percent_credit_received: number | null;
   total_delta?: number | null;
+  beta_delta?: number | null;
   iv_rank?: number | null;
   rules?: import('./positions.rules').RuleResult[];
   positions: Position[];
