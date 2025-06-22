@@ -271,22 +271,32 @@ def get_all_positions(db: Session = Depends(get_db)):
             return sym
 
         unique_roots = sorted({root_symbol(g["underlying_symbol"]) for g in groups_list if g["underlying_symbol"]})
-        vol_map: Dict[str, Optional[float]] = {}
+        vol_rank_map: Dict[str, Optional[float]] = {}
+        vol_change_map: Dict[str, Optional[float]] = {}
         if unique_roots:
             try:
                 vol_data = tastytrade.fetch_volatility_data(token, unique_roots)
                 for item in vol_data:
                     sym = item.get("symbol")
                     iv = item.get("implied-volatility-index-rank")
-                    if sym is not None and iv is not None:
-                        try:
-                            vol_map[sym] = round(float(iv) * 100, 1)
-                        except (ValueError, TypeError):
-                            vol_map[sym] = None
+                    change = item.get("implied-volatility-index-5-day-change")
+                    if sym is not None:
+                        if iv is not None:
+                            try:
+                                vol_rank_map[sym] = round(float(iv) * 100, 1)
+                            except (ValueError, TypeError):
+                                vol_rank_map[sym] = None
+                        if change is not None:
+                            try:
+                                vol_change_map[sym] = round(float(change) * 100, 2)
+                            except (ValueError, TypeError):
+                                vol_change_map[sym] = None
             except Exception as e:
                 logging.error(f"Failed to fetch volatility data: {e}")
         for g in groups_list:
-            g["iv_rank"] = vol_map.get(root_symbol(g["underlying_symbol"]))
+            root = root_symbol(g["underlying_symbol"])
+            g["iv_rank"] = vol_rank_map.get(root)
+            g["iv_5d_change"] = vol_change_map.get(root)
 
         if groups_list:
             accounts_data.append({

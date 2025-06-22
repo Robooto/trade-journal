@@ -110,6 +110,7 @@ class GroupedPositions(BaseModel):
     total_delta: Optional[float] = None
     beta_delta: Optional[float] = None
     iv_rank: Optional[float] = Field(None, alias="iv_rank")
+    iv_5d_change: Optional[float] = Field(None, alias="iv_5d_change")
     positions: List[Position]
 
     model_config = {
