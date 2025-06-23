@@ -124,6 +124,7 @@ class AccountPositions(BaseModel):
     nickname: str
     groups: List[GroupedPositions]
     total_beta_delta: Optional[float] = None
+    percent_used_bp: Optional[int] = None
 
     model_config = {
         "populate_by_name": True,

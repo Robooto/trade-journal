@@ -69,6 +69,13 @@ async def test_trades_grouped(client, monkeypatch):
             assert future == []
             return [{"symbol": "SPY", "beta": "1.2"}]
 
+    def fake_balance(token, acct):
+        return {
+            "used-derivative-buying-power": "500",
+            "derivative-buying-power": "1000",
+            "equity-buying-power": "500",
+        }
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -84,6 +91,9 @@ async def test_trades_grouped(client, monkeypatch):
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
     )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance
+    )
 
     resp = await client.get("/v1/trades")
     assert resp.status_code == 200
@@ -95,6 +105,7 @@ async def test_trades_grouped(client, monkeypatch):
                 "account_number": "123",
                 "nickname": "Main",
                 "total_beta_delta": -1.2,
+                "percent_used_bp": 33,
                 "groups": [
                     {
                         "underlying_symbol": "SPY",
@@ -247,6 +258,13 @@ async def test_volatility_future_dedup(client, monkeypatch):
                 {"symbol": "/ESZ5", "beta": "1.1"},
             ]
 
+    def fake_balance(token, acct):
+        return {
+            "used-derivative-buying-power": "100",
+            "derivative-buying-power": "200",
+            "equity-buying-power": "100",
+        }
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -261,6 +279,9 @@ async def test_volatility_future_dedup(client, monkeypatch):
     )
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance
     )
 
     resp = await client.get("/v1/trades")
@@ -314,6 +335,13 @@ async def test_approximate_pl_long(client, monkeypatch):
             assert eq == ["SPY"]
             return [{"symbol": "SPY", "beta": "1"}]
 
+    def fake_balance(token, acct):
+        return {
+            "used-derivative-buying-power": "50",
+            "derivative-buying-power": "100",
+            "equity-buying-power": "50",
+        }
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -328,6 +356,9 @@ async def test_approximate_pl_long(client, monkeypatch):
     )
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance
     )
 
     resp = await client.get("/v1/trades")
@@ -395,6 +426,13 @@ async def test_total_beta_delta(client, monkeypatch):
                 {"symbol": "/ESZ4", "beta": "2"},
             ]
 
+    def fake_balance(token, acct):
+        return {
+            "used-derivative-buying-power": "200",
+            "derivative-buying-power": "400",
+            "equity-buying-power": "200",
+        }
+
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.get_active_token", fake_token
     )
@@ -410,6 +448,9 @@ async def test_total_beta_delta(client, monkeypatch):
     monkeypatch.setattr(
         "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
     )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance
+    )
 
     resp = await client.get("/v1/trades")
     assert resp.status_code == 200
@@ -419,4 +460,72 @@ async def test_total_beta_delta(client, monkeypatch):
     assert groups[1]["beta_delta"] == 0.2
     total = round(sum(g["beta_delta"] for g in groups if g["beta_delta"] is not None), 2)
     assert acct["total_beta_delta"] == total
+
+
+@pytest.mark.asyncio
+async def test_percent_used_bp(client, monkeypatch):
+    """Verify percent_used_bp is calculated from account balance."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_accounts(token):
+        return [{"account_number": "999", "nickname": "BP"}]
+
+    def fake_positions(token, acct):
+        return [
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_C",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "cost-effect": "Credit",
+                "average-open-price": "1.0",
+                "close-price": "0.5",
+                "average-daily-market-close-price": "0.75",
+                "quantity": "1",
+                "quantity-direction": "Short",
+                "multiplier": "100",
+            }
+        ]
+
+    def fake_vol(token, symbols):
+        return []
+
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        if eq_opt or future_opt:
+            return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
+        else:
+            return [{"symbol": "SPY", "beta": "1"}]
+
+    def fake_balance(token, acct):
+        return {
+            "used-derivative-buying-power": "300",
+            "derivative-buying-power": "900",
+            "equity-buying-power": "0",
+        }
+
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.get_active_token", fake_token
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_positions", fake_positions
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance
+    )
+
+    resp = await client.get("/v1/trades")
+    assert resp.status_code == 200
+    acct = resp.json()["accounts"][0]
+    assert acct["percent_used_bp"] == 33
 

@@ -298,12 +298,26 @@ def get_all_positions(db: Session = Depends(get_db)):
             g["iv_rank"] = vol_rank_map.get(root)
             g["iv_5d_change"] = vol_change_map.get(root)
 
+        percent_used_bp = None
+        try:
+            bal = tastytrade.fetch_account_balance(token, acct_num)
+            used = bal.get("used-derivative-buying-power")
+            deriv = bal.get("derivative-buying-power")
+            equity_bp = bal.get("equity-buying-power")
+            if used is not None and deriv is not None and equity_bp is not None:
+                denom = float(deriv) + float(equity_bp)
+                if denom:
+                    percent_used_bp = int(float(used) / denom * 100)
+        except Exception as e:
+            logging.error(f"Failed to fetch balance for account {acct_num}: {e}")
+
         if groups_list:
             accounts_data.append({
                 "account_number": acct_num,
                 "nickname": nickname,
                 "groups": groups_list,
                 "total_beta_delta": round(account_beta_delta, 2),
+                "percent_used_bp": percent_used_bp,
             })
 
     return PositionsResponse(accounts=accounts_data)
