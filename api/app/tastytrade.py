@@ -151,9 +151,9 @@ def fetch_account_balance(token: str, account_number: str) -> dict:
         "User-Agent": "trade-journal/0.1",
         "Accept": "application/json"
     }
-    url = f"{BASE_URL}/accounts/{account_number}/balance"
+    url = f"{BASE_URL}/accounts/{account_number}/balances"
     response = requests.get(url, headers=headers)
     response.raise_for_status()
     data = response.json()
 
-    return data["data"]["item"]
+    return data["data"]

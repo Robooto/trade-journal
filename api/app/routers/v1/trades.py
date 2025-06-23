@@ -302,10 +302,9 @@ def get_all_positions(db: Session = Depends(get_db)):
         try:
             bal = tastytrade.fetch_account_balance(token, acct_num)
             used = bal.get("used-derivative-buying-power")
-            deriv = bal.get("derivative-buying-power")
-            equity_bp = bal.get("equity-buying-power")
-            if used is not None and deriv is not None and equity_bp is not None:
-                denom = float(deriv) + float(equity_bp)
+            deriv = bal.get("margin-equity")
+            if used is not None and deriv is not None:
+                denom = float(deriv)
                 if denom:
                     percent_used_bp = int(float(used) / denom * 100)
         except Exception as e:
