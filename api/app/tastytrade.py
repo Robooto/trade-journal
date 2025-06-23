@@ -140,3 +140,20 @@ def fetch_volatility_data(token: str, symbols: List[str]) -> List[dict]:
     response.raise_for_status()
     data = response.json()
     return data["data"]["items"]
+
+def fetch_account_balance(token: str, account_number: str) -> dict:
+    """
+    Fetch the account balance for a specific account from the Tastytrade API.
+    Returns a dictionary with balance information.
+    """
+    headers = {
+        "Authorization": token,
+        "User-Agent": "trade-journal/0.1",
+        "Accept": "application/json"
+    }
+    url = f"{BASE_URL}/accounts/{account_number}/balance"
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+
+    return data["data"]["item"]
