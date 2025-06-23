@@ -5,6 +5,9 @@
     <span *ngIf="account.total_beta_delta !== null && account.total_beta_delta !== undefined">
       - Beta Δ {{ account.total_beta_delta }}
     </span>
+    <span *ngIf="account.percent_used_bp !== null && account.percent_used_bp !== undefined">
+      - % BP {{ account.percent_used_bp }}
+    </span>
   </h2>
   <table mat-table [dataSource]="account.groups" class="mat-elevation-z1 full-width">
     <ng-container matColumnDef="underlying">
