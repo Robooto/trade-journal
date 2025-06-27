@@ -12,7 +12,7 @@ export class JournalPageComponent implements OnInit {
   entries: JournalEntry[] = [];
   totalEntries = 0;
   pageSkip = 0;
-  pageLimit = 20;
+  pageLimit = 15;
   selectedEntry?: JournalEntry;
 
   constructor(private api: JournalApiService) {}
