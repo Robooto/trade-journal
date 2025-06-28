@@ -32,7 +32,7 @@ def get_all_positions(db: Session = Depends(get_db)):
       3. For each group, compute:
          - total_credit_received using the quantity direction sign and group multiplier
         - current_group_p_l as the sum of the positions' approximate P/L values
-        - percent_credit_received = int((current_group_p_l / total_credit_received) * 100), or None
+        - percent_credit_received = int((current_group_p_l / abs(total_credit_received)) * 100), or None
     """
     try:
         token = tastytrade.get_active_token(db)
@@ -237,7 +237,7 @@ def get_all_positions(db: Session = Depends(get_db)):
             total_credit_received = round(total_credit_unrounded * multiplier, 2)
             current_group_p_l = round(current_price_unrounded, 2)
             if total_credit_received != 0:
-                percent_credit_received = int((current_group_p_l / total_credit_received) * 100)
+                percent_credit_received = int((current_group_p_l / abs(total_credit_received)) * 100)
             else:
                 percent_credit_received = None
 

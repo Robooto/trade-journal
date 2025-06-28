@@ -74,6 +74,7 @@ async def test_trades_grouped(client, monkeypatch):
             "used-derivative-buying-power": "500",
             "derivative-buying-power": "1000",
             "equity-buying-power": "500",
+            "margin-equity": "1500",
         }
 
     monkeypatch.setattr(
@@ -368,6 +369,83 @@ async def test_approximate_pl_long(client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_percent_credit_received_debit_spread(client, monkeypatch):
+    """Percent calculation should handle debit spreads correctly."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_accounts(token):
+        return [{"account_number": "333", "nickname": "Debit"}]
+
+    def fake_positions(token, acct):
+        return [
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_C1",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "cost-effect": "Debit",
+                "average-open-price": "2.0",
+                "close-price": "2.0",
+                "average-daily-market-close-price": "2.0",
+                "quantity": "1",
+                "quantity-direction": "Long",
+                "multiplier": "100",
+            },
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_C2",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "cost-effect": "Credit",
+                "average-open-price": "1.0",
+                "close-price": "1.0",
+                "average-daily-market-close-price": "1.0",
+                "quantity": "1",
+                "quantity-direction": "Short",
+                "multiplier": "100",
+            },
+        ]
+
+    def fake_vol(token, symbols):
+        return []
+
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        if eq_opt:
+            assert sorted(eq_opt) == ["SPY_C1", "SPY_C2"]
+            return [
+                {"symbol": "SPY_C1", "mark": "2.5", "delta": "0.5"},
+                {"symbol": "SPY_C2", "mark": "0.75", "delta": "0.3"},
+            ]
+        else:
+            assert eq == ["SPY"]
+            return [{"symbol": "SPY", "beta": "1"}]
+
+    def fake_balance(token, acct):
+        return {
+            "used-derivative-buying-power": "0",
+            "derivative-buying-power": "0",
+            "equity-buying-power": "0",
+            "margin-equity": "1",
+        }
+
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.get_active_token", fake_token)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_positions", fake_positions)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_market_data", fake_market)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance)
+
+    resp = await client.get("/v1/trades")
+    assert resp.status_code == 200
+    group = resp.json()["accounts"][0]["groups"][0]
+    assert group["total_credit_received"] == -100.0
+    assert group["current_group_p_l"] == 75.0
+    assert group["percent_credit_received"] == 75
+
+
+@pytest.mark.asyncio
 async def test_total_beta_delta(client, monkeypatch):
     """Verify total_beta_delta calculation per account."""
 
@@ -503,6 +581,7 @@ async def test_percent_used_bp(client, monkeypatch):
             "used-derivative-buying-power": "300",
             "derivative-buying-power": "900",
             "equity-buying-power": "0",
+            "margin-equity": "900",
         }
 
     monkeypatch.setattr(
