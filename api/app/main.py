@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -8,11 +9,18 @@ from app import models
 from app.db import engine
 from app.routers.v1 import hello as hello_v1, entries as entries_v1, trades as trades_v1
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("🚀 App starting…")
+    yield
+
 models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Trade Journal API",
     description="Backend for your Trade Journal app",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -27,10 +35,6 @@ logging.basicConfig(level=logging.ERROR)
 app.include_router(hello_v1.router)
 app.include_router(entries_v1.router)
 app.include_router(trades_v1.router)
-
-@app.on_event("startup")
-async def startup_event():
-    print("🚀 App starting…")
 
 @app.exception_handler(Exception)
 async def log_exceptions(request: Request, exc: Exception):
