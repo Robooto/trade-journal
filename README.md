@@ -22,6 +22,8 @@ nano .env
 TASTYTRADE_USERNAME=your_username_here
 TASTYTRADE_PASSWORD=your_super_secret_password
 TASTYTRADE_URL=https://api.tastytrade.com
+SPOTGAMMA_USERNAME=your_spotgamma_username
+SPOTGAMMA_PASSWORD=your_spotgamma_password
 
 docker compose up --build -d  # The '-d' flag runs containers in detached mode (in the background)
 ```

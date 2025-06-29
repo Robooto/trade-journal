@@ -13,6 +13,11 @@ const routes: Routes = [
       import('./positions/positions.module').then(m => m.PositionsModule)
   },
   {
+    path: 'hiro',
+    loadChildren: () =>
+      import('./hiro/hiro.module').then(m => m.HiroModule)
+  },
+  {
     path: 'dashboard',
     loadChildren: () =>
       import('./dashboard/dashboard.module').then(m => m.DashboardModule)

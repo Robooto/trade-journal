@@ -1,0 +1,8 @@
+<div class="hiro">
+  <button mat-raised-button color="primary" (click)="getScreens()" [disabled]="loading">
+    Get Screens
+  </button>
+  <div class="screens">
+    <img *ngFor="let img of images" [src]="img" />
+  </div>
+</div>
