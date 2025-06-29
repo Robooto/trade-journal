@@ -12,7 +12,8 @@ RUN apt-get update && \
 # 2) Install dependencies
 COPY api/requirements.txt .
 RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
+ && pip install --no-cache-dir -r requirements.txt \
+ && playwright install --with-deps chromium
 
 # 3) Bundle the app
 COPY api/app ./app

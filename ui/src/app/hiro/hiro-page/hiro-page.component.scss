@@ -1,0 +1,11 @@
+.hiro {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.screens img {
+  max-width: 100%;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+}
