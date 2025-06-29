@@ -27,7 +27,7 @@ class JournalEntryBase(BaseModel):
     delta: Optional[float] = None
     notes: str
     market_direction: MarketDirection = Field(..., alias="marketDirection")
-    events: List[Event] = []
+    events: List[Event] = Field(default_factory=list)
 
     model_config = {
         "populate_by_name": True,
