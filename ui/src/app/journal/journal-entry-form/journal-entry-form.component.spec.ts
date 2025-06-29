@@ -63,7 +63,7 @@ describe('JournalEntryFormComponent', () => {
       'events'
     ]);
 
-    const requiredNames = ['date', 'esPrice', 'delta', 'marketDirection'];
+    const requiredNames = ['date', 'esPrice', 'marketDirection'];
     for (const name of requiredNames) {
       const ctrl = form.get(name)!;
       ctrl.setValue(null);

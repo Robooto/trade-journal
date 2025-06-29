@@ -18,7 +18,8 @@ export class JournalEntryListComponent {
   }
 
   copyEntry(entry: JournalEntry) {
-    let text = `${entry.date} - ES ${entry.esPrice} - ${entry.marketDirection} (My account's delta ${entry.delta})\n`;
+    const deltaStr = entry.delta !== undefined && entry.delta !== null ? entry.delta : 'n/a';
+    let text = `${entry.date} - ES ${entry.esPrice} - ${entry.marketDirection} (My account's delta ${deltaStr})\n`;
 
     // 2) Add the main notes
     text += `Notes: ${entry.notes}\n`;

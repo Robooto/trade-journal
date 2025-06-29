@@ -60,7 +60,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
           id: this.entry.id,
           date: this.entry.date,
           esPrice: this.entry.esPrice,
-          delta: this.entry.delta,
+          delta: this.entry.delta ?? null,
           marketDirection: this.entry.marketDirection,
           notes: this.entry.notes
         });
@@ -92,7 +92,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
         new Date().toISOString().substring(0, 10), Validators.required
       ],
       esPrice: [null, Validators.required],
-      delta: [null, Validators.required],
+      delta: [null],
       marketDirection: ['up' as const, Validators.required],
       notes: [''],
       events: this.fb.array([]),

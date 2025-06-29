@@ -7,8 +7,13 @@
 .journal-container {
   display: flex;
   flex-direction: column;
-  flex: 1;             // ← take all the host’s height
+  flex: 1;
   gap: 16px;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
+  }
 }
 
 .journal-list {
@@ -17,5 +22,10 @@
 }
 
 .journal-form {
-  flex: none;          // ← form sizes to its content and stays pinned
+  flex: none;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    max-width: 400px;
+  }
 }

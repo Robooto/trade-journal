@@ -14,7 +14,7 @@ class JournalEntryORM(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     date = Column(Date, nullable=False)
     es_price = Column("es_price", Float, nullable=False)
-    delta = Column(Float, nullable=False)
+    delta = Column(Float, nullable=True)
     notes = Column(String, nullable=False)
     market_direction = Column(
         SAEnum(MarketDirection, name="market_direction_enum"),

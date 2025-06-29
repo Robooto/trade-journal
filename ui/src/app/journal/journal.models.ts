@@ -8,7 +8,7 @@ export interface JournalEntry {
   id: string;            // uuid
   date: string;
   esPrice: number;
-  delta: number;
+  delta?: number | null;
   notes: string;
   events: JournalEvent[];
   marketDirection: 'up' | 'down';
