@@ -4,17 +4,12 @@
 # Node dependencies
 node_modules/
 
-# Build outputs
-/dist/
-/out-tsc/
-
-# Python cache or compiled files
+# Python cache and compiled files
 __pycache__/
 *.py[cod]
 
-# Test files and directories
+# Test directories
 /tests/
-**/*.spec.ts
 
 # Local configuration files
 .env
