@@ -60,14 +60,14 @@ async def test_trades_grouped(client, monkeypatch):
         }]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        if eq_opt or future_opt:
-            assert eq_opt == ["SPY_C"]
-            assert future_opt == []
-            return [{"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"}]
-        else:
-            assert eq == ["SPY"]
-            assert future == []
-            return [{"symbol": "SPY", "beta": "1.2"}]
+        assert eq == ["SPY"]
+        assert eq_opt == ["SPY_C"]
+        assert future == []
+        assert future_opt == []
+        return [
+            {"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"},
+            {"symbol": "SPY", "beta": "1.2"},
+        ]
 
     def fake_balance(token, acct):
         return {
@@ -249,15 +249,14 @@ async def test_volatility_future_dedup(client, monkeypatch):
         }]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        if eq_opt or future_opt:
-            assert future_opt == ["/ESU5O", "/ESZ5O"]
-            return []
-        else:
-            assert future == ["/ESU5", "/ESZ5"]
-            return [
-                {"symbol": "/ESU5", "beta": "1.0"},
-                {"symbol": "/ESZ5", "beta": "1.1"},
-            ]
+        assert eq == []
+        assert eq_opt == []
+        assert future == ["/ESU5", "/ESZ5"]
+        assert future_opt == ["/ESU5O", "/ESZ5O"]
+        return [
+            {"symbol": "/ESU5", "beta": "1.0"},
+            {"symbol": "/ESZ5", "beta": "1.1"},
+        ]
 
     def fake_balance(token, acct):
         return {
@@ -329,12 +328,14 @@ async def test_approximate_pl_long(client, monkeypatch):
         }]
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        if eq_opt or future_opt:
-            assert eq_opt == ["SPY_C"]
-            return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
-        else:
-            assert eq == ["SPY"]
-            return [{"symbol": "SPY", "beta": "1"}]
+        assert eq == ["SPY"]
+        assert eq_opt == ["SPY_C"]
+        assert future == []
+        assert future_opt == []
+        return [
+            {"symbol": "SPY_C", "mark": "10", "close": "9"},
+            {"symbol": "SPY", "beta": "1"},
+        ]
 
     def fake_balance(token, acct):
         return {
@@ -412,15 +413,15 @@ async def test_percent_credit_received_debit_spread(client, monkeypatch):
         return []
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        if eq_opt:
-            assert sorted(eq_opt) == ["SPY_C1", "SPY_C2"]
-            return [
-                {"symbol": "SPY_C1", "mark": "2.5", "delta": "0.5"},
-                {"symbol": "SPY_C2", "mark": "0.75", "delta": "0.3"},
-            ]
-        else:
-            assert eq == ["SPY"]
-            return [{"symbol": "SPY", "beta": "1"}]
+        assert eq == ["SPY"]
+        assert sorted(eq_opt) == ["SPY_C1", "SPY_C2"]
+        assert future == []
+        assert future_opt == []
+        return [
+            {"symbol": "SPY_C1", "mark": "2.5", "delta": "0.5"},
+            {"symbol": "SPY_C2", "mark": "0.75", "delta": "0.3"},
+            {"symbol": "SPY", "beta": "1"},
+        ]
 
     def fake_balance(token, acct):
         return {
@@ -489,20 +490,16 @@ async def test_total_beta_delta(client, monkeypatch):
         return []
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        if eq_opt or future_opt:
-            assert eq_opt == ["SPY_C"]
-            assert future_opt == ["/ESZ4O"]
-            return [
-                {"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"},
-                {"symbol": "/ESZ4O", "mark": "10", "close": "9", "delta": "0.1"},
-            ]
-        else:
-            assert eq == ["SPY"]
-            assert future == ["/ESZ4"]
-            return [
-                {"symbol": "SPY", "beta": "1"},
-                {"symbol": "/ESZ4", "beta": "2"},
-            ]
+        assert eq == ["SPY"]
+        assert eq_opt == ["SPY_C"]
+        assert future == ["/ESZ4"]
+        assert future_opt == ["/ESZ4O"]
+        return [
+            {"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"},
+            {"symbol": "/ESZ4O", "mark": "10", "close": "9", "delta": "0.1"},
+            {"symbol": "SPY", "beta": "1"},
+            {"symbol": "/ESZ4", "beta": "2"},
+        ]
 
     def fake_balance(token, acct):
         return {
@@ -571,10 +568,14 @@ async def test_percent_used_bp(client, monkeypatch):
         return []
 
     def fake_market(token, eq, eq_opt, future, future_opt):
-        if eq_opt or future_opt:
-            return [{"symbol": "SPY_C", "mark": "10", "close": "9"}]
-        else:
-            return [{"symbol": "SPY", "beta": "1"}]
+        assert eq == ["SPY"]
+        assert eq_opt == ["SPY_C"]
+        assert future == []
+        assert future_opt == []
+        return [
+            {"symbol": "SPY_C", "mark": "10", "close": "9"},
+            {"symbol": "SPY", "beta": "1"},
+        ]
 
     def fake_balance(token, acct):
         return {
