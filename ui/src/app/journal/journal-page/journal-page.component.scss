@@ -11,8 +11,7 @@
   gap: 16px;
 
   @media (min-width: 768px) {
-    flex-direction: row;
-    align-items: flex-start;
+    flex-direction: column; // keep journal-list above journal-form
   }
 }
 
@@ -24,8 +23,4 @@
 .journal-form {
   flex: none;
   width: 100%;
-
-  @media (min-width: 768px) {
-    max-width: 400px;
-  }
 }
