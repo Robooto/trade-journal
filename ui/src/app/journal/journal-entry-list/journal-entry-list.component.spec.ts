@@ -54,7 +54,7 @@ describe('JournalEntryListComponent', () => {
       expect(textArg).toContain(entry.date);
       expect(textArg).toContain(entry.esPrice.toString());
       expect(textArg).toContain(entry.marketDirection);
-      expect(textArg).toContain(entry.delta.toString());
+      expect(textArg).toContain(entry.delta!.toString());
       expect(textArg).toContain(entry.notes);
       expect(textArg).toContain(entry.events[0].note);
     }));

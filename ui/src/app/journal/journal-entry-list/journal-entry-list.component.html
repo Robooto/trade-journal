@@ -11,7 +11,7 @@
         [ngClass]="{
       up:   e.marketDirection === 'up',
       down: e.marketDirection === 'down'
-    }"> ES {{ e.esPrice }} </span> — Δ {{ e.delta }}
+    }"> ES {{ e.esPrice }} </span> — Δ {{ e.delta ?? 'n/a' }}
         <span class="event-count" *ngIf="e.events?.length">
           ({{ e.events.length }} {{ e.events.length === 1 ? 'event' : 'events' }})
         </span>

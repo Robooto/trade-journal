@@ -50,7 +50,7 @@ describe('JournalPageComponent', () => {
 
     expect(component.entries.map(e => e.id)).toEqual(['x', 'a', 'b']);
     expect(component.totalEntries).toBe(3);
-    expect(component.pageSkip).toBe(20);
+    expect(component.pageSkip).toBe(15);
   });
 
   it('onEntrySelected stores the selected entry', () => {
@@ -73,7 +73,7 @@ describe('JournalPageComponent', () => {
     component.onEntrySaved(component.selectedEntry);
 
     expect(component.selectedEntry).toBeUndefined();
-    expect(component.pageSkip).toBe(20);
+    expect(component.pageSkip).toBe(15);
     expect(component.entries.map(e => e.id)).toEqual(['new']);
     expect(component.totalEntries).toBe(1);
   });

@@ -24,7 +24,7 @@ class Event(BaseModel):
 class JournalEntryBase(BaseModel):
     date: date
     es_price: float = Field(..., alias="esPrice")
-    delta: float
+    delta: Optional[float] = None
     notes: str
     market_direction: MarketDirection = Field(..., alias="marketDirection")
     events: List[Event] = []
