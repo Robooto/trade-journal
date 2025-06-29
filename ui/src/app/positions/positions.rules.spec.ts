@@ -35,7 +35,7 @@ describe('positions rules', () => {
 
   it('lossRule uses percent_credit_received when available', () => {
     const g = makeGroup({ percent_credit_received: -200 });
-    expect(lossRule(g)).toEqual({ id: '2x loss', level: 'warning' });
+    expect(lossRule(g)).toEqual({ id: '2x loss', level: 'alert' });
   });
 
   it('lossRule calculates percent when not provided', () => {
