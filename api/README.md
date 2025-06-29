@@ -19,7 +19,7 @@ pytest
 
 ## Running the API locally on pycharm community edition
 ## make sure to create your virtual environment first and .env file is set up
-```aiignore
+```
 # cd into the api directory
 source .venv/bin/activate
 uvicorn app.main:app \
@@ -29,5 +29,6 @@ uvicorn app.main:app \
   --env-file /home/boots/code/trade-journal/.env
 ```
 
-
-```http://localhost:8876/docs```
+```
+http://localhost:8876/docs
+```
