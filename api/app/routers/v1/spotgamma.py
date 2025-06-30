@@ -30,11 +30,16 @@ async def hiro_screens():
 
         await page.goto(HIRO_SPY_URL)
         await page.wait_for_load_state('networkidle')
+        await page.get_by_role("button", name="open drawer").click()
+        await page.get_by_role("button", name="chart sizing options").click()
+        await page.get_by_role("button", name="Open Full Screen").click()
         shot1 = await page.screenshot()
         img1 = base64.b64encode(shot1).decode("utf-8")
 
         await page.goto(HIRO_EQUITIES_URL)
         await page.wait_for_load_state('networkidle')
+        await page.get_by_role("button", name="chart sizing options").click()
+        await page.get_by_role("button", name="Open Full Screen").click()
         shot2 = await page.screenshot()
         img2 = base64.b64encode(shot2).decode("utf-8")
 
