@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 import os
 import base64
+from datetime import datetime
 from playwright.async_api import async_playwright
 
 HIRO_SPY_URL = "https://dashboard.spotgamma.com/hiro?eh-model=legacy&sym=S%26P+500"
@@ -45,4 +46,5 @@ async def hiro_screens():
 
         await browser.close()
 
-    return {"images": [img1, img2]}
+    timestamp = datetime.utcnow().isoformat() + "Z"
+    return {"timestamp": timestamp, "images": [img1, img2]}

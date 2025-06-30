@@ -3,6 +3,11 @@
     Get Screens
   </button>
   <div class="screens">
-    <img *ngFor="let img of images" [src]="img" />
+    <div *ngFor="let screen of screens" class="screen-set">
+      <div class="screen-date">{{ screen.timestamp | date:'short' }}</div>
+      <div class="screen-row">
+        <img *ngFor="let img of screen.images" [src]="img" />
+      </div>
+    </div>
   </div>
 </div>
