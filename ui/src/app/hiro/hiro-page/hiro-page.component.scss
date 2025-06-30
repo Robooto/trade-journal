@@ -8,15 +8,34 @@
   margin-bottom: 2rem;
 }
 
+.screen-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
 .screen-row {
   display: flex;
   gap: 1rem;
 }
 
-.screen-row img {
+.img-wrapper {
   flex: 1;
   max-width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.img-wrapper img {
+  width: 100%;
   height: auto;
   border: 1px solid #ccc;
   cursor: pointer;
+}
+
+.cross-result {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
 }
