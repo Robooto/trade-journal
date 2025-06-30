@@ -12,13 +12,6 @@ interface HiroResponse {
   images: HiroImage[];
 }
 
-@Component({
-  selector: 'app-hiro-page',
-  templateUrl: './hiro-page.component.html',
-  styleUrls: ['./hiro-page.component.scss'],
-  standalone: false,
-})
-
 interface ScreenImage {
   name: string;
   url: string;
@@ -31,6 +24,12 @@ interface ScreenSet {
   checking?: boolean;
 }
 
+@Component({
+  selector: 'app-hiro-page',
+  templateUrl: './hiro-page.component.html',
+  styleUrls: ['./hiro-page.component.scss'],
+  standalone: false,
+})
 export class HiroPageComponent {
   screens: ScreenSet[] = [];
   loading = false;
