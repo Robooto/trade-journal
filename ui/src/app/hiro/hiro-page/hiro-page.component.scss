@@ -4,8 +4,18 @@
   gap: 1rem;
 }
 
-.screens img {
+.screen-set {
+  margin-bottom: 2rem;
+}
+
+.screen-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.screen-row img {
+  flex: 1;
   max-width: 100%;
-  margin-bottom: 1rem;
+  height: auto;
   border: 1px solid #ccc;
 }
