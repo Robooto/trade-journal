@@ -10,7 +10,7 @@ router = APIRouter(prefix="/v1/spotgamma", tags=["v1 – spotgamma"])
 
 async def login(page, username: str, password: str) -> None:
     await page.goto("https://dashboard.spotgamma.com/login")
-    await page.fill('input[type="email"]', username)
+    await page.fill('input[type="text"]', username)
     await page.fill('input[type="password"]', password)
     await page.click('button[type="submit"]')
     await page.wait_for_load_state('networkidle')
