@@ -50,8 +50,14 @@ async def hiro_screens():
 
         await browser.close()
 
-    timestamp = datetime.utcnow().isoformat() + "Z"
-    return {"timestamp": timestamp, "images": [img1, img2]}
+    ts = datetime.utcnow()
+    timestamp = ts.isoformat() + "Z"
+    safe_ts = ts.strftime("%Y%m%d-%H%M%S")
+    images = [
+        {"name": f"{safe_ts}-SP500.png", "data": img1},
+        {"name": f"{safe_ts}-SPEquities.png", "data": img2},
+    ]
+    return {"timestamp": timestamp, "images": images}
 
 
 def load_image(file: UploadFile) -> np.ndarray:

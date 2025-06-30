@@ -6,7 +6,7 @@
     <div *ngFor="let screen of screens" class="screen-set">
       <div class="screen-date">{{ screen.timestamp | date:'short' }}</div>
       <div class="screen-row">
-        <img *ngFor="let img of screen.images" [src]="img" />
+        <img *ngFor="let img of screen.images" [src]="img.url" [alt]="img.name" (click)="downloadImage(img)" />
       </div>
     </div>
   </div>
