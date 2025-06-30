@@ -4,9 +4,17 @@
   </button>
   <div class="screens">
     <div *ngFor="let screen of screens" class="screen-set">
-      <div class="screen-date">{{ screen.timestamp | date:'short' }}</div>
+      <div class="screen-header">
+        <div class="screen-date">{{ screen.timestamp | date:'short' }}</div>
+        <button mat-button (click)="detectCross(screen)" [disabled]="screen.checking">Check Cross</button>
+      </div>
       <div class="screen-row">
-        <img *ngFor="let img of screen.images" [src]="img.url" [alt]="img.name" (click)="downloadImage(img)" />
+        <div class="img-wrapper" *ngFor="let img of screen.images">
+          <img [src]="img.url" [alt]="img.name" (click)="downloadImage(img)" />
+          <div class="cross-result" *ngIf="img.crossing !== undefined">
+            {{ img.crossing ? 'Cross detected' : 'No cross' }}
+          </div>
+        </div>
       </div>
     </div>
   </div>
