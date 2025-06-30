@@ -1,5 +1,5 @@
 # 1) Base image with Python
-FROM mcr.microsoft.com/playwright/python:1.43.0-focal
+FROM mcr.microsoft.com/playwright/python:v1.52.0-noble
 WORKDIR /app
 
 # 2) Install dependencies
