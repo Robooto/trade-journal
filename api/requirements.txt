@@ -6,6 +6,7 @@ requests~=2.32.3
 python-multipart==0.0.20
 numpy==2.3.1
 opencv-python-headless==4.11.0.86
+playwright==1.52.0
 
 # Testing dependencies
 pytest==7.4.3

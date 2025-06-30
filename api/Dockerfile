@@ -1,5 +1,5 @@
 # 1) Base image with Python
-FROM mcr.microsoft.com/playwright/python:v1.52.0-noble
+FROM --platform=linux/amd64 mcr.microsoft.com/playwright/python:v1.52.0-noble
 WORKDIR /app
 
 # 2) Install dependencies
