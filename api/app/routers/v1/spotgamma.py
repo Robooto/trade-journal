@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, Form
+from fastapi import APIRouter, HTTPException, UploadFile
 import os
 import base64
 import numpy as np
@@ -144,10 +144,15 @@ def segments_intersect(s1, s2) -> bool:
     # general intersection test
     return (ccw(A, C, D) != ccw(B, C, D)) and (ccw(A, B, C) != ccw(A, B, D))
 
-def detect_cross(img, col1, col2):
-    hsv   = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    mask1 = mask_for_color(hsv, col1)
-    mask2 = mask_for_color(hsv, col2)
+DEFAULT_COLOR_1 = "orange"
+DEFAULT_COLOR_2 = "blue"
+
+
+def detect_cross(img: np.ndarray) -> bool:
+    """Return True if a line of DEFAULT_COLOR_1 crosses a line of DEFAULT_COLOR_2."""
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    mask1 = mask_for_color(hsv, DEFAULT_COLOR_1)
+    mask2 = mask_for_color(hsv, DEFAULT_COLOR_2)
 
     segs1 = extract_line_segments(mask1)
     segs2 = extract_line_segments(mask2)
@@ -161,7 +166,7 @@ def detect_cross(img, col1, col2):
     return False
 
 @router.post("/detect-crossing", summary="Detect crossing in SpotGamma images")
-async def detect_crossing_endpoint(img1: UploadFile, img2: UploadFile, color1: str=Form(default="orange"), color2: str=Form(default="blue")):
+async def detect_crossing_endpoint(img1: UploadFile, img2: UploadFile):
     """
     Detects a cross in two SpotGamma images.
     This is a placeholder function and should be implemented with actual logic.
@@ -172,11 +177,11 @@ async def detect_crossing_endpoint(img1: UploadFile, img2: UploadFile, color1: s
     im2 = load_image(img2)
     img2.file.close()
 
-    crosses1 = detect_cross(im1, color1, color2)
-    crosses2 = detect_cross(im2, color1, color2)
+    crosses1 = detect_cross(im1)
+    crosses2 = detect_cross(im2)
     result = {
-        "image1_crosses": crosses1,
-        "image2_crosses": crosses2
+        img1.filename: crosses1,
+        img2.filename: crosses2
     }
 
     return result
