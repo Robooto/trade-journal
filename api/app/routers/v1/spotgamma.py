@@ -18,9 +18,9 @@ router = APIRouter(prefix="/v1/spotgamma", tags=["v1 – spotgamma"])
 
 def login(driver, username: str, password: str) -> None:
     driver.get("https://dashboard.spotgamma.com/login")
-    driver.find_element(By.CSS_SELECTOR, 'input[type="text"]').send_keys(username)
-    driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(password)
-    driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+    driver.find_element(By.ID, 'login-username').send_keys(username)
+    driver.find_element(By.ID, 'login-password').send_keys(password)
+    driver.find_element(By.TAG_NAME, 'button').click()
     WebDriverWait(driver, 30).until(EC.url_contains("dashboard"))
 
 @router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
@@ -34,27 +34,40 @@ async def hiro_screens():
         options = webdriver.ChromeOptions()
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
+        options.add_argument("--window-size=1920,1080")
         driver = webdriver.Chrome(options=options)
         try:
-            login(driver, username, password)
+            driver.get("https://dashboard.spotgamma.com/login")
+            driver.find_element(By.ID, 'login-username').send_keys(username)
+            driver.find_element(By.ID, 'login-password').send_keys(password)
+            driver.find_element(By.TAG_NAME, 'button').click()
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'button[aria-label="open drawer"]'))
+            )
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
 
             driver.get(HIRO_SPY_URL)
-            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
+            WebDriverWait(driver, 100).until(
+                lambda driver: driver.execute_script('return document.readyState') == 'complete')
             driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
-            # wait till modal is visible
-            WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)'))
+            open_full_btn = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '//button[normalize-space(text())="Open Full Screen"]')
+                )
             )
-            driver.find_element(By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)').click()
+            open_full_btn.click()
             img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
 
             driver.get(HIRO_EQUITIES_URL)
+            WebDriverWait(driver, 100).until(
+                lambda driver: driver.execute_script('return document.readyState') == 'complete')
             driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
-            # wait till modal is visible
-            WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)'))
+            open_full_btn = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable(
+                    (By.XPATH, '//button[normalize-space(text())="Open Full Screen"]')
+                )
             )
-            driver.find_element(By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)').click()
+            open_full_btn.click()
             img2 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
         finally:
             driver.quit()
@@ -136,7 +149,7 @@ def extract_line_segments(mask: np.ndarray) -> List[Tuple[Tuple[int,int],Tuple[i
     lines = cv2.HoughLinesP(
         mask, rho=1, theta=np.pi / 180,
         threshold=20,  # lower threshold to pick up fainter segments
-        minLineLength=20,  # allow shorter bits
+        minLineLength=14,  # allow shorter bits
         maxLineGap=5  # bridge slightly larger gaps
     )
     if lines is None:
