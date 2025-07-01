@@ -30,6 +30,21 @@ async def hiro_screens():
     if not username or not password:
         raise HTTPException(status_code=500, detail="SpotGamma credentials not configured")
 
+    def capture_chart(driver, url: str) -> str:
+        """Navigate to ``url`` and return a base64 screenshot of the chart."""
+        driver.get(url)
+        WebDriverWait(driver, 100).until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]')
+            )
+        )
+        driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
+        open_full_btn = WebDriverWait(driver, 10).until(
+            lambda d: d.find_element(By.XPATH, '//button[normalize-space(text())="Open Full Screen"]')
+        )
+        open_full_btn.click()
+        return base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
+
     def capture():
         options = webdriver.ChromeOptions()
         options.add_argument("--headless=new")
@@ -37,38 +52,16 @@ async def hiro_screens():
         options.add_argument("--window-size=1920,1080")
         driver = webdriver.Chrome(options=options)
         try:
-            driver.get("https://dashboard.spotgamma.com/login")
-            driver.find_element(By.ID, 'login-username').send_keys(username)
-            driver.find_element(By.ID, 'login-password').send_keys(password)
-            driver.find_element(By.TAG_NAME, 'button').click()
+            login(driver, username, password)
             WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'button[aria-label="open drawer"]'))
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, 'button[aria-label="open drawer"]')
+                )
             )
             driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
 
-            driver.get(HIRO_SPY_URL)
-            WebDriverWait(driver, 100).until(
-                lambda driver: driver.execute_script('return document.readyState') == 'complete')
-            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
-            open_full_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable(
-                    (By.XPATH, '//button[normalize-space(text())="Open Full Screen"]')
-                )
-            )
-            open_full_btn.click()
-            img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
-
-            driver.get(HIRO_EQUITIES_URL)
-            WebDriverWait(driver, 100).until(
-                lambda driver: driver.execute_script('return document.readyState') == 'complete')
-            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
-            open_full_btn = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable(
-                    (By.XPATH, '//button[normalize-space(text())="Open Full Screen"]')
-                )
-            )
-            open_full_btn.click()
-            img2 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
+            img1 = capture_chart(driver, HIRO_SPY_URL)
+            img2 = capture_chart(driver, HIRO_EQUITIES_URL)
         finally:
             driver.quit()
         return img1, img2
