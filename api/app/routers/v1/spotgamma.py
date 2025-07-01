@@ -5,20 +5,20 @@ import numpy as np
 import cv2
 from typing import Tuple, List
 from datetime import datetime
-from playwright.async_api import async_playwright
-from pathlib import Path
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import asyncio
 
 HIRO_SPY_URL = "https://dashboard.spotgamma.com/hiro?eh-model=legacy&sym=S%26P+500"
 HIRO_EQUITIES_URL = "https://dashboard.spotgamma.com/hiro?eh-model=legacy&sym=S%26P+Equities"
 
 router = APIRouter(prefix="/v1/spotgamma", tags=["v1 – spotgamma"])
 
-async def login(page, username: str, password: str) -> None:
-    await page.goto("https://dashboard.spotgamma.com/login")
-    await page.fill('input[type="text"]', username)
-    await page.fill('input[type="password"]', password)
-    await page.click('button[type="submit"]')
-    await page.wait_for_load_state('networkidle')
+def login(driver, username: str, password: str) -> None:
+    driver.get("https://dashboard.spotgamma.com/login")
+    driver.find_element(By.CSS_SELECTOR, 'input[type="text"]').send_keys(username)
+    driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(password)
+    driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
 
 @router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
 async def hiro_screens():
@@ -27,28 +27,29 @@ async def hiro_screens():
     if not username or not password:
         raise HTTPException(status_code=500, detail="SpotGamma credentials not configured")
 
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=["--no-sandbox"])
-        context = await browser.new_context()
-        page = await context.new_page()
-        await login(page, username, password)
+    def capture():
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        driver = webdriver.Chrome(options=options)
+        try:
+            login(driver, username, password)
 
-        await page.goto(HIRO_SPY_URL)
-        await page.wait_for_load_state('networkidle')
-        await page.get_by_role("button", name="open drawer").click()
-        await page.get_by_role("button", name="chart sizing options").click()
-        await page.get_by_role("button", name="Open Full Screen").click()
-        shot1 = await page.screenshot()
-        img1 = base64.b64encode(shot1).decode("utf-8")
+            driver.get(HIRO_SPY_URL)
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Open Full Screen"]').click()
+            img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
 
-        await page.goto(HIRO_EQUITIES_URL)
-        await page.wait_for_load_state('networkidle')
-        await page.get_by_role("button", name="chart sizing options").click()
-        await page.get_by_role("button", name="Open Full Screen").click()
-        shot2 = await page.screenshot()
-        img2 = base64.b64encode(shot2).decode("utf-8")
+            driver.get(HIRO_EQUITIES_URL)
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Open Full Screen"]').click()
+            img2 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
+        finally:
+            driver.quit()
+        return img1, img2
 
-        await browser.close()
+    img1, img2 = await asyncio.to_thread(capture)
 
     ts = datetime.utcnow()
     timestamp = ts.isoformat() + "Z"
