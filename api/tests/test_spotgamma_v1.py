@@ -5,47 +5,28 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_hiro_screens(client, monkeypatch):
-    class DummyLocator:
-        async def click(self):
+    class DummyElement:
+        def click(self):
+            pass
+        def send_keys(self, *a, **kw):
             pass
 
-    class DummyPage:
-        async def goto(self, url):
+    class DummyDriver:
+        def get(self, url):
             pass
-        async def wait_for_load_state(self, state):
-            pass
-        def get_by_role(self, *a, **kw):
-            return DummyLocator()
-        async def screenshot(self):
+        def find_element(self, *a, **kw):
+            return DummyElement()
+        def get_screenshot_as_png(self):
             return b'data'
-        async def fill(self, *args, **kwargs):
-            pass
-    class DummyContext:
-        async def new_page(self):
-            return DummyPage()
-    class DummyBrowser:
-        async def new_context(self):
-            return DummyContext()
-        async def close(self):
-            pass
-    class DummyChromium:
-        async def launch(self, headless=True, args=None):
-            return DummyBrowser()
-    class DummyPlaywright:
-        def __init__(self):
-            self.chromium = DummyChromium()
-    class DummyManager:
-        async def __aenter__(self):
-            return DummyPlaywright()
-        async def __aexit__(self, exc_type, exc, tb):
+        def quit(self):
             pass
 
     monkeypatch.setenv("SPOTGAMMA_USERNAME", "u")
     monkeypatch.setenv("SPOTGAMMA_PASSWORD", "p")
     import app.routers.v1.spotgamma as spg
-    monkeypatch.setattr(spg, "async_playwright", lambda: DummyManager())
+    monkeypatch.setattr(spg.webdriver, "Chrome", lambda options=None: DummyDriver())
 
-    async def fake_login(*args, **kwargs):
+    def fake_login(*args, **kwargs):
         return None
 
     monkeypatch.setattr(spg, "login", fake_login)
