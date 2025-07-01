@@ -4,6 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+      python3-opencv \
       build-essential \
       python3-dev \
       libssl-dev \
