@@ -21,7 +21,7 @@ RUN pip install --upgrade pip \
 # 3) Bundle the app
 COPY api/app ./app
 
-RUN apt-get purge -y --auto-remove \
+RUN apt-get purge -y \
       build-essential python3-dev libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
