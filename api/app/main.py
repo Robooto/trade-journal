@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models
 from app.db import engine
-from app.routers.v1 import hello as hello_v1, entries as entries_v1, trades as trades_v1, spotgamma as spotgamma_v1
+from app.routers.v1 import hello as hello_v1, entries as entries_v1, trades as trades_v1#, spotgamma as spotgamma_v1
 
 
 @asynccontextmanager
@@ -35,7 +35,7 @@ logging.basicConfig(level=logging.ERROR)
 app.include_router(hello_v1.router)
 app.include_router(entries_v1.router)
 app.include_router(trades_v1.router)
-app.include_router(spotgamma_v1.router)
+#app.include_router(spotgamma_v1.router)
 
 @app.exception_handler(Exception)
 async def log_exceptions(request: Request, exc: Exception):
