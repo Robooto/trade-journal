@@ -21,9 +21,6 @@ RUN pip install --upgrade pip \
 # 3) Bundle the app
 COPY api/app ./app
 
-RUN apt-get purge -y \
-      build-essential python3-dev libssl-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 # 4) Launch with Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000"]
