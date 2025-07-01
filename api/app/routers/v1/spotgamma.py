@@ -7,6 +7,8 @@ from typing import Tuple, List
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import asyncio
 
 HIRO_SPY_URL = "https://dashboard.spotgamma.com/hiro?eh-model=legacy&sym=S%26P+500"
@@ -19,6 +21,7 @@ def login(driver, username: str, password: str) -> None:
     driver.find_element(By.CSS_SELECTOR, 'input[type="text"]').send_keys(username)
     driver.find_element(By.CSS_SELECTOR, 'input[type="password"]').send_keys(password)
     driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]').click()
+    WebDriverWait(driver, 30).until(EC.url_contains("dashboard"))
 
 @router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
 async def hiro_screens():
@@ -38,12 +41,20 @@ async def hiro_screens():
             driver.get(HIRO_SPY_URL)
             driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
             driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
-            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Open Full Screen"]').click()
+            # wait till modal is visible
+            WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)'))
+            )
+            driver.find_element(By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)').click()
             img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
 
             driver.get(HIRO_EQUITIES_URL)
             driver.find_element(By.CSS_SELECTOR, 'button[aria-label="chart sizing options"]').click()
-            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="Open Full Screen"]').click()
+            # wait till modal is visible
+            WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)'))
+            )
+            driver.find_element(By.CSS_SELECTOR, 'button.MuiButton-text:nth-child(3)').click()
             img2 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
         finally:
             driver.quit()
