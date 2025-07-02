@@ -66,7 +66,7 @@ async def hiro_screens():
         driver = webdriver.Chrome(service=service, options=options)
         try:
             login(driver, username, password)
-            WebDriverWait(driver, 30).until(
+            WebDriverWait(driver, 100).until(
                 EC.presence_of_element_located(
                     (By.CSS_SELECTOR, 'button[aria-label="open drawer"]')
                 )
