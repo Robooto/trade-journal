@@ -9,7 +9,7 @@ RUN apt-get update && \
       build-essential \
       python3-dev \
       libssl-dev \
-      chromium \
+      chromium-browser \
       chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
