@@ -214,6 +214,10 @@ def group_positions_and_compute_totals(
                 except (ValueError, TypeError):
                     avg_open = 0.0
                 try:
+                    qty = int(p.get("quantity", 1))
+                except (ValueError, TypeError):
+                    qty = 1
+                try:
                     pl_val = float(p.get("approximate-p-l", 0))
                 except (ValueError, TypeError):
                     pl_val = 0.0
@@ -225,7 +229,7 @@ def group_positions_and_compute_totals(
                         multiplier = 1
 
                 sign = -1 if qty_dir == "Long" else 1
-                total_credit_unrounded += sign * avg_open
+                total_credit_unrounded += sign * avg_open * qty
                 current_price_unrounded += pl_val
 
                 md = p.get("market_data", {})
