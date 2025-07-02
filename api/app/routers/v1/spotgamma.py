@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, UploadFile
 import os
+import platform
 import base64
 import numpy as np
 import cv2
 from typing import Tuple, List
 from datetime import datetime
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -52,7 +54,16 @@ async def hiro_screens():
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument('--remote-debugging-port=9222')
         options.add_argument("--window-size=1920,1080")
-        driver = webdriver.Chrome(options=options)
+        print(">>> Platform", platform.machine())
+        is_pi = platform.machine().startswith(("arm", "aarch64"))
+        if is_pi:
+            options.binary_location = "/usr/bin/chromium"
+            service = Service("/usr/bin/chromedriver")
+        else:
+            # Rely on PATH or defaults on local/WSL
+            service = Service()
+
+        driver = webdriver.Chrome(service=service, options=options)
         try:
             login(driver, username, password)
             WebDriverWait(driver, 30).until(
