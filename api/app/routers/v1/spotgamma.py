@@ -20,10 +20,25 @@ router = APIRouter(prefix="/v1/spotgamma", tags=["v1 – spotgamma"])
 
 def login(driver, username: str, password: str) -> None:
     driver.get("https://dashboard.spotgamma.com/login")
-    driver.find_element(By.ID, 'login-username').send_keys(username)
-    driver.find_element(By.ID, 'login-password').send_keys(password)
+    username_field = driver.find_element(By.ID, 'login-username')
+    password_field = driver.find_element(By.ID, 'login-password')
+
+    # Clear fields and enter credentials
+    username_field.clear()
+    password_field.clear()
+    username_field.send_keys(username)
+    password_field.send_keys(password)
+
+    # Ensure the password field is fully populated
+    WebDriverWait(driver, 10).until(
+        lambda d: password_field.get_attribute("value") == password
+    )
+
+    # Click the login button
     driver.find_element(By.TAG_NAME, 'button').click()
-    WebDriverWait(driver, 120).until(EC.url_contains("home"))
+
+    # Wait for the post-login page to load
+    WebDriverWait(driver, 30).until(EC.url_contains("dashboard"))
 
 @router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
 async def hiro_screens():
