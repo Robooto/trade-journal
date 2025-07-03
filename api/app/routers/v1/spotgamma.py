@@ -23,7 +23,7 @@ def login(driver, username: str, password: str) -> None:
     driver.find_element(By.ID, 'login-username').send_keys(username)
     driver.find_element(By.ID, 'login-password').send_keys(password)
     driver.find_element(By.TAG_NAME, 'button').click()
-    WebDriverWait(driver, 30).until(EC.url_contains("home"))
+    WebDriverWait(driver, 120).until(EC.url_contains("home"))
 
 @router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
 async def hiro_screens():
