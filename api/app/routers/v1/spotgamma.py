@@ -66,17 +66,17 @@ async def hiro_screens():
         driver = webdriver.Chrome(service=service, options=options)
         try:
             login(driver, username, password)
-            # img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
-            # img2 = capture_chart(driver, HIRO_EQUITIES_URL)
-            WebDriverWait(driver, 30).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'button[aria-label="open drawer"]')
-                )
-            )
-            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
-
-            img1 = capture_chart(driver, HIRO_SPY_URL)
+            img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
             img2 = capture_chart(driver, HIRO_EQUITIES_URL)
+            # WebDriverWait(driver, 30).until(
+            #     EC.presence_of_element_located(
+            #         (By.CSS_SELECTOR, 'button[aria-label="open drawer"]')
+            #     )
+            # )
+            # driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
+            #
+            # img1 = capture_chart(driver, HIRO_SPY_URL)
+            # img2 = capture_chart(driver, HIRO_EQUITIES_URL)
         finally:
             driver.quit()
         return img1, img2
