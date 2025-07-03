@@ -38,7 +38,7 @@ def login(driver, username: str, password: str) -> None:
     driver.find_element(By.TAG_NAME, 'button').click()
 
     # Wait for the post-login page to load
-    WebDriverWait(driver, 30).until(EC.url_contains("dashboard"))
+    WebDriverWait(driver, 30).until(EC.url_contains("home"))
 
 @router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
 async def hiro_screens():
