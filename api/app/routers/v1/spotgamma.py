@@ -28,7 +28,6 @@ def login(driver, username: str, password: str) -> None:
     password_field.clear()
     username_field.send_keys(username)
     password_field.send_keys(password)
-    print(username, password)
     # Ensure the password field is fully populated
     WebDriverWait(driver, 10).until(
         lambda d: password_field.get_attribute("value") == password
@@ -81,17 +80,15 @@ async def hiro_screens():
         driver = webdriver.Chrome(service=service, options=options)
         try:
             login(driver, username, password)
-            img1 = base64.b64encode(driver.get_screenshot_as_png()).decode("utf-8")
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, 'button[aria-label="open drawer"]')
+                )
+            )
+            driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
+
+            img1 = capture_chart(driver, HIRO_SPY_URL)
             img2 = capture_chart(driver, HIRO_EQUITIES_URL)
-            # WebDriverWait(driver, 30).until(
-            #     EC.presence_of_element_located(
-            #         (By.CSS_SELECTOR, 'button[aria-label="open drawer"]')
-            #     )
-            # )
-            # driver.find_element(By.CSS_SELECTOR, 'button[aria-label="open drawer"]').click()
-            #
-            # img1 = capture_chart(driver, HIRO_SPY_URL)
-            # img2 = capture_chart(driver, HIRO_EQUITIES_URL)
         finally:
             driver.quit()
         return img1, img2
