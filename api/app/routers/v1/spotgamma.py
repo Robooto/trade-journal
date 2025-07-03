@@ -28,7 +28,7 @@ def login(driver, username: str, password: str) -> None:
     password_field.clear()
     username_field.send_keys(username)
     password_field.send_keys(password)
-
+    print(username, password)
     # Ensure the password field is fully populated
     WebDriverWait(driver, 10).until(
         lambda d: password_field.get_attribute("value") == password
