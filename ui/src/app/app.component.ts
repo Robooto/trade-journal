@@ -11,6 +11,8 @@ import { FuturesService } from './shared/futures.service';
 export class AppComponent {
   view: 'journal' = 'journal';
   currentContract: string;
+  isCollapsed = false;
+  
   get loading$() {
     return this.loadingService.loading$;
   }
@@ -20,5 +22,9 @@ export class AppComponent {
     private futures: FuturesService
   ) {
     this.currentContract = this.futures.getCurrentESContract();
+  }
+
+  toggleSidebar() {
+    this.isCollapsed = !this.isCollapsed;
   }
 }

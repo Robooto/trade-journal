@@ -16,8 +16,8 @@
 :host {
   .es-price {
     padding: 0 var(--spacing-xs);
-    &.up   { color: var(--mat-sys-success); }
-    &.down { color: var(--mat-sys-error); }
+    &.up   { color: #4caf50; }
+    &.down { color: #f44336; }
   }
 }
 

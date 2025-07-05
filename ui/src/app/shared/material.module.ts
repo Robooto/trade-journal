@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @NgModule({
   imports: [
@@ -27,6 +28,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     MatButtonToggleModule,
     MatTableModule,
     MatProgressBarModule,
+    MatTooltipModule,
   ],
   exports: [
     MatSidenavModule,
@@ -40,6 +42,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
     MatButtonToggleModule,
     MatTableModule,
     MatProgressBarModule,
+    MatTooltipModule,
   ]
 })
 export class SharedMaterialModule {}
