@@ -1,12 +1,12 @@
 form {
   max-width: 900px;
   width: 100%;
-  margin: 16px;
+  margin: var(--spacing-sm);
 }
 
 .row-fields {
   display: flex;
-  gap: 16px;
+  gap: var(--spacing-sm);
   flex-wrap: wrap;
   width: 100%;
 }
@@ -19,27 +19,27 @@ form {
 }
 
 .market-toggle {
-  margin: 16px 0;
+  margin: var(--spacing-sm) 0;
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-xs);
 }
 
 .button-row {
   display: flex;
   justify-content: space-between;
-  margin-top: 16px;
+  margin-top: var(--spacing-sm);
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--spacing-xs);
 }
 
 .left-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-xs);
 }
 
 .right-buttons {
   display: flex;
-  gap: 8px;
+  gap: var(--spacing-xs);
 }
 
 @media (max-width: 600px) {

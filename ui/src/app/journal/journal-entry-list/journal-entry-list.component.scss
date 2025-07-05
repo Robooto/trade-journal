@@ -15,17 +15,16 @@
 
 :host {
   .es-price {
-    padding: 0 4px;
-    /* default to neutral if you like */
-    &.up   { color: green; }
-    &.down { color: red;   }
+    padding: 0 var(--spacing-xs);
+    &.up   { color: var(--mat-sys-success); }
+    &.down { color: var(--mat-sys-error); }
   }
 }
 
 .event-count {
-  margin-left: 8px;
-  font-size: 0.875rem;    /* slightly smaller text so it doesn’t dominate */
-  color: rgba(166, 166, 166, 0.6); /* a bit muted so it’s informative but not “loud” */
+  margin-left: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--mat-sys-outline);
 }
 
 .full-note p {
