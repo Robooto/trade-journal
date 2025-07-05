@@ -8,10 +8,10 @@ mat-sidenav-content {
 }
 
 .content {
-  flex: 1;             // ← fills below the toolbar
+  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: var(--spacing-sm);
 }
 
 .app-sidenav {
@@ -26,7 +26,7 @@ a.active-link {
 }
 
 .contract {
-  margin-left: 16px;
+  margin-left: var(--spacing-sm);
   font-weight: bold;
 }
 
@@ -37,5 +37,5 @@ a.active-link {
 .robin-icon {
   height: 32px;
   width: 32px;
-  margin-left: 8px;
+  margin-left: var(--spacing-xs);
 }

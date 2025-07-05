@@ -1,14 +1,14 @@
-<div class="hiro">
+<div class="flex flex-col gap-md p-md">
   <button mat-raised-button color="primary" (click)="getScreens()" [disabled]="loading">
     Get Screens
   </button>
-  <div class="screens">
-    <div *ngFor="let screen of screens" class="screen-set">
-      <div class="screen-header">
+  <div class="flex flex-col gap-lg">
+    <div *ngFor="let screen of screens" class="mb-lg">
+      <div class="flex items-center gap-md mb-sm">
         <div class="screen-date">{{ screen.timestamp | date:'short' }}</div>
         <button mat-button (click)="detectCross(screen)" [disabled]="screen.checking">Check Cross</button>
       </div>
-      <div class="screen-row">
+      <div class="flex gap-md">
         <div class="img-wrapper" *ngFor="let img of screen.images">
           <img [src]="img.url" [alt]="img.name" (click)="downloadImage(img)" />
           <div class="cross-result" *ngIf="img.crossing !== undefined">

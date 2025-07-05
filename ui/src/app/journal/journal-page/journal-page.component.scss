@@ -1,22 +1,11 @@
 :host {
   display: flex;
   flex-direction: column;
-  height: 100%;        // ← critical so it fills the shell’s .content
-}
-
-.journal-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: 16px;
-
-  @media (min-width: 768px) {
-    flex-direction: column; // keep journal-list above journal-form
-  }
+  height: 100%;
 }
 
 .journal-list {
-  flex: 1;             // ← list grows & scrolls
+  flex: 1;
   overflow-y: auto;
 }
 
