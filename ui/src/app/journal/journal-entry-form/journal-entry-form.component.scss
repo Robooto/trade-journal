@@ -2,6 +2,7 @@ form {
   max-width: 900px;
   width: 100%;
   margin: var(--spacing-sm);
+  padding: 0 var(--spacing-xs);
 }
 
 .row-fields {
@@ -12,6 +13,7 @@ form {
 }
 .row-fields mat-form-field {
   flex: 1 1 0;
+  min-width: 0;
 }
 
 .full-width {
@@ -22,6 +24,8 @@ form {
   margin: var(--spacing-sm) 0;
   display: flex;
   gap: var(--spacing-xs);
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .button-row {
@@ -35,6 +39,7 @@ form {
 .left-buttons {
   display: flex;
   gap: var(--spacing-xs);
+  flex-wrap: wrap;
 }
 
 .right-buttons {
@@ -42,14 +47,61 @@ form {
   gap: var(--spacing-xs);
 }
 
+@media (max-width: 768px) {
+  form {
+    margin: var(--spacing-xs);
+    padding: 0;
+  }
+  
+  .row-fields {
+    gap: var(--spacing-xs);
+  }
+  
+  .row-fields mat-form-field {
+    min-width: 120px;
+  }
+  
+  .market-toggle {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .market-toggle mat-button-toggle {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 600px) {
+  .row-fields {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .row-fields mat-form-field {
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+  
   .button-row {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--spacing-sm);
   }
+  
   .left-buttons, .right-buttons {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .left-buttons {
+    gap: var(--spacing-xs);
+  }
+  
+  .left-buttons button {
+    flex: 1;
+    min-width: 0;
   }
 }
 
