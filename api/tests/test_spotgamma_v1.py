@@ -5,37 +5,19 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_hiro_screens(client, monkeypatch):
-    class DummyElement:
-        def click(self):
-            pass
-        def send_keys(self, *a, **kw):
-            pass
+    # Mock the SpotGamma service
+    class MockSpotGammaService:
+        async def get_hiro_screenshots(self):
+            return {
+                "timestamp": "2024-01-01T00:00:00Z",
+                "images": [
+                    {"name": "20240101-000000-SP500.png", "data": base64.b64encode(b'data').decode()},
+                    {"name": "20240101-000000-SPEquities.png", "data": base64.b64encode(b'data').decode()}
+                ]
+            }
 
-    class DummyDriver:
-        def get(self, url):
-            pass
-        def find_element(self, *a, **kw):
-            return DummyElement()
-        def get_screenshot_as_png(self):
-            return b'data'
-        def quit(self):
-            pass
-
-    monkeypatch.setenv("SPOTGAMMA_USERNAME", "u")
-    monkeypatch.setenv("SPOTGAMMA_PASSWORD", "p")
-    import app.routers.v1.spotgamma as spg
-    monkeypatch.setattr(spg.webdriver, "Chrome", lambda options=None: DummyDriver())
-
-    def fake_login(*args, **kwargs):
-        return None
-
-    monkeypatch.setattr(spg, "login", fake_login)
-    class FakeDateTime:
-        @classmethod
-        def utcnow(cls):
-            return real_datetime(2024, 1, 1, 0, 0, 0)
-
-    monkeypatch.setattr(spg, "datetime", FakeDateTime)
+    # Patch the service import in the routes module
+    monkeypatch.setattr("app.routers.v1.spotgamma.SpotGammaService", MockSpotGammaService)
 
     resp = await client.get("/v1/spotgamma/hiro")
     assert resp.status_code == 200
@@ -49,13 +31,18 @@ async def test_hiro_screens(client, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_detect_crossing(client, monkeypatch):
-    def fake_load(f):
-        return f.filename
-    def fake_detect(img):
-        return img == "a"
-    monkeypatch.setattr("app.routers.v1.spotgamma.load_image", fake_load)
-    monkeypatch.setattr("app.routers.v1.spotgamma.detect_cross", fake_detect)
+    # Mock the ImageAnalysisService
+    class MockImageAnalysisService:
+        def analyze_chart_crossing(self, img1, img2):
+            return {
+                img1.filename: img1.filename == "a",
+                img2.filename: img2.filename == "b"
+            }
+
+    # Patch the service import in the routes module
+    monkeypatch.setattr("app.routers.v1.spotgamma.ImageAnalysisService", MockImageAnalysisService)
+    
     files = {"img1": ("a", b"foo", "image/png"), "img2": ("b", b"bar", "image/png")}
     resp = await client.post("/v1/spotgamma/detect-crossing", files=files)
     assert resp.status_code == 200
-    assert resp.json() == {"a": True, "b": False}
+    assert resp.json() == {"a": True, "b": True}
