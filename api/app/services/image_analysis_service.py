@@ -87,15 +87,24 @@ class ImageAnalysisService:
             mask,
             rho=1,
             theta=np.pi / 180,
-            threshold=20,
-            minLineLength=14,
-            maxLineGap=5
+            threshold=25,
+            minLineLength=20,
+            maxLineGap=8
         )
         
         if lines is None:
             return []
         
-        return [((x1, y1), (x2, y2)) for [[x1, y1, x2, y2]] in lines]
+        segments = [((x1, y1), (x2, y2)) for [[x1, y1, x2, y2]] in lines]
+        
+        # Filter out very short segments and merge nearby segments
+        filtered_segments = []
+        for segment in segments:
+            length = self._distance(segment[0], segment[1])
+            if length > 15:  # Only keep segments longer than 15 pixels
+                filtered_segments.append(segment)
+        
+        return filtered_segments
     
     def _ccw(self, A: Tuple[int, int], B: Tuple[int, int], C: Tuple[int, int]) -> bool:
         """Test if points A, B, C are listed in counter-clockwise order"""
@@ -103,10 +112,25 @@ class ImageAnalysisService:
     
     def _segments_intersect(self, s1: Tuple[Tuple[int, int], Tuple[int, int]], 
                            s2: Tuple[Tuple[int, int], Tuple[int, int]]) -> bool:
-        """Check if two line segments intersect"""
+        """Check if two line segments intersect, excluding shared endpoints"""
         A, B = s1
         C, D = s2
+        
+        # Check if segments share an endpoint (avoid false positives)
+        if A == C or A == D or B == C or B == D:
+            return False
+        
+        # Check if endpoints are too close (within 5 pixels)
+        min_distance = 5
+        if (self._distance(A, C) < min_distance or self._distance(A, D) < min_distance or 
+            self._distance(B, C) < min_distance or self._distance(B, D) < min_distance):
+            return False
+        
         return (self._ccw(A, C, D) != self._ccw(B, C, D)) and (self._ccw(A, B, C) != self._ccw(A, B, D))
+    
+    def _distance(self, p1: Tuple[int, int], p2: Tuple[int, int]) -> float:
+        """Calculate Euclidean distance between two points"""
+        return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
     
     def detect_line_crossing(self, img: np.ndarray, color1: str = "orange", color2: str = "blue") -> bool:
         """Detect if lines of color1 cross lines of color2"""
