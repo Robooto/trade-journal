@@ -7,11 +7,11 @@
   >
     Load Older Entries
   </button>
-  <app-journal-entry-list
+  <app-journal-timeline
     [entries]="entries"
     (entrySelected)="onEntrySelected($event)"
-    class="journal-list"
-  ></app-journal-entry-list>
+    class="journal-timeline"
+  ></app-journal-timeline>
 
   <app-journal-entry-form
     [entry]="selectedEntry"

@@ -1,107 +1,126 @@
-<form [formGroup]="form" (ngSubmit)="submit()">
-  <!-- top row: date, ES price, delta -->
-  <div class="row-fields">
-    <mat-form-field appearance="fill">
-      <mat-label>Date</mat-label>
-      <input matInput type="date" formControlName="date" />
-    </mat-form-field>
-
-    <mat-form-field appearance="fill">
-      <mat-label>ES Price</mat-label>
-      <input matInput type="number" formControlName="esPrice" />
-    </mat-form-field>
-
-    <mat-button-toggle-group
-      formControlName="marketDirection"
-      aria-label="Market Up or Down"
-      appearance="legacy"
-      class="market-toggle"
-    >
-      <mat-button-toggle value="up">
-        <mat-icon>arrow_upward</mat-icon>
-        Up
-      </mat-button-toggle>
-      <mat-button-toggle value="down">
-        <mat-icon>arrow_downward</mat-icon>
-        Down
-      </mat-button-toggle>
-    </mat-button-toggle-group>
-
-    <mat-form-field appearance="fill">
-      <mat-label>Delta</mat-label>
-      <input matInput type="number" formControlName="delta" />
-    </mat-form-field>
-  </div>
-
-  <!-- main notes below -->
-  <mat-form-field appearance="fill" class="full-width">
-    <mat-label>Notes</mat-label>
-    <textarea
-      matInput
-      formControlName="notes"
-      rows="4"
-      placeholder="Morning thoughts…"
-    ></textarea>
-  </mat-form-field>
-
-
-  <h3>Intra-day Notes</h3>
-  <div formArrayName="events">
-    <div
-      *ngFor="let ev of events.controls; let i = index"
-      [formGroupName]="i"
-      class="event-group"
-    >
-      <!-- time & price side by side -->
-      <div class="row-fields">
-        <mat-form-field appearance="fill">
-          <mat-label>Time</mat-label>
-          <input matInput formControlName="time" />
-        </mat-form-field>
-
-        <mat-form-field appearance="fill">
-          <mat-label>Price</mat-label>
-          <input matInput type="number" formControlName="price" />
+<form [formGroup]="form" (ngSubmit)="submit()" class="minimalist-form">
+  <!-- Single line with all main fields -->
+  <div class="form-header">
+    <div class="header-fields">
+      <div class="field-group">
+        <mat-icon>calendar_today</mat-icon>
+        <mat-form-field appearance="outline" class="date-field">
+          <input matInput type="date" formControlName="date" />
         </mat-form-field>
       </div>
-
-      <!-- intra-day note below those -->
-      <mat-form-field appearance="fill" class="full-width">
-        <mat-label>Note</mat-label>
-        <textarea
-          matInput
-          formControlName="note"
-          rows="3"
-          placeholder="What happened at this time…"
-        ></textarea>
-      </mat-form-field>
+      
+      <div class="field-group">
+        <mat-icon>trending_up</mat-icon>
+        <mat-form-field appearance="outline" class="compact-field">
+          <mat-label>ES Price</mat-label>
+          <input matInput type="number" formControlName="esPrice" placeholder="6272" />
+        </mat-form-field>
+      </div>
+      
+      <mat-button-toggle-group
+        formControlName="marketDirection"
+        aria-label="Market Up or Down"
+        appearance="standard"
+        class="direction-toggle"
+      >
+        <mat-button-toggle value="up">
+          <mat-icon>arrow_upward</mat-icon>
+          Up
+        </mat-button-toggle>
+        <mat-button-toggle value="down">
+          <mat-icon>arrow_downward</mat-icon>
+          Down
+        </mat-button-toggle>
+      </mat-button-toggle-group>
+      
+      <div class="field-group">
+        <span class="delta-symbol">Δ</span>
+        <mat-form-field appearance="outline" class="compact-field">
+          <mat-label>Delta</mat-label>
+          <input matInput type="number" formControlName="delta" placeholder="+20" />
+        </mat-form-field>
+      </div>
     </div>
   </div>
 
-  <div class="button-row">
-    <div class="left-buttons">
-      <button mat-button type="button" (click)="addEvent()">
-        Add Intra-day Note
+  <!-- Market Notes Section -->
+  <div class="notes-section">
+    <h3 class="section-title">
+      <mat-icon>edit_note</mat-icon>
+      Market Notes
+    </h3>
+    <mat-form-field appearance="outline" class="notes-field">
+      <textarea
+        matInput
+        formControlName="notes"
+        rows="4"
+        placeholder="Morning thoughts on market direction and key levels to watch..."
+      ></textarea>
+    </mat-form-field>
+  </div>
+
+
+  <!-- Timeline Events Section -->
+  <div class="timeline-section">
+    <div class="section-header">
+      <h3 class="section-title">
+        <mat-icon>schedule</mat-icon>
+        Timeline Events
+      </h3>
+      <button mat-button type="button" (click)="addEvent()" class="add-event-btn">
+        <mat-icon>add</mat-icon>
+        Add Event
       </button>
-      <button mat-button
-              type="button"
-              (click)="cancel()"
-              *ngIf="form.get('id')?.value">
+    </div>
+    
+    <div class="timeline-divider"></div>
+    
+    <div formArrayName="events" class="events-container">
+      <div
+        *ngFor="let ev of events.controls; let i = index"
+        [formGroupName]="i"
+        class="timeline-event-form"
+      >
+        <!-- Time and Price on same line -->
+        <div class="event-time-price">
+          <mat-icon>access_time</mat-icon>
+          <mat-form-field appearance="outline" class="time-field">
+            <input matInput formControlName="time" placeholder="10:15 AM" />
+          </mat-form-field>
+          <span class="price-separator">&#64;</span>
+          <mat-form-field appearance="outline" class="price-field">
+            <input matInput type="number" formControlName="price" placeholder="5855" />
+          </mat-form-field>
+        </div>
+        
+        <!-- Note below -->
+        <mat-form-field appearance="outline" class="event-note-field">
+          <textarea
+            matInput
+            formControlName="note"
+            rows="2"
+            placeholder="What happened at this time..."
+          ></textarea>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="form-actions">
+    <div class="left-actions">
+      <button mat-button type="button" (click)="cancel()" *ngIf="form.get('id')?.value">
         Clear
       </button>
-      <button mat-raised-button
-              color="primary"
-              type="submit">
+      <button mat-raised-button color="primary" type="submit" class="save-btn">
+        <mat-icon>save</mat-icon>
         {{ form.get('id')?.value ? 'Update' : 'Save' }} Entry
       </button>
     </div>
-
-    <div class="right-buttons">
-      <button mat-stroked-button
-              color="warn"
-              type="button"
-              (click)="confirmDelete()"
-              *ngIf="form.get('id')?.value">
+    
+    <div class="right-actions">
+      <button mat-stroked-button color="warn" type="button" (click)="confirmDelete()" *ngIf="form.get('id')?.value">
+        <mat-icon>delete</mat-icon>
         Delete
       </button>
     </div>

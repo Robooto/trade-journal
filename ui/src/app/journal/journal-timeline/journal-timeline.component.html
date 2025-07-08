@@ -1,0 +1,74 @@
+<div class="timeline-container" *ngIf="entries.length; else noEntries">
+  <div class="timeline-entry" *ngFor="let entry of entries; trackBy: trackByFn">
+    <!-- Entry Header with all info on one line -->
+    <div class="entry-header">
+      <div class="entry-title">
+        <span class="entry-date">{{ entry.date | date:'fullDate' }}</span>
+        <mat-icon [class]="getMarketDirectionClass(entry.marketDirection)">
+          {{ getMarketDirectionIcon(entry.marketDirection) }}
+        </mat-icon>
+        <span class="price" [class]="getMarketDirectionClass(entry.marketDirection)">
+          ES {{ entry.esPrice }}
+        </span>
+        <div class="delta-info" *ngIf="entry.delta !== undefined && entry.delta !== null">
+          <span class="delta-label">Δ</span>
+          <span class="delta-value">
+            {{ entry.delta > 0 ? '+' : '' }}{{ entry.delta }}
+          </span>
+        </div>
+      </div>
+      <div class="entry-actions">
+        <button mat-icon-button (click)="onEditEntry(entry)" matTooltip="Edit entry">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="copyEntry(entry)" matTooltip="Copy to clipboard">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="entry-content">
+      <div class="entry-notes">
+        <div class="notes-text" [innerHTML]="entry.notes | nl2br"></div>
+      </div>
+
+      <!-- Intraday Events Timeline -->
+      <div class="events-timeline" *ngIf="entry.events && entry.events.length > 0">
+        <h3>Timeline</h3>
+        <div class="timeline-events">
+          <div class="timeline-event" *ngFor="let event of entry.events; let last = last">
+            <div class="event-time-price">
+              <mat-icon>access_time</mat-icon>
+              <span>{{ event.time }}</span>
+              <span class="price-separator">&#64;</span>
+              <span class="price-value">{{ event.price }}</span>
+            </div>
+            <div class="event-note">
+              {{ event.note }}
+            </div>
+            <div class="timeline-connector" *ngIf="!last"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entry Footer -->
+    <div class="entry-footer">
+      <div class="entry-stats">
+        <span *ngIf="entry.events && entry.events.length > 0">
+          <mat-icon>timeline</mat-icon>
+          {{ entry.events.length }} {{ entry.events.length === 1 ? 'update' : 'updates' }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #noEntries>
+  <div class="no-entries">
+    <mat-icon>journal</mat-icon>
+    <h2>No journal entries yet</h2>
+    <p>Start documenting your trading journey by creating your first entry.</p>
+  </div>
+</ng-template>
