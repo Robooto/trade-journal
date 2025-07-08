@@ -5,11 +5,12 @@ from fastapi import APIRouter, HTTPException, UploadFile
 
 from app.services.spotgamma_service import SpotGammaService
 from app.services.image_analysis_service import ImageAnalysisService
+from app.schema import HiroScreenshotsResponse
 
 router = APIRouter(prefix="/v1/spotgamma", tags=["v1 – spotgamma"])
 
 
-@router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots")
+@router.get("/hiro", summary="Fetch SpotGamma Hiro screenshots", response_model=HiroScreenshotsResponse)
 async def hiro_screens():
     """Fetch SpotGamma Hiro screenshots for SPY and Equities"""
     try:

@@ -10,7 +10,17 @@
       </div>
       <div class="flex gap-md">
         <div class="img-wrapper" *ngFor="let img of screen.images">
-          <img [src]="img.url" [alt]="img.name" (click)="downloadImage(img)" />
+          <div class="img-container">
+            <img [src]="img.url" [alt]="img.name" (click)="openSourceUrl(img)" class="main-image" />
+            <div class="img-overlay">
+              <button mat-icon-button (click)="downloadImage(img)" class="download-btn" matTooltip="Download">
+                <mat-icon>download</mat-icon>
+              </button>
+            </div>
+            <div class="img-hover-preview">
+              <img [src]="img.url" [alt]="img.name" />
+            </div>
+          </div>
           <div class="cross-result" *ngIf="img.crossing !== undefined">
             {{ img.crossing ? 'Cross detected' : 'No cross' }}
           </div>

@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 interface HiroImage {
   name: string;
   data: string;
+  source_url: string;
 }
 
 interface HiroResponse {
@@ -15,6 +16,7 @@ interface HiroResponse {
 interface ScreenImage {
   name: string;
   url: string;
+  source_url: string;
   crossing?: boolean;
 }
 
@@ -44,7 +46,8 @@ export class HiroPageComponent {
           timestamp: res.timestamp,
           images: res.images.map(img => ({
             name: img.name,
-            url: 'data:image/png;base64,' + img.data
+            url: 'data:image/png;base64,' + img.data,
+            source_url: img.source_url
           }))
         });
         this.loading = false;
@@ -60,6 +63,10 @@ export class HiroPageComponent {
     link.href = img.url;
     link.download = img.name;
     link.click();
+  }
+
+  openSourceUrl(img: ScreenImage) {
+    window.open(img.source_url, '_blank');
   }
 
   async detectCross(screen: ScreenSet) {

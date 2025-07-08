@@ -127,8 +127,8 @@ class SpotGammaService:
         safe_ts = ts.strftime("%Y%m%d-%H%M%S")
         
         images = [
-            {"name": f"{safe_ts}-SP500.png", "data": spy_img},
-            {"name": f"{safe_ts}-SPEquities.png", "data": equities_img},
+            {"name": f"{safe_ts}-SP500.png", "data": spy_img, "source_url": self.HIRO_SPY_URL},
+            {"name": f"{safe_ts}-SPEquities.png", "data": equities_img, "source_url": self.HIRO_EQUITIES_URL},
         ]
         
         return {"timestamp": timestamp, "images": images}
