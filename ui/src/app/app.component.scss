@@ -1,44 +1,8 @@
-mat-sidenav-container.full-height {
-  height: 91vh;
-}
-
-mat-sidenav-content {
-  display: flex;
-  flex-direction: column;
-  transition: margin-left 0.3s ease;
-}
-
 .content {
   flex: 1;
   display: flex;
   flex-direction: column;
   padding: var(--spacing-sm);
-}
-
-.app-sidenav {
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  transition: width 0.3s ease;
-}
-
-.app-sidenav.collapsed {
-  width: 64px;
-  min-width: 64px;
-  max-width: 64px;
-}
-
-.app-sidenav.collapsed .mat-mdc-list-item .mdc-list-item__content {
-  justify-content: center;
-}
-
-.app-sidenav.collapsed .mat-mdc-list-item-text {
-  display: none;
-}
-
-/* Highlight active sidebar link */
-a.active-link {
-  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .contract {

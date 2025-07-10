@@ -79,3 +79,41 @@ body {
 .mb-sm { margin-bottom: var(--spacing-sm); }
 .mb-md { margin-bottom: var(--spacing-md); }
 .mb-lg { margin-bottom: var(--spacing-lg); }
+
+// Sidebar layout fix for production builds
+// Using !important to override component styles that get inlined in production
+mat-sidenav-container.full-height {
+  height: 91vh !important;
+}
+
+mat-sidenav-content {
+  display: flex !important;
+  flex-direction: column !important;
+  transition: margin-left 0.3s ease !important;
+}
+
+.app-sidenav {
+  width: 200px !important;
+  min-width: 200px !important;
+  max-width: 200px !important;
+  transition: width 0.3s ease !important;
+}
+
+.app-sidenav.collapsed {
+  width: 64px !important;
+  min-width: 64px !important;
+  max-width: 64px !important;
+}
+
+.app-sidenav.collapsed .mat-mdc-list-item .mdc-list-item__content {
+  justify-content: center !important;
+}
+
+.app-sidenav.collapsed .mat-mdc-list-item-text {
+  display: none !important;
+}
+
+/* Highlight active sidebar link */
+a.active-link {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
