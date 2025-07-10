@@ -38,14 +38,16 @@
         <h3>Timeline</h3>
         <div class="timeline-events">
           <div class="timeline-event" *ngFor="let event of entry.events; let last = last">
-            <div class="event-time-price">
-              <mat-icon>access_time</mat-icon>
-              <span>{{ event.time }}</span>
-              <span class="price-separator">&#64;</span>
-              <span class="price-value">{{ event.price }}</span>
-            </div>
-            <div class="event-note">
-              {{ event.note }}
+            <div class="event-content">
+              <div class="event-text-price">
+                <div class="event-time-price">
+                  <mat-icon>access_time</mat-icon>
+                  <span>{{ event.time }}</span>
+                  <span class="price-separator">&#64;</span>
+                  <span class="price-value">{{ event.price }}</span>
+                </div>
+                <span class="event-note">{{ event.note }}</span>
+              </div>
             </div>
             <div class="timeline-connector" *ngIf="!last"></div>
           </div>

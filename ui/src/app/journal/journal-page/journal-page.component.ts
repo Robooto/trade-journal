@@ -12,8 +12,9 @@ export class JournalPageComponent implements OnInit {
   entries: JournalEntry[] = [];
   totalEntries = 0;
   pageSkip = 0;
-  pageLimit = 15;
+  pageLimit = 10;
   selectedEntry?: JournalEntry;
+  showForm = false;
 
   constructor(private api: JournalApiService) {}
 
@@ -23,21 +24,27 @@ export class JournalPageComponent implements OnInit {
 
   loadNextPage() {
     this.api.list(this.pageSkip, this.pageLimit).subscribe((result: PaginatedJournalEntries) => {
-      let sortedResults = result.items.sort((a, b) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      );
-      this.entries = [...this.entries, ...sortedResults];
+      this.entries = [...this.entries, ...result.items];
       this.totalEntries = result.total;
       this.pageSkip += this.pageLimit;
     });
   }
 
+  toggleForm() {
+    this.showForm = !this.showForm;
+    if (!this.showForm) {
+      this.selectedEntry = undefined;
+    }
+  }
+
   onEntrySelected(entry: JournalEntry) {
     this.selectedEntry = entry;
+    this.showForm = true;
   }
 
   onEntrySaved(_entry: JournalEntry) {
     this.selectedEntry = undefined;
+    this.showForm = false;
     this.entries = [];
     this.pageSkip = 0;
     this.loadNextPage();
@@ -45,6 +52,7 @@ export class JournalPageComponent implements OnInit {
 
   onEditCancelled() {
     this.selectedEntry = undefined;
+    this.showForm = false;
   }
 
   onEntryDeleted(id: string) {

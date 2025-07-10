@@ -6,10 +6,37 @@
 
 .journal-timeline {
   flex: 1;
-  overflow-y: auto;
 }
 
 .journal-form {
   flex: none;
   width: 100%;
+}
+
+.form-toggle-container {
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  background: var(--mat-sys-surface);
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--mat-app-surface-variant);
+}
+
+.toggle-form-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.sticky-form {
+  position: sticky;
+  top: 60px;
+  z-index: 1000;
+  background: var(--mat-sys-surface);
+  border-bottom: 1px solid var(--mat-app-surface-variant);
+  padding: 0 24px 16px 24px;
+  margin: 0 -24px 16px -24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }

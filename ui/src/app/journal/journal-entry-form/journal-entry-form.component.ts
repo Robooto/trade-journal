@@ -23,6 +23,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   @Output() deleted = new EventEmitter<string>();
 
   form!: FormGroup;
+  showTimelineSection = false;
 
   constructor(
     private fb: FormBuilder,
@@ -33,47 +34,35 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
   ngOnInit() {
     this.buildForm();
 
-    const symbol = this.futures.getCurrentESContract();
-    this.api
-      .getMarketData([], [], [symbol], [])
-      .subscribe((data) => {
-        if (!data || !data.length) return;
-        const item = data[0];
-        const mark = parseFloat(item['mark']);
-        const open = parseFloat(item['open']);
-        if (!isNaN(mark)) {
-          this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
-        }
-        if (!isNaN(mark) && !isNaN(open)) {
-          this.form.patchValue({
-            marketDirection: mark > open ? 'up' : 'down'
-          });
-        }
-      });
+    // Populate form with entry data if available
+    if (this.entry) {
+      this.populateFormWithEntry();
+    } else {
+      // Only load market data if this is a new entry (no existing entry)
+      const symbol = this.futures.getCurrentESContract();
+      this.api
+        .getMarketData([], [], [symbol], [])
+        .subscribe((data) => {
+          if (!data || !data.length) return;
+          const item = data[0];
+          const mark = parseFloat(item['mark']);
+          const open = parseFloat(item['open']);
+          if (!isNaN(mark)) {
+            this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
+          }
+          if (!isNaN(mark) && !isNaN(open)) {
+            this.form.patchValue({
+              marketDirection: mark > open ? 'up' : 'down'
+            });
+          }
+        });
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if (changes['entry']) {
+    if (changes['entry'] && this.form) {
       if (this.entry) {
-        // patch existing
-        this.form.patchValue({
-          id: this.entry.id,
-          date: this.entry.date,
-          esPrice: this.entry.esPrice,
-          delta: this.entry.delta ?? null,
-          marketDirection: this.entry.marketDirection,
-          notes: this.entry.notes
-        });
-        // rebuild events array
-        const arr = this.form.get('events') as FormArray;
-        arr.clear();
-        this.entry.events.forEach(ev =>
-          arr.push(this.fb.group({
-            time: [ev.time, Validators.required],
-            price: [ev.price, Validators.required],
-            note: [ev.note]
-          }))
-        );
+        this.populateFormWithEntry();
       } else {
         // reset to blank
         this.resetForm();
@@ -83,6 +72,37 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   get events() {
     return this.form.get('events') as FormArray;
+  }
+
+  private populateFormWithEntry() {
+    if (!this.entry || !this.form) return;
+    
+    // patch existing
+    this.form.patchValue({
+      id: this.entry.id,
+      date: this.entry.date,
+      esPrice: this.entry.esPrice,
+      delta: this.entry.delta ?? null,
+      marketDirection: this.entry.marketDirection,
+      notes: this.entry.notes
+    });
+    
+    // rebuild events array
+    const arr = this.form.get('events') as FormArray;
+    arr.clear();
+    if (this.entry.events && this.entry.events.length > 0) {
+      this.entry.events.forEach(ev =>
+        arr.push(this.fb.group({
+          time: [ev.time, Validators.required],
+          price: [ev.price, Validators.required],
+          note: [ev.note]
+        }))
+      );
+      // Show timeline section if entry has events
+      this.showTimelineSection = true;
+    } else {
+      this.showTimelineSection = false;
+    }
   }
 
   buildForm() {
@@ -101,6 +121,14 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   resetForm() {
     this.buildForm();
+    this.showTimelineSection = false;
+  }
+
+  toggleTimelineSection() {
+    this.showTimelineSection = !this.showTimelineSection;
+    if (this.showTimelineSection && this.events.length === 0) {
+      this.addEvent();
+    }
   }
 
   addEvent() {

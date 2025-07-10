@@ -142,15 +142,31 @@
 
 .section-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
+}
+
+.toggle-timeline-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  justify-content: center;
+  color: var(--mat-sys-primary);
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .add-event-btn {
   display: flex;
   align-items: center;
   gap: 4px;
+  margin-top: 8px;
 
   mat-icon {
     font-size: 18px;

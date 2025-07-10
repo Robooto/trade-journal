@@ -5,6 +5,7 @@ mat-sidenav-container.full-height {
 mat-sidenav-content {
   display: flex;
   flex-direction: column;
+  transition: margin-left 0.3s ease;
 }
 
 .content {

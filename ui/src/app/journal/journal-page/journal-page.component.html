@@ -1,4 +1,28 @@
 <div class="flex flex-col flex-1 gap-md">
+  <!-- Toggle Button -->
+  <div class="form-toggle-container">
+    <button mat-raised-button color="primary" (click)="toggleForm()" class="toggle-form-btn">
+      <mat-icon>{{ showForm ? 'expand_less' : 'add' }}</mat-icon>
+      {{ showForm ? 'Hide Entry Form' : 'New Entry' }}
+    </button>
+  </div>
+
+  <!-- Entry Form (conditionally shown) -->
+  <app-journal-entry-form
+    *ngIf="showForm"
+    [entry]="selectedEntry"
+    (saved)="onEntrySaved($event)"
+    (cancelled)="onEditCancelled()"
+    (deleted)="onEntryDeleted($event)"
+    class="journal-form sticky-form"
+  ></app-journal-entry-form>
+
+  <app-journal-timeline
+    [entries]="entries"
+    (entrySelected)="onEntrySelected($event)"
+    class="journal-timeline"
+  ></app-journal-timeline>
+
   <button
     mat-button
     (click)="loadNextPage()"
@@ -7,17 +31,4 @@
   >
     Load Older Entries
   </button>
-  <app-journal-timeline
-    [entries]="entries"
-    (entrySelected)="onEntrySelected($event)"
-    class="journal-timeline"
-  ></app-journal-timeline>
-
-  <app-journal-entry-form
-    [entry]="selectedEntry"
-    (saved)="onEntrySaved($event)"
-    (cancelled)="onEditCancelled()"
-    (deleted)="onEntryDeleted($event)"
-    class="journal-form"
-  ></app-journal-entry-form>
 </div>

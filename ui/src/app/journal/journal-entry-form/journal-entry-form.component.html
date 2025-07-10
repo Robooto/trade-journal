@@ -53,7 +53,7 @@
       <textarea
         matInput
         formControlName="notes"
-        rows="4"
+        rows="2"
         placeholder="Morning thoughts on market direction and key levels to watch..."
       ></textarea>
     </mat-form-field>
@@ -63,46 +63,49 @@
   <!-- Timeline Events Section -->
   <div class="timeline-section">
     <div class="section-header">
-      <h3 class="section-title">
-        <mat-icon>schedule</mat-icon>
-        Timeline Events
-      </h3>
+      <button mat-button type="button" (click)="toggleTimelineSection()" class="toggle-timeline-btn">
+        <mat-icon>{{ showTimelineSection ? 'expand_less' : 'add' }}</mat-icon>
+        {{ showTimelineSection ? 'Hide Timeline Events' : 'Add Timeline Events' }}
+      </button>
+    </div>
+    
+    <div *ngIf="showTimelineSection" class="timeline-content">
+      <div class="timeline-divider"></div>
+      
+      <div formArrayName="events" class="events-container">
+        <div
+          *ngFor="let ev of events.controls; let i = index"
+          [formGroupName]="i"
+          class="timeline-event-form"
+        >
+          <!-- Time and Price on same line -->
+          <div class="event-time-price">
+            <mat-icon>access_time</mat-icon>
+            <mat-form-field appearance="outline" class="time-field">
+              <input matInput formControlName="time" placeholder="10:15 AM" />
+            </mat-form-field>
+            <span class="price-separator">&#64;</span>
+            <mat-form-field appearance="outline" class="price-field">
+              <input matInput type="number" formControlName="price" placeholder="5855" />
+            </mat-form-field>
+          </div>
+          
+          <!-- Note below -->
+          <mat-form-field appearance="outline" class="event-note-field">
+            <textarea
+              matInput
+              formControlName="note"
+              rows="2"
+              placeholder="What happened at this time..."
+            ></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+      
       <button mat-button type="button" (click)="addEvent()" class="add-event-btn">
         <mat-icon>add</mat-icon>
         Add Event
       </button>
-    </div>
-    
-    <div class="timeline-divider"></div>
-    
-    <div formArrayName="events" class="events-container">
-      <div
-        *ngFor="let ev of events.controls; let i = index"
-        [formGroupName]="i"
-        class="timeline-event-form"
-      >
-        <!-- Time and Price on same line -->
-        <div class="event-time-price">
-          <mat-icon>access_time</mat-icon>
-          <mat-form-field appearance="outline" class="time-field">
-            <input matInput formControlName="time" placeholder="10:15 AM" />
-          </mat-form-field>
-          <span class="price-separator">&#64;</span>
-          <mat-form-field appearance="outline" class="price-field">
-            <input matInput type="number" formControlName="price" placeholder="5855" />
-          </mat-form-field>
-        </div>
-        
-        <!-- Note below -->
-        <mat-form-field appearance="outline" class="event-note-field">
-          <textarea
-            matInput
-            formControlName="note"
-            rows="2"
-            placeholder="What happened at this time..."
-          ></textarea>
-        </mat-form-field>
-      </div>
     </div>
   </div>
 
