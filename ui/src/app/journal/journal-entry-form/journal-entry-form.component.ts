@@ -42,18 +42,44 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
       const symbol = this.futures.getCurrentESContract();
       this.api
         .getMarketData([], [], [symbol], [])
-        .subscribe((data) => {
-          if (!data || !data.length) return;
-          const item = data[0];
-          const mark = parseFloat(item['mark']);
-          const open = parseFloat(item['open']);
-          if (!isNaN(mark)) {
-            this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
-          }
-          if (!isNaN(mark) && !isNaN(open)) {
-            this.form.patchValue({
-              marketDirection: mark > open ? 'up' : 'down'
-            });
+        .subscribe({
+          next: (data) => {
+            if (!data || !data.length) {
+              console.warn('No market data received');
+              return;
+            }
+            const item = data[0];
+            
+            // Validate market data fields exist
+            if (!item.hasOwnProperty('mark') || !item.hasOwnProperty('open')) {
+              console.warn('Market data missing required fields (mark/open)');
+              return;
+            }
+            
+            const mark = parseFloat(item['mark']);
+            const open = parseFloat(item['open']);
+            
+            if (!isNaN(mark)) {
+              this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
+            }
+            
+            if (!isNaN(mark) && !isNaN(open)) {
+              let direction: 'up' | 'down';
+              if (mark > open) {
+                direction = 'up';
+              } else if (mark < open) {
+                direction = 'down';
+              } else {
+                // When mark === open, default to 'up' but this could be configurable
+                direction = 'up';
+              }
+              this.form.patchValue({ marketDirection: direction });
+            }
+          },
+          error: (error) => {
+            console.error('Failed to load market data:', error);
+            // Set a default direction when API fails
+            this.form.patchValue({ marketDirection: 'up' });
           }
         });
     }
@@ -113,7 +139,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
       ],
       esPrice: [null, Validators.required],
       delta: [null],
-      marketDirection: ['up' as const, Validators.required],
+      marketDirection: [null, Validators.required],
       notes: [''],
       events: this.fb.array([]),
     });
