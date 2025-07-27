@@ -93,6 +93,8 @@ class Position(BaseModel):
 
     approximate_p_l: Optional[float] = Field(None, alias="approximate-p-l")
     beta: Optional[float] = None
+    strike: Optional[float] = None
+    option_type: Optional[str] = Field(None, alias="option-type")
 
     model_config = {
         "populate_by_name": True,

@@ -1,0 +1,37 @@
+<div class="option-chart-container">
+  <div class="chart-header">
+    <h3>{{ positionGroup.underlying_symbol }} Option Positions Chart</h3>
+    <span class="chart-resolution">1 Hour Resolution - 1 Month View</span>
+  </div>
+
+  <!-- Error Display -->
+  <div *ngIf="error" class="error-message">
+    <mat-icon color="warn">error</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="30"></mat-spinner>
+    <span>Loading chart data...</span>
+  </div>
+
+  <!-- Chart Container -->
+  <div 
+    #chartContainer 
+    class="chart-container"
+    [class.loading]="isLoading"
+    (window:resize)="onResize()">
+  </div>
+
+  <!-- Option Lines Legend -->
+  <div *ngIf="optionLines.length > 0 && !isLoading && !error" class="option-lines-legend">
+    <h4>Strike Lines:</h4>
+    <div class="legend-items">
+      <div *ngFor="let line of optionLines" class="legend-item">
+        <div class="legend-swatch" [style.background-color]="line.color"></div>
+        <span class="legend-label">{{ line.label }}</span>
+      </div>
+    </div>
+  </div>
+</div>

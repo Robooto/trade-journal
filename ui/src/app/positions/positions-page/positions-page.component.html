@@ -12,7 +12,17 @@
   <table mat-table [dataSource]="account.groups" class="mat-elevation-z1 full-width">
     <ng-container matColumnDef="underlying">
       <th mat-header-cell *matHeaderCellDef>Underlying</th>
-      <td mat-cell *matCellDef="let g">{{ g.underlying_symbol }}</td>
+      <td mat-cell *matCellDef="let g" class="underlying-cell">
+        <span 
+          [class.clickable]="isValidChartSymbol(g.underlying_symbol)"
+          [class.expanded]="isChartExpanded(g, account)"
+          (click)="onUnderlyingClick(g, $event, account)">
+          {{ g.underlying_symbol }}
+          <mat-icon *ngIf="isValidChartSymbol(g.underlying_symbol)" class="chart-icon">
+            {{ isChartExpanded(g, account) ? 'expand_less' : 'show_chart' }}
+          </mat-icon>
+        </span>
+      </td>
     </ng-container>
     <ng-container matColumnDef="expires">
       <th mat-header-cell *matHeaderCellDef>Expires</th>
@@ -100,5 +110,11 @@
       *matRowDef="let row; columns: groupCols"
       [ngClass]="getRuleClass(row)"
     ></tr>
+    
   </table>
+  
+  <!-- Chart expansion positioned after the expanded row for this account -->
+  <div *ngIf="getExpandedChartForAccount(account)" class="chart-expansion">
+    <app-option-chart [positionGroup]="getExpandedChartForAccount(account)!"></app-option-chart>
+  </div>
 </div>

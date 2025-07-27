@@ -1,12 +1,67 @@
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, List, Tuple, Set
+from typing import Dict, List, Tuple, Set, Optional
+from datetime import datetime
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app import tastytrade
+
+
+def extract_expiration_date(expires_at: str) -> str:
+    """
+    Extract just the date part from an expiration timestamp, ignoring time.
+    
+    Args:
+        expires_at: ISO format timestamp like "2025-08-15T20:15:00.000+00:00"
+    
+    Returns:
+        Date string like "2025-08-15" or original string if parsing fails
+    """
+    if not expires_at:
+        return expires_at
+    
+    try:
+        # Parse the ISO format timestamp and extract just the date
+        dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+        return dt.strftime('%Y-%m-%d')
+    except (ValueError, AttributeError):
+        # If parsing fails, try to extract date with simple string manipulation
+        if 'T' in expires_at:
+            return expires_at.split('T')[0]
+        return expires_at
+
+
+def parse_equity_option_symbol(symbol: str) -> Tuple[Optional[float], Optional[str]]:
+    """
+    Parse OCC-formatted equity option symbol to extract strike and option type.
+    
+    Format: ROOT(6 chars, padded) + YYMMDD + C/P + Strike(8 digits)
+    Example: AAPL  220617C00150000
+    
+    Returns:
+        Tuple of (strike_price, option_type) or (None, None) if parsing fails
+    """
+    if not symbol or len(symbol) < 21:  # Minimum length for OCC format
+        return None, None
+    
+    try:
+        # Extract the last 9 characters (option type + 8-digit strike)
+        option_suffix = symbol[-9:]
+        option_type = option_suffix[0]  # C or P
+        strike_str = option_suffix[1:]  # 8-digit strike
+        
+        if option_type not in ('C', 'P'):
+            return None, None
+            
+        # Convert 8-digit strike to float (divide by 1000)
+        strike_price = float(strike_str) / 1000.0
+        
+        return strike_price, option_type
+    except (ValueError, IndexError):
+        return None, None
 
 
 def acquire_token(db: Session) -> str:
@@ -180,6 +235,13 @@ def augment_positions_with_market_data(
             underlying_sym = p.get("underlying-symbol")
             if underlying_sym in beta_map:
                 p["beta"] = beta_map[underlying_sym]
+                
+            # Parse strike and option type for Equity Options
+            inst_type = p.get("instrument-type")
+            if inst_type == "Equity Option" and sym:
+                strike, option_type = parse_equity_option_symbol(sym)
+                p["strike"] = strike
+                p["option-type"] = option_type
 
 
 def group_positions_and_compute_totals(
@@ -197,11 +259,16 @@ def group_positions_and_compute_totals(
         grouping: Dict[Tuple[str, str], List[dict]] = defaultdict(list)
         for p in pos_list:
             underlying = p.get("underlying-symbol", "") or ""
-            expires = p.get("expires-at", "") or ""
-            grouping[(underlying, expires)].append(p)
+            expires_full = p.get("expires-at", "") or ""
+            # Group by date only, ignoring time differences
+            expires_date = extract_expiration_date(expires_full)
+            grouping[(underlying, expires_date)].append(p)
 
         groups_list = []
-        for (underlying, expires), plist in grouping.items():
+        for (underlying, expires_date), plist in grouping.items():
+            # Use the first position's full expires_at for display purposes
+            # All positions in this group should have the same date, just potentially different times
+            first_expires = plist[0].get("expires-at", "") if plist else expires_date
             total_credit_unrounded = 0.0
             current_price_unrounded = 0.0
             delta_sum_unrounded = 0.0
@@ -255,7 +322,7 @@ def group_positions_and_compute_totals(
 
             groups_list.append({
                 "underlying_symbol": underlying,
-                "expires_at": expires,
+                "expires_at": first_expires,  # Use the full timestamp from first position
                 "total_credit_received": total_credit_received,
                 "current_group_p_l": current_group_p_l,
                 "percent_credit_received": percent_credit_received,
