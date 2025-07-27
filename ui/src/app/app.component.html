@@ -28,6 +28,10 @@
         <mat-icon matListItemIcon>analytics</mat-icon>
         <span *ngIf="!isCollapsed">Hiro</span>
       </a>
+      <a mat-list-item routerLink="/charts" routerLinkActive="active-link" matTooltip="Charts" [matTooltipDisabled]="!isCollapsed">
+        <mat-icon matListItemIcon>show_chart</mat-icon>
+        <span *ngIf="!isCollapsed">Charts</span>
+      </a>
     </mat-nav-list>
   </mat-sidenav>
 

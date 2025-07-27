@@ -23,6 +23,11 @@ const routes: Routes = [
       import('./dashboard/dashboard.module').then(m => m.DashboardModule)
   },
   {
+    path: 'charts',
+    loadChildren: () =>
+      import('./charts/charts.module').then(m => m.ChartsModule)
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full'

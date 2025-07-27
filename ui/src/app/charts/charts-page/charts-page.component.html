@@ -1,0 +1,202 @@
+<div class="charts-page">
+  <div class="page-header">
+    <h1>Stock Charts</h1>
+    <p>Interactive charts - SPY shown by default - Select symbol, resolution, and date range (max 60 days)</p>
+  </div>
+
+  <!-- Chart Controls Form -->
+  <mat-card class="controls-card">
+    <mat-card-header>
+      <mat-card-title>Chart Settings</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form [formGroup]="chartForm" (ngSubmit)="onSubmit()" class="chart-form">
+        <div class="form-row">
+          <!-- Symbol Input -->
+          <mat-form-field appearance="outline" class="symbol-field">
+            <mat-label>Symbol</mat-label>
+            <input matInput 
+                   formControlName="symbol" 
+                   placeholder="AAPL" 
+                   style="text-transform: uppercase"
+                   maxlength="10">
+            <mat-error *ngIf="chartForm.get('symbol')?.hasError('required')">
+              Symbol is required
+            </mat-error>
+            <mat-error *ngIf="chartForm.get('symbol')?.hasError('pattern')">
+              Enter a valid stock symbol (1-10 characters)
+            </mat-error>
+          </mat-form-field>
+
+          <!-- Resolution Dropdown -->
+          <mat-form-field appearance="outline" class="resolution-field">
+            <mat-label>Resolution</mat-label>
+            <mat-select formControlName="resolution">
+              <mat-option *ngFor="let res of resolutionOptions" [value]="res.value">
+                {{ res.label }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>Chart resolution</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <!-- From Date -->
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>From Date</mat-label>
+            <input matInput 
+                   [matDatepicker]="fromPicker" 
+                   formControlName="fromDate">
+            <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
+            <mat-datepicker #fromPicker></mat-datepicker>
+            <mat-hint>Maximum 60-day range</mat-hint>
+          </mat-form-field>
+
+          <!-- To Date -->
+          <mat-form-field appearance="outline" class="date-field">
+            <mat-label>To Date</mat-label>
+            <input matInput 
+                   [matDatepicker]="toPicker" 
+                   formControlName="toDate">
+            <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
+            <mat-datepicker #toPicker></mat-datepicker>
+          </mat-form-field>
+
+          <!-- Submit Button -->
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit" 
+                  [disabled]="chartForm.invalid || isLoading"
+                  class="load-button">
+            <mat-icon *ngIf="isLoading">refresh</mat-icon>
+            <span *ngIf="!isLoading">Load Chart</span>
+            <span *ngIf="isLoading">Loading...</span>
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Error Display -->
+  <mat-card *ngIf="error" class="error-card">
+    <mat-card-content>
+      <div class="error-message">
+        <mat-icon color="warn">error</mat-icon>
+        <span>{{ error }}</span>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Price Lines Management -->
+  <mat-card class="price-lines-card">
+    <mat-card-header>
+      <mat-card-title>Price Lines</mat-card-title>
+      <div class="spacer"></div>
+      <button mat-icon-button (click)="togglePriceLineForm()" [color]="showPriceLineForm ? 'accent' : 'primary'">
+        <mat-icon>{{ showPriceLineForm ? 'close' : 'add' }}</mat-icon>
+      </button>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Add Price Line Form -->
+      <form *ngIf="showPriceLineForm" [formGroup]="priceLineForm" (ngSubmit)="addPriceLine()" class="price-line-form">
+        <div class="price-line-form-row">
+          <mat-form-field appearance="outline" class="price-field">
+            <mat-label>Price</mat-label>
+            <input matInput 
+                   type="number" 
+                   step="0.01" 
+                   formControlName="price" 
+                   placeholder="625.50">
+            <mat-error *ngIf="priceLineForm.get('price')?.hasError('required')">
+              Price is required
+            </mat-error>
+            <mat-error *ngIf="priceLineForm.get('price')?.hasError('min')">
+              Price must be greater than 0
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="color-field">
+            <mat-label>Color</mat-label>
+            <mat-select formControlName="color">
+              <mat-option *ngFor="let color of colorOptions" [value]="color.value">
+                <div class="color-option">
+                  <div class="color-swatch" [style.background-color]="color.value"></div>
+                  {{ color.label }}
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="style-field">
+            <mat-label>Line Style</mat-label>
+            <mat-select formControlName="lineStyle">
+              <mat-option *ngFor="let style of lineStyleOptions" [value]="style.value">
+                {{ style.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="label-field">
+            <mat-label>Label (Optional)</mat-label>
+            <input matInput formControlName="label" placeholder="Support Level">
+          </mat-form-field>
+
+          <button mat-raised-button 
+                  color="primary" 
+                  type="submit" 
+                  [disabled]="priceLineForm.invalid"
+                  class="add-line-button">
+            <mat-icon>add</mat-icon>
+            Add Line
+          </button>
+        </div>
+      </form>
+
+      <!-- Existing Price Lines List -->
+      <div *ngIf="priceLines.length > 0" class="price-lines-list">
+        <div *ngFor="let priceLine of priceLines" class="price-line-item">
+          <div class="price-line-info">
+            <div class="price-line-swatch" [style.background-color]="priceLine.color"></div>
+            <span class="price-line-price">${{ priceLine.price }}</span>
+            <span class="price-line-style">{{ priceLine.lineStyle }}</span>
+            <span class="price-line-label" *ngIf="priceLine.label">{{ priceLine.label }}</span>
+          </div>
+          <button mat-icon-button 
+                  color="warn" 
+                  (click)="removePriceLine(priceLine.id)"
+                  aria-label="Remove price line">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="priceLines.length === 0 && !showPriceLineForm" class="no-price-lines">
+        <p>No price lines added. Click the + button to add your first price line.</p>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Chart Container -->
+  <mat-card class="chart-card">
+    <mat-card-header>
+      <mat-card-title>
+        {{ chartForm.get('symbol')?.value?.toUpperCase() || 'Chart' }}
+        <span class="resolution-badge">{{ chartForm.get('resolution')?.value }}</span>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Loading Indicator -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Loading chart data...</p>
+      </div>
+
+      <!-- Chart Container -->
+      <div #chartContainer 
+           class="chart-container"
+           [class.loading]="isLoading"
+           (window:resize)="onResize()">
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
