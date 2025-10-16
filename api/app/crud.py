@@ -150,12 +150,12 @@ def add_event_to_entry(
     return orm_entry
 
 def get_session_token(db: Session):
-    """Retrieve the stored session token record (if any) from the database."""
+    """Retrieve the stored OAuth token record (if any) from the database."""
     return db.query(SessionTokenORM).first()
 
 def save_session_token(db: Session, token: str, expiration: datetime):
     """
-    Create or update the session token record in the database.
+    Create or update the OAuth access token record in the database.
     If a token record already exists, update it; otherwise insert a new record.
     Returns the saved SessionTokenORM object.
     """

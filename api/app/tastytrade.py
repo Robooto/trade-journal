@@ -1,50 +1,56 @@
 import os
 import requests
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from typing import Tuple, List, Dict
 
 from app import crud
 
 
-BASE_URL = os.getenv("TASTYTRADE_URL", "https://api.cert.tastyworks.com")
+BASE_URL = os.getenv("TASTYTRADE_URL", "https://api.tastyworks.com")
 
 def login_to_tastytrade() -> Tuple[str, datetime]:
     """
-    Authenticate with the Tastytrade API and get a session token.
-    Returns a tuple of (session_token, expiration_datetime).
+    Authenticate with the Tastytrade API and get an OAuth access token.
+    Returns a tuple of (auth_header_value, expiration_datetime).
     """
 
-    username = os.getenv("TASTYTRADE_USERNAME")
-    password = os.getenv("TASTYTRADE_PASSWORD")
-    if not username or not password:
-        raise RuntimeError("Tastytrade credentials not set in environment variables.")
+    client_secret = os.getenv("TASTYTRADE_SECRET")
+    refresh_token = os.getenv("TASTYTRADE_REFRESH")
+    if not client_secret or not refresh_token:
+        raise RuntimeError("Tastytrade OAuth credentials not set in environment variables.")
 
     payload = {
-        "login": username,
-        "password": password,
-        "remember-me": True
+        "grant_type": "refresh_token",
+        "refresh_token": refresh_token,
+        "client_secret": client_secret,
     }
 
-    url = f"{BASE_URL}/sessions"
+    url = f"{BASE_URL}/oauth/token"
     headers = {
-        "Content-Type": "application/json",
-        "User-Agent": "trade-journal/0.1"
+        "User-Agent": "trade-journal/0.1",
+        "Accept": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
     }
-    response = requests.post(url, json=payload, headers=headers)
+    response = requests.post(url, data=payload, headers=headers)
     response.raise_for_status()
     data = response.json()
 
-    token = data["data"]["session-token"]
-    expiration_str = data["data"]["session-expiration"]
-    # Parse the expiration timestamp (e.g. "2024-09-12T20:25:32.440Z") to a timezone-aware datetime
-    exp_dt = datetime.strptime(expiration_str, "%Y-%m-%dT%H:%M:%S.%fZ")
-    exp_dt = exp_dt.replace(tzinfo=timezone.utc)
-    return token, exp_dt
+    access_token = data["access_token"]
+    token_type = data.get("token_type", "Bearer")
+    expires_value = data.get("expires_in", 0)
+    try:
+        expires_in = int(float(expires_value))
+    except (TypeError, ValueError):
+        expires_in = 0
+    buffer_seconds = 30  # refresh a little early to avoid using an expired token
+    exp_dt = datetime.now(timezone.utc) + timedelta(seconds=max(expires_in - buffer_seconds, 0))
+    bearer_token = f"{token_type} {access_token}".strip()
+    return bearer_token, exp_dt
 
 def get_active_token(db: Session) -> str:
     """
-    Retrieve a valid session token, using a cached token if possible or logging in if needed.
+    Retrieve a valid access token, using a cached token if possible or logging in if needed.
     This function checks the token stored in the database and refreshes it if expired.
     """
     token_entry = crud.get_session_token(db)
