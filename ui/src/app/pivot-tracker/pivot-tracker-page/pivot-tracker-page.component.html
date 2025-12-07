@@ -1,0 +1,50 @@
+<div class="pivot-page">
+  <div class="header">
+    <div>
+      <h1>Pivot Tracker</h1>
+      <p class="subtitle">Monitor the latest SpotGamma pivot and keep its history up to date.</p>
+    </div>
+    <button mat-flat-button color="primary" (click)="openEditor()">
+      <mat-icon>edit</mat-icon>
+      <span>Update Pivot</span>
+    </button>
+  </div>
+
+  <mat-card class="pivot-card">
+    <div class="pivot-card__content" *ngIf="latest$ | async as latest; else emptyState">
+      <div class="pivot-pill">
+        <span class="label">{{ latest.index }} Pivot</span>
+        <span class="value">{{ latest.price | number:'1.2-2' }}</span>
+        <span class="date">{{ latest.date | date:'mediumDate' }}</span>
+      </div>
+      <button mat-icon-button color="accent" (click)="openEditor()" matTooltip="Update pivot level">
+        <mat-icon>edit</mat-icon>
+      </button>
+    </div>
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>{{ latestError || 'No pivot level recorded yet.' }}</p>
+        <button mat-stroked-button color="primary" (click)="openEditor()">Add Pivot</button>
+      </div>
+    </ng-template>
+  </mat-card>
+
+  <section class="history">
+    <div class="section-header">
+      <h2>Recent changes</h2>
+      <button mat-icon-button (click)="refreshHistory()" matTooltip="Refresh history">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+    <mat-progress-bar *ngIf="historyLoading" mode="indeterminate"></mat-progress-bar>
+    <mat-list *ngIf="!historyLoading && history.length">
+      <mat-list-item *ngFor="let pivot of history">
+        <div matListItemTitle>{{ pivot.price | number:'1.2-2' }}</div>
+        <div matListItemLine>{{ pivot.index }} — {{ pivot.date | date:'mediumDate' }}</div>
+      </mat-list-item>
+    </mat-list>
+    <div class="history-empty" *ngIf="!historyLoading && !history.length">
+      {{ historyError || 'No history captured yet.' }}
+    </div>
+  </section>
+</div>

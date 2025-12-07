@@ -1,0 +1,33 @@
+<h1 mat-dialog-title>Update Pivot Level</h1>
+<div mat-dialog-content>
+  <form [formGroup]="form" class="pivot-form">
+    <mat-form-field appearance="outline">
+      <mat-label>Pivot price</mat-label>
+      <input matInput type="number" formControlName="price" />
+      <mat-error *ngIf="form.controls['price']?.hasError('required')">
+        Price is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Tracked on</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="date" />
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Index</mat-label>
+      <input matInput formControlName="index" />
+      <mat-error *ngIf="form.controls['index']?.hasError('required')">
+        Index is required
+      </mat-error>
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="submit()" [disabled]="form.invalid">
+    Save
+  </button>
+</div>

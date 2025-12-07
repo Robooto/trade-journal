@@ -28,6 +28,11 @@ const routes: Routes = [
       import('./charts/charts.module').then(m => m.ChartsModule)
   },
   {
+    path: 'pivot-tracker',
+    loadChildren: () =>
+      import('./pivot-tracker/pivot-tracker.module').then(m => m.PivotTrackerModule)
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full'

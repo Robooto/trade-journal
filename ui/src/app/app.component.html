@@ -4,6 +4,30 @@
   </button>
   <span>Robin's Roost</span>
   <span class="contract" matTooltip="Current ES contract">{{ currentContract }}</span>
+  <div class="pivot-wrapper">
+    <ng-container *ngIf="pivot$ | async as pivot; else pivotMissing">
+      <div class="pivot-indicator" matTooltip="Latest SpotGamma pivot">
+        <mat-icon>warning</mat-icon>
+        <span class="pivot-label">{{ pivot.index }}</span>
+        <span class="pivot-value">{{ pivot.price | number:'1.2-2' }}</span>
+        <span class="pivot-date">{{ pivot.date | date:'MMM d' }}</span>
+      </div>
+      <button
+        mat-icon-button
+        color="warn"
+        [routerLink]="['/pivot-tracker']"
+        matTooltip="Update pivot level"
+      >
+        <mat-icon>edit</mat-icon>
+      </button>
+    </ng-container>
+    <ng-template #pivotMissing>
+      <button mat-stroked-button color="warn" [routerLink]="['/pivot-tracker']">
+        <mat-icon>warning</mat-icon>
+        <span>Add pivot</span>
+      </button>
+    </ng-template>
+  </div>
   <span class="spacer"></span>
   <img src="assets/robin.png" alt="Robin icon" class="robin-icon" />
 </mat-toolbar>
@@ -31,6 +55,10 @@
       <a mat-list-item routerLink="/charts" routerLinkActive="active-link" matTooltip="Charts" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>show_chart</mat-icon>
         <span *ngIf="!isCollapsed">Charts</span>
+      </a>
+      <a mat-list-item routerLink="/pivot-tracker" routerLinkActive="active-link" matTooltip="Pivot Tracker" [matTooltipDisabled]="!isCollapsed">
+        <mat-icon matListItemIcon>bolt</mat-icon>
+        <span *ngIf="!isCollapsed">Pivot Tracker</span>
       </a>
     </mat-nav-list>
   </mat-sidenav>

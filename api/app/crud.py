@@ -7,8 +7,8 @@ from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models import JournalEntryORM, EventORM, SessionTokenORM
-from app.schema import JournalEntryCreate, JournalEntryUpdate, Event
+from app.models import JournalEntryORM, EventORM, SessionTokenORM, PivotLevelORM
+from app.schema import JournalEntryCreate, JournalEntryUpdate, Event, PivotLevelCreate
 
 
 def count_entries(db: Session) -> int:
@@ -173,3 +173,46 @@ def save_session_token(db: Session, token: str, expiration: datetime):
         db.commit()
         db.refresh(record)
     return record
+
+
+def _normalize_index(symbol: str | None) -> str:
+    return (symbol or "SPX").upper()
+
+
+def create_pivot_level(db: Session, pivot_in: PivotLevelCreate) -> PivotLevelORM:
+    orm_pivot = PivotLevelORM(
+        price=pivot_in.price,
+        index=_normalize_index(pivot_in.index),
+        date=pivot_in.date,
+    )
+    db.add(orm_pivot)
+    db.commit()
+    db.refresh(orm_pivot)
+    return orm_pivot
+
+
+def get_latest_pivot_level(db: Session, index: str = "SPX") -> PivotLevelORM | None:
+    symbol = _normalize_index(index)
+    return (
+        db.query(PivotLevelORM)
+        .filter(PivotLevelORM.index == symbol)
+        .order_by(desc(PivotLevelORM.date), desc(PivotLevelORM.id))
+        .first()
+    )
+
+
+def get_recent_pivot_levels(
+    db: Session,
+    *,
+    limit: int = 7,
+    index: str = "SPX",
+) -> List[PivotLevelORM]:
+    symbol = _normalize_index(index)
+    limit = max(1, limit)
+    return (
+        db.query(PivotLevelORM)
+        .filter(PivotLevelORM.index == symbol)
+        .order_by(desc(PivotLevelORM.date), desc(PivotLevelORM.id))
+        .limit(limit)
+        .all()
+    )

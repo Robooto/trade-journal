@@ -13,6 +13,7 @@ from app.routers.v1 import (
     trades as trades_v1,
     spotgamma as spotgamma_v1,
     charts as charts_v1,
+    pivots as pivots_v1,
 )
 
 
@@ -43,6 +44,7 @@ app.include_router(entries_v1.router)
 app.include_router(trades_v1.router)
 app.include_router(spotgamma_v1.router)
 app.include_router(charts_v1.router)
+app.include_router(pivots_v1.router)
 
 @app.exception_handler(Exception)
 async def log_exceptions(request: Request, exc: Exception):

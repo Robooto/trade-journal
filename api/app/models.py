@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime
+from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -45,3 +45,12 @@ class SessionTokenORM(Base):
     id = Column(Integer, primary_key=True, index=True)
     token = Column(String(128), nullable=False)       # session token string
     expiration = Column(DateTime, nullable=False)     # expiration timestamp (UTC)
+
+
+class PivotLevelORM(Base):
+    __tablename__ = "pivot_levels"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    price = Column(Float, nullable=False)
+    index = Column(String(16), nullable=False, default="SPX")
+    date = Column(Date, nullable=False, server_default=func.current_date())

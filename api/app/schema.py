@@ -1,9 +1,9 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Mapping
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class MarketDirection(str, Enum):
@@ -183,3 +183,36 @@ class ChartResponse(BaseModel):
         "from_attributes": True,
     }
 
+
+class PivotLevelBase(BaseModel):
+    price: float
+    index: str
+    date: date
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
+    }
+
+    @model_validator(mode="before")
+    @classmethod
+    def apply_defaults(cls, values: Any) -> Any:
+        if isinstance(values, Mapping):
+            data = dict(values)
+            data.setdefault("index", "SPX")
+            data.setdefault("date", date.today())
+            return data
+        return values
+
+
+class PivotLevelCreate(PivotLevelBase):
+    pass
+
+
+class PivotLevel(PivotLevelBase):
+    id: int
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
+    }
