@@ -1,10 +1,19 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, Subject, Subscription, takeUntil } from 'rxjs';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
 import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ChartsApiService } from '../charts-api.service';
-import { ChartParams, Bar, PriceLine, LineStyle, LineColor } from '../charts.models';
+import { ChartParams, Bar, PriceLine, LineStyle, LineColor, RawVolatilityData, VolatilityData, RawMarketData } from '../charts.models';
+
+type MarketDataValue = string | number | boolean | null | undefined;
+
+interface MarketDataEntry {
+  key: string;
+  label: string;
+  value: string;
+}
 
 @Component({
   selector: 'app-charts-page',
@@ -24,10 +33,37 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
   priceLineRefs: Map<string, any> = new Map();
   candlestickSeries: any = null;
   showPriceLineForm = false;
+  volatilityData: VolatilityData | null = null;
+  volatilityLoading = false;
+  volatilityError: string | null = null;
+  marketDataHighlights: MarketDataEntry[] = [];
+  marketDataDetails: MarketDataEntry[] = [];
+  marketDataLoading = false;
+  marketDataError: string | null = null;
   
   private destroy$ = new Subject<void>();
   private formChange$ = new Subject<void>();
   private lastRequestParams: ChartParams | null = null;
+  private volatilityRequestSub: Subscription | null = null;
+  private marketDataRequestSub: Subscription | null = null;
+  private yearHighPriceLineRef: any = null;
+  private yearLowPriceLineRef: any = null;
+  private yearHighValue: number | null = null;
+  private yearLowValue: number | null = null;
+  private readonly marketHighlightKeys = [
+    'bid',
+    'ask',
+    'mid',
+    'last',
+    'open',
+    'close',
+    'volume',
+    'day-high-price',
+    'day-low-price',
+    'year-high-price',
+    'year-low-price',
+    'beta'
+  ];
 
   resolutionOptions = [
     { value: '5m', label: '5 Minutes' },
@@ -53,9 +89,13 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
     { value: 'dotted', label: 'Dotted' }
   ];
 
+  lastVolatilityRawData: RawVolatilityData | null = null;
+  lastMarketDataRaw: RawMarketData | null = null;
+  
   constructor(
     private fb: FormBuilder,
-    private chartsApi: ChartsApiService
+    private chartsApi: ChartsApiService,
+    private snackBar: MatSnackBar
   ) {
     // Set default date range (30 days)
     const defaultDateRange = this.getSimpleDefaultDateRange();
@@ -89,6 +129,14 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
     
     if (this.chart) {
       this.chart.remove();
+    }
+
+    if (this.volatilityRequestSub) {
+      this.volatilityRequestSub.unsubscribe();
+    }
+
+    if (this.marketDataRequestSub) {
+      this.marketDataRequestSub.unsubscribe();
     }
   }
 
@@ -157,6 +205,8 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
     this.lastRequestParams = { ...params };
     this.isLoading = true;
     this.error = null;
+    this.fetchVolatilityData(params.symbol);
+    this.fetchMarketData(params.symbol);
 
     this.chartsApi.getHistory(params).subscribe({
       next: (response) => {
@@ -207,8 +257,10 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
   private renderChart(bars: Bar[]) {
     // Remove existing chart if any
     if (this.chart) {
+      this.removeYearRangePriceLines();
       this.chart.remove();
     }
+    this.candlestickSeries = null;
 
     // Wait for the view to update
     setTimeout(() => {
@@ -266,6 +318,7 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
       
       // Re-add any existing price lines
       this.redrawPriceLines();
+      this.applyYearRangePriceLines();
     }, 100);
   }
 
@@ -366,5 +419,297 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
         width: this.chartContainer.nativeElement.clientWidth
       });
     }
+  }
+
+  private fetchVolatilityData(symbol: string) {
+    if (!symbol) {
+      return;
+    }
+
+    if (this.volatilityRequestSub) {
+      this.volatilityRequestSub.unsubscribe();
+    }
+
+    this.volatilityLoading = true;
+    this.volatilityError = null;
+    this.volatilityData = null;
+    this.lastVolatilityRawData = null;
+
+    this.volatilityRequestSub = this.chartsApi.getVolatilityData(symbol).subscribe({
+      next: (data: RawVolatilityData[]) => {
+        this.volatilityLoading = false;
+        const upper = symbol.toUpperCase();
+        const match = data.find(item => item.symbol?.toUpperCase() === upper);
+        if (match) {
+          this.lastVolatilityRawData = match;
+          this.volatilityData = this.transformVolatilityData(match);
+        } else {
+          this.volatilityError = 'No volatility data available for this symbol.';
+          this.lastVolatilityRawData = null;
+        }
+      },
+      error: (err) => {
+        this.volatilityLoading = false;
+        this.volatilityError = err.error?.detail || 'Failed to load volatility data';
+        this.lastVolatilityRawData = null;
+        console.error('Volatility data loading error:', err);
+      }
+    });
+  }
+
+  private fetchMarketData(symbol: string) {
+    if (!symbol) {
+      return;
+    }
+
+    if (this.marketDataRequestSub) {
+      this.marketDataRequestSub.unsubscribe();
+    }
+
+    this.marketDataLoading = true;
+    this.marketDataError = null;
+    this.marketDataHighlights = [];
+    this.marketDataDetails = [];
+    this.lastMarketDataRaw = null;
+    this.yearHighValue = null;
+    this.yearLowValue = null;
+    this.removeYearRangePriceLines();
+
+    this.marketDataRequestSub = this.chartsApi.getMarketData(symbol).subscribe({
+      next: (data: RawMarketData[]) => {
+        this.marketDataLoading = false;
+        const upper = symbol.toUpperCase();
+        const match = data.find(item => item.symbol?.toUpperCase() === upper);
+        if (match) {
+          this.lastMarketDataRaw = match;
+          this.computeMarketDataDisplay(match);
+          this.yearHighValue = this.toNumber(match['year-high-price'] as string | number | null | undefined);
+          this.yearLowValue = this.toNumber(match['year-low-price'] as string | number | null | undefined);
+          this.applyYearRangePriceLines();
+        } else {
+          this.marketDataError = 'No market data available for this symbol.';
+        }
+      },
+      error: (err) => {
+        this.marketDataLoading = false;
+        this.marketDataError = err.error?.detail || 'Failed to load market data';
+        console.error('Market data loading error:', err);
+      }
+    });
+  }
+
+  private transformVolatilityData(raw: RawVolatilityData): VolatilityData {
+    const optionExpirationImpliedVolatilities = (raw['option-expiration-implied-volatilities'] || []).map(exp => ({
+      expirationDate: exp['expiration-date'],
+      impliedVolatility: this.toNumber(exp['implied-volatility']),
+      optionChainType: exp['option-chain-type'],
+      settlementType: exp['settlement-type'],
+    }));
+
+    return {
+      symbol: raw.symbol,
+      impliedVolatilityIndex: this.toNumber(raw['implied-volatility-index']),
+      impliedVolatilityIndex15Day: this.toNumber(raw['implied-volatility-index-15-day']),
+      impliedVolatilityIndex5DayChange: this.toNumber(raw['implied-volatility-index-5-day-change']),
+      impliedVolatilityIndexRank: this.toNumber(raw['implied-volatility-index-rank']),
+      impliedVolatilityPercentile: this.toNumber(raw['implied-volatility-percentile']),
+      corrSpy3Month: this.toNumber(raw['corr-spy-3month']),
+      liquidityRating: this.toNumber(raw['liquidity-rating'] as any),
+      optionExpirationImpliedVolatilities,
+    };
+  }
+
+  private toNumber(value: string | number | null | undefined): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (typeof value === 'number') {
+      return isFinite(value) ? value : null;
+    }
+
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? null : parsed;
+  }
+
+  formatPercent(value: number | null): string {
+    if (value === null || value === undefined) {
+      return 'N/A';
+    }
+
+    return `${(value * 100).toFixed(2)}%`;
+  }
+
+  formatDecimal(value: number | null, digits: number = 2): string {
+    if (value === null || value === undefined) {
+      return 'N/A';
+    }
+
+    return value.toFixed(digits);
+  }
+
+  copyVolatilityJson(event: MouseEvent) {
+    event.stopPropagation();
+
+    if (!this.lastVolatilityRawData) {
+      this.snackBar.open('No volatility data to copy yet.', 'Dismiss', { duration: 2500 });
+      return;
+    }
+
+    const json = JSON.stringify(this.lastVolatilityRawData, null, 2);
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(json).then(() => {
+        this.snackBar.open('Volatility JSON copied to clipboard', 'Dismiss', { duration: 2500 });
+      }).catch(() => {
+        this.fallbackCopy(json, 'Volatility JSON copied to clipboard', 'Unable to copy volatility JSON.');
+      });
+    } else {
+      this.fallbackCopy(json, 'Volatility JSON copied to clipboard', 'Unable to copy volatility JSON.');
+    }
+  }
+
+  copyMarketDataJson(event: MouseEvent) {
+    event.stopPropagation();
+
+    if (!this.lastMarketDataRaw) {
+      this.snackBar.open('No market data to copy yet.', 'Dismiss', { duration: 2500 });
+      return;
+    }
+
+    const json = JSON.stringify(this.lastMarketDataRaw, null, 2);
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(json).then(() => {
+        this.snackBar.open('Market data JSON copied to clipboard', 'Dismiss', { duration: 2500 });
+      }).catch(() => {
+        this.fallbackCopy(json, 'Market data JSON copied to clipboard', 'Unable to copy market data JSON.');
+      });
+    } else {
+      this.fallbackCopy(json, 'Market data JSON copied to clipboard', 'Unable to copy market data JSON.');
+    }
+  }
+
+  private fallbackCopy(text: string, successMessage: string, failureMessage: string) {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      this.snackBar.open(successMessage, 'Dismiss', { duration: 2500 });
+    } catch (error) {
+      this.snackBar.open(failureMessage, 'Dismiss', { duration: 3000 });
+      console.error('Clipboard copy failed', error);
+    }
+  }
+
+  private computeMarketDataDisplay(raw: RawMarketData) {
+    const highlightSet = new Set(this.marketHighlightKeys);
+    this.marketDataHighlights = this.marketHighlightKeys
+      .map(key => ({
+        key,
+        label: this.toTitleCase(key),
+        value: this.formatMarketValue(raw[key])
+      }))
+      .filter(entry => entry.value !== 'N/A');
+
+    this.marketDataDetails = Object.entries(raw)
+      .filter(([key]) => !highlightSet.has(key))
+      .map(([key, value]) => ({
+        key,
+        label: this.toTitleCase(key),
+        value: this.formatMarketValue(value as MarketDataValue)
+      }));
+  }
+
+  private formatMarketValue(value: MarketDataValue): string {
+    if (value === null || value === undefined || value === '') {
+      return 'N/A';
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+
+    if (typeof value === 'number') {
+      return this.formatNumberValue(value);
+    }
+
+    const numeric = Number(value);
+    if (!isNaN(numeric)) {
+      return this.formatNumberValue(numeric);
+    }
+
+    const date = new Date(value);
+    if (!isNaN(date.getTime()) && `${value}`.includes('T')) {
+      return date.toLocaleString();
+    }
+
+    return `${value}`;
+  }
+
+  private formatNumberValue(value: number): string {
+    const absValue = Math.abs(value);
+    if (absValue >= 1000) {
+      return value.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    }
+    return value % 1 === 0 ? value.toString() : value.toFixed(2);
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .replace(/[-_]/g, ' ')
+      .split(' ')
+      .filter(Boolean)
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  private applyYearRangePriceLines() {
+    if (!this.candlestickSeries) {
+      return;
+    }
+
+    this.removeYearRangePriceLines();
+
+    if (this.yearHighValue !== null) {
+      this.yearHighPriceLineRef = this.candlestickSeries.createPriceLine({
+        price: this.yearHighValue,
+        color: '#ff9800',
+        lineWidth: 2,
+        lineStyle: 0,
+        axisLabelVisible: true,
+        title: `52W High (${this.yearHighValue.toFixed(2)})`,
+      });
+    }
+
+    if (this.yearLowValue !== null) {
+      this.yearLowPriceLineRef = this.candlestickSeries.createPriceLine({
+        price: this.yearLowValue,
+        color: '#2196f3',
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: `52W Low (${this.yearLowValue.toFixed(2)})`,
+      });
+    }
+  }
+
+  private removeYearRangePriceLines() {
+    if (this.yearHighPriceLineRef && this.candlestickSeries) {
+      this.candlestickSeries.removePriceLine(this.yearHighPriceLineRef);
+    }
+
+    if (this.yearLowPriceLineRef && this.candlestickSeries) {
+      this.candlestickSeries.removePriceLine(this.yearLowPriceLineRef);
+    }
+
+    this.yearHighPriceLineRef = null;
+    this.yearLowPriceLineRef = null;
   }
 }

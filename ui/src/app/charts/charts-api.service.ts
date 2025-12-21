@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ChartResponse, ChartParams } from './charts.models';
+import { ChartResponse, ChartParams, RawVolatilityData, RawMarketData } from './charts.models';
 
 @Injectable({ providedIn: 'root' })
 export class ChartsApiService {
-  private base = `${environment.apiUrl}/charts`;
+  private chartsBase = `${environment.apiUrl}/charts`;
+  private tradesBase = `${environment.apiUrl}/trades`;
 
   constructor(private http: HttpClient) {}
 
@@ -23,8 +24,30 @@ export class ChartsApiService {
     }
 
     return this.http.get<ChartResponse>(
-      `${this.base}/history/${params.symbol}`,
+      `${this.chartsBase}/history/${params.symbol}`,
       { params: httpParams }
+    );
+  }
+
+  getVolatilityData(symbol: string): Observable<RawVolatilityData[]> {
+    const payload = [symbol.toUpperCase()];
+    return this.http.post<RawVolatilityData[]>(
+      `${this.tradesBase}/volatility-data`,
+      payload
+    );
+  }
+
+  getMarketData(symbol: string): Observable<RawMarketData[]> {
+    const payload = {
+      equity: [symbol.toUpperCase()],
+      equity_option: [],
+      future: [],
+      future_option: []
+    };
+
+    return this.http.post<RawMarketData[]>(
+      `${this.tradesBase}/market-data`,
+      payload
     );
   }
 }

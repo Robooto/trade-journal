@@ -89,3 +89,23 @@ def get_market_data(equity: List[str], equity_option: List[str], future: List[st
         raise HTTPException(status_code=500, detail=f"Failed to fetch market data: {e}")
 
     return market_data
+
+@router.post("/volatility-data",summary="Get volatility data for symbols", response_model=List[dict])
+def get_volatility_data(symbols: List[str], db: Session = Depends(get_db)):
+    """
+    Fetch volatility data for the given symbols from the Tastytrade API.
+    Returns a list of volatility data dictionaries.
+    """
+    try:
+        token = tastytrade.get_active_token(db)
+    except Exception as e:
+        logging.error(f"Authentication to Tastytrade failed: {e}")
+        raise HTTPException(status_code=403, detail=f"Authentication to Tastytrade failed: {e}")
+
+    try:
+        volatility_data = tastytrade.fetch_volatility_data(token, symbols)
+    except Exception as e:
+        logging.error(f"Failed to fetch volatility data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch volatility data: {e}")
+
+    return volatility_data

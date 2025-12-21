@@ -91,6 +91,166 @@
   }
 }
 
+.volatility-section {
+  margin-top: 24px;
+
+  .mat-expansion-panel-header {
+    padding: 0 24px;
+  }
+
+  .volatility-content {
+    padding: 16px 24px 24px 24px;
+  }
+
+  .volatility-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .volatility-header-status {
+      flex: 1;
+    }
+  }
+
+  .volatility-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  .volatility-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f44336;
+    padding: 16px 0;
+  }
+
+  .volatility-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+  }
+
+  .volatility-metric {
+    background: rgba(25, 118, 210, 0.08);
+    border-radius: 8px;
+    padding: 12px 16px;
+
+    .metric-label {
+      font-size: 0.85rem;
+      opacity: 0.75;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+  }
+
+  .option-expirations {
+    margin-top: 24px;
+
+    .option-expirations-header {
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .no-option-expirations {
+      opacity: 0.7;
+      font-style: italic;
+    }
+  }
+
+  .option-expirations-list {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .option-expiration-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 4px;
+    font-size: 0.95rem;
+
+    .expiration-date {
+      font-weight: 600;
+    }
+
+    .expiration-iv {
+      font-weight: 500;
+      opacity: 0.85;
+    }
+  }
+
+  .market-content {
+    padding: 16px 24px 24px 24px;
+  }
+
+  .market-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .market-metric {
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    padding: 12px 16px;
+
+    .metric-label {
+      font-size: 0.85rem;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+  }
+
+  .market-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .market-detail {
+    background: rgba(25, 118, 210, 0.06);
+    border-radius: 6px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .detail-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    .detail-value {
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+  }
+
+  .market-empty {
+    padding: 16px;
+    text-align: center;
+    opacity: 0.7;
+    font-style: italic;
+  }
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -280,5 +440,63 @@
   
   .chart-container {
     height: 300px;
+  }
+
+  .volatility-section {
+    .volatility-metrics {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
+
+    .volatility-content {
+      padding: 16px;
+    }
+
+    .option-expirations-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .market-content {
+      padding: 16px;
+    }
+
+    .market-details {
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .volatility-section {
+    .option-expirations-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .market-details {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .volatility-section {
+    .option-expirations-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .market-details {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .volatility-section {
+    .option-expirations-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .market-details {
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
   }
 }

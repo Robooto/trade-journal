@@ -199,4 +199,142 @@
       </div>
     </mat-card-content>
   </mat-card>
+
+  <mat-accordion class="volatility-section">
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Volatility &amp; Correlation</mat-panel-title>
+        <mat-panel-description class="volatility-header-actions">
+          <span class="volatility-header-status">
+            <ng-container *ngIf="volatilityLoading">Loading...</ng-container>
+            <ng-container *ngIf="!volatilityLoading && volatilityData">
+              {{ volatilityData.symbol }}
+            </ng-container>
+          </span>
+          <button 
+            mat-icon-button 
+            matTooltip="Copy raw JSON"
+            aria-label="Copy volatility JSON"
+            [disabled]="!lastVolatilityRawData"
+            (click)="copyVolatilityJson($event)">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="volatility-content">
+        <div *ngIf="volatilityLoading" class="volatility-loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <span>Fetching volatility snapshot...</span>
+        </div>
+
+        <div *ngIf="!volatilityLoading && volatilityError" class="volatility-error">
+          <mat-icon color="warn">warning</mat-icon>
+          <span>{{ volatilityError }}</span>
+        </div>
+
+        <ng-container *ngIf="!volatilityLoading && !volatilityError && volatilityData as vol">
+          <div class="volatility-metrics">
+            <div class="volatility-metric">
+              <div class="metric-label">Implied Volatility Index</div>
+              <div class="metric-value">{{ formatPercent(vol.impliedVolatilityIndex) }}</div>
+            </div>
+            <div class="volatility-metric">
+              <div class="metric-label">15 Day IV</div>
+              <div class="metric-value">{{ formatPercent(vol.impliedVolatilityIndex15Day) }}</div>
+            </div>
+            <div class="volatility-metric">
+              <div class="metric-label">5 Day IV Change</div>
+              <div class="metric-value">{{ formatPercent(vol.impliedVolatilityIndex5DayChange) }}</div>
+            </div>
+            <div class="volatility-metric">
+              <div class="metric-label">IV Rank</div>
+              <div class="metric-value">{{ formatPercent(vol.impliedVolatilityIndexRank) }}</div>
+            </div>
+            <div class="volatility-metric">
+              <div class="metric-label">IV Percentile</div>
+              <div class="metric-value">{{ formatPercent(vol.impliedVolatilityPercentile) }}</div>
+            </div>
+            <div class="volatility-metric">
+              <div class="metric-label">Corr SPY (3M)</div>
+              <div class="metric-value">{{ formatDecimal(vol.corrSpy3Month) }}</div>
+            </div>
+            <div class="volatility-metric">
+              <div class="metric-label">Liquidity Rating</div>
+              <div class="metric-value">{{ formatDecimal(vol.liquidityRating, 1) }}</div>
+            </div>
+          </div>
+
+          <div class="option-expirations">
+            <div class="option-expirations-header">Option Expiration Implied Volatility</div>
+            <div *ngIf="vol.optionExpirationImpliedVolatilities.length === 0" class="no-option-expirations">
+              <span>No option expiration data available.</span>
+            </div>
+            <div *ngIf="vol.optionExpirationImpliedVolatilities.length > 0" class="option-expirations-list">
+              <div 
+                class="option-expiration-item" 
+                *ngFor="let expiration of vol.optionExpirationImpliedVolatilities">
+                <div class="expiration-date">{{ expiration.expirationDate | date:'MMM d, y' }}</div>
+                <div class="expiration-iv">{{ formatPercent(expiration.impliedVolatility) }}</div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Market Data Snapshot</mat-panel-title>
+        <mat-panel-description class="volatility-header-actions">
+          <span class="volatility-header-status">
+            <ng-container *ngIf="marketDataLoading">Loading...</ng-container>
+            <ng-container *ngIf="!marketDataLoading && lastMarketDataRaw">
+              {{ lastMarketDataRaw.symbol }}
+            </ng-container>
+          </span>
+          <button 
+            mat-icon-button 
+            matTooltip="Copy raw JSON"
+            aria-label="Copy market data JSON"
+            [disabled]="!lastMarketDataRaw"
+            (click)="copyMarketDataJson($event)">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="market-content">
+        <div *ngIf="marketDataLoading" class="volatility-loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <span>Fetching market snapshot...</span>
+        </div>
+
+        <div *ngIf="!marketDataLoading && marketDataError" class="volatility-error">
+          <mat-icon color="warn">warning</mat-icon>
+          <span>{{ marketDataError }}</span>
+        </div>
+
+        <ng-container *ngIf="!marketDataLoading && !marketDataError && lastMarketDataRaw">
+          <div *ngIf="marketDataHighlights.length > 0" class="market-metrics">
+            <div class="market-metric" *ngFor="let metric of marketDataHighlights">
+              <div class="metric-label">{{ metric.label }}</div>
+              <div class="metric-value">{{ metric.value }}</div>
+            </div>
+          </div>
+
+          <div *ngIf="marketDataDetails.length > 0" class="market-details">
+            <div class="market-detail" *ngFor="let detail of marketDataDetails">
+              <div class="detail-label">{{ detail.label }}</div>
+              <div class="detail-value">{{ detail.value }}</div>
+            </div>
+          </div>
+
+          <div *ngIf="marketDataHighlights.length === 0 && marketDataDetails.length === 0" class="market-empty">
+            <span>No market data fields available.</span>
+          </div>
+        </ng-container>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
 </div>
