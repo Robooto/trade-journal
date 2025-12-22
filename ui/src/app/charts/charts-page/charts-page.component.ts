@@ -26,6 +26,7 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
   
   chartForm: FormGroup;
   priceLineForm: FormGroup;
+  equityHubDateParam = this.formatDateForEquityHub(new Date());
   chart: IChartApi | null = null;
   isLoading = false;
   error: string | null = null;
@@ -711,5 +712,17 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
 
     this.yearHighPriceLineRef = null;
     this.yearLowPriceLineRef = null;
+  }
+
+  get equityHubUrl(): string {
+    const symbol = (this.chartForm?.get('symbol')?.value || 'SPY').toUpperCase();
+    return `https://dashboard.spotgamma.com/equityhub?sym=${symbol}&date=${this.equityHubDateParam}&eh-model=synthoi`;
+  }
+
+  private formatDateForEquityHub(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
