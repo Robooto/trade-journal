@@ -250,21 +250,6 @@
     font-style: italic;
   }
 
-  .equity-hub-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 24px;
-    font-weight: 600;
-    color: #1976d2;
-    text-decoration: none;
-
-    mat-icon {
-      font-size: 16px;
-      width: 18px;
-      height: 18px;
-    }
-  }
 }
 
 .loading-container {
@@ -411,6 +396,47 @@
   
   p {
     margin: 0;
+  }
+}
+
+.equity-hub-card {
+  margin-top: 24px;
+
+  .equity-hub-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .equity-hub-text {
+    flex: 1 1 240px;
+  }
+
+  .equity-hub-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .equity-hub-description {
+    opacity: 0.7;
+  }
+
+  .equity-hub-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #1976d2;
+    text-decoration: none;
+
+    mat-icon {
+      font-size: 16px;
+      width: 18px;
+      height: 18px;
+    }
   }
 }
 
