@@ -119,6 +119,27 @@
     padding: 16px 0;
   }
 
+  .prompt-content {
+    padding: 16px 24px 24px 24px;
+  }
+
+  .prompt-hint {
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    opacity: 0.7;
+  }
+
+  .prompt-output {
+    margin: 0;
+    padding: 16px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
   .volatility-error {
     display: flex;
     align-items: center;

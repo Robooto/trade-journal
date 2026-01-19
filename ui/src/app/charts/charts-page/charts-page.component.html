@@ -203,6 +203,29 @@
   <mat-accordion class="volatility-section">
     <mat-expansion-panel>
       <mat-expansion-panel-header>
+        <mat-panel-title>Prompt Builder</mat-panel-title>
+        <mat-panel-description class="volatility-header-actions">
+          <span class="volatility-header-status">
+            {{ chartForm.get('symbol')?.value?.toUpperCase() || 'TICKER' }}
+          </span>
+          <button
+            mat-icon-button
+            matTooltip="Copy prompt"
+            aria-label="Copy prompt"
+            (click)="copyPrompt($event)">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="prompt-content">
+        <div class="prompt-hint">Copy-ready prompt with volatility, correlation, and market data snapshots.</div>
+        <pre class="prompt-output">{{ promptOutput }}</pre>
+      </div>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
         <mat-panel-title>Volatility &amp; Correlation</mat-panel-title>
         <mat-panel-description class="volatility-header-actions">
           <span class="volatility-header-status">
