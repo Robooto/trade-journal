@@ -6,13 +6,13 @@
 
 .page-header {
   margin-bottom: 24px;
-  
+
   h1 {
     margin: 0 0 8px 0;
     font-size: 2rem;
     font-weight: 400;
   }
-  
+
   p {
     margin: 0;
     opacity: 0.6;
@@ -21,7 +21,7 @@
 
 .controls-card {
   margin-bottom: 24px;
-  
+
   mat-card-header {
     margin-bottom: 16px;
   }
@@ -34,7 +34,7 @@
     align-items: flex-start;
     margin-bottom: 16px;
     flex-wrap: wrap;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -60,7 +60,7 @@
     min-width: 120px;
     align-self: flex-start;
     margin-top: 0;
-    
+
     mat-icon {
       animation: spin 1s linear infinite;
     }
@@ -99,7 +99,7 @@
   }
 
   .volatility-content {
-    padding: 16px 24px 24px 24px;
+    padding: 16px 24px 24px;
   }
 
   .volatility-header-actions {
@@ -120,7 +120,7 @@
   }
 
   .prompt-content {
-    padding: 16px 24px 24px 24px;
+    padding: 16px 24px 24px;
   }
 
   .prompt-hint {
@@ -211,7 +211,7 @@
   }
 
   .market-content {
-    padding: 16px 24px 24px 24px;
+    padding: 16px 24px 24px;
   }
 
   .market-metrics {
@@ -270,7 +270,6 @@
     opacity: 0.7;
     font-style: italic;
   }
-
 }
 
 .loading-container {
@@ -280,18 +279,17 @@
   justify-content: center;
   padding: 40px;
   text-align: center;
-  
+
   p {
     margin-top: 16px;
     opacity: 0.6;
   }
 }
-
 .chart-container {
   width: 100%;
   height: 400px;
   position: relative;
-  
+
   &.loading {
     opacity: 0.5;
   }
@@ -301,14 +299,12 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-// Responsive design
 .price-lines-card {
   margin-bottom: 24px;
-  
+
   mat-card-header {
     margin-bottom: 16px;
-    
+
     .spacer {
       flex: 1 1 auto;
     }
@@ -317,33 +313,33 @@
 
 .price-line-form {
   margin-bottom: 16px;
-  
+
   .price-line-form-row {
     display: flex;
     gap: 16px;
     align-items: flex-start;
     flex-wrap: wrap;
-    
+
     .price-field {
       min-width: 120px;
       flex: 0 0 120px;
     }
-    
+
     .color-field {
       min-width: 140px;
       flex: 0 0 140px;
     }
-    
+
     .style-field {
       min-width: 120px;
       flex: 0 0 120px;
     }
-    
+
     .label-field {
       min-width: 160px;
       flex: 1 1 160px;
     }
-    
+
     .add-line-button {
       height: 56px;
       align-self: flex-start;
@@ -358,20 +354,17 @@
   align-items: center;
   gap: 8px;
 }
-
 .color-swatch {
   width: 16px;
   height: 16px;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.2);
 }
-
 .price-lines-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .price-line-item {
   display: flex;
   align-items: center;
@@ -379,47 +372,45 @@
   padding: 8px 12px;
   background: rgba(0, 0, 0, 0.04);
   border-radius: 4px;
-  
+
   .price-line-info {
     display: flex;
     align-items: center;
     gap: 12px;
   }
-  
+
   .price-line-swatch {
     width: 20px;
     height: 3px;
     border-radius: 1px;
   }
-  
+
   .price-line-price {
     font-weight: 500;
     min-width: 80px;
   }
-  
+
   .price-line-style {
     font-size: 0.875rem;
     opacity: 0.7;
     min-width: 60px;
   }
-  
+
   .price-line-label {
     font-size: 0.875rem;
     font-style: italic;
     opacity: 0.8;
   }
 }
-
 .no-price-lines {
   text-align: center;
   padding: 24px;
   opacity: 0.6;
-  
+
   p {
     margin: 0;
   }
 }
-
 .equity-hub-card {
   margin-top: 24px;
 
@@ -460,32 +451,31 @@
     }
   }
 }
-
 @media (max-width: 768px) {
   .chart-form {
     .form-row {
       flex-direction: column;
       gap: 8px;
     }
-    
+
     .symbol-field,
     .resolution-field,
     .date-field {
       width: 100%;
       flex: 1 1 auto;
     }
-    
+
     .load-button {
       width: 100%;
       align-self: stretch;
     }
   }
-  
+
   .price-line-form {
     .price-line-form-row {
       flex-direction: column;
       gap: 8px;
-      
+
       .price-field,
       .color-field,
       .style-field,
@@ -493,14 +483,14 @@
         width: 100%;
         flex: 1 1 auto;
       }
-      
+
       .add-line-button {
         width: 100%;
         align-self: stretch;
       }
     }
   }
-  
+
   .chart-container {
     height: 300px;
   }
