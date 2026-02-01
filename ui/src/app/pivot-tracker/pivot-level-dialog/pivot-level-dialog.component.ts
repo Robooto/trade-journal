@@ -17,7 +17,6 @@ export interface PivotLevelDialogData {
 @Component({
   selector: 'app-pivot-level-dialog',
   templateUrl: './pivot-level-dialog.component.html',
-  styleUrls: ['./pivot-level-dialog.component.scss'],
   standalone: false,
 })
 export class PivotLevelDialogComponent {

@@ -17,8 +17,8 @@
             <mat-label>Symbol</mat-label>
             <input matInput 
                    formControlName="symbol" 
-                   placeholder="AAPL" 
-                   style="text-transform: uppercase"
+                   placeholder="AAPL"
+                   class="uppercase"
                    maxlength="10">
             <mat-error *ngIf="chartForm.get('symbol')?.hasError('required')">
               Symbol is required

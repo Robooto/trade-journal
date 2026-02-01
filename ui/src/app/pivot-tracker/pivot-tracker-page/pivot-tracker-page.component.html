@@ -1,8 +1,10 @@
-<div class="pivot-page">
-  <div class="header">
+<div class="flex flex-col gap-8">
+  <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
       <h1>Pivot Tracker</h1>
-      <p class="subtitle">Monitor the latest SpotGamma pivot and keep its history up to date.</p>
+      <p class="text-[color:var(--mat-sys-secondary)]">
+        Monitor the latest SpotGamma pivot and keep its history up to date.
+      </p>
     </div>
     <button mat-flat-button color="primary" (click)="openEditor()">
       <mat-icon>edit</mat-icon>
@@ -10,8 +12,8 @@
     </button>
   </div>
 
-  <mat-card class="pivot-card">
-    <div class="pivot-card__content" *ngIf="latest$ | async as latest; else emptyState">
+  <mat-card class="p-6">
+    <div class="flex items-center justify-between gap-4" *ngIf="latest$ | async as latest; else emptyState">
       <div class="pivot-pill">
         <span class="label">{{ latest.index }} Pivot</span>
         <span class="value">{{ latest.price | number:'1.2-2' }}</span>
@@ -22,15 +24,15 @@
       </button>
     </div>
     <ng-template #emptyState>
-      <div class="empty-state">
+      <div class="flex flex-col gap-4 text-center">
         <p>{{ latestError || 'No pivot level recorded yet.' }}</p>
         <button mat-stroked-button color="primary" (click)="openEditor()">Add Pivot</button>
       </div>
     </ng-template>
   </mat-card>
 
-  <section class="history">
-    <div class="section-header">
+  <section class="flex flex-col gap-4">
+    <div class="flex items-center justify-between">
       <h2>Recent changes</h2>
       <button mat-icon-button (click)="refreshHistory()" matTooltip="Refresh history">
         <mat-icon>refresh</mat-icon>
@@ -43,7 +45,10 @@
         <div matListItemLine>{{ pivot.index }} — {{ pivot.date | date:'mediumDate' }}</div>
       </mat-list-item>
     </mat-list>
-    <div class="history-empty" *ngIf="!historyLoading && !history.length">
+    <div
+      class="italic text-[color:var(--mat-sys-on-surface-variant,rgba(255,255,255,0.6))]"
+      *ngIf="!historyLoading && !history.length"
+    >
       {{ historyError || 'No history captured yet.' }}
     </div>
   </section>

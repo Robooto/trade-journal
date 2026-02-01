@@ -1,7 +1,7 @@
-<div class="flex flex-col flex-1 gap-md">
+<div class="flex flex-1 flex-col gap-6">
   <!-- Toggle Button -->
-  <div class="form-toggle-container">
-    <button mat-raised-button color="primary" (click)="toggleForm()" class="toggle-form-btn">
+  <div class="sticky top-0 z-[1001] border-b border-[color:var(--mat-app-surface-variant)] bg-[var(--mat-sys-surface)] px-6 py-2.5">
+    <button mat-raised-button color="primary" (click)="toggleForm()" class="flex w-full items-center justify-center gap-2">
       <mat-icon>{{ showForm ? 'expand_less' : 'add' }}</mat-icon>
       {{ showForm ? 'Hide Entry Form' : 'New Entry' }}
     </button>
@@ -14,20 +14,20 @@
     (saved)="onEntrySaved($event)"
     (cancelled)="onEditCancelled()"
     (deleted)="onEntryDeleted($event)"
-    class="journal-form sticky-form"
+    class="sticky top-[60px] z-[1000] mb-4 w-full flex-none border-b border-[color:var(--mat-app-surface-variant)] bg-[var(--mat-sys-surface)] px-6 pb-4 pt-0 shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
   ></app-journal-entry-form>
 
   <app-journal-timeline
     [entries]="entries"
     (entrySelected)="onEntrySelected($event)"
-    class="journal-timeline"
+    class="flex-1"
   ></app-journal-timeline>
 
   <button
     mat-button
     (click)="loadNextPage()"
     *ngIf="entries.length < totalEntries"
-    style="margin: 16px 0; display: block; width: fit-content;"
+    class="my-4 block w-fit"
   >
     Load Older Entries
   </button>

@@ -7,11 +7,9 @@ import { PivotLevel, PivotTrackerService } from './pivot-tracker/pivot-tracker.s
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss'],
   standalone: false,
 })
 export class AppComponent implements OnInit {
-  view: 'journal' = 'journal';
   currentContract: string;
   isCollapsed = false;
   pivot$!: Observable<PivotLevel | null>;
