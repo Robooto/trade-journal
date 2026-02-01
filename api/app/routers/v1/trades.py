@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.schema import PositionsResponse
+from app.schema import PositionsResponse, BracketOrderRequest, BracketOrderResponse
 
 from app.db import get_db
 from app import tastytrade
@@ -23,6 +23,76 @@ router = APIRouter(
     prefix="/v1/trades",
     tags=["v1 – trades"]
 )
+
+
+def _is_credit_trade(quantity_direction: str, cost_effect: str | None) -> bool:
+    direction = (quantity_direction or "").strip().lower()
+    if direction == "short":
+        return True
+    if direction == "long":
+        return False
+    return (cost_effect or "").strip().lower() == "credit"
+
+
+def _round_price(value: float) -> float:
+    return round(float(value) + 1e-8, 2)
+
+
+def _clamp_price(value: float) -> float:
+    if value < 0.01:
+        return 0.01
+    return value
+
+
+def _build_bracket_payload(req: BracketOrderRequest) -> tuple[dict, float, float]:
+    is_credit = _is_credit_trade(req.quantity_direction, req.cost_effect)
+    entry_price = float(req.entry_price)
+    if is_credit:
+        take_profit_price = entry_price * (1 - req.take_profit_percent / 100)
+        stop_loss_price = entry_price * (1 + req.stop_loss_percent / 100)
+    else:
+        take_profit_price = entry_price * (1 + req.take_profit_percent / 100)
+        stop_loss_price = max(0.01, entry_price * (1 - req.stop_loss_percent / 100))
+
+    take_profit_price = _round_price(_clamp_price(take_profit_price))
+    stop_loss_price = _round_price(_clamp_price(stop_loss_price))
+
+    action = "Buy to Close" if req.quantity_direction.strip().lower() == "short" else "Sell to Close"
+    price_effect = "Debit" if is_credit else "Credit"
+
+    payload = {
+        "type": "OCO",
+        "orders": [
+            {
+                "order-type": "Limit",
+                "price": take_profit_price,
+                "price-effect": price_effect,
+                "time-in-force": "GTC",
+                "legs": [
+                    {
+                        "symbol": req.symbol,
+                        "instrument-type": req.instrument_type,
+                        "action": action,
+                        "quantity": req.quantity,
+                    }
+                ],
+            },
+            {
+                "order-type": "Stop",
+                "time-in-force": "GTC",
+                "stop-trigger": stop_loss_price,
+                "legs": [
+                    {
+                        "symbol": req.symbol,
+                        "instrument-type": req.instrument_type,
+                        "action": action,
+                        "quantity": req.quantity,
+                    }
+                ],
+            },
+        ],
+    }
+    return payload, take_profit_price, stop_loss_price
 
 @router.get(
     "",
@@ -109,3 +179,41 @@ def get_volatility_data(symbols: List[str], db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to fetch volatility data: {e}")
 
     return volatility_data
+
+
+@router.post(
+    "/bracket-orders",
+    summary="Submit a single-leg bracket (OCO) order",
+    response_model=BracketOrderResponse,
+)
+def submit_bracket_order(req: BracketOrderRequest, db: Session = Depends(get_db)):
+    """
+    Build an OCO payload from single-leg inputs and submit to Tastytrade unless dry_run is true.
+    """
+    if req.quantity <= 0:
+        raise HTTPException(status_code=400, detail="quantity must be positive")
+    if req.entry_price <= 0:
+        raise HTTPException(status_code=400, detail="entry_price must be positive")
+    if req.take_profit_percent <= 0 or req.stop_loss_percent <= 0:
+        raise HTTPException(status_code=400, detail="percent values must be positive")
+
+    payload, take_profit_price, stop_loss_price = _build_bracket_payload(req)
+    tasty_response = None
+
+    if not req.dry_run:
+        try:
+            token = tastytrade.get_active_token(db)
+            tasty_response = tastytrade.place_complex_order(token, req.account_number, payload)
+        except Exception as e:
+            logging.error(f"Failed to submit bracket order: {e}")
+            raise HTTPException(status_code=500, detail=f"Failed to submit bracket order: {e}")
+
+    return BracketOrderResponse(
+        **{
+            "dry-run": req.dry_run,
+            "payload": payload,
+            "take-profit-price": take_profit_price,
+            "stop-loss-price": stop_loss_price,
+            "tasty-response": tasty_response,
+        }
+    )

@@ -143,6 +143,38 @@ class PositionsResponse(BaseModel):
     }
 
 
+class BracketOrderRequest(BaseModel):
+    account_number: str = Field(..., alias="account-number")
+    symbol: str
+    instrument_type: str = Field(..., alias="instrument-type")
+    quantity: int
+    multiplier: int = 100
+    quantity_direction: str = Field(..., alias="quantity-direction")
+    cost_effect: Optional[str] = Field(None, alias="cost-effect")
+    entry_price: float = Field(..., alias="entry-price")
+    take_profit_percent: float = Field(..., alias="take-profit-percent")
+    stop_loss_percent: float = Field(..., alias="stop-loss-percent")
+    dry_run: bool = Field(False, alias="dry-run")
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
+    }
+
+
+class BracketOrderResponse(BaseModel):
+    dry_run: bool = Field(..., alias="dry-run")
+    payload: dict
+    take_profit_price: float = Field(..., alias="take-profit-price")
+    stop_loss_price: float = Field(..., alias="stop-loss-price")
+    tasty_response: Optional[dict] = Field(None, alias="tasty-response")
+
+    model_config = {
+        "populate_by_name": True,
+        "from_attributes": True,
+    }
+
+
 class HiroScreenshotImage(BaseModel):
     name: str
     data: str

@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { PositionsApiService } from '../positions-api.service';
 import { AccountPositions, PositionGroup } from '../positions.models';
 import { evaluateRules } from '../positions.rules';
+import { BracketOrderDialogComponent } from '../bracket-order-dialog/bracket-order-dialog.component';
 
 @Component({
   selector: 'app-positions-page',
@@ -25,10 +27,10 @@ export class PositionsPageComponent implements OnInit {
     'positions',
   ];
 
-  positionCols = ['symbol', 'qty', 'type', 'plpos', 'cdelta'];
+  positionCols = ['symbol', 'qty', 'type', 'plpos', 'cdelta', 'bo'];
   expandedChartStates: Map<string, PositionGroup | null> = new Map();
 
-  constructor(private api: PositionsApiService) {}
+  constructor(private api: PositionsApiService, private dialog: MatDialog) {}
 
   ngOnInit() {
     this.api.getAll().subscribe(res => {
@@ -86,5 +88,15 @@ export class PositionsPageComponent implements OnInit {
   getExpandedChartForAccount(account: AccountPositions): PositionGroup | null {
     const accountKey = account.account_number;
     return this.expandedChartStates.get(accountKey) || null;
+  }
+
+  openBracketOrder(position: Record<string, any>, account: AccountPositions): void {
+    this.dialog.open(BracketOrderDialogComponent, {
+      width: '520px',
+      data: {
+        accountNumber: account.account_number,
+        position,
+      },
+    });
   }
 }

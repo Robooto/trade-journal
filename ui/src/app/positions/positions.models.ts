@@ -28,3 +28,25 @@ export interface AccountPositions {
 export interface PositionsResponse {
   accounts: AccountPositions[];
 }
+
+export interface BracketOrderRequest {
+  'account-number': string;
+  symbol: string;
+  'instrument-type': string;
+  quantity: number;
+  multiplier: number;
+  'quantity-direction': string;
+  'cost-effect'?: string;
+  'entry-price': number;
+  'take-profit-percent': number;
+  'stop-loss-percent': number;
+  'dry-run': boolean;
+}
+
+export interface BracketOrderResponse {
+  'dry-run': boolean;
+  payload: Record<string, any>;
+  'take-profit-price': number;
+  'stop-loss-price': number;
+  'tasty-response'?: Record<string, any> | null;
+}

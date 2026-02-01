@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { PositionsResponse } from './positions.models';
+import { BracketOrderRequest, BracketOrderResponse, PositionsResponse } from './positions.models';
 
 @Injectable({ providedIn: 'root' })
 export class PositionsApiService {
@@ -12,5 +12,9 @@ export class PositionsApiService {
 
   getAll(): Observable<PositionsResponse> {
     return this.http.get<PositionsResponse>(this.base);
+  }
+
+  submitBracketOrder(payload: BracketOrderRequest): Observable<BracketOrderResponse> {
+    return this.http.post<BracketOrderResponse>(`${this.base}/bracket-orders`, payload);
   }
 }

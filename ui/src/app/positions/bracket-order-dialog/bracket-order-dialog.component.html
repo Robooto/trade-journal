@@ -1,0 +1,121 @@
+<h2 mat-dialog-title class="flex flex-wrap items-center gap-2">
+  Bracket Order · {{ symbol }}
+  <span class="text-xs text-slate-400">
+    {{ quantityDirection }} {{ quantity }} &#64; {{ entryPrice | number:'1.2-2' }}
+  </span>
+</h2>
+
+<div mat-dialog-content class="flex min-w-[320px] flex-col gap-4">
+  <div class="rounded border border-slate-700 bg-slate-900/60 p-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div class="text-sm text-slate-300">Entry</div>
+      <div class="text-sm font-semibold" [ngClass]="displayCostEffect === 'Credit' ? 'text-emerald-300' : 'text-rose-300'">
+        {{ displayCostEffect }} {{ entryPrice | number:'1.2-2' }}
+      </div>
+    </div>
+    <div class="mt-1 text-xs text-slate-400">
+      Qty {{ quantity }} · Mult {{ multiplier }} · ${{ entryDollar | number:'1.2-2' }}
+    </div>
+  </div>
+
+  <section class="rounded border border-emerald-500/40 bg-emerald-900/10 p-3" [class.opacity-60]="reviewMode || isReviewLoading || isSending">
+    <div class="flex items-center justify-between gap-2">
+      <div class="text-sm font-semibold text-emerald-300">Take Profit</div>
+      <div class="text-xs text-emerald-200/80">Target % (max 95)</div>
+    </div>
+
+    <div class="mt-2 flex items-center justify-between gap-3">
+      <input
+        type="range"
+        min="5"
+        max="95"
+        step="5"
+        [value]="takeProfitPercent"
+        (input)="setTakeProfitPercent($any($event.target).value)"
+        class="w-full"
+      />
+      <div class="min-w-[52px] text-right text-sm font-semibold text-emerald-200">
+        {{ takeProfitPercent }}%
+      </div>
+    </div>
+
+    <div class="mt-2 flex flex-wrap gap-2 text-xs">
+      <button mat-stroked-button color="primary" (click)="setTakeProfitPercent(25)">25</button>
+      <button mat-stroked-button color="primary" (click)="setTakeProfitPercent(50)">50</button>
+      <button mat-stroked-button color="primary" (click)="setTakeProfitPercent(75)">75</button>
+      <button mat-stroked-button color="primary" (click)="setTakeProfitPercent(95)">95</button>
+    </div>
+    <div class="mt-1 text-[11px] text-emerald-200/70">Ticks: 25 · 50 · 75 · 95</div>
+
+    <div class="mt-3 grid grid-cols-1 gap-1 text-xs text-emerald-100/90">
+      <div>Limit Price: {{ takeProfitPrice | number:'1.2-2' }} · ${{ (takeProfitPrice * multiplier * quantity) | number:'1.2-2' }}</div>
+      <div>Est Profit: +{{ takeProfitAmount | number:'1.2-2' }} · +${{ takeProfitDollar | number:'1.2-2' }}</div>
+    </div>
+  </section>
+
+  <section class="rounded border border-rose-500/40 bg-rose-900/10 p-3" [class.opacity-60]="reviewMode || isReviewLoading || isSending">
+    <div class="flex items-center justify-between gap-2">
+      <div class="text-sm font-semibold text-rose-300">Stop Loss</div>
+      <div class="text-xs text-rose-200/80">Loss %</div>
+    </div>
+
+    <div class="mt-2 flex items-center justify-between gap-3">
+      <input
+        type="range"
+        min="25"
+        max="200"
+        step="5"
+        [value]="stopLossPercent"
+        (input)="setStopLossPercent($any($event.target).value)"
+        class="w-full"
+      />
+      <div class="min-w-[52px] text-right text-sm font-semibold text-rose-200">
+        {{ stopLossPercent }}%
+      </div>
+    </div>
+
+    <div class="mt-2 flex flex-wrap gap-2 text-xs">
+      <button mat-stroked-button color="warn" (click)="setStopLossPercent(50)">50</button>
+      <button mat-stroked-button color="warn" (click)="setStopLossPercent(100)">100</button>
+      <button mat-stroked-button color="warn" (click)="setStopLossPercent(150)">150</button>
+      <button mat-stroked-button color="warn" (click)="setStopLossPercent(200)">200</button>
+    </div>
+
+    <div class="mt-3 grid grid-cols-1 gap-1 text-xs text-rose-100/90">
+      <div>Stop Price: {{ stopLossPrice | number:'1.2-2' }} · ${{ (stopLossPrice * multiplier * quantity) | number:'1.2-2' }}</div>
+      <div>Net Loss: {{ stopLossAmount | number:'1.2-2' }} · ${{ stopLossDollar | number:'1.2-2' }}</div>
+    </div>
+
+    <div class="mt-2 text-[11px] text-rose-200/70">
+      Net Loss = Stop - Entry for credits, Entry - Stop for debits.
+    </div>
+  </section>
+
+  <section *ngIf="reviewMode" class="rounded border border-slate-700 bg-slate-950/70 p-3">
+    <div class="flex items-center justify-between gap-2">
+      <div class="text-sm font-semibold text-slate-200">Review</div>
+      <div class="text-xs text-slate-400">Preview payload</div>
+    </div>
+    <div class="mt-3 grid grid-cols-1 gap-1 text-xs text-slate-200/90">
+      <div>Action: {{ action }}</div>
+      <div>Limit: {{ previewTakeProfitPrice | number:'1.2-2' }} · Stop: {{ previewStopLossPrice | number:'1.2-2' }}</div>
+      <div>Take Profit: +{{ takeProfitAmount | number:'1.2-2' }} · +${{ takeProfitDollar | number:'1.2-2' }}</div>
+      <div>Net Loss: {{ stopLossAmount | number:'1.2-2' }} · ${{ stopLossDollar | number:'1.2-2' }}</div>
+    </div>
+    <pre class="mt-3 max-h-48 overflow-auto rounded bg-slate-950 p-2 text-[11px] text-slate-200">{{ previewPayload | json }}</pre>
+  </section>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button mat-stroked-button color="primary" (click)="toggleReview()" [disabled]="isReviewLoading || isSending">
+    {{ reviewMode ? 'Edit' : (isReviewLoading ? 'Reviewing...' : 'Review (optional)') }}
+  </button>
+  <button mat-flat-button color="primary" (click)="submitOrder()" [disabled]="isSending || isReviewLoading">
+    {{ isSending ? 'Sending...' : (reviewMode ? 'Send' : 'Send now') }}
+  </button>
+</div>
+
+<div *ngIf="apiError" class="mt-2 text-xs text-rose-300">
+  {{ apiError }}
+</div>

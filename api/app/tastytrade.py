@@ -163,3 +163,21 @@ def fetch_account_balance(token: str, account_number: str) -> dict:
     data = response.json()
 
     return data["data"]
+
+
+def place_complex_order(token: str, account_number: str, payload: dict) -> dict:
+    """
+    Submit a complex order (OCO/OTO/etc.) to the Tastytrade API.
+    Returns the raw API response data.
+    """
+    headers = {
+        "Authorization": token,
+        "User-Agent": "trade-journal/0.1",
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    url = f"{BASE_URL}/accounts/{account_number}/complex-orders"
+    response = requests.post(url, headers=headers, json=payload)
+    response.raise_for_status()
+    data = response.json()
+    return data.get("data", data)
