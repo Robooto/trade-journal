@@ -39,6 +39,7 @@ class TastyPosition(TastyModel):
 class TastyMarketData(TastyModel):
     symbol: str
     mark: Optional[str | int | float] = None
+    open: Optional[str | int | float] = None
     close: Optional[str | int | float] = None
     beta: Optional[str | int | float] = None
     delta: Optional[str | int | float] = None

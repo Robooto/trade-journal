@@ -541,6 +541,7 @@ def build_market_data_summary(items: List[Any], requested_symbols: List[str]) ->
         normalized.append(_compact_dict({
             "symbol": symbol,
             "mark": _numeric_field(item, "mark"),
+            "open": _numeric_field(item, "open"),
             "close": _numeric_field(item, "close"),
             "bid": _numeric_field(item, "bid"),
             "ask": _numeric_field(item, "ask"),

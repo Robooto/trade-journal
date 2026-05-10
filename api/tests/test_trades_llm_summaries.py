@@ -16,6 +16,7 @@ def test_market_data_summary_normalizes_numeric_fields():
             {
                 "symbol": "SPY",
                 "mark": "500.25",
+                "open": "501.50",
                 "close": "499.10",
                 "beta": "1.1",
                 "delta": "0.51",
@@ -30,6 +31,7 @@ def test_market_data_summary_normalizes_numeric_fields():
     parsed = MarketDataSummaryResponse.model_validate(summary)
     assert parsed.items[0].symbol == "SPY"
     assert parsed.items[0].mark == 500.25
+    assert parsed.items[0].open == 501.50
     assert parsed.items[0].theta == -0.04
     assert parsed.items[0].implied_volatility == 0.22
     assert parsed.missing_symbols == ["QQQ"]

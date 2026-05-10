@@ -240,6 +240,50 @@ async def test_market_data(client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_market_data_summary_includes_open(client, monkeypatch):
+    """Verify /v1/trades/market-data/summary includes the session open."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_market(token, equity, equity_option, future, future_option):
+        assert equity == ["SPY"]
+        return [
+            {
+                "symbol": "SPY",
+                "mark": "500.25",
+                "open": "501.50",
+                "close": "499.10",
+            }
+        ]
+
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.get_active_token", fake_token
+    )
+    monkeypatch.setattr(
+        "app.routers.v1.trades.tastytrade.fetch_market_data", fake_market
+    )
+
+    resp = await client.post(
+        "/v1/trades/market-data/summary",
+        json={
+            "equity": ["SPY"],
+            "equity_option": [],
+            "future": [],
+            "future_option": [],
+        },
+    )
+
+    assert resp.status_code == 200
+    assert resp.json()["items"][0] == {
+        "symbol": "SPY",
+        "mark": 500.25,
+        "open": 501.5,
+        "close": 499.1,
+    }
+
+
+@pytest.mark.asyncio
 async def test_volatility_future_dedup(client, monkeypatch):
     """Verify futures symbols are normalized and deduplicated when fetching IV rank."""
 

@@ -78,6 +78,7 @@ class MarketDataRequest(BaseModel):
 class MarketDataSnapshot(BaseModel):
     symbol: str
     mark: Optional[float] = None
+    open: Optional[float] = None
     close: Optional[float] = None
     bid: Optional[float] = None
     ask: Optional[float] = None
