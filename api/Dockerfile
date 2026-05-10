@@ -7,8 +7,6 @@ RUN apt-get update && \
       build-essential \
       python3-dev \
       libssl-dev \
-      chromium \
-      chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
 # 2) Install dependencies

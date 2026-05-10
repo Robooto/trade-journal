@@ -12,7 +12,6 @@ from app.schemas.journal import (
     SessionTokenBase,
 )
 from app.schemas.pivots import PivotLevel, PivotLevelBase, PivotLevelCreate
-from app.schemas.spotgamma import HiroScreenshotImage, HiroScreenshotsResponse
 from app.schemas.trades import (
     AccountPositions,
     BracketOrderRequest,
