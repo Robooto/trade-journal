@@ -1,0 +1,23 @@
+# Local environment and secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Local databases
+*.db
+
+# Node and Angular build output
+node_modules/
+dist/
+.angular/
+
+# Editors and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

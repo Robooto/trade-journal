@@ -32,7 +32,6 @@ export const dailyOverviewAnalysis: ResourceLink[] = [
 export const spotGammaToolLinks: ResourceLink[] = [
   { name: 'SpotGamma Dashboard', url: 'https://dashboard.spotgamma.com/home?eh-model=legacy' },
   { name: 'SpotGamma Trace', url: 'https://dashboard.spotgamma.com/trace?lense=1&traceSym=SPX' },
-  { name: 'SpotGamma Hero', url: 'https://dashboard.spotgamma.com/hiro?eh-model=legacy' },
   { name: 'SG Equity Hub', url: 'https://dashboard.spotgamma.com/equityhub?sym=SPX&eh-model=synthoi' },
   { name: 'SG Scanners', url: 'https://dashboard.spotgamma.com/scanners?eh-model=legacy' },
 ];
