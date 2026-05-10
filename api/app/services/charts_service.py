@@ -6,7 +6,7 @@ import pandas as pd
 import yfinance as yf
 from fastapi import HTTPException
 
-from app.schema import Bar, ChartResponse
+from app.schemas.charts import Bar, ChartResponse
 from app.services.cache_service import get_cache, create_cache_key
 
 logger = logging.getLogger(__name__)

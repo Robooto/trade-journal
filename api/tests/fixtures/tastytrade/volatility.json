@@ -1,0 +1,16 @@
+{
+  "data": {
+    "items": [
+      {
+        "symbol": "SPY",
+        "implied-volatility-index-rank": "0.191",
+        "implied-volatility-index-5-day-change": "0.0123"
+      },
+      {
+        "symbol": "QQQ",
+        "implied-volatility-index-rank": "0.287",
+        "implied-volatility-index-5-day-change": "-0.034"
+      }
+    ]
+  }
+}

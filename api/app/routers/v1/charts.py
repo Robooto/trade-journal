@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Query
 
-from app.schema import ChartResponse
+from app.schemas.charts import ChartResponse
 from app.services.charts_service import get_chart_history
 
 router = APIRouter(

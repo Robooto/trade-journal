@@ -1,13 +1,71 @@
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, List, Tuple, Set, Optional
+from typing import Any, Dict, List, Tuple, Set, Optional
 from datetime import datetime
 
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app import tastytrade
+from app.services.trades_errors import TastytradeAuthError, TastytradeFetchError
+from app.services.strategy_classifier import classify_strategy
+
+
+def _as_tasty_dict(value: Any, *, by_alias: bool = True) -> dict:
+    if isinstance(value, BaseModel):
+        return value.model_dump(by_alias=by_alias, exclude_none=True)
+    return dict(value)
+
+
+def _optional_float(value: Any) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _quantity_multiplier(position: dict) -> tuple[int, int]:
+    try:
+        quantity = int(position.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+    try:
+        multiplier = int(position.get("multiplier", 1))
+    except (TypeError, ValueError):
+        multiplier = 1
+    return quantity, multiplier
+
+
+def _direction_sign(quantity_direction: Optional[str]) -> int:
+    return -1 if (quantity_direction or "").strip().lower() == "short" else 1
+
+
+def _brokerage_greek_total(value: float) -> int:
+    return int(round(value * 100))
+
+
+def _optional_int(value: Any) -> Optional[int]:
+    if value is None:
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _numeric_field(data: dict, *keys: str) -> Optional[float]:
+    for key in keys:
+        value = _optional_float(data.get(key))
+        if value is not None:
+            return value
+    return None
+
+
+def _compact_dict(data: dict) -> dict:
+    return {key: value for key, value in data.items() if value is not None}
 
 
 def extract_expiration_date(expires_at: str) -> str:
@@ -70,16 +128,19 @@ def acquire_token(db: Session) -> str:
         return tastytrade.get_active_token(db)
     except Exception as e:
         logging.error(f"Authentication to Tastytrade failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Authentication to Tastytrade failed: {e}")
+        raise TastytradeAuthError(f"Authentication to Tastytrade failed: {e}") from e
 
 
 def fetch_accounts(token: str) -> List[dict]:
     """Fetch the list of accounts for the authenticated user."""
     try:
-        return tastytrade.fetch_accounts(token)
+        return [
+            _as_tasty_dict(account, by_alias=False)
+            for account in tastytrade.fetch_accounts(token)
+        ]
     except Exception as e:
         logging.error(f"Failed to fetch accounts: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch accounts: {e}")
+        raise TastytradeFetchError(f"Failed to fetch accounts: {e}") from e
 
 
 def collect_positions_and_symbols(
@@ -96,10 +157,15 @@ def collect_positions_and_symbols(
         acct_num = acct.get("account_number")
         nickname = acct.get("nickname", "")
         try:
-            raw_positions = tastytrade.fetch_positions(token, acct_num)
+            raw_positions = [
+                _as_tasty_dict(position)
+                for position in tastytrade.fetch_positions(token, acct_num)
+            ]
         except Exception as e:
             logging.error(f"Failed to fetch positions for account {acct_num}: {e}")
-            raise HTTPException(status_code=500, detail=f"Failed to fetch positions for account {acct_num}: {e}")
+            raise TastytradeFetchError(
+                f"Failed to fetch positions for account {acct_num}: {e}"
+            ) from e
 
         filtered = [p for p in raw_positions if p.get("instrument-type", "") != "Equity"]
         if not filtered:
@@ -171,7 +237,8 @@ def fetch_market_and_beta_data(
         logging.error(f"Failed to fetch market/beta data: {e}")
         return market_map, beta_map
 
-    for item in md_list:
+    for raw_item in md_list:
+        item = _as_tasty_dict(raw_item)
         sym = item.get("symbol")
         if not sym:
             continue
@@ -197,6 +264,8 @@ def augment_positions_with_market_data(
             if sym and sym in market_map:
                 md_item = market_map[sym].copy()
                 qty_dir = p.get("quantity-direction")
+                direction_sign = _direction_sign(qty_dir)
+                quantity, multiplier = _quantity_multiplier(p)
                 delta_val = md_item.get("delta")
                 if qty_dir and delta_val is not None:
                     try:
@@ -211,6 +280,13 @@ def augment_positions_with_market_data(
                         else:
                             sign = 1
                         md_item["computed_delta"] = round(sign * delta_float, 2)
+                position_greek_sign = direction_sign * quantity * multiplier
+                for greek in ("delta", "theta", "vega", "gamma", "rho"):
+                    greek_value = _optional_float(md_item.get(greek))
+                    if greek_value is not None:
+                        md_item[f"computed_position_{greek}"] = round(
+                            greek_value * position_greek_sign, 4
+                        )
             else:
                 md_item = {}
 
@@ -256,6 +332,11 @@ def group_positions_and_compute_totals(
         pos_list = acct["positions"]
 
         account_beta_delta = 0.0
+        account_position_delta = 0.0
+        account_theta = 0.0
+        account_vega = 0.0
+        account_gamma = 0.0
+        account_rho = 0.0
         grouping: Dict[Tuple[str, str], List[dict]] = defaultdict(list)
         for p in pos_list:
             underlying = p.get("underlying-symbol", "") or ""
@@ -272,6 +353,11 @@ def group_positions_and_compute_totals(
             total_credit_unrounded = 0.0
             current_price_unrounded = 0.0
             delta_sum_unrounded = 0.0
+            position_delta_sum_unrounded = 0.0
+            theta_sum_unrounded = 0.0
+            vega_sum_unrounded = 0.0
+            gamma_sum_unrounded = 0.0
+            rho_sum_unrounded = 0.0
 
             multiplier = 1
             for idx, p in enumerate(plist):
@@ -304,6 +390,21 @@ def group_positions_and_compute_totals(
                     delta_sum_unrounded += float(md.get("computed_delta", 0))
                 except (TypeError, ValueError):
                     pass
+                position_delta = _optional_float(md.get("computed_position_delta"))
+                if position_delta is not None:
+                    position_delta_sum_unrounded += position_delta
+                theta = _optional_float(md.get("computed_position_theta"))
+                if theta is not None:
+                    theta_sum_unrounded += theta
+                vega = _optional_float(md.get("computed_position_vega"))
+                if vega is not None:
+                    vega_sum_unrounded += vega
+                gamma = _optional_float(md.get("computed_position_gamma"))
+                if gamma is not None:
+                    gamma_sum_unrounded += gamma
+                rho = _optional_float(md.get("computed_position_rho"))
+                if rho is not None:
+                    rho_sum_unrounded += rho
 
             total_credit_received = round(total_credit_unrounded * multiplier, 2)
             current_group_p_l = round(current_price_unrounded, 2)
@@ -313,6 +414,16 @@ def group_positions_and_compute_totals(
                 percent_credit_received = None
 
             total_delta = round(delta_sum_unrounded, 2)
+            total_position_delta = _brokerage_greek_total(position_delta_sum_unrounded)
+            total_theta = _brokerage_greek_total(theta_sum_unrounded)
+            total_vega = _brokerage_greek_total(vega_sum_unrounded)
+            total_gamma = _brokerage_greek_total(gamma_sum_unrounded)
+            total_rho = _brokerage_greek_total(rho_sum_unrounded)
+            account_position_delta += total_position_delta
+            account_theta += total_theta
+            account_vega += total_vega
+            account_gamma += total_gamma
+            account_rho += total_rho
 
             beta_val = beta_map.get(underlying)
             beta_delta = None
@@ -327,6 +438,11 @@ def group_positions_and_compute_totals(
                 "current_group_p_l": current_group_p_l,
                 "percent_credit_received": percent_credit_received,
                 "total_delta": total_delta,
+                "total_position_delta": total_position_delta,
+                "total_theta": total_theta,
+                "total_vega": total_vega,
+                "total_gamma": total_gamma,
+                "total_rho": total_rho,
                 "beta_delta": beta_delta,
                 "positions": plist,
             })
@@ -336,6 +452,11 @@ def group_positions_and_compute_totals(
             "nickname": nickname,
             "groups": groups_list,
             "total_beta_delta": round(account_beta_delta, 2),
+            "total_position_delta": int(round(account_position_delta)),
+            "total_theta": int(round(account_theta)),
+            "total_vega": int(round(account_vega)),
+            "total_gamma": int(round(account_gamma)),
+            "total_rho": int(round(account_rho)),
         })
 
     return accounts_data
@@ -360,7 +481,8 @@ def apply_volatility(token: str, accounts_data: List[dict]) -> None:
         if unique_roots:
             try:
                 vol_data = tastytrade.fetch_volatility_data(token, unique_roots)
-                for item in vol_data:
+                for raw_item in vol_data:
+                    item = _as_tasty_dict(raw_item)
                     sym = item.get("symbol")
                     iv = item.get("implied-volatility-index-rank")
                     change = item.get("implied-volatility-index-5-day-change")
@@ -392,7 +514,7 @@ def apply_balance(token: str, accounts_data: List[dict]) -> None:
 
         percent_used_bp = None
         try:
-            bal = tastytrade.fetch_account_balance(token, acct_num)
+            bal = _as_tasty_dict(tastytrade.fetch_account_balance(token, acct_num))
             used = bal.get("used-derivative-buying-power")
             deriv = bal.get("margin-equity")
             if used is not None and deriv is not None:
@@ -405,3 +527,210 @@ def apply_balance(token: str, accounts_data: List[dict]) -> None:
         acct["percent_used_bp"] = percent_used_bp
 
 
+def build_market_data_summary(items: List[Any], requested_symbols: List[str]) -> dict:
+    """Return a compact, numeric market data payload suitable for LLM context."""
+    normalized = []
+    seen_symbols = set()
+
+    for raw_item in items:
+        item = _as_tasty_dict(raw_item)
+        symbol = item.get("symbol")
+        if not symbol:
+            continue
+        seen_symbols.add(symbol)
+        normalized.append(_compact_dict({
+            "symbol": symbol,
+            "mark": _numeric_field(item, "mark"),
+            "close": _numeric_field(item, "close"),
+            "bid": _numeric_field(item, "bid"),
+            "ask": _numeric_field(item, "ask"),
+            "last": _numeric_field(item, "last", "last-price"),
+            "beta": _numeric_field(item, "beta"),
+            "delta": _numeric_field(item, "delta"),
+            "theta": _numeric_field(item, "theta"),
+            "vega": _numeric_field(item, "vega"),
+            "gamma": _numeric_field(item, "gamma"),
+            "rho": _numeric_field(item, "rho"),
+            "implied_volatility": _numeric_field(
+                item,
+                "implied-volatility",
+                "implied-volatility-index",
+                "volatility",
+            ),
+        }))
+
+    return {
+        "items": normalized,
+        "requested_symbols": requested_symbols,
+        "missing_symbols": [
+            symbol for symbol in requested_symbols if symbol not in seen_symbols
+        ],
+    }
+
+
+def build_volatility_data_summary(items: List[Any], requested_symbols: List[str]) -> dict:
+    """Return compact volatility data with percentages already scaled for humans."""
+    normalized = []
+    seen_symbols = set()
+
+    for raw_item in items:
+        item = _as_tasty_dict(raw_item)
+        symbol = item.get("symbol")
+        if not symbol:
+            continue
+        seen_symbols.add(symbol)
+        iv_rank = _numeric_field(item, "implied-volatility-index-rank")
+        iv_change = _numeric_field(item, "implied-volatility-index-5-day-change")
+        normalized.append(_compact_dict({
+            "symbol": symbol,
+            "iv_rank_percent": round(iv_rank * 100, 1) if iv_rank is not None else None,
+            "iv_5d_change_percent": round(iv_change * 100, 2) if iv_change is not None else None,
+        }))
+
+    return {
+        "items": normalized,
+        "requested_symbols": requested_symbols,
+        "missing_symbols": [
+            symbol for symbol in requested_symbols if symbol not in seen_symbols
+        ],
+    }
+
+
+def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
+    """Strip broker-specific nesting from grouped positions for LLM consumers."""
+    accounts = []
+    portfolio = {
+        "account_count": 0,
+        "group_count": 0,
+        "position_count": 0,
+        "percent_used_bp": None,
+        "total_beta_delta": 0.0,
+        "total_position_delta": 0,
+        "theta": 0,
+        "vega": 0,
+        "gamma": 0,
+        "rho": 0,
+    }
+    percent_used_values = []
+
+    for account in accounts_data:
+        portfolio["account_count"] += 1
+        if account.get("percent_used_bp") is not None:
+            percent_used_values.append(account["percent_used_bp"])
+        portfolio["total_beta_delta"] += account.get("total_beta_delta") or 0
+        portfolio["total_position_delta"] += account.get("total_position_delta") or 0
+        portfolio["theta"] += account.get("total_theta") or 0
+        portfolio["vega"] += account.get("total_vega") or 0
+        portfolio["gamma"] += account.get("total_gamma") or 0
+        portfolio["rho"] += account.get("total_rho") or 0
+
+        groups = []
+        positions_by_underlying: dict[str, list[dict]] = defaultdict(list)
+        for group in account.get("groups", []):
+            portfolio["group_count"] += 1
+            positions = []
+            for position in group.get("positions", []):
+                portfolio["position_count"] += 1
+                underlying = position.get("underlying-symbol") or group.get("underlying_symbol", "")
+                if underlying:
+                    positions_by_underlying[underlying].append(position)
+                market_data = position.get("market_data", {})
+                positions.append(_compact_dict({
+                    "symbol": position.get("symbol") or position.get("instrument-symbol"),
+                    "instrument_type": position.get("instrument-type"),
+                    "underlying_symbol": position.get("underlying-symbol"),
+                    "expiration_date": extract_expiration_date(position.get("expires-at", "")),
+                    "quantity": _optional_int(position.get("quantity")),
+                    "quantity_direction": position.get("quantity-direction"),
+                    "multiplier": _optional_int(position.get("multiplier")),
+                    "average_open_price": _numeric_field(position, "average-open-price"),
+                    "mark": _numeric_field(market_data, "mark"),
+                    "approximate_pl": _numeric_field(position, "approximate-p-l"),
+                    "strike": _numeric_field(position, "strike"),
+                    "option_type": position.get("option-type"),
+                    "delta": _numeric_field(market_data, "computed_position_delta", "delta"),
+                    "theta": _numeric_field(market_data, "computed_position_theta", "theta"),
+                    "vega": _numeric_field(market_data, "computed_position_vega", "vega"),
+                    "gamma": _numeric_field(market_data, "computed_position_gamma", "gamma"),
+                    "rho": _numeric_field(market_data, "computed_position_rho", "rho"),
+                }))
+
+            groups.append(_compact_dict({
+                "underlying_symbol": group.get("underlying_symbol", ""),
+                "expiration_date": extract_expiration_date(group.get("expires_at", "")),
+                "total_credit_received": group.get("total_credit_received", 0),
+                "current_pl": group.get("current_group_p_l", 0),
+                "percent_credit_received": group.get("percent_credit_received"),
+                "total_delta": group.get("total_delta"),
+                "total_position_delta": group.get("total_position_delta"),
+                "beta_delta": group.get("beta_delta"),
+                "theta": group.get("total_theta"),
+                "vega": group.get("total_vega"),
+                "gamma": group.get("total_gamma"),
+                "rho": group.get("total_rho"),
+                "iv_rank_percent": group.get("iv_rank"),
+                "iv_5d_change_percent": group.get("iv_5d_change"),
+                "strategy": classify_strategy(group.get("positions", [])),
+                "positions": positions,
+            }))
+
+        underlying_strategies = []
+        for underlying_symbol, underlying_positions in sorted(positions_by_underlying.items()):
+            strategy = classify_strategy(underlying_positions)
+            if strategy["label"] == "unknown":
+                continue
+            expiration_dates = sorted({
+                extract_expiration_date(position.get("expires-at", ""))
+                for position in underlying_positions
+                if position.get("expires-at")
+            })
+            underlying_strategies.append({
+                "underlying_symbol": underlying_symbol,
+                "leg_count": len(underlying_positions),
+                "expiration_dates": expiration_dates,
+                **strategy,
+            })
+
+        accounts.append(_compact_dict({
+            "account_number": account.get("account_number", ""),
+            "nickname": account.get("nickname", ""),
+            "percent_used_bp": account.get("percent_used_bp"),
+            "total_beta_delta": account.get("total_beta_delta"),
+            "total_position_delta": account.get("total_position_delta"),
+            "theta": account.get("total_theta"),
+            "vega": account.get("total_vega"),
+            "gamma": account.get("total_gamma"),
+            "rho": account.get("total_rho"),
+            "underlying_strategies": underlying_strategies,
+            "groups": groups,
+        }))
+
+    if percent_used_values:
+        portfolio["percent_used_bp"] = max(percent_used_values)
+    portfolio["total_beta_delta"] = round(portfolio["total_beta_delta"], 2)
+
+    units = {
+        "mark": "price",
+        "close": "price",
+        "average_open_price": "price",
+        "total_credit_received": "dollars",
+        "current_pl": "dollars",
+        "approximate_pl": "dollars",
+        "percent_used_bp": "percent",
+        "percent_credit_received": "percent",
+        "iv_rank_percent": "percent",
+        "iv_5d_change_percent": "percent",
+        "total_delta": "raw option delta sum",
+        "total_position_delta": "brokerage display integer",
+        "theta": "brokerage display integer",
+        "vega": "brokerage display integer",
+        "gamma": "brokerage display integer",
+        "rho": "brokerage display integer",
+        "beta_delta": "SPY beta weighted delta",
+    }
+
+    return {
+        "portfolio": _compact_dict(portfolio),
+        "units": units,
+        "accounts": accounts,
+    }

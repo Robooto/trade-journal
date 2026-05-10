@@ -1,250 +1,36 @@
-from datetime import date, datetime
-from enum import Enum
-from typing import Any, List, Optional, Mapping
-from uuid import UUID, uuid4
+"""Compatibility re-exports for domain-specific schema modules."""
 
-from pydantic import BaseModel, Field, model_validator
-
-
-class MarketDirection(str, Enum):
-    up = "up"
-    down = "down"
-
-
-class Event(BaseModel):
-    time: str
-    price: float
-    note: str
-
-    model_config = {
-        "from_attributes": True
-    }
-
-
-class JournalEntryBase(BaseModel):
-    date: date
-    es_price: float = Field(..., alias="esPrice")
-    delta: Optional[float] = None
-    notes: str
-    market_direction: MarketDirection = Field(..., alias="marketDirection")
-    events: List[Event] = Field(default_factory=list)
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True
-    }
-
-
-class JournalEntryCreate(JournalEntryBase):
-    pass
-
-
-class JournalEntryUpdate(BaseModel):
-    date: Optional[date]
-    es_price: Optional[float] = Field(None, alias="esPrice")
-    delta: Optional[float] = None
-    notes: Optional[str] = None
-    market_direction: Optional[MarketDirection] = Field(None, alias="marketDirection")
-    events: Optional[List[Event]] = None
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": False
-    }
-
-
-class JournalEntry(JournalEntryBase):
-    id: UUID = Field(default_factory=uuid4)
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True
-    }
-
-class PaginatedEntries(BaseModel):
-    total: int
-    items: List[JournalEntry]
-    skip: int
-    limit: int
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True
-    }
-
-class SessionTokenBase(BaseModel):
-    token: str
-    expiration: datetime
-
-    model_config = {
-        "from_attributes": True
-    }
-
-class SessionToken(SessionTokenBase):
-    id: int
-
-    model_config = {
-        "from_attributes": True
-    }
-
-
-class Position(BaseModel):
-    """Generic position data with arbitrary fields."""
-
-    approximate_p_l: Optional[float] = Field(None, alias="approximate-p-l")
-    beta: Optional[float] = None
-    strike: Optional[float] = None
-    option_type: Optional[str] = Field(None, alias="option-type")
-
-    model_config = {
-        "populate_by_name": True,
-        "extra": "allow",
-        "from_attributes": True,
-    }
-
-
-class GroupedPositions(BaseModel):
-    underlying_symbol: str
-    expires_at: str
-    total_credit_received: float
-    current_group_p_l: float
-    percent_credit_received: Optional[int] = None
-    total_delta: Optional[float] = None
-    beta_delta: Optional[float] = None
-    iv_rank: Optional[float] = Field(None, alias="iv_rank")
-    iv_5d_change: Optional[float] = Field(None, alias="iv_5d_change")
-    positions: List[Position]
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
-
-
-class AccountPositions(BaseModel):
-    account_number: str
-    nickname: str
-    groups: List[GroupedPositions]
-    total_beta_delta: Optional[float] = None
-    percent_used_bp: Optional[int] = None
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
-
-
-class PositionsResponse(BaseModel):
-    accounts: List[AccountPositions]
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
-
-
-class BracketOrderRequest(BaseModel):
-    account_number: str = Field(..., alias="account-number")
-    symbol: str
-    instrument_type: str = Field(..., alias="instrument-type")
-    quantity: int
-    multiplier: int = 100
-    quantity_direction: str = Field(..., alias="quantity-direction")
-    cost_effect: Optional[str] = Field(None, alias="cost-effect")
-    entry_price: float = Field(..., alias="entry-price")
-    take_profit_percent: float = Field(..., alias="take-profit-percent")
-    stop_loss_percent: float = Field(..., alias="stop-loss-percent")
-    dry_run: bool = Field(False, alias="dry-run")
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
-
-
-class BracketOrderResponse(BaseModel):
-    dry_run: bool = Field(..., alias="dry-run")
-    payload: dict
-    take_profit_price: float = Field(..., alias="take-profit-price")
-    stop_loss_price: float = Field(..., alias="stop-loss-price")
-    tasty_response: Optional[dict] = Field(None, alias="tasty-response")
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
-
-
-class HiroScreenshotImage(BaseModel):
-    name: str
-    data: str
-    source_url: str
-
-    model_config = {
-        "from_attributes": True,
-    }
-
-
-class HiroScreenshotsResponse(BaseModel):
-    timestamp: str
-    images: List[HiroScreenshotImage]
-
-    model_config = {
-        "from_attributes": True,
-    }
-
-
-class Bar(BaseModel):
-    time: int
-    open: float
-    high: float
-    low: float
-    close: float
-    volume: int
-
-    model_config = {
-        "from_attributes": True,
-    }
-
-
-class ChartResponse(BaseModel):
-    s: str
-    bars: List[Bar]
-
-    model_config = {
-        "from_attributes": True,
-    }
-
-
-class PivotLevelBase(BaseModel):
-    price: float
-    index: str
-    date: date
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
-
-    @model_validator(mode="before")
-    @classmethod
-    def apply_defaults(cls, values: Any) -> Any:
-        if isinstance(values, Mapping):
-            data = dict(values)
-            data.setdefault("index", "SPX")
-            data.setdefault("date", date.today())
-            return data
-        return values
-
-
-class PivotLevelCreate(PivotLevelBase):
-    pass
-
-
-class PivotLevel(PivotLevelBase):
-    id: int
-
-    model_config = {
-        "populate_by_name": True,
-        "from_attributes": True,
-    }
+from app.schemas.charts import Bar, ChartResponse
+from app.schemas.journal import (
+    Event,
+    JournalEntry,
+    JournalEntryCreate,
+    JournalEntryUpdate,
+    MarketDirection,
+    PaginatedEntries,
+    SessionToken,
+    SessionTokenBase,
+)
+from app.schemas.pivots import PivotLevel, PivotLevelBase, PivotLevelCreate
+from app.schemas.spotgamma import HiroScreenshotImage, HiroScreenshotsResponse
+from app.schemas.trades import (
+    AccountPositions,
+    BracketOrderRequest,
+    BracketOrderResponse,
+    GroupedPositions,
+    LlmAccountPositionsSummary,
+    LlmPositionGroupSummary,
+    LlmPositionsSummaryResponse,
+    LlmPositionSummary,
+    LlmPortfolioSummary,
+    LlmStrategySummary,
+    LlmUnderlyingStrategySummary,
+    MarketDataRequest,
+    MarketDataSnapshot,
+    MarketDataSummaryResponse,
+    Position,
+    PositionsResponse,
+    VolatilityDataRequest,
+    VolatilityDataSnapshot,
+    VolatilityDataSummaryResponse,
+)

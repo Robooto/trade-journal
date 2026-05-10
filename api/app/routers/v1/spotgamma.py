@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, UploadFile
 
 from app.services.spotgamma_service import SpotGammaService
 from app.services.image_analysis_service import ImageAnalysisService
-from app.schema import HiroScreenshotsResponse
+from app.schemas.spotgamma import HiroScreenshotsResponse
 
 router = APIRouter(prefix="/v1/spotgamma", tags=["v1 – spotgamma"])
 

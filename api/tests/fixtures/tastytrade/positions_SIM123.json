@@ -1,0 +1,61 @@
+{
+  "data": {
+    "items": [
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "SPY   260619P00690000",
+        "underlying-symbol": "SPY",
+        "expires-at": "2026-06-19T20:15:00.000+00:00",
+        "cost-effect": "Credit",
+        "average-open-price": "2.10",
+        "quantity": "1",
+        "quantity-direction": "Short",
+        "multiplier": "100"
+      },
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "SPY   260619C00760000",
+        "underlying-symbol": "SPY",
+        "expires-at": "2026-06-19T20:15:00.000+00:00",
+        "cost-effect": "Credit",
+        "average-open-price": "1.15",
+        "quantity": "1",
+        "quantity-direction": "Short",
+        "multiplier": "100"
+      },
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "SPY   260619C00770000",
+        "underlying-symbol": "SPY",
+        "expires-at": "2026-06-19T20:15:00.000+00:00",
+        "cost-effect": "Debit",
+        "average-open-price": "0.55",
+        "quantity": "1",
+        "quantity-direction": "Long",
+        "multiplier": "100"
+      },
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "QQQ   260619P00500000",
+        "underlying-symbol": "QQQ",
+        "expires-at": "2026-06-19T20:15:00.000+00:00",
+        "cost-effect": "Credit",
+        "average-open-price": "3.20",
+        "quantity": "1",
+        "quantity-direction": "Short",
+        "multiplier": "100"
+      },
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "QQQ   260717P00500000",
+        "underlying-symbol": "QQQ",
+        "expires-at": "2026-07-17T20:15:00.000+00:00",
+        "cost-effect": "Debit",
+        "average-open-price": "4.80",
+        "quantity": "1",
+        "quantity-direction": "Long",
+        "multiplier": "100"
+      }
+    ]
+  }
+}

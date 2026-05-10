@@ -2,12 +2,46 @@ import os
 import requests
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
-from typing import Tuple, List, Dict
+from typing import Tuple, List
 
 from app import crud
+from app.settings import settings
+from app.tastytrade_schema import (
+    TastyAccount,
+    TastyAccountBalance,
+    TastyComplexOrderResponse,
+    TastyMarketData,
+    TastyPosition,
+    TastyVolatilityMetric,
+)
 
 
-BASE_URL = os.getenv("TASTYTRADE_URL", "https://api.tastyworks.com")
+BASE_URL = settings.tastytrade_url
+REQUEST_TIMEOUT_SECONDS = settings.tastytrade_timeout_seconds
+USER_AGENT = settings.tastytrade_user_agent
+
+
+def _headers(token: str | None = None, *, content_type: str | None = None) -> dict[str, str]:
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "application/json",
+    }
+    if token:
+        headers["Authorization"] = token
+    if content_type:
+        headers["Content-Type"] = content_type
+    return headers
+
+
+def _request_json(method: str, path: str, **kwargs) -> dict:
+    response = requests.request(
+        method,
+        f"{BASE_URL}{path}",
+        timeout=REQUEST_TIMEOUT_SECONDS,
+        **kwargs,
+    )
+    response.raise_for_status()
+    return response.json()
 
 def login_to_tastytrade() -> Tuple[str, datetime]:
     """
@@ -26,15 +60,12 @@ def login_to_tastytrade() -> Tuple[str, datetime]:
         "client_secret": client_secret,
     }
 
-    url = f"{BASE_URL}/oauth/token"
-    headers = {
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-    response = requests.post(url, data=payload, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    data = _request_json(
+        "POST",
+        "/oauth/token",
+        data=payload,
+        headers=_headers(content_type="application/x-www-form-urlencoded"),
+    )
 
     access_token = data["access_token"]
     token_type = data.get("token_type", "Bearer")
@@ -63,121 +94,95 @@ def get_active_token(db: Session) -> str:
     crud.save_session_token(db, new_token, new_expiration)
     return new_token
 
-def fetch_accounts(token: str) -> List[Dict[str, str]]:
+def _items_from_response(data: dict) -> list[dict]:
+    return data.get("data", {}).get("items", [])
+
+
+def fetch_accounts(token: str) -> List[TastyAccount]:
     """
     Fetch all accounts for the logged-in user via the Tastytrade API.
 
-    Returns a list of dicts with ``account_number`` and ``nickname`` keys.
+    Returns typed account models with account_number and nickname fields.
     """
-    headers = {
-        "Authorization": token,
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json",
-    }
-    url = f"{BASE_URL}/customers/me/accounts"
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    data = _request_json("GET", "/customers/me/accounts", headers=_headers(token))
 
-    accounts = []
-    for item in data["data"]["items"]:
+    accounts: list[TastyAccount] = []
+    for item in _items_from_response(data):
         acct = item.get("account", {})
-        accounts.append({
-            "account_number": acct.get("account-number", ""),
-            "nickname": acct.get("nickname", ""),
-        })
+        accounts.append(TastyAccount.model_validate(acct))
     return accounts
 
-def fetch_positions(token: str, account_number: str) -> List[dict]:
+def fetch_positions(token: str, account_number: str) -> List[TastyPosition]:
     """
     Retrieve all positions for a given account from the Tastytrade API.
     Returns a list of position dictionaries for the specified account.
     """
-    headers = {
-        "Authorization": token,
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json"
-    }
-    url = f"{BASE_URL}/accounts/{account_number}/positions?net-positions=true&include-marks=true"
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    data = _request_json(
+        "GET",
+        f"/accounts/{account_number}/positions?net-positions=true&include-marks=true",
+        headers=_headers(token),
+    )
 
-    positions = data["data"]["items"]
-    return positions
+    return [TastyPosition.model_validate(item) for item in _items_from_response(data)]
 
-def fetch_market_data(token: str, equity: List[str], equity_option: List[str], future: List[str], future_option: List[str]) -> List[dict]:
+def fetch_market_data(token: str, equity: List[str], equity_option: List[str], future: List[str], future_option: List[str]) -> List[TastyMarketData]:
     """
     Fetch market data for the given symbols from the Tastytrade API.
     Returns a list of market data dictionaries.
     """
-    headers = {
-        "Authorization": token,
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json"
-    }
-    url = f"{BASE_URL}/market-data/by-type"
     params = {
         "equity": ",".join(equity),
         "equity-option": ",".join(equity_option),
         "future": ",".join(future),
         "future-option": ",".join(future_option)
     }
-    response = requests.get(url, headers=headers, params=params)
-    response.raise_for_status()
-    data = response.json()
-    return data["data"]["items"]
+    data = _request_json(
+        "GET",
+        "/market-data/by-type",
+        headers=_headers(token),
+        params=params,
+    )
+    return [TastyMarketData.model_validate(item) for item in _items_from_response(data)]
 
-def fetch_volatility_data(token: str, symbols: List[str]) -> List[dict]:
+def fetch_volatility_data(token: str, symbols: List[str]) -> List[TastyVolatilityMetric]:
     """
     Fetch volatility data for the given symbols from the Tastytrade API.
     Returns a list of volatility data dictionaries.
     """
-    headers = {
-        "Authorization": token,
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json"
-    }
-    url = f"{BASE_URL}/market-metrics"
     params = {
         "symbols": ",".join(symbols)
     }
-    response = requests.get(url, headers=headers, params=params)
-    response.raise_for_status()
-    data = response.json()
-    return data["data"]["items"]
+    data = _request_json(
+        "GET",
+        "/market-metrics",
+        headers=_headers(token),
+        params=params,
+    )
+    return [TastyVolatilityMetric.model_validate(item) for item in _items_from_response(data)]
 
-def fetch_account_balance(token: str, account_number: str) -> dict:
+def fetch_account_balance(token: str, account_number: str) -> TastyAccountBalance:
     """
     Fetch the account balance for a specific account from the Tastytrade API.
     Returns a dictionary with balance information.
     """
-    headers = {
-        "Authorization": token,
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json"
-    }
-    url = f"{BASE_URL}/accounts/{account_number}/balances"
-    response = requests.get(url, headers=headers)
-    response.raise_for_status()
-    data = response.json()
+    data = _request_json(
+        "GET",
+        f"/accounts/{account_number}/balances",
+        headers=_headers(token),
+    )
 
-    return data["data"]
+    return TastyAccountBalance.model_validate(data["data"])
 
 
-def place_complex_order(token: str, account_number: str, payload: dict) -> dict:
+def place_complex_order(token: str, account_number: str, payload: dict) -> TastyComplexOrderResponse:
     """
     Submit a complex order (OCO/OTO/etc.) to the Tastytrade API.
     Returns the raw API response data.
     """
-    headers = {
-        "Authorization": token,
-        "User-Agent": "trade-journal/0.1",
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    url = f"{BASE_URL}/accounts/{account_number}/complex-orders"
-    response = requests.post(url, headers=headers, json=payload)
-    response.raise_for_status()
-    data = response.json()
-    return data.get("data", data)
+    data = _request_json(
+        "POST",
+        f"/accounts/{account_number}/complex-orders",
+        headers=_headers(token, content_type="application/json"),
+        json=payload,
+    )
+    return TastyComplexOrderResponse.model_validate(data.get("data", data))

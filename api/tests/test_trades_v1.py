@@ -65,7 +65,16 @@ async def test_trades_grouped(client, monkeypatch):
         assert future == []
         assert future_opt == []
         return [
-            {"symbol": "SPY_C", "mark": "10", "close": "9", "delta": "0.5"},
+            {
+                "symbol": "SPY_C",
+                "mark": "10",
+                "close": "9",
+                "delta": "0.5",
+                "theta": "-0.12",
+                "vega": "0.08",
+                "gamma": "0.01",
+                "rho": "0.02",
+            },
             {"symbol": "SPY", "beta": "1.2"},
         ]
 
@@ -106,6 +115,11 @@ async def test_trades_grouped(client, monkeypatch):
                 "account_number": "123",
                 "nickname": "Main",
                 "total_beta_delta": -1.2,
+                "total_position_delta": -15000,
+                "total_theta": 3600,
+                "total_vega": -2400,
+                "total_gamma": -300,
+                "total_rho": -600,
                 "percent_used_bp": 33,
                 "groups": [
                     {
@@ -115,6 +129,11 @@ async def test_trades_grouped(client, monkeypatch):
                         "current_group_p_l": -2550.0,
                         "percent_credit_received": -566,
                         "total_delta": -1.0,
+                        "total_position_delta": -15000,
+                        "total_theta": 3600,
+                        "total_vega": -2400,
+                        "total_gamma": -300,
+                        "total_rho": -600,
                         "beta_delta": -1.2,
                         "iv_rank": 19.1,
                         "iv_5d_change": 1.23,
@@ -138,7 +157,16 @@ async def test_trades_grouped(client, monkeypatch):
                                     "mark": "10",
                                     "close": "9",
                                     "delta": "0.5",
+                                    "theta": "-0.12",
+                                    "vega": "0.08",
+                                    "gamma": "0.01",
+                                    "rho": "0.02",
                                     "computed_delta": -0.5,
+                                    "computed_position_delta": -50.0,
+                                    "computed_position_theta": 12.0,
+                                    "computed_position_vega": -8.0,
+                                    "computed_position_gamma": -1.0,
+                                    "computed_position_rho": -2.0,
                                 },
                             },
                             {
@@ -160,7 +188,16 @@ async def test_trades_grouped(client, monkeypatch):
                                     "mark": "10",
                                     "close": "9",
                                     "delta": "0.5",
+                                    "theta": "-0.12",
+                                    "vega": "0.08",
+                                    "gamma": "0.01",
+                                    "rho": "0.02",
                                     "computed_delta": -0.5,
+                                    "computed_position_delta": -100.0,
+                                    "computed_position_theta": 24.0,
+                                    "computed_position_vega": -16.0,
+                                    "computed_position_gamma": -2.0,
+                                    "computed_position_rho": -4.0,
                                 },
                             },
                         ],
@@ -538,6 +575,90 @@ async def test_total_beta_delta(client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_total_position_greeks(client, monkeypatch):
+    """Verify quantity-scaled account and group Greek totals."""
+
+    def fake_token(db):
+        return "FAKE"
+
+    def fake_accounts(token):
+        return [{"account_number": "444", "nickname": "Greeks"}]
+
+    def fake_positions(token, acct):
+        return [
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_C",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "average-open-price": "1.0",
+                "quantity": "2",
+                "quantity-direction": "Long",
+                "multiplier": "100",
+            },
+            {
+                "instrument-type": "Equity Option",
+                "symbol": "SPY_P",
+                "underlying-symbol": "SPY",
+                "expires-at": "2024-01-19",
+                "average-open-price": "1.0",
+                "quantity": "1",
+                "quantity-direction": "Short",
+                "multiplier": "100",
+            },
+        ]
+
+    def fake_vol(token, symbols):
+        return []
+
+    def fake_market(token, eq, eq_opt, future, future_opt):
+        return [
+            {
+                "symbol": "SPY_C",
+                "mark": "1.2",
+                "delta": "0.45",
+                "theta": "-0.10",
+                "vega": "0.20",
+                "gamma": "0.01",
+                "rho": "0.03",
+            },
+            {
+                "symbol": "SPY_P",
+                "mark": "0.8",
+                "delta": "-0.30",
+                "theta": "-0.05",
+                "vega": "0.15",
+                "gamma": "0.02",
+                "rho": "-0.01",
+            },
+            {"symbol": "SPY", "beta": "1"},
+        ]
+
+    def fake_balance(token, acct):
+        return {"used-derivative-buying-power": "0", "margin-equity": "1"}
+
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.get_active_token", fake_token)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_accounts", fake_accounts)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_positions", fake_positions)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_volatility_data", fake_vol)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_market_data", fake_market)
+    monkeypatch.setattr("app.routers.v1.trades.tastytrade.fetch_account_balance", fake_balance)
+
+    resp = await client.get("/v1/trades")
+    assert resp.status_code == 200
+    acct = resp.json()["accounts"][0]
+    group = acct["groups"][0]
+
+    assert group["total_position_delta"] == 12000
+    assert group["total_theta"] == -1500
+    assert group["total_vega"] == 2500
+    assert group["total_gamma"] == 0
+    assert group["total_rho"] == 700
+    assert acct["total_theta"] == group["total_theta"]
+    assert acct["total_vega"] == group["total_vega"]
+
+
+@pytest.mark.asyncio
 async def test_percent_used_bp(client, monkeypatch):
     """Verify percent_used_bp is calculated from account balance."""
 
@@ -608,4 +729,3 @@ async def test_percent_used_bp(client, monkeypatch):
     assert resp.status_code == 200
     acct = resp.json()["accounts"][0]
     assert acct["percent_used_bp"] == 33
-

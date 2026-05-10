@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from app.models import JournalEntryORM, EventORM, SessionTokenORM, PivotLevelORM
-from app.schema import JournalEntryCreate, JournalEntryUpdate, Event, PivotLevelCreate
+from app.schemas.journal import Event, JournalEntryCreate, JournalEntryUpdate
+from app.schemas.pivots import PivotLevelCreate
 
 
 def count_entries(db: Session) -> int:

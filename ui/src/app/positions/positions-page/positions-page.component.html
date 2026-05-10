@@ -3,10 +3,16 @@
     Account
     {{ account.nickname ? account.nickname + ' (' + account.account_number + ')' : account.account_number }}
     <span *ngIf="account.total_beta_delta !== null && account.total_beta_delta !== undefined">
-      - Beta Δ {{ account.total_beta_delta }}
+      | Beta Δ {{ account.total_beta_delta }}
+    </span>
+    <span *ngIf="account.total_theta !== null && account.total_theta !== undefined">
+      | Theta {{ account.total_theta }}
+    </span>
+    <span *ngIf="account.total_vega !== null && account.total_vega !== undefined">
+      | Vega {{ account.total_vega }}
     </span>
     <span *ngIf="account.percent_used_bp !== null && account.percent_used_bp !== undefined">
-      - % BP {{ account.percent_used_bp }}
+      | % BP {{ account.percent_used_bp }}
     </span>
   </h2>
   <table mat-table [dataSource]="account.groups" class="mat-elevation-z1 w-full">

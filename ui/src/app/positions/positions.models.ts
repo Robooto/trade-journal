@@ -10,6 +10,11 @@ export interface PositionGroup {
   current_group_p_l: number;
   percent_credit_received: number | null;
   total_delta?: number | null;
+  total_position_delta?: number | null;
+  total_theta?: number | null;
+  total_vega?: number | null;
+  total_gamma?: number | null;
+  total_rho?: number | null;
   beta_delta?: number | null;
   iv_rank?: number | null;
   iv_5d_change?: number | null;
@@ -22,6 +27,11 @@ export interface AccountPositions {
   nickname?: string;
   groups: PositionGroup[];
   total_beta_delta?: number | null;
+  total_position_delta?: number | null;
+  total_theta?: number | null;
+  total_vega?: number | null;
+  total_gamma?: number | null;
+  total_rho?: number | null;
   percent_used_bp?: number | null;
 }
 

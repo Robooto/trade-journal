@@ -3,7 +3,7 @@ from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, 
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
-from app.schema import MarketDirection
+from app.schemas.journal import MarketDirection
 
 Base = declarative_base()
 

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.db import get_db
-from app.schema import PivotLevel, PivotLevelCreate
+from app.schemas.pivots import PivotLevel, PivotLevelCreate
 
 
 router = APIRouter(
