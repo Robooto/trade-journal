@@ -2,7 +2,7 @@ import logging
 import re
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Set, Optional
-from datetime import datetime
+from datetime import date, datetime
 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -32,10 +32,11 @@ def _quantity_multiplier(position: dict) -> tuple[int, int]:
         quantity = int(position.get("quantity", 1))
     except (TypeError, ValueError):
         quantity = 1
+    default_multiplier = 100 if "Option" in (position.get("instrument-type") or "") else 1
     try:
-        multiplier = int(position.get("multiplier", 1))
+        multiplier = int(position.get("multiplier") or default_multiplier)
     except (TypeError, ValueError):
-        multiplier = 1
+        multiplier = default_multiplier
     return quantity, multiplier
 
 
@@ -44,7 +45,7 @@ def _direction_sign(quantity_direction: Optional[str]) -> int:
 
 
 def _brokerage_greek_total(value: float) -> int:
-    return int(round(value * 100))
+    return int(round(value))
 
 
 def _optional_int(value: Any) -> Optional[int]:
@@ -90,6 +91,104 @@ def extract_expiration_date(expires_at: str) -> str:
         if 'T' in expires_at:
             return expires_at.split('T')[0]
         return expires_at
+
+
+def days_to_expiration(expires_at: str, today: Optional[date] = None) -> Optional[int]:
+    expiration_date = extract_expiration_date(expires_at)
+    if not expiration_date:
+        return None
+    try:
+        expires_on = date.fromisoformat(expiration_date)
+    except ValueError:
+        return None
+    today = today or datetime.now().date()
+    return (expires_on - today).days
+
+
+def _signed_credit_value(position: dict, price: Optional[float]) -> Optional[float]:
+    if price is None:
+        return None
+    quantity, multiplier = _quantity_multiplier(position)
+    value = price * quantity * multiplier
+    return value if (position.get("quantity-direction") or "").strip().lower() == "short" else -value
+
+
+def _position_money_fields(position: dict) -> dict[str, Optional[float]]:
+    avg_open = _numeric_field(position, "average-open-price")
+    mark = _numeric_field(position.get("market_data", {}), "mark")
+    quantity, multiplier = _quantity_multiplier(position)
+    open_value = avg_open * quantity * multiplier if avg_open is not None else None
+    current_value = mark * quantity * multiplier if mark is not None else None
+    signed_open = _signed_credit_value(position, avg_open)
+    signed_current = _signed_credit_value(position, mark)
+    unrealized = None
+    if signed_open is not None and signed_current is not None:
+        unrealized = signed_open - signed_current
+    return {
+        "open_value_dollars": round(open_value, 2) if open_value is not None else None,
+        "current_value_dollars": round(current_value, 2) if current_value is not None else None,
+        "net_open_credit_or_debit_dollars": round(signed_open, 2) if signed_open is not None else None,
+        "net_current_value_dollars": round(signed_current, 2) if signed_current is not None else None,
+        "unrealized_pl_dollars": round(unrealized, 2) if unrealized is not None else None,
+    }
+
+
+def _assignment_exposure(position: dict) -> Optional[float]:
+    if (
+        position.get("option-type") != "P"
+        or (position.get("quantity-direction") or "").strip().lower() != "short"
+    ):
+        return None
+    strike = _numeric_field(position, "strike")
+    if strike is None:
+        return None
+    quantity, multiplier = _quantity_multiplier(position)
+    return round(strike * quantity * multiplier, 2)
+
+
+def _spread_percent(position: dict) -> Optional[float]:
+    market_data = position.get("market_data", {})
+    bid = _numeric_field(market_data, "bid")
+    ask = _numeric_field(market_data, "ask")
+    mark = _numeric_field(market_data, "mark")
+    if bid is None or ask is None or mark is None or mark == 0:
+        return None
+    return abs(ask - bid) / abs(mark) * 100
+
+
+def _management_flags(
+    *,
+    strategy_label: str,
+    days_to_nearest_expiration: Optional[int],
+    percent_credit_captured: Optional[float],
+    beta_delta_shares: Optional[float],
+    theta_dollars_per_day: Optional[float],
+    vega_dollars_per_vol_point: Optional[float],
+    assignment_exposure_dollars: Optional[float],
+    positions: list[dict],
+) -> list[str]:
+    flags = []
+    if percent_credit_captured is not None and 45 <= percent_credit_captured < 60:
+        flags.append("near_50_percent_profit")
+    if days_to_nearest_expiration is not None and days_to_nearest_expiration <= 14:
+        flags.append("expires_within_14_days")
+    if beta_delta_shares is not None and abs(beta_delta_shares) >= 100:
+        flags.append("high_beta_underlying")
+    if vega_dollars_per_vol_point is not None and vega_dollars_per_vol_point < 0:
+        flags.append("short_vega")
+    if vega_dollars_per_vol_point is not None and vega_dollars_per_vol_point > 0:
+        flags.append("positive_vega")
+    if theta_dollars_per_day is not None and theta_dollars_per_day < 0:
+        flags.append("negative_theta")
+    if any((_spread_percent(position) or 0) >= 25 for position in positions):
+        flags.append("wide_bid_ask_spread")
+    if strategy_label == "unknown":
+        flags.append("unknown_strategy")
+    if assignment_exposure_dollars:
+        flags.append("assignment_exposure")
+    if days_to_nearest_expiration is not None and days_to_nearest_expiration <= 21:
+        flags.append("watch_front_expiration")
+    return flags
 
 
 def parse_equity_option_symbol(symbol: str) -> Tuple[Optional[float], Optional[str]]:
@@ -295,8 +394,7 @@ def augment_positions_with_market_data(
             try:
                 avg_open = float(p.get("average-open-price", "0"))
                 mark = float(md_item.get("mark"))
-                quantity = int(p.get("quantity", 1))
-                multiplier = int(p.get("multiplier", 1))
+                quantity, multiplier = _quantity_multiplier(p)
                 qty_dir = p.get("quantity-direction")
             except (TypeError, ValueError):
                 approximate_pl = 0.0
@@ -307,6 +405,11 @@ def augment_positions_with_market_data(
                     approximate_pl = (avg_open - mark) * quantity * multiplier
 
             p["approximate-p-l"] = round(approximate_pl, 2)
+            p.update({
+                key.replace("_", "-"): value
+                for key, value in _position_money_fields(p).items()
+                if value is not None
+            })
 
             underlying_sym = p.get("underlying-symbol")
             if underlying_sym in beta_map:
@@ -316,8 +419,10 @@ def augment_positions_with_market_data(
             inst_type = p.get("instrument-type")
             if inst_type == "Equity Option" and sym:
                 strike, option_type = parse_equity_option_symbol(sym)
-                p["strike"] = strike
-                p["option-type"] = option_type
+                if strike is not None:
+                    p["strike"] = strike
+                if option_type is not None:
+                    p["option-type"] = option_type
 
 
 def group_positions_and_compute_totals(
@@ -332,6 +437,11 @@ def group_positions_and_compute_totals(
         pos_list = acct["positions"]
 
         account_beta_delta = 0.0
+        account_beta_delta_shares = 0.0
+        account_delta_shares = 0.0
+        account_theta_dollars_per_day = 0.0
+        account_vega_dollars_per_vol_point = 0.0
+        account_gamma_display = 0.0
         account_position_delta = 0.0
         account_theta = 0.0
         account_vega = 0.0
@@ -351,6 +461,11 @@ def group_positions_and_compute_totals(
             # All positions in this group should have the same date, just potentially different times
             first_expires = plist[0].get("expires-at", "") if plist else expires_date
             total_credit_unrounded = 0.0
+            total_open_value_dollars = 0.0
+            total_current_value_dollars = 0.0
+            total_signed_current_value_dollars = 0.0
+            total_unrealized_pl_dollars = 0.0
+            total_assignment_exposure_dollars = 0.0
             current_price_unrounded = 0.0
             delta_sum_unrounded = 0.0
             position_delta_sum_unrounded = 0.0
@@ -376,14 +491,17 @@ def group_positions_and_compute_totals(
                     pl_val = 0.0
 
                 if idx == 0:
-                    try:
-                        multiplier = int(p.get("multiplier", 1))
-                    except (TypeError, ValueError):
-                        multiplier = 1
+                    _, multiplier = _quantity_multiplier(p)
 
                 sign = -1 if qty_dir == "Long" else 1
                 total_credit_unrounded += sign * avg_open * qty
                 current_price_unrounded += pl_val
+                money_fields = _position_money_fields(p)
+                total_open_value_dollars += money_fields.get("open_value_dollars") or 0
+                total_current_value_dollars += money_fields.get("current_value_dollars") or 0
+                total_signed_current_value_dollars += money_fields.get("net_current_value_dollars") or 0
+                total_unrealized_pl_dollars += money_fields.get("unrealized_pl_dollars") or 0
+                total_assignment_exposure_dollars += _assignment_exposure(p) or 0
 
                 md = p.get("market_data", {})
                 try:
@@ -414,11 +532,19 @@ def group_positions_and_compute_totals(
                 percent_credit_received = None
 
             total_delta = round(delta_sum_unrounded, 2)
+            delta_shares = round(position_delta_sum_unrounded, 2)
+            theta_dollars_per_day = round(theta_sum_unrounded, 2)
+            vega_dollars_per_vol_point = round(vega_sum_unrounded, 2)
+            gamma_display = round(gamma_sum_unrounded, 4)
             total_position_delta = _brokerage_greek_total(position_delta_sum_unrounded)
             total_theta = _brokerage_greek_total(theta_sum_unrounded)
             total_vega = _brokerage_greek_total(vega_sum_unrounded)
             total_gamma = _brokerage_greek_total(gamma_sum_unrounded)
             total_rho = _brokerage_greek_total(rho_sum_unrounded)
+            account_delta_shares += delta_shares
+            account_theta_dollars_per_day += theta_dollars_per_day
+            account_vega_dollars_per_vol_point += vega_dollars_per_vol_point
+            account_gamma_display += gamma_display
             account_position_delta += total_position_delta
             account_theta += total_theta
             account_vega += total_vega
@@ -427,23 +553,49 @@ def group_positions_and_compute_totals(
 
             beta_val = beta_map.get(underlying)
             beta_delta = None
+            beta_delta_shares = None
             if beta_val is not None:
                 beta_delta = round(beta_val * total_delta, 2)
+                beta_delta_shares = round(beta_val * delta_shares, 2)
                 account_beta_delta += beta_delta
+                account_beta_delta_shares += beta_delta_shares
 
             groups_list.append({
                 "underlying_symbol": underlying,
                 "expires_at": first_expires,  # Use the full timestamp from first position
                 "total_credit_received": total_credit_received,
+                "total_credit_points": round(total_credit_unrounded, 2),
+                "total_credit_dollars": total_credit_received,
+                "net_open_credit_or_debit_dollars": total_credit_received,
+                "open_value_dollars": round(total_open_value_dollars, 2),
+                "current_value_dollars": round(total_signed_current_value_dollars, 2),
+                "gross_current_value_dollars": round(total_current_value_dollars, 2),
+                "unrealized_pl_dollars": round(total_unrealized_pl_dollars, 2),
+                "days_to_nearest_expiration": days_to_expiration(first_expires),
+                "assignment_exposure_dollars": round(total_assignment_exposure_dollars, 2),
+                "max_loss_dollars": None,
+                "buying_power_effect_dollars": None,
                 "current_group_p_l": current_group_p_l,
                 "percent_credit_received": percent_credit_received,
+                "percent_credit_captured": (
+                    round((total_unrealized_pl_dollars / total_credit_received) * 100, 1)
+                    if total_credit_received > 0
+                    else None
+                ),
+                "percent_max_profit_or_target": None,
                 "total_delta": total_delta,
+                "delta_shares": delta_shares,
+                "theta_dollars_per_day": theta_dollars_per_day,
+                "vega_dollars_per_vol_point": vega_dollars_per_vol_point,
+                "gamma_display": gamma_display,
                 "total_position_delta": total_position_delta,
                 "total_theta": total_theta,
                 "total_vega": total_vega,
                 "total_gamma": total_gamma,
                 "total_rho": total_rho,
                 "beta_delta": beta_delta,
+                "beta_delta_raw": beta_delta,
+                "beta_delta_shares": beta_delta_shares,
                 "positions": plist,
             })
 
@@ -452,6 +604,12 @@ def group_positions_and_compute_totals(
             "nickname": nickname,
             "groups": groups_list,
             "total_beta_delta": round(account_beta_delta, 2),
+            "total_beta_delta_raw": round(account_beta_delta, 2),
+            "total_beta_delta_shares": round(account_beta_delta_shares, 2),
+            "delta_shares": round(account_delta_shares, 2),
+            "theta_dollars_per_day": round(account_theta_dollars_per_day, 2),
+            "vega_dollars_per_vol_point": round(account_vega_dollars_per_vol_point, 2),
+            "gamma_display": round(account_gamma_display, 4),
             "total_position_delta": int(round(account_position_delta)),
             "total_theta": int(round(account_theta)),
             "total_vega": int(round(account_vega)),
@@ -603,14 +761,25 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
     portfolio = {
         "account_count": 0,
         "group_count": 0,
+        "strategy_group_count": 0,
         "position_count": 0,
         "percent_used_bp": None,
         "total_beta_delta": 0.0,
+        "total_beta_delta_raw": 0.0,
+        "total_beta_delta_shares": 0.0,
         "total_position_delta": 0,
+        "delta_shares": 0,
+        "theta_dollars_per_day": 0,
+        "vega_dollars_per_vol_point": 0,
+        "gamma_display": 0,
         "theta": 0,
         "vega": 0,
         "gamma": 0,
         "rho": 0,
+        "unrealized_pl_dollars": 0.0,
+        "assignment_exposure_dollars": 0.0,
+        "max_loss_dollars": None,
+        "buying_power_effect_dollars": None,
     }
     percent_used_values = []
 
@@ -619,7 +788,13 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
         if account.get("percent_used_bp") is not None:
             percent_used_values.append(account["percent_used_bp"])
         portfolio["total_beta_delta"] += account.get("total_beta_delta") or 0
+        portfolio["total_beta_delta_raw"] += account.get("total_beta_delta_raw") or account.get("total_beta_delta") or 0
+        portfolio["total_beta_delta_shares"] += account.get("total_beta_delta_shares") or 0
         portfolio["total_position_delta"] += account.get("total_position_delta") or 0
+        portfolio["delta_shares"] += account.get("delta_shares") or account.get("total_position_delta") or 0
+        portfolio["theta_dollars_per_day"] += account.get("theta_dollars_per_day") or account.get("total_theta") or 0
+        portfolio["vega_dollars_per_vol_point"] += account.get("vega_dollars_per_vol_point") or account.get("total_vega") or 0
+        portfolio["gamma_display"] += account.get("gamma_display") or account.get("total_gamma") or 0
         portfolio["theta"] += account.get("total_theta") or 0
         portfolio["vega"] += account.get("total_vega") or 0
         portfolio["gamma"] += account.get("total_gamma") or 0
@@ -636,98 +811,282 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
                 if underlying:
                     positions_by_underlying[underlying].append(position)
                 market_data = position.get("market_data", {})
+                money_fields = _position_money_fields(position)
+                assignment_exposure_dollars = _assignment_exposure(position)
                 positions.append(_compact_dict({
                     "symbol": position.get("symbol") or position.get("instrument-symbol"),
                     "instrument_type": position.get("instrument-type"),
-                    "underlying_symbol": position.get("underlying-symbol"),
+                    "underlying_symbol": position.get("underlying-symbol") or underlying,
                     "expiration_date": extract_expiration_date(position.get("expires-at", "")),
+                    "days_to_expiration": days_to_expiration(position.get("expires-at", "")),
                     "quantity": _optional_int(position.get("quantity")),
                     "quantity_direction": position.get("quantity-direction"),
-                    "multiplier": _optional_int(position.get("multiplier")),
+                    "multiplier": _quantity_multiplier(position)[1],
                     "average_open_price": _numeric_field(position, "average-open-price"),
                     "mark": _numeric_field(market_data, "mark"),
+                    **money_fields,
                     "approximate_pl": _numeric_field(position, "approximate-p-l"),
                     "strike": _numeric_field(position, "strike"),
                     "option_type": position.get("option-type"),
+                    "delta_shares": _numeric_field(market_data, "computed_position_delta", "delta"),
+                    "theta_dollars_per_day": _numeric_field(market_data, "computed_position_theta", "theta"),
+                    "vega_dollars_per_vol_point": _numeric_field(market_data, "computed_position_vega", "vega"),
+                    "gamma_display": _numeric_field(market_data, "computed_position_gamma", "gamma"),
                     "delta": _numeric_field(market_data, "computed_position_delta", "delta"),
                     "theta": _numeric_field(market_data, "computed_position_theta", "theta"),
                     "vega": _numeric_field(market_data, "computed_position_vega", "vega"),
                     "gamma": _numeric_field(market_data, "computed_position_gamma", "gamma"),
                     "rho": _numeric_field(market_data, "computed_position_rho", "rho"),
+                    "assignment_exposure_dollars": assignment_exposure_dollars,
+                    "max_loss_dollars": _numeric_field(position, "max-loss", "max_loss"),
+                    "buying_power_effect_dollars": _numeric_field(
+                        position,
+                        "buying-power-effect",
+                        "buying_power_effect",
+                        "buying-power-effect-dollars",
+                    ),
                 }))
 
+            strategy = classify_strategy(group.get("positions", []))
+            management_flags = _management_flags(
+                strategy_label=strategy["label"],
+                days_to_nearest_expiration=group.get("days_to_nearest_expiration"),
+                percent_credit_captured=group.get("percent_credit_captured"),
+                beta_delta_shares=group.get("beta_delta_shares"),
+                theta_dollars_per_day=group.get("theta_dollars_per_day", group.get("total_theta")),
+                vega_dollars_per_vol_point=group.get("vega_dollars_per_vol_point", group.get("total_vega")),
+                assignment_exposure_dollars=group.get("assignment_exposure_dollars"),
+                positions=group.get("positions", []),
+            )
+            portfolio["unrealized_pl_dollars"] += group.get("unrealized_pl_dollars") or 0
+            portfolio["assignment_exposure_dollars"] += group.get("assignment_exposure_dollars") or 0
             groups.append(_compact_dict({
                 "underlying_symbol": group.get("underlying_symbol", ""),
                 "expiration_date": extract_expiration_date(group.get("expires_at", "")),
                 "total_credit_received": group.get("total_credit_received", 0),
+                "total_credit_points": group.get("total_credit_points"),
+                "total_credit_dollars": group.get("total_credit_dollars"),
+                "net_open_credit_or_debit_dollars": group.get("net_open_credit_or_debit_dollars"),
+                "open_value_dollars": group.get("open_value_dollars"),
+                "current_value_dollars": group.get("current_value_dollars"),
+                "gross_current_value_dollars": group.get("gross_current_value_dollars"),
+                "unrealized_pl_dollars": group.get("unrealized_pl_dollars"),
+                "days_to_nearest_expiration": group.get("days_to_nearest_expiration"),
+                "assignment_exposure_dollars": group.get("assignment_exposure_dollars"),
+                "max_loss_dollars": group.get("max_loss_dollars"),
+                "buying_power_effect_dollars": group.get("buying_power_effect_dollars"),
                 "current_pl": group.get("current_group_p_l", 0),
                 "percent_credit_received": group.get("percent_credit_received"),
+                "percent_credit_captured": group.get("percent_credit_captured"),
+                "percent_max_profit_or_target": group.get("percent_max_profit_or_target"),
                 "total_delta": group.get("total_delta"),
                 "total_position_delta": group.get("total_position_delta"),
                 "beta_delta": group.get("beta_delta"),
+                "beta_delta_raw": group.get("beta_delta_raw"),
+                "beta_delta_shares": group.get("beta_delta_shares"),
+                "delta_shares": group.get("delta_shares", group.get("total_position_delta")),
+                "theta_dollars_per_day": group.get("theta_dollars_per_day", group.get("total_theta")),
+                "vega_dollars_per_vol_point": group.get("vega_dollars_per_vol_point", group.get("total_vega")),
+                "gamma_display": group.get("gamma_display", group.get("total_gamma")),
                 "theta": group.get("total_theta"),
                 "vega": group.get("total_vega"),
                 "gamma": group.get("total_gamma"),
                 "rho": group.get("total_rho"),
                 "iv_rank_percent": group.get("iv_rank"),
                 "iv_5d_change_percent": group.get("iv_5d_change"),
-                "strategy": classify_strategy(group.get("positions", [])),
+                "strategy": strategy,
+                "management_flags": management_flags,
                 "positions": positions,
             }))
 
         underlying_strategies = []
+        strategy_groups = []
         for underlying_symbol, underlying_positions in sorted(positions_by_underlying.items()):
             strategy = classify_strategy(underlying_positions)
-            if strategy["label"] == "unknown":
-                continue
             expiration_dates = sorted({
                 extract_expiration_date(position.get("expires-at", ""))
                 for position in underlying_positions
                 if position.get("expires-at")
             })
-            underlying_strategies.append({
+            nearest_dte_values = [
+                dte
+                for dte in (days_to_expiration(position.get("expires-at", "")) for position in underlying_positions)
+                if dte is not None
+            ]
+            total_open = round(sum(
+                _position_money_fields(position).get("net_open_credit_or_debit_dollars") or 0
+                for position in underlying_positions
+            ), 2)
+            total_current = round(sum(
+                _position_money_fields(position).get("net_current_value_dollars") or 0
+                for position in underlying_positions
+            ), 2)
+            total_unrealized = round(sum(
+                _position_money_fields(position).get("unrealized_pl_dollars") or 0
+                for position in underlying_positions
+            ), 2)
+            assignment_exposure = round(sum(
+                _assignment_exposure(position) or 0 for position in underlying_positions
+            ), 2)
+            theta = int(round(sum(
+                _numeric_field(position.get("market_data", {}), "computed_position_theta") or 0
+                for position in underlying_positions
+            )))
+            vega = int(round(sum(
+                _numeric_field(position.get("market_data", {}), "computed_position_vega") or 0
+                for position in underlying_positions
+            )))
+            delta_shares = int(round(sum(
+                _numeric_field(position.get("market_data", {}), "computed_position_delta") or 0
+                for position in underlying_positions
+            )))
+            gamma = int(round(sum(
+                _numeric_field(position.get("market_data", {}), "computed_position_gamma") or 0
+                for position in underlying_positions
+            )))
+            beta = _numeric_field(underlying_positions[0], "beta") if underlying_positions else None
+            beta_delta_shares = round(delta_shares * beta, 2) if beta is not None else None
+            percent_credit_captured = (
+                round((total_unrealized / total_open) * 100, 1) if total_open > 0 else None
+            )
+            nearest_dte = min(nearest_dte_values) if nearest_dte_values else None
+            legs = []
+            for position in underlying_positions:
+                market_data = position.get("market_data", {})
+                legs.append(_compact_dict({
+                    "symbol": position.get("symbol") or position.get("instrument-symbol"),
+                    "instrument_type": position.get("instrument-type"),
+                    "underlying_symbol": position.get("underlying-symbol") or underlying_symbol,
+                    "expiration_date": extract_expiration_date(position.get("expires-at", "")),
+                    "days_to_expiration": days_to_expiration(position.get("expires-at", "")),
+                    "quantity": _optional_int(position.get("quantity")),
+                    "quantity_direction": position.get("quantity-direction"),
+                    "multiplier": _quantity_multiplier(position)[1],
+                    "strike": _numeric_field(position, "strike"),
+                    "option_type": position.get("option-type"),
+                    "average_open_price": _numeric_field(position, "average-open-price"),
+                    "mark": _numeric_field(market_data, "mark"),
+                    **_position_money_fields(position),
+                    "approximate_pl": _numeric_field(position, "approximate-p-l"),
+                    "delta_shares": _numeric_field(market_data, "computed_position_delta", "delta"),
+                    "theta_dollars_per_day": _numeric_field(market_data, "computed_position_theta", "theta"),
+                    "vega_dollars_per_vol_point": _numeric_field(market_data, "computed_position_vega", "vega"),
+                    "gamma_display": _numeric_field(market_data, "computed_position_gamma", "gamma"),
+                    "delta": _numeric_field(market_data, "computed_position_delta", "delta"),
+                    "theta": _numeric_field(market_data, "computed_position_theta", "theta"),
+                    "vega": _numeric_field(market_data, "computed_position_vega", "vega"),
+                    "gamma": _numeric_field(market_data, "computed_position_gamma", "gamma"),
+                    "rho": _numeric_field(market_data, "computed_position_rho", "rho"),
+                    "assignment_exposure_dollars": _assignment_exposure(position),
+                }))
+            strategy_group = _compact_dict({
                 "underlying_symbol": underlying_symbol,
+                "strategy": strategy,
                 "leg_count": len(underlying_positions),
                 "expiration_dates": expiration_dates,
-                **strategy,
+                "legs": legs,
+                "net_open_credit_or_debit_dollars": total_open,
+                "current_value_dollars": total_current,
+                "unrealized_pl_dollars": total_unrealized,
+                "percent_credit_captured": percent_credit_captured,
+                "percent_max_profit_or_target": None,
+                "days_to_nearest_expiration": nearest_dte,
+                "theta_dollars_per_day": theta,
+                "vega_dollars_per_vol_point": vega,
+                "delta_shares": delta_shares,
+                "gamma_display": gamma,
+                "beta_delta_raw": None,
+                "beta_delta_shares": beta_delta_shares,
+                "assignment_exposure_dollars": assignment_exposure,
+                "max_loss_dollars": None,
+                "buying_power_effect_dollars": None,
+                "management_flags": _management_flags(
+                    strategy_label=strategy["label"],
+                    days_to_nearest_expiration=nearest_dte,
+                    percent_credit_captured=percent_credit_captured,
+                    beta_delta_shares=beta_delta_shares,
+                    theta_dollars_per_day=theta,
+                    vega_dollars_per_vol_point=vega,
+                    assignment_exposure_dollars=assignment_exposure,
+                    positions=underlying_positions,
+                ),
             })
+            strategy_groups.append(strategy_group)
+            portfolio["strategy_group_count"] += 1
+            if strategy["label"] != "unknown":
+                underlying_strategies.append({
+                    "underlying_symbol": underlying_symbol,
+                    "leg_count": len(underlying_positions),
+                    "expiration_dates": expiration_dates,
+                    **strategy,
+                })
 
         accounts.append(_compact_dict({
             "account_number": account.get("account_number", ""),
             "nickname": account.get("nickname", ""),
             "percent_used_bp": account.get("percent_used_bp"),
             "total_beta_delta": account.get("total_beta_delta"),
+            "total_beta_delta_raw": account.get("total_beta_delta_raw"),
+            "total_beta_delta_shares": account.get("total_beta_delta_shares"),
             "total_position_delta": account.get("total_position_delta"),
+            "delta_shares": account.get("delta_shares", account.get("total_position_delta")),
+            "theta_dollars_per_day": account.get("theta_dollars_per_day", account.get("total_theta")),
+            "vega_dollars_per_vol_point": account.get("vega_dollars_per_vol_point", account.get("total_vega")),
+            "gamma_display": account.get("gamma_display", account.get("total_gamma")),
             "theta": account.get("total_theta"),
             "vega": account.get("total_vega"),
             "gamma": account.get("total_gamma"),
             "rho": account.get("total_rho"),
             "underlying_strategies": underlying_strategies,
+            "strategy_groups": strategy_groups,
             "groups": groups,
         }))
 
     if percent_used_values:
         portfolio["percent_used_bp"] = max(percent_used_values)
     portfolio["total_beta_delta"] = round(portfolio["total_beta_delta"], 2)
+    portfolio["total_beta_delta_raw"] = round(portfolio["total_beta_delta_raw"], 2)
+    portfolio["total_beta_delta_shares"] = round(portfolio["total_beta_delta_shares"], 2)
+    portfolio["unrealized_pl_dollars"] = round(portfolio["unrealized_pl_dollars"], 2)
+    portfolio["assignment_exposure_dollars"] = round(portfolio["assignment_exposure_dollars"], 2)
 
     units = {
         "mark": "price",
         "close": "price",
         "average_open_price": "price",
-        "total_credit_received": "dollars",
+        "total_credit_received": "legacy dollars; use total_credit_points/total_credit_dollars",
+        "total_credit_points": "option points, signed credit positive and debit negative",
+        "total_credit_dollars": "dollars, signed credit positive and debit negative",
+        "net_open_credit_or_debit_dollars": "dollars, credit positive and debit negative",
+        "open_value_dollars": "absolute dollars per leg or gross group dollars",
+        "current_value_dollars": "absolute dollars per leg; signed net dollars for groups",
+        "unrealized_pl_dollars": "dollars",
+        "assignment_exposure_dollars": "dollars",
+        "max_loss_dollars": "dollars or null when unknown",
+        "buying_power_effect_dollars": "dollars or null when unknown",
         "current_pl": "dollars",
         "approximate_pl": "dollars",
         "percent_used_bp": "percent",
-        "percent_credit_received": "percent",
+        "percent_credit_received": "legacy percent; use percent_credit_captured for credit trades",
+        "percent_credit_captured": "percent of opening credit captured for net credit trades; null otherwise",
+        "percent_max_profit_or_target": "percent or null when not available",
         "iv_rank_percent": "percent",
         "iv_5d_change_percent": "percent",
+        "days_to_expiration": "calendar days",
+        "days_to_nearest_expiration": "calendar days",
         "total_delta": "raw option delta sum",
-        "total_position_delta": "brokerage display integer",
+        "total_position_delta": "legacy delta shares integer; use delta_shares",
+        "delta_shares": "share-equivalent delta",
+        "theta_dollars_per_day": "dollars per day",
+        "vega_dollars_per_vol_point": "dollars per 1 volatility point",
+        "gamma_display": "brokerage display integer",
         "theta": "brokerage display integer",
         "vega": "brokerage display integer",
         "gamma": "brokerage display integer",
         "rho": "brokerage display integer",
-        "beta_delta": "SPY beta weighted delta",
+        "beta_delta": "legacy raw option beta-weighted delta",
+        "beta_delta_raw": "raw option beta-weighted delta",
+        "beta_delta_shares": "share-equivalent beta-weighted delta",
     }
 
     return {

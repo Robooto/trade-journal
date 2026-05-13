@@ -213,7 +213,6 @@ def get_all_positions(db: Session = Depends(get_db)):
     "/summary",
     summary="Get LLM-friendly positions summary",
     response_model=LlmPositionsSummaryResponse,
-    response_model_exclude_none=True,
 )
 def get_positions_summary(db: Session = Depends(get_db)):
     """
