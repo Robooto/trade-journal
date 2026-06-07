@@ -17,6 +17,18 @@ export interface ChartParams {
   resolution: string;
   from_ts: number;
   to_ts: number;
+  spotgamma?: ManualSpotGammaInput;
+}
+
+export interface ManualSpotGammaInput {
+  spot?: number;
+  lowVolatilityPoint?: number;
+  highVolatilityPoint?: number;
+  callGammaNotional?: number;
+  putGammaNotional?: number;
+  topGammaExpiration?: string;
+  majorGammaStrikes?: number[];
+  notes?: string;
 }
 
 export interface PriceLine {
@@ -71,4 +83,80 @@ export interface VolatilityData {
 export interface RawMarketData {
   symbol: string;
   [key: string]: string | number | boolean | null | undefined;
+}
+
+export interface SourceStatus {
+  source: string;
+  status: 'ok' | 'partial' | 'unavailable';
+  detail?: string;
+}
+
+export interface EquityAnalysisPackage {
+  schema_version: 'equity-analysis-package.v1';
+  analysis_profile: 'sam-equity-options.v1';
+  analysis_instructions: string;
+  generated_at: string;
+  symbol: string;
+  as_of_date: string;
+  window: {
+    resolution: string;
+    from_ts: number;
+    to_ts: number;
+  };
+  equity_hub_url: string;
+  market?: RawMarketData;
+  volatility?: {
+    current_iv_percent?: number;
+    iv_15_day_percent?: number;
+    iv_rank_percent?: number;
+    iv_percentile_percent?: number;
+    iv_5_day_change_percent?: number;
+    corr_spy_3_month?: number;
+    liquidity_rating?: number;
+    term_structure: Array<{
+      expiration_date: string;
+      implied_volatility_percent?: number;
+      option_chain_type?: string;
+      settlement_type?: string;
+    }>;
+  };
+  chart_features: {
+    bar_count: number;
+    first_close?: number;
+    last_close?: number;
+    change_percent?: number;
+    window_high?: number;
+    window_low?: number;
+    average_volume?: number;
+  };
+  chart_bars: Bar[];
+  spotgamma: {
+    source: 'manual' | 'captured' | 'unavailable';
+    equity_hub_url: string;
+    spot?: number;
+    low_volatility_point?: number;
+    high_volatility_point?: number;
+    call_gamma_notional?: number;
+    put_gamma_notional?: number;
+    top_gamma_expiration?: string;
+    major_gamma_strikes: number[];
+    notes?: string;
+  };
+  catalysts: {
+    source: 'manual' | 'captured' | 'unavailable';
+    earnings_date?: string;
+    earnings_time?: string;
+    events: string[];
+    notes?: string;
+  };
+  portfolio_exposure: {
+    status: 'ok' | 'unavailable';
+    matching_groups: number;
+    buying_power_effect?: number;
+    beta_delta?: number;
+    account_percent_used_bp?: number;
+    notes: string[];
+  };
+  source_status: SourceStatus[];
+  warnings: string[];
 }

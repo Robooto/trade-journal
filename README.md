@@ -7,6 +7,22 @@ A trading journal for your tastytrade account with tastytrade rules analysis of 
 docker compose up --build
 ```
 
+## Equity analysis package
+
+The chart API exposes one versioned package for the Angular chart page,
+OpenClaw, and portable ChatGPT handoffs:
+
+```text
+GET /v1/charts/analysis-package/NVDA
+GET /v1/charts/analysis-package/NVDA?format=markdown
+```
+
+The package combines chart bars and features, normalized Tastytrade quote and
+volatility context, portfolio exposure, a dated SpotGamma Equity Hub link, and
+explicit source warnings. The chart page can add manually entered SpotGamma
+levels to the same package and download JSON or copy the complete Markdown
+handoff.
+
 ## Pi deployment
 Initial
 ```

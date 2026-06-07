@@ -5,7 +5,18 @@ import { createChart, CandlestickSeries } from 'lightweight-charts';
 import type { IChartApi, UTCTimestamp } from 'lightweight-charts';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ChartsApiService } from '../charts-api.service';
-import { ChartParams, Bar, PriceLine, LineStyle, LineColor, RawVolatilityData, VolatilityData, RawMarketData } from '../charts.models';
+import {
+  ChartParams,
+  Bar,
+  EquityAnalysisPackage,
+  ManualSpotGammaInput,
+  PriceLine,
+  LineStyle,
+  LineColor,
+  RawVolatilityData,
+  VolatilityData,
+  RawMarketData
+} from '../charts.models';
 
 type MarketDataValue = string | number | boolean | null | undefined;
 
@@ -26,6 +37,7 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
   
   chartForm: FormGroup;
   priceLineForm: FormGroup;
+  spotGammaForm: FormGroup;
   equityHubDateParam = this.formatDateForEquityHub(new Date());
   chart: IChartApi | null = null;
   isLoading = false;
@@ -41,195 +53,12 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
   marketDataDetails: MarketDataEntry[] = [];
   marketDataLoading = false;
   marketDataError: string | null = null;
-  private readonly promptTemplate = `# 📊 EquityHub + Volatility Options Analysis
-
-## Premium-Aware Edition v3 (Markdown Spec)
-
----
-## 🎯 Goal
-
-Given a **single ticker’s EquityHub gamma structure**, **volatility regime**, and **catalyst timing**, classify the current regime and generate **3–4 high-quality option trade ideas**.
-
-Trades must be **directly justified by the provided data**.
-
-### Core Bias
-- Favor **premium selling** only when supported by **gamma + volatility**
-- **Restrict naked upside risk** unless explicitly allowed
-- Prefer **defined-risk** structures when IV Rank is low or catalysts are near
----
-## 🔍 Required Inputs
-
-### 1️⃣ Symbol & Timing
-- **Symbol:** {TICKER}
-- **As-of Date:** {YYYY-MM-DD}
----
-### 2️⃣ EquityHub Gamma Data
-- **Spot Price**
-- **Low Volatility Point (LVP)**
-- **High Volatility Point (HVP)**
-- **Call Gamma (notional)**
-- **Put Gamma (notional)**
-- **Top Gamma Expiration**
-- **Top Delta Expiration** _(optional)_
-- **Gamma Curve Notes** _(optional — e.g. “gamma cliff above HVP”, “pin centered at X”)_
----
-### 3️⃣ Volatility Data
-- **Current IV**
-- **IV Rank** _(specify scale: 0–1 or 0–100)_
-- **IV Percentile** _(specify scale)_
-- **IV Change (5-day)** _(optional)_
-- **IV Change (15-day)** _(optional)_
-#### Term Structure
-Provide a list of expirations with IV:
-- {Expiration} → {IV}
----
-### 4️⃣ Catalyst Awareness
-- **Earnings Date** _(if known)_
-- **Earnings Time:** BMO / AMC / Unknown
-- **Other Events** _(optional)_
----
-### 5️⃣ Risk Constraints _(Optional but Recommended)_
-- **Account Size**
-- **Max Risk per Trade (%)**
-- **Prefer Defined Risk:** true / false
-- **Allow Undefined Risk:** true / false
----
-## 🧠 Analysis Order (MANDATORY)
-Follow this order exactly. Do **not** skip steps.
-
----
-## 1️⃣ Regime Classification
-
-### Dealer Gamma Regime
-Classify one:
-- **Positive**
-- **Negative**
-- **Mixed / Asymmetric**
-
-Notes to address:
-- Is downside gamma stronger than upside?
-- Is gamma dominated by near-term expiration?
-
----
-### Volatility Regime
-
-Classify one:
-- **Low Vol:** IV Rank < 15
-- **Medium Vol:** 15–30
-- **High Vol:** > 30
-> If IV Rank is on a 0–1 scale, convert to 0–100 before classifying.
----
-### Term Structure
-
-Classify one:
-- **Contango** (back-month IV > front-month IV)
-- **Backwardation** (front > back)
-- **Flat**
----
-### One-Sentence Regime Summary
-
-> “This ticker is in a ___ gamma regime and ___ volatility regime, favoring ___ types of trades.”
-
----
-## 2️⃣ EquityHub Price Zones
-
-Identify and explain:
-### **Income / Pin Zone**
-- Where gamma density is highest
-- Where price is expected to chop or magnetize
-### **Downside Acceleration Zone**
-- Typically below LVP
-- Where gamma thins or turns negative
-### **Upside Risk Zone**
-- Typically above HVP
-- Where call gamma decays or turns negative
-
-Explain **expected price behavior** in each zone.
-
----
-## 3️⃣ Greek Edge Summary
-
-State explicitly:
-- Which Greek you are **being paid to sell**
-- Which Greek risk must be **contained**
-
-> “The market is paying us to sell ___ while respecting ___ risk.”
-
----
-## 4️⃣ Strategy Permissions (Binary)
-
-### ✅ Allowed Strategies
-
-List only strategies **explicitly permitted** by:
-- Gamma structure
-- Volatility regime
-- Term structure
-- Catalyst timing
-
----
-### ❌ Avoided Strategies
-List strategies that are **misaligned**, and why.
-
----
-### Premium Permission Rules (Implicit)
-- **Naked Puts** only if:
-    - IV Rank ≥ 30
-    - No earnings within ~15 days
-    - Short strike below LVP
-    - Downside gamma not severely negative
-- **Naked Calls** only if **all** are true:
-    - IV Rank ≥ 40
-    - Strong positive gamma above spot
-    - Clear upside stall zone
-    - Small size or stock-backed
-
-Otherwise, **avoid naked upside risk**.
-
----
-## 🎯 Trade Construction (Most Important Section)
-Provide **3–4 trades only**, ranked by robustness.
-Each trade **must** include:
-### Trade Template
-**Rank:**  
-**Strategy:**  
-**Expiration:**  
-**Strikes / Structure:**  
-**Risk Type:** Defined / Undefined  
-**Primary Greeks:**
-
-**Why this trade works (bullet points):**
-- Gamma logic
-- Volatility logic
-- Price-zone alignment
-- Catalyst awareness
-
----
-## 🛠️ Management Rules (Per Trade)
-Define clearly:
-- **Profit Target**
-- **Invalidation Conditions**
-- **Adjustment or Exit Plan**
-- **Assignment Tolerance (if applicable)**
-
----
-## 🧠 Final Verdict
-Answer succinctly:
-- Is this a **premium-selling ticker today?**
-- Should risk be **defined or undefined?**
-- Is upside risk acceptable?
-- **Best single structure right now**
-- **What flips the regime** (price, vol, or event)
----
-### 🔚 Output Expectations
-- No filler or generic explanations
-- Every conclusion must trace back to **gamma, volatility, or price zones**
-- Fewer trades > more conviction`;
-  
+  analysisPackage: EquityAnalysisPackage | null = null;
+  analysisPackageError: string | null = null;
   private destroy$ = new Subject<void>();
   private formChange$ = new Subject<void>();
   private lastRequestParams: ChartParams | null = null;
-  private volatilityRequestSub: Subscription | null = null;
-  private marketDataRequestSub: Subscription | null = null;
+  private analysisPackageRequestSub: Subscription | null = null;
   private yearHighPriceLineRef: any = null;
   private yearLowPriceLineRef: any = null;
   private yearHighValue: number | null = null;
@@ -297,6 +126,17 @@ Answer succinctly:
       lineStyle: ['solid', Validators.required],
       label: ['']
     });
+
+    this.spotGammaForm = this.fb.group({
+      spot: [''],
+      lowVolatilityPoint: [''],
+      highVolatilityPoint: [''],
+      callGammaNotional: [''],
+      putGammaNotional: [''],
+      topGammaExpiration: [''],
+      majorGammaStrikes: [''],
+      notes: [''],
+    });
   }
 
   ngOnInit() {
@@ -315,13 +155,10 @@ Answer succinctly:
       this.chart.remove();
     }
 
-    if (this.volatilityRequestSub) {
-      this.volatilityRequestSub.unsubscribe();
+    if (this.analysisPackageRequestSub) {
+      this.analysisPackageRequestSub.unsubscribe();
     }
 
-    if (this.marketDataRequestSub) {
-      this.marketDataRequestSub.unsubscribe();
-    }
   }
 
   onSubmit() {
@@ -363,7 +200,8 @@ Answer succinctly:
       symbol: formValue.symbol.toUpperCase(),
       resolution: formValue.resolution,
       from_ts: Math.floor(formValue.fromDate.getTime() / 1000),
-      to_ts: Math.floor(formValue.toDate.getTime() / 1000)
+      to_ts: Math.floor(formValue.toDate.getTime() / 1000),
+      spotgamma: this.buildManualSpotGammaInput(),
     };
 
     // Check if this is the same request as the last one to avoid duplicate calls
@@ -389,33 +227,132 @@ Answer succinctly:
     this.lastRequestParams = { ...params };
     this.isLoading = true;
     this.error = null;
-    this.fetchVolatilityData(params.symbol);
-    this.fetchMarketData(params.symbol);
+    this.loadAnalysisPackage(params);
+  }
 
-    this.chartsApi.getHistory(params).subscribe({
-      next: (response) => {
+  applySpotGammaContext() {
+    this.lastRequestParams = null;
+    this.loadChart();
+  }
+
+  clearSpotGammaContext() {
+    this.spotGammaForm.reset({
+      spot: '',
+      lowVolatilityPoint: '',
+      highVolatilityPoint: '',
+      callGammaNotional: '',
+      putGammaNotional: '',
+      topGammaExpiration: '',
+      majorGammaStrikes: '',
+      notes: '',
+    });
+    this.applySpotGammaContext();
+  }
+
+  private buildManualSpotGammaInput(): ManualSpotGammaInput | undefined {
+    const value = this.spotGammaForm.value;
+    const input: ManualSpotGammaInput = {
+      spot: this.toNumber(value.spot) ?? undefined,
+      lowVolatilityPoint: this.toNumber(value.lowVolatilityPoint) ?? undefined,
+      highVolatilityPoint: this.toNumber(value.highVolatilityPoint) ?? undefined,
+      callGammaNotional: this.toNumber(value.callGammaNotional) ?? undefined,
+      putGammaNotional: this.toNumber(value.putGammaNotional) ?? undefined,
+      topGammaExpiration: value.topGammaExpiration?.trim() || undefined,
+      majorGammaStrikes: `${value.majorGammaStrikes || ''}`
+        .split(',')
+        .map((strike: string) => this.toNumber(strike.trim()))
+        .filter((strike: number | null): strike is number => strike !== null),
+      notes: value.notes?.trim() || undefined,
+    };
+    return Object.values(input).some(item => (
+      Array.isArray(item) ? item.length > 0 : item !== undefined
+    )) ? input : undefined;
+  }
+
+  private loadAnalysisPackage(params: ChartParams) {
+    this.analysisPackageRequestSub?.unsubscribe();
+    this.analysisPackage = null;
+    this.analysisPackageError = null;
+    this.volatilityLoading = true;
+    this.marketDataLoading = true;
+
+    this.analysisPackageRequestSub = this.chartsApi.getAnalysisPackage(params).subscribe({
+      next: (analysisPackage) => {
         this.isLoading = false;
-        if (response.s === 'ok') {
-          this.renderChart(response.bars);
+        this.volatilityLoading = false;
+        this.marketDataLoading = false;
+        this.analysisPackage = analysisPackage;
+        this.equityHubDateParam = analysisPackage.as_of_date;
+
+        if (analysisPackage.chart_bars.length > 0) {
+          this.renderChart(analysisPackage.chart_bars);
         } else {
-          this.error = 'Failed to load chart data';
+          this.error = 'Chart data is unavailable in the analysis package.';
         }
+
+        this.applyPackageVolatility(analysisPackage);
+        this.applyPackageMarketData(analysisPackage);
       },
       error: (err) => {
         this.isLoading = false;
-        
-        // Handle specific error cases
-        if (err.status === 429) {
-          this.error = 'Too many requests. Please wait a moment and try again.';
-        } else if (err.status === 404) {
-          this.error = `Symbol '${params.symbol}' not found. Please check the symbol and try again.`;
-        } else {
-          this.error = err.error?.detail || 'Failed to load chart data';
-        }
-        
-        console.error('Chart loading error:', err);
+        this.volatilityLoading = false;
+        this.marketDataLoading = false;
+        this.analysisPackageError = err.error?.detail || 'Failed to build analysis package';
+        this.error = this.analysisPackageError;
+        console.error('Analysis package loading error:', err);
       }
     });
+
+  }
+
+  private applyPackageVolatility(analysisPackage: EquityAnalysisPackage) {
+    const vol = analysisPackage.volatility;
+    if (!vol) {
+      this.volatilityData = null;
+      this.lastVolatilityRawData = null;
+      this.volatilityError = 'Volatility data is unavailable in this package.';
+      return;
+    }
+
+    this.volatilityError = null;
+    this.volatilityData = {
+      symbol: analysisPackage.symbol,
+      impliedVolatilityIndex: this.percentToDecimal(vol.current_iv_percent),
+      impliedVolatilityIndex15Day: this.percentToDecimal(vol.iv_15_day_percent),
+      impliedVolatilityIndex5DayChange: this.percentToDecimal(vol.iv_5_day_change_percent),
+      impliedVolatilityIndexRank: this.percentToDecimal(vol.iv_rank_percent),
+      impliedVolatilityPercentile: this.percentToDecimal(vol.iv_percentile_percent),
+      corrSpy3Month: vol.corr_spy_3_month ?? null,
+      liquidityRating: vol.liquidity_rating ?? null,
+      optionExpirationImpliedVolatilities: (vol.term_structure || []).map(point => ({
+        expirationDate: point.expiration_date,
+        impliedVolatility: this.percentToDecimal(point.implied_volatility_percent),
+        optionChainType: point.option_chain_type,
+        settlementType: point.settlement_type,
+      })),
+    };
+    this.lastVolatilityRawData = vol as unknown as RawVolatilityData;
+  }
+
+  private applyPackageMarketData(analysisPackage: EquityAnalysisPackage) {
+    if (!analysisPackage.market) {
+      this.lastMarketDataRaw = null;
+      this.marketDataHighlights = [];
+      this.marketDataDetails = [];
+      this.marketDataError = 'Market data is unavailable in this package.';
+      return;
+    }
+
+    this.marketDataError = null;
+    this.lastMarketDataRaw = analysisPackage.market;
+    this.computeMarketDataDisplay(analysisPackage.market);
+    this.yearHighValue = this.toNumber(analysisPackage.market['year_high']);
+    this.yearLowValue = this.toNumber(analysisPackage.market['year_low']);
+    this.applyYearRangePriceLines();
+  }
+
+  private percentToDecimal(value: number | undefined): number | null {
+    return value === undefined || value === null ? null : value / 100;
   }
 
   private areParamsEqual(params1: ChartParams, params2: ChartParams): boolean {
@@ -605,106 +542,8 @@ Answer succinctly:
     }
   }
 
-  private fetchVolatilityData(symbol: string) {
-    if (!symbol) {
-      return;
-    }
-
-    if (this.volatilityRequestSub) {
-      this.volatilityRequestSub.unsubscribe();
-    }
-
-    this.volatilityLoading = true;
-    this.volatilityError = null;
-    this.volatilityData = null;
-    this.lastVolatilityRawData = null;
-
-    this.volatilityRequestSub = this.chartsApi.getVolatilityData(symbol).subscribe({
-      next: (data: RawVolatilityData[]) => {
-        this.volatilityLoading = false;
-        const upper = symbol.toUpperCase();
-        const match = data.find(item => item.symbol?.toUpperCase() === upper);
-        if (match) {
-          this.lastVolatilityRawData = match;
-          this.volatilityData = this.transformVolatilityData(match);
-        } else {
-          this.volatilityError = 'No volatility data available for this symbol.';
-          this.lastVolatilityRawData = null;
-        }
-      },
-      error: (err) => {
-        this.volatilityLoading = false;
-        this.volatilityError = err.error?.detail || 'Failed to load volatility data';
-        this.lastVolatilityRawData = null;
-        console.error('Volatility data loading error:', err);
-      }
-    });
-  }
-
-  private fetchMarketData(symbol: string) {
-    if (!symbol) {
-      return;
-    }
-
-    if (this.marketDataRequestSub) {
-      this.marketDataRequestSub.unsubscribe();
-    }
-
-    this.marketDataLoading = true;
-    this.marketDataError = null;
-    this.marketDataHighlights = [];
-    this.marketDataDetails = [];
-    this.lastMarketDataRaw = null;
-    this.yearHighValue = null;
-    this.yearLowValue = null;
-    this.removeYearRangePriceLines();
-
-    this.marketDataRequestSub = this.chartsApi.getMarketData(symbol).subscribe({
-      next: (data: RawMarketData[]) => {
-        this.marketDataLoading = false;
-        const upper = symbol.toUpperCase();
-        const match = data.find(item => item.symbol?.toUpperCase() === upper);
-        if (match) {
-          this.lastMarketDataRaw = match;
-          this.computeMarketDataDisplay(match);
-          this.yearHighValue = this.toNumber(match['year-high-price'] as string | number | null | undefined);
-          this.yearLowValue = this.toNumber(match['year-low-price'] as string | number | null | undefined);
-          this.applyYearRangePriceLines();
-        } else {
-          this.marketDataError = 'No market data available for this symbol.';
-        }
-      },
-      error: (err) => {
-        this.marketDataLoading = false;
-        this.marketDataError = err.error?.detail || 'Failed to load market data';
-        console.error('Market data loading error:', err);
-      }
-    });
-  }
-
-  private transformVolatilityData(raw: RawVolatilityData): VolatilityData {
-    const optionExpirationImpliedVolatilities = (raw['option-expiration-implied-volatilities'] || []).map(exp => ({
-      expirationDate: exp['expiration-date'],
-      impliedVolatility: this.toNumber(exp['implied-volatility']),
-      optionChainType: exp['option-chain-type'],
-      settlementType: exp['settlement-type'],
-    }));
-
-    return {
-      symbol: raw.symbol,
-      impliedVolatilityIndex: this.toNumber(raw['implied-volatility-index']),
-      impliedVolatilityIndex15Day: this.toNumber(raw['implied-volatility-index-15-day']),
-      impliedVolatilityIndex5DayChange: this.toNumber(raw['implied-volatility-index-5-day-change']),
-      impliedVolatilityIndexRank: this.toNumber(raw['implied-volatility-index-rank']),
-      impliedVolatilityPercentile: this.toNumber(raw['implied-volatility-percentile']),
-      corrSpy3Month: this.toNumber(raw['corr-spy-3month']),
-      liquidityRating: this.toNumber(raw['liquidity-rating'] as any),
-      optionExpirationImpliedVolatilities,
-    };
-  }
-
-  private toNumber(value: string | number | null | undefined): number | null {
-    if (value === null || value === undefined) {
+  private toNumber(value: MarketDataValue): number | null {
+    if (value === null || value === undefined || typeof value === 'boolean') {
       return null;
     }
 
@@ -779,19 +618,40 @@ Answer succinctly:
 
     const prompt = this.promptOutput;
     if (!prompt) {
-      this.snackBar.open('Prompt is not ready yet.', 'Dismiss', { duration: 2500 });
+      this.snackBar.open('AI handoff is not ready yet.', 'Dismiss', { duration: 2500 });
       return;
     }
 
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(prompt).then(() => {
-        this.snackBar.open('Prompt copied to clipboard', 'Dismiss', { duration: 2500 });
+        this.snackBar.open('Complete AI handoff copied to clipboard', 'Dismiss', { duration: 2500 });
       }).catch(() => {
-        this.fallbackCopy(prompt, 'Prompt copied to clipboard', 'Unable to copy prompt.');
+        this.fallbackCopy(prompt, 'Complete AI handoff copied to clipboard', 'Unable to copy AI handoff.');
       });
     } else {
-      this.fallbackCopy(prompt, 'Prompt copied to clipboard', 'Unable to copy prompt.');
+      this.fallbackCopy(prompt, 'Complete AI handoff copied to clipboard', 'Unable to copy AI handoff.');
     }
+  }
+
+  downloadAnalysisPackage(event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.analysisPackage) {
+      this.snackBar.open('Analysis package is not ready yet.', 'Dismiss', { duration: 2500 });
+      return;
+    }
+
+    const blob = new Blob(
+      [JSON.stringify(this.analysisPackage, null, 2)],
+      { type: 'application/json' }
+    );
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${this.analysisPackage.symbol.toLowerCase()}-equity-analysis-package.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
   }
 
   private fallbackCopy(text: string, successMessage: string, failureMessage: string) {
@@ -918,6 +778,9 @@ Answer succinctly:
   }
 
   get equityHubUrl(): string {
+    if (this.analysisPackage?.equity_hub_url) {
+      return this.analysisPackage.equity_hub_url;
+    }
     const symbol = (this.chartForm?.get('symbol')?.value || 'SPY').toUpperCase();
     return `https://dashboard.spotgamma.com/equityhub?sym=${symbol}&date=${this.equityHubDateParam}&eh-model=synthoi`;
   }
@@ -943,56 +806,34 @@ Answer succinctly:
   }
 
   get promptOutput(): string {
-    const symbol = (this.chartForm?.get('symbol')?.value || 'TICKER').toUpperCase();
-    const toDate = this.chartForm?.get('toDate')?.value instanceof Date
-      ? this.chartForm.get('toDate')?.value
-      : null;
-    const asOfDate = toDate ? this.formatDateForEquityHub(toDate) : this.formatDateForEquityHub(new Date());
-    const lines: string[] = [];
-
-    lines.push(this.promptTemplate.trim(), '', '---', '## 📌 Auto-Filled Data', '');
-    lines.push(`- Symbol: ${symbol}`);
-    lines.push(`- As-of Date: ${asOfDate}`);
-    lines.push('', '### Volatility & Correlation Snapshot');
-
-    const vol = this.volatilityData;
-    lines.push(`- Current IV: ${this.formatPercent(vol?.impliedVolatilityIndex ?? null)}`);
-    lines.push(`- IV Rank: ${this.formatPercent(vol?.impliedVolatilityIndexRank ?? null)}`);
-    lines.push(`- IV Percentile: ${this.formatPercent(vol?.impliedVolatilityPercentile ?? null)}`);
-    lines.push(`- IV Change (5-day): ${this.formatPercent(vol?.impliedVolatilityIndex5DayChange ?? null)}`);
-    lines.push(`- IV Change (15-day): ${this.formatPercent(vol?.impliedVolatilityIndex15Day ?? null)}`);
-    lines.push(`- Corr SPY (3M): ${this.formatDecimal(vol?.corrSpy3Month ?? null)}`);
-    lines.push(`- Liquidity Rating: ${this.formatDecimal(vol?.liquidityRating ?? null, 1)}`);
-
-    const expirations = vol?.optionExpirationImpliedVolatilities || [];
-    if (expirations.length > 0) {
-      lines.push('- Term Structure:');
-      expirations.forEach(exp => {
-        lines.push(`  - ${this.formatExpirationDate(exp.expirationDate)} → ${this.formatPercent(exp.impliedVolatility)}`);
-      });
-    } else {
-      lines.push('- Term Structure: N/A');
+    if (!this.analysisPackage) {
+      return '';
     }
 
-    lines.push('', '### Market Data Snapshot');
-    if (this.marketDataHighlights.length === 0 && this.marketDataDetails.length === 0) {
-      lines.push('- No market data available.');
-    } else {
-      if (this.marketDataHighlights.length > 0) {
-        lines.push('- Highlights:');
-        this.marketDataHighlights.forEach(metric => {
-          lines.push(`  - ${metric.label}: ${metric.value}`);
-        });
-      }
-
-      if (this.marketDataDetails.length > 0) {
-        lines.push('- Details:');
-        this.marketDataDetails.forEach(detail => {
-          lines.push(`  - ${detail.label}: ${detail.value}`);
-        });
-      }
-    }
-
-    return lines.join('\n');
+    const {
+      analysis_instructions: analysisInstructions,
+      ...packageData
+    } = this.analysisPackage;
+    const packageJson = JSON.stringify(packageData, null, 2);
+    return [
+      `# Equity Analysis Handoff - ${this.analysisPackage.symbol}`,
+      '',
+      `- Package: \`${this.analysisPackage.schema_version}\``,
+      `- Analysis profile: \`${this.analysisPackage.analysis_profile}\``,
+      `- Generated: ${this.analysisPackage.generated_at}`,
+      `- As of: ${this.analysisPackage.as_of_date}`,
+      `- SpotGamma Equity Hub: ${this.analysisPackage.equity_hub_url}`,
+      '',
+      '## Analysis Instructions',
+      '',
+      analysisInstructions,
+      '',
+      '## Data Package',
+      '',
+      '```json',
+      packageJson,
+      '```',
+      '',
+    ].join('\n');
   }
 }

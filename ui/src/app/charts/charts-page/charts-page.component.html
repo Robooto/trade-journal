@@ -203,23 +203,45 @@
   <mat-accordion class="volatility-section">
     <mat-expansion-panel>
       <mat-expansion-panel-header>
-        <mat-panel-title>Prompt Builder</mat-panel-title>
+        <mat-panel-title>AI Analysis Handoff</mat-panel-title>
         <mat-panel-description class="volatility-header-actions">
           <span class="volatility-header-status">
-            {{ chartForm.get('symbol')?.value?.toUpperCase() || 'TICKER' }}
+            {{ analysisPackage?.schema_version || 'Building package...' }}
           </span>
           <button
             mat-icon-button
-            matTooltip="Copy prompt"
-            aria-label="Copy prompt"
+            matTooltip="Copy complete Markdown handoff"
+            aria-label="Copy AI analysis handoff"
+            [disabled]="!analysisPackage"
             (click)="copyPrompt($event)">
             <mat-icon>content_copy</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            matTooltip="Download JSON analysis package"
+            aria-label="Download JSON analysis package"
+            [disabled]="!analysisPackage"
+            (click)="downloadAnalysisPackage($event)">
+            <mat-icon>download</mat-icon>
           </button>
         </mat-panel-description>
       </mat-expansion-panel-header>
 
       <div class="prompt-content">
-        <div class="prompt-hint">Copy-ready prompt with volatility, correlation, and market data snapshots.</div>
+        <div class="prompt-hint">
+          One versioned package for OpenClaw or ChatGPT, including chart bars,
+          brokerage context, SpotGamma status, portfolio exposure, and explicit warnings.
+        </div>
+        <div class="volatility-error" *ngIf="analysisPackageError">
+          <mat-icon color="warn">warning</mat-icon>
+          <span>{{ analysisPackageError }}</span>
+        </div>
+        <div class="market-details" *ngIf="analysisPackage?.warnings?.length">
+          <div class="market-detail" *ngFor="let warning of analysisPackage?.warnings">
+            <div class="detail-label">Warning</div>
+            <div class="detail-value">{{ warning }}</div>
+          </div>
+        </div>
         <pre class="prompt-output">{{ promptOutput }}</pre>
       </div>
     </mat-expansion-panel>
@@ -377,6 +399,52 @@
           <mat-icon>open_in_new</mat-icon>
         </a>
       </div>
+
+      <form class="price-line-form" [formGroup]="spotGammaForm" (ngSubmit)="applySpotGammaContext()">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Spot</mat-label>
+            <input matInput type="number" formControlName="spot">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>LVP</mat-label>
+            <input matInput type="number" formControlName="lowVolatilityPoint">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>HVP</mat-label>
+            <input matInput type="number" formControlName="highVolatilityPoint">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Top Gamma Expiration</mat-label>
+            <input matInput placeholder="YYYY-MM-DD" formControlName="topGammaExpiration">
+          </mat-form-field>
+        </div>
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Call Gamma Notional</mat-label>
+            <input matInput type="number" formControlName="callGammaNotional">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Put Gamma Notional</mat-label>
+            <input matInput type="number" formControlName="putGammaNotional">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Major Gamma Strikes</mat-label>
+            <input matInput placeholder="175, 180, 185" formControlName="majorGammaStrikes">
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Gamma Notes</mat-label>
+            <input matInput formControlName="notes">
+          </mat-form-field>
+        </div>
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit">Apply SpotGamma Context</button>
+          <button mat-button type="button" (click)="clearSpotGammaContext()">Clear</button>
+          <span class="volatility-header-status">
+            Source: {{ analysisPackage?.spotgamma?.source || 'unavailable' }}
+          </span>
+        </div>
+      </form>
     </mat-card-content>
   </mat-card>
 </div>
