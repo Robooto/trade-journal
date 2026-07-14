@@ -314,7 +314,8 @@ class BracketOrderRequest(BaseModel):
     entry_price: float = Field(..., alias="entry-price")
     take_profit_percent: float = Field(..., alias="take-profit-percent")
     stop_loss_percent: float = Field(..., alias="stop-loss-percent")
-    dry_run: bool = Field(False, alias="dry-run")
+    dry_run: bool = Field(True, alias="dry-run")
+    confirmed: bool = False
 
     model_config = {
         "populate_by_name": True,

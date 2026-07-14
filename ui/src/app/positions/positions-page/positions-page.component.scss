@@ -1,58 +1,244 @@
-
-
-.alert {
-  background-color: #2196f3;
-  color: white;
+.positions-page {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
 }
 
-.warning {
-  background-color: #ffc107;
-  color: black;
+.page-header,
+.account-heading,
+.attention-summary,
+.state-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.page-header h1,
+.account-heading h2 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.subtitle,
+.attention-summary p,
+.state-panel p {
+  margin: 4px 0 0;
+  color: #64748b;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.freshness,
+.account-number,
+.quiet {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.attention-summary,
+.state-panel {
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.attention-summary.has-alerts {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.error-state {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.state-panel.compact {
+  justify-content: center;
+  padding: 24px;
+}
+
+.account-section {
+  display: grid;
+  gap: 12px;
+}
+
+.account-heading {
+  align-items: flex-end;
+}
+
+.account-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.metric {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+}
+
+.metric span {
+  color: #64748b;
+  font-size: 0.7rem;
+}
+
+.metric strong {
+  font-size: 1rem;
+}
+
+.table-shell,
+.nested-table-shell {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.positions-table {
+  width: 100%;
+  min-width: 1180px;
+}
+
+.nested-table {
+  width: 100%;
+  min-width: 760px;
+}
+
+.symbol-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 0;
+  border-radius: 6px;
+  padding: 5px 7px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.symbol-button:hover,
+.symbol-button:focus-visible {
+  background: #dbeafe;
+  outline: 2px solid transparent;
+}
+
+.symbol-button.expanded {
+  background: #2563eb;
+  color: #fff;
+}
+
+.symbol-button mat-icon {
+  width: 17px;
+  height: 17px;
+  font-size: 17px;
+}
+
+.rule-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.rule-chip {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.rule-chip.alert {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.rule-chip.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+tr.alert td:first-child {
+  border-left: 4px solid #dc2626;
+}
+
+tr.warning td:first-child {
+  border-left: 4px solid #f59e0b;
 }
 
 .positive {
-  color: #1b5e20; // dark green
+  color: #047857;
+  font-weight: 600;
 }
 
 .negative {
-  color: #b71c1c; // dark red
+  color: #b91c1c;
+  font-weight: 600;
 }
 
-// Chart expansion styles
-.underlying-cell {
-  .clickable {
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-
-    &:hover {
-      background-color: #e3f2fd;
-    }
-
-    &.expanded {
-      background-color: #1976d2;
-      color: white;
-
-      &:hover {
-        background-color: #1565c0;
-      }
-    }
-
-    .chart-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-  }
+.legs-panel {
+  min-width: 170px;
+  box-shadow: none;
+  border: 1px solid #e2e8f0;
 }
 
 .chart-expansion {
-  margin: 8px 0;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  background-color: #f9f9f9;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+@media (max-width: 1100px) {
+  .account-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .account-metrics {
+    grid-template-columns: repeat(3, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .positions-page {
+    padding: 14px;
+  }
+
+  .page-header,
+  .attention-summary,
+  .state-panel {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .page-actions button {
+    flex: 1;
+  }
+
+  .account-metrics {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
 }

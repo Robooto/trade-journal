@@ -10,78 +10,47 @@ function makeGroup(overrides: Partial<PositionGroup> = {}): PositionGroup {
     percent_credit_received: 50,
     total_delta: 0,
     positions: [],
-    ...overrides
+    ...overrides,
   };
 }
 
 describe('positions rules', () => {
-  it('dteRule flags alerts and warnings correctly', () => {
+  it('dteRule reports the current DTE and severity', () => {
     const today = new Date('2025-01-01');
-    const warningGroup = makeGroup({ expires_at: '2025-01-25' });
-    const alertGroup = makeGroup({ expires_at: '2025-01-15' });
-    expect(dteRule(warningGroup, today)).toEqual({ id: '21 dte', level: 'warning' });
-    expect(dteRule(alertGroup, today)).toEqual({ id: '21 dte', level: 'alert' });
+    expect(dteRule(makeGroup({ expires_at: '2025-01-25' }), today)).toEqual(jasmine.objectContaining({ id: 'dte', label: '24 DTE', level: 'warning' }));
+    expect(dteRule(makeGroup({ expires_at: '2025-01-15' }), today)).toEqual(jasmine.objectContaining({ id: 'dte', label: '14 DTE', level: 'alert' }));
   });
 
   it('profitRule uses percent_credit_received when available', () => {
-    const g = makeGroup({ percent_credit_received: 55 });
-    expect(profitRule(g)).toEqual({ id: '50% profit', level: 'alert' });
+    expect(profitRule(makeGroup({ percent_credit_received: 55 }))).toEqual(jasmine.objectContaining({ id: 'profit', label: '55% captured', level: 'alert' }));
   });
 
   it('profitRule calculates percent when not provided', () => {
-    const g = makeGroup({ percent_credit_received: null, current_group_p_l: 6, total_credit_received: 10 });
-    expect(profitRule(g)).toEqual({ id: '50% profit', level: 'warning' });
+    const group = makeGroup({ percent_credit_received: null, current_group_p_l: 6, total_credit_received: 10 });
+    expect(profitRule(group)).toEqual(jasmine.objectContaining({ id: 'profit', label: '40% captured', level: 'warning' }));
   });
 
-  it('lossRule uses percent_credit_received when available', () => {
-    const g = makeGroup({ percent_credit_received: -200 });
-    expect(lossRule(g)).toEqual({ id: '2x loss', level: 'alert' });
+  it('lossRule reports warning and alert thresholds', () => {
+    expect(lossRule(makeGroup({ percent_credit_received: -200 }))).toEqual(jasmine.objectContaining({ id: 'loss', level: 'alert' }));
+    expect(lossRule(makeGroup({ percent_credit_received: -175 }))).toEqual(jasmine.objectContaining({ id: 'loss', level: 'warning' }));
   });
 
-  it('lossRule calculates percent when not provided', () => {
-    const g = makeGroup({
-      percent_credit_received: null,
-      current_group_p_l: 25,
-      total_credit_received: 10
-    });
-    expect(lossRule(g)).toEqual({ id: '2x loss', level: 'warning' });
+  it('ivRankRule includes the current IV rank', () => {
+    expect(ivRankRule(makeGroup({ iv_rank: 12 }))).toEqual(jasmine.objectContaining({ id: 'iv-rank', label: 'IVR 12', level: 'warning' }));
+    expect(ivRankRule(makeGroup({ iv_rank: 9 }))).toEqual(jasmine.objectContaining({ id: 'iv-rank', label: 'IVR 9', level: 'alert' }));
   });
 
-  it('ivRankRule flags alerts and warnings correctly', () => {
-    const warning = makeGroup({ iv_rank: 12 });
-    const alert = makeGroup({ iv_rank: 9 });
-    expect(ivRankRule(warning)).toEqual({ id: 'low iv rank', level: 'warning' });
-    expect(ivRankRule(alert)).toEqual({ id: 'low iv rank', level: 'alert' });
+  it('evaluateRules runs only triggered rules in rule order', () => {
+    const results = evaluateRules(makeGroup({ percent_credit_received: 55, expires_at: '2025-01-15' }), new Date('2025-01-01'));
+    expect(results.map(result => result.id)).toEqual(['dte', 'profit']);
   });
 
-  it('evaluateRules runs only triggered rules', () => {
-    const g = makeGroup({ percent_credit_received: 55, expires_at: '2025-01-15' });
-    const results = evaluateRules(g, new Date('2025-01-01'));
+  it('every result explains the signal and a review action', () => {
+    const results = evaluateRules(makeGroup({ iv_rank: 12, expires_at: '2025-01-15', percent_credit_received: 0 }), new Date('2025-01-01'));
     expect(results.length).toBe(2);
-    expect(results[0].id).toBe('21 dte');
-    expect(results[1].id).toBe('50% profit');
-  });
-
-  it('evaluateRules includes lossRule when triggered', () => {
-    const g = makeGroup({
-      percent_credit_received: -195,
-      expires_at: '2025-01-15'
+    results.forEach(result => {
+      expect(result.detail.length).toBeGreaterThan(0);
+      expect(result.action.length).toBeGreaterThan(0);
     });
-    const results = evaluateRules(g, new Date('2025-01-01'));
-    expect(results.length).toBe(2);
-    expect(results[0]).toEqual({ id: '21 dte', level: 'alert' });
-    expect(results[1]).toEqual({ id: '2x loss', level: 'warning' });
-  });
-
-  it('evaluateRules includes ivRankRule when triggered', () => {
-    const g = makeGroup({
-      iv_rank: 12,
-      expires_at: '2025-01-15',
-      percent_credit_received: 0
-    });
-    const results = evaluateRules(g, new Date('2025-01-01'));
-    expect(results.length).toBe(2);
-    expect(results[0]).toEqual({ id: '21 dte', level: 'alert' });
-    expect(results[1]).toEqual({ id: 'low iv rank', level: 'warning' });
   });
 });

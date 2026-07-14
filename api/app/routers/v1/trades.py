@@ -18,6 +18,7 @@ from app.schemas.trades import (
 
 from app.db import get_db
 from app import tastytrade
+from app.settings import settings
 from app.services.trades_service import (
     acquire_token,
     fetch_accounts,
@@ -299,6 +300,16 @@ def submit_bracket_order(req: BracketOrderRequest, db: Session = Depends(get_db)
     tasty_response = None
 
     if not req.dry_run:
+        if not settings.live_trading_enabled:
+            raise HTTPException(
+                status_code=503,
+                detail="Live order submission is disabled. Set LIVE_TRADING_ENABLED=true to enable it.",
+            )
+        if not req.confirmed:
+            raise HTTPException(
+                status_code=400,
+                detail="A reviewed order must be explicitly confirmed before live submission.",
+            )
         token = _get_tastytrade_token_or_403(db)
         tasty_response = _jsonable_tasty(
             _place_complex_order_or_500(token, req.account_number, payload)

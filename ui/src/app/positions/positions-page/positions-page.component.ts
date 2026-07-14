@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { finalize } from 'rxjs';
 import { PositionsApiService } from '../positions-api.service';
 import { AccountPositions, PositionGroup } from '../positions.models';
 import { evaluateRules } from '../positions.rules';
@@ -13,6 +14,10 @@ import { BracketOrderDialogComponent } from '../bracket-order-dialog/bracket-ord
 })
 export class PositionsPageComponent implements OnInit {
   accounts: AccountPositions[] = [];
+  loading = false;
+  errorMessage = '';
+  lastRefreshed?: Date;
+  attentionOnly = false;
   groupCols = [
     'underlying',
     'expires',
@@ -26,77 +31,93 @@ export class PositionsPageComponent implements OnInit {
     'rules',
     'positions',
   ];
-
   positionCols = ['symbol', 'qty', 'type', 'plpos', 'cdelta', 'bo'];
   expandedChartStates: Map<string, PositionGroup | null> = new Map();
 
   constructor(private api: PositionsApiService, private dialog: MatDialog) {}
 
-  ngOnInit() {
-    this.api.getAll().subscribe(res => {
-      this.accounts = res.accounts;
-      this.accounts.forEach(acct => {
-        acct.groups.forEach(g => {
-          g.rules = evaluateRules(g);
+  ngOnInit(): void {
+    this.loadPositions();
+  }
+
+  loadPositions(): void {
+    this.loading = true;
+    this.errorMessage = '';
+    this.api.getAll().pipe(finalize(() => (this.loading = false))).subscribe({
+      next: response => {
+        this.accounts = response.accounts;
+        this.accounts.forEach(account => {
+          account.groups.forEach(group => {
+            group.rules = evaluateRules(group);
+          });
         });
-      });
+        this.lastRefreshed = new Date();
+      },
+      error: error => {
+        this.errorMessage = error?.error?.detail || 'Positions could not be loaded. Check the API and brokerage connection.';
+      },
     });
   }
 
-  getRuleClass(group: PositionGroup): string {
-    if (!group.rules) {
-      return '';
+  get attentionCount(): number {
+    return this.accounts.reduce(
+      (total, account) => total + account.groups.filter(group => group.rules?.some(rule => rule.level === 'alert')).length,
+      0
+    );
+  }
+
+  visibleGroups(account: AccountPositions): PositionGroup[] {
+    if (!this.attentionOnly) {
+      return account.groups;
     }
-    if (group.rules.some(r => r.level === 'alert')) {
+    return account.groups.filter(group => (group.rules?.length ?? 0) > 0);
+  }
+
+  toggleAttentionOnly(): void {
+    this.attentionOnly = !this.attentionOnly;
+  }
+
+  getRuleClass(group: PositionGroup): string {
+    if (group.rules?.some(rule => rule.level === 'alert')) {
       return 'alert';
     }
-    if (group.rules.some(r => r.level === 'warning')) {
+    if (group.rules?.some(rule => rule.level === 'warning')) {
       return 'warning';
     }
     return '';
   }
 
+  ruleTooltip(group: PositionGroup): string {
+    return (group.rules ?? []).map(rule => `${rule.detail} ${rule.action}`).join('\n');
+  }
+
   onUnderlyingClick(group: PositionGroup, event: Event, account: AccountPositions): void {
     event.stopPropagation();
-    
-    // Check if symbol is valid for charting (no "/" symbols)
     if (!this.isValidChartSymbol(group.underlying_symbol)) {
       return;
     }
-
     const accountKey = account.account_number;
     const currentExpanded = this.expandedChartStates.get(accountKey);
-
-    // Toggle chart expansion for this specific account
-    if (currentExpanded === group) {
-      this.expandedChartStates.set(accountKey, null);
-    } else {
-      this.expandedChartStates.set(accountKey, group);
-    }
+    this.expandedChartStates.set(accountKey, currentExpanded === group ? null : group);
   }
 
   isValidChartSymbol(symbol: string): boolean {
-    // Exclude symbols with "/" (like spread symbols)
     return !symbol.includes('/');
   }
 
   isChartExpanded(group: PositionGroup, account: AccountPositions): boolean {
-    const accountKey = account.account_number;
-    return this.expandedChartStates.get(accountKey) === group;
+    return this.expandedChartStates.get(account.account_number) === group;
   }
 
   getExpandedChartForAccount(account: AccountPositions): PositionGroup | null {
-    const accountKey = account.account_number;
-    return this.expandedChartStates.get(accountKey) || null;
+    return this.expandedChartStates.get(account.account_number) || null;
   }
 
   openBracketOrder(position: Record<string, any>, account: AccountPositions): void {
     this.dialog.open(BracketOrderDialogComponent, {
-      width: '520px',
-      data: {
-        accountNumber: account.account_number,
-        position,
-      },
+      width: '560px',
+      maxWidth: 'calc(100vw - 24px)',
+      data: { accountNumber: account.account_number, position },
     });
   }
 }

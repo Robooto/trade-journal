@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import models
 from app.db import engine
+from app.settings import settings
 from app.routers.v1 import (
     hello as hello_v1,
     entries as entries_v1,
@@ -30,7 +31,7 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=list(settings.cors_origins),
     allow_credentials=True,
     allow_methods=["*"],          # GET, POST, PUT, DELETE, OPTIONS…
     allow_headers=["*"],          # allow Authorization, Content-Type, etc.

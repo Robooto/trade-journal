@@ -1,3 +1,169 @@
-section h2 {
-  margin-top: 0;
+.morning-page {
+  display: grid;
+  gap: 24px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.morning-header,
+.step-heading,
+.resource-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.morning-header h1,
+.workflow-card h2,
+.guideline-card h2,
+.resource-heading h3 {
+  margin: 0;
+}
+
+.morning-header > div > p:last-child,
+.workflow-card > p {
+  margin: 7px 0 0;
+  color: #64748b;
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.workflow-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 18px;
+}
+
+.next-steps {
+  display: grid;
+  gap: 18px;
+}
+
+.workflow-card,
+.guideline-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 5%);
+}
+
+.research-step {
+  display: grid;
+  gap: 20px;
+}
+
+.journal-step {
+  border-color: #93c5fd;
+  background: linear-gradient(145deg, #eff6ff, #fff 70%);
+}
+
+.step-heading {
+  justify-content: flex-start;
+}
+
+.step-number {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 800;
+}
+
+.resource-group {
+  display: grid;
+  gap: 10px;
+}
+
+.resource-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.resource-links a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  color: #0f172a;
+  text-decoration: none;
+}
+
+.resource-links a:hover,
+.resource-links a:focus-visible {
+  border-color: #60a5fa;
+  background: #eff6ff;
+}
+
+.resource-links mat-icon {
+  width: 17px;
+  height: 17px;
+  color: #2563eb;
+  font-size: 17px;
+}
+
+.guideline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.guideline-card ul {
+  display: grid;
+  gap: 9px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guideline-card li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.guideline-card mat-icon {
+  width: 18px;
+  height: 18px;
+  color: #2563eb;
+  font-size: 18px;
+}
+
+@media (max-width: 900px) {
+  .workflow-grid,
+  .guideline-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .morning-page {
+    padding: 16px;
+  }
+
+  .morning-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .resource-links {
+    grid-template-columns: 1fr;
+  }
 }

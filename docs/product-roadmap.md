@@ -10,7 +10,8 @@ Record free-form thoughts plus the structured thesis, entry plan, invalidation,
 management, exit, and post-trade review. Brokerage history records what
 happened; the journal records why.
 
-Current: journal CRUD API and UI.
+Current: journal CRUD API and UI, with the morning dashboard handing off from the
+research-link routine directly into a new journal entry.
 
 Next:
 
@@ -30,7 +31,9 @@ Current:
 - Marks, approximate P/L, credit progress, delta/beta-delta, IV rank, and IV
   change where available.
 - Rules for 21 DTE, 50% profit, 2x loss, and low IV rank.
-- Position chart expansion and bracket-order workflow.
+- Position chart expansion and a safeguarded bracket-order workflow: dry-run by
+  default, mandatory UI review, explicit confirmation, and a server-side live
+  trading enable flag.
 
 Next:
 
@@ -81,7 +84,8 @@ Next:
 
 - Live brokerage credentials remain inside this project.
 - Read-only contracts come before new mutation routes.
-- Bracket/live-order workflows require explicit user action.
+- Bracket/live-order workflows preview by default and require both explicit user
+  confirmation and `LIVE_TRADING_ENABLED=true` on the server.
 - Market-data or FlowPatrol interest is not trade approval.
 - Exact contracts require current chain, quotes, Greeks, liquidity, catalysts,
   portfolio exposure, and an explicit risk/exit plan.

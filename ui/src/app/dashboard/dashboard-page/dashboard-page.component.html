@@ -1,34 +1,98 @@
-<div class="grid grid-cols-1 gap-6 p-6 md:grid-cols-2 lg:grid-cols-4">
-  <section class="guidelines">
-    <h2>Daily Guidelines</h2>
-    <ul>
-      <li *ngFor="let rule of dailyGuidelines">{{ rule }}</li>
-    </ul>
+<div class="morning-page">
+  <header class="morning-header">
+    <div>
+      <p class="eyebrow">Morning workflow</p>
+      <h1>Start with context. Capture the plan.</h1>
+      <p>Open the research you use every morning, then move directly into your journal.</p>
+    </div>
+    <a mat-flat-button color="primary" routerLink="/journal">
+      <mat-icon>edit_note</mat-icon>
+      Open journal
+    </a>
+  </header>
+
+  <section class="workflow-grid">
+    <article class="workflow-card research-step">
+      <div class="step-heading">
+        <span class="step-number">1</span>
+        <div>
+          <p class="eyebrow">Get oriented</p>
+          <h2>Morning research</h2>
+        </div>
+      </div>
+
+      <div class="resource-group">
+        <div class="resource-heading">
+          <h3>Daily overview</h3>
+          <button mat-stroked-button type="button" (click)="openAll(dailyOverview)">
+            <mat-icon>open_in_new</mat-icon>
+            Open all
+          </button>
+        </div>
+        <div class="resource-links">
+          <a *ngFor="let resource of dailyOverview" [href]="resource.url" target="_blank" rel="noopener">
+            <span>{{ resource.name }}</span>
+            <mat-icon>north_east</mat-icon>
+          </a>
+        </div>
+      </div>
+
+      <div class="resource-group">
+        <div class="resource-heading">
+          <h3>SpotGamma tools</h3>
+          <button mat-stroked-button type="button" (click)="openAll(spotGammaTools)">
+            <mat-icon>open_in_new</mat-icon>
+            Open all
+          </button>
+        </div>
+        <div class="resource-links">
+          <a *ngFor="let resource of spotGammaTools" [href]="resource.url" target="_blank" rel="noopener">
+            <span>{{ resource.name }}</span>
+            <mat-icon>north_east</mat-icon>
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <div class="next-steps">
+      <article class="workflow-card journal-step">
+        <div class="step-heading">
+          <span class="step-number">2</span>
+          <div>
+            <p class="eyebrow">Most important</p>
+            <h2>Write the journal</h2>
+          </div>
+        </div>
+        <p>Capture what you see, your directional lean, important levels and what would change your mind.</p>
+        <a mat-flat-button color="primary" routerLink="/journal">Start today’s entry</a>
+      </article>
+
+      <article class="workflow-card positions-step">
+        <div class="step-heading">
+          <span class="step-number">3</span>
+          <div>
+            <p class="eyebrow">Risk check</p>
+            <h2>Review positions</h2>
+          </div>
+        </div>
+        <p>Check buying power, portfolio Greeks and any positions crossing a management threshold.</p>
+        <a mat-stroked-button routerLink="/positions">Review positions</a>
+      </article>
+    </div>
   </section>
 
-  <section class="resources">
-    <h2>Daily Overview Analysis</h2>
-    <button mat-raised-button color="primary" (click)="openAll(dailyOverview)">Open All</button>
-    <ul>
-      <li *ngFor="let r of dailyOverview">
-        <a [href]="r.url" target="_blank" rel="noopener">{{ r.name }}</a>
-      </li>
-    </ul>
-  </section>
-
-  <section class="resources">
-    <h2>SpotGamma Tools</h2>
-    <button mat-raised-button color="primary" (click)="openAll(spotGammaTools)">Open All</button>
-    <ul>
-      <li *ngFor="let r of spotGammaTools">
-        <a [href]="r.url" target="_blank" rel="noopener">{{ r.name }}</a>
-      </li>
-    </ul>
-  </section>
-  <section class="guidelines">
-    <h2>Daily Trading Guidelines</h2>
-    <ul>
-      <li *ngFor="let rule of tradeGuidelines">{{ rule }}</li>
-    </ul>
+  <section class="guideline-grid">
+    <article class="guideline-card">
+      <h2>Daily checklist</h2>
+      <ul>
+        <li *ngFor="let rule of dailyGuidelines"><mat-icon>check_circle_outline</mat-icon><span>{{ rule }}</span></li>
+      </ul>
+    </article>
+    <article class="guideline-card">
+      <h2>Trading guardrails</h2>
+      <ul>
+        <li *ngFor="let rule of tradeGuidelines"><mat-icon>shield</mat-icon><span>{{ rule }}</span></li>
+      </ul>
+    </article>
   </section>
 </div>

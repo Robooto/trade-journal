@@ -57,11 +57,11 @@ describe('PositionsPageComponent', () => {
       percent_credit_received: null,
       total_delta: 0,
       positions: [],
-      rules: [{ id: 'r1', level: 'warning' }]
+      rules: [{ id: 'r1', label: 'warning', detail: 'detail', action: 'action', level: 'warning' }]
     };
 
     expect(component.getRuleClass(group)).toBe('warning');
-    group.rules = [{ id: 'r2', level: 'alert' }];
+    group.rules = [{ id: 'r2', label: 'alert', detail: 'detail', action: 'action', level: 'alert' }];
     expect(component.getRuleClass(group)).toBe('alert');
     group.rules = undefined;
     expect(component.getRuleClass(group)).toBe('');

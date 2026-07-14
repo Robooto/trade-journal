@@ -97,22 +97,39 @@
       <div class="text-xs text-slate-400">Preview payload</div>
     </div>
     <div class="mt-3 grid grid-cols-1 gap-1 text-xs text-slate-200/90">
+      <div>Account: {{ data.accountNumber }}</div>
+      <div>Symbol: {{ symbol }} · Quantity: {{ quantity }}</div>
       <div>Action: {{ action }}</div>
       <div>Limit: {{ previewTakeProfitPrice | number:'1.2-2' }} · Stop: {{ previewStopLossPrice | number:'1.2-2' }}</div>
       <div>Take Profit: +{{ takeProfitAmount | number:'1.2-2' }} · +${{ takeProfitDollar | number:'1.2-2' }}</div>
       <div>Net Loss: {{ stopLossAmount | number:'1.2-2' }} · ${{ stopLossDollar | number:'1.2-2' }}</div>
     </div>
     <pre class="mt-3 max-h-48 overflow-auto rounded bg-slate-950 p-2 text-[11px] text-slate-200">{{ previewPayload | json }}</pre>
+
+    <label class="mt-3 flex cursor-pointer items-start gap-2 rounded border border-amber-500/40 bg-amber-900/10 p-3 text-xs text-amber-100">
+      <input
+        type="checkbox"
+        class="mt-0.5"
+        [checked]="confirmationAccepted"
+        (change)="setConfirmationAccepted($any($event.target).checked)"
+      />
+      <span>I reviewed the account, symbol, quantity, limit and stop. Submit this live OCO order.</span>
+    </label>
   </section>
 </div>
 
 <div mat-dialog-actions align="end">
   <button mat-button (click)="close()">Cancel</button>
   <button mat-stroked-button color="primary" (click)="toggleReview()" [disabled]="isReviewLoading || isSending">
-    {{ reviewMode ? 'Edit' : (isReviewLoading ? 'Reviewing...' : 'Review (optional)') }}
+    {{ reviewMode ? 'Edit order' : (isReviewLoading ? 'Reviewing...' : 'Review order') }}
   </button>
-  <button mat-flat-button color="primary" (click)="submitOrder()" [disabled]="isSending || isReviewLoading">
-    {{ isSending ? 'Sending...' : (reviewMode ? 'Send' : 'Send now') }}
+  <button
+    mat-flat-button
+    color="primary"
+    (click)="submitOrder()"
+    [disabled]="isSending || isReviewLoading || !reviewMode || !serverPreview || !confirmationAccepted"
+  >
+    {{ isSending ? 'Sending...' : 'Submit live order' }}
   </button>
 </div>
 

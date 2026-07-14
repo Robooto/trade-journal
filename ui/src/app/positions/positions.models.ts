@@ -10,12 +10,17 @@ export interface PositionGroup {
   current_group_p_l: number;
   percent_credit_received: number | null;
   total_delta?: number | null;
+  delta_shares?: number | null;
+  theta_dollars_per_day?: number | null;
+  vega_dollars_per_vol_point?: number | null;
+  gamma_display?: number | null;
   total_position_delta?: number | null;
   total_theta?: number | null;
   total_vega?: number | null;
   total_gamma?: number | null;
   total_rho?: number | null;
   beta_delta?: number | null;
+  beta_delta_shares?: number | null;
   iv_rank?: number | null;
   iv_5d_change?: number | null;
   rules?: import('./positions.rules').RuleResult[];
@@ -27,6 +32,11 @@ export interface AccountPositions {
   nickname?: string;
   groups: PositionGroup[];
   total_beta_delta?: number | null;
+  total_beta_delta_shares?: number | null;
+  delta_shares?: number | null;
+  theta_dollars_per_day?: number | null;
+  vega_dollars_per_vol_point?: number | null;
+  gamma_display?: number | null;
   total_position_delta?: number | null;
   total_theta?: number | null;
   total_vega?: number | null;
@@ -51,6 +61,7 @@ export interface BracketOrderRequest {
   'take-profit-percent': number;
   'stop-loss-percent': number;
   'dry-run': boolean;
+  confirmed: boolean;
 }
 
 export interface BracketOrderResponse {

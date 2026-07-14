@@ -11,13 +11,15 @@ Tastytrade client.
 
 ## Current capabilities
 
+- A morning dashboard that preserves the daily research links and hands off directly to the journal.
 - Journal entry API and Angular journal views for recording trading thoughts.
 - Tastytrade authentication, account discovery, balances, positions, quote
   snapshots, and volatility metrics.
 - Option positions grouped by account, underlying, and expiration with marks,
   approximate P/L, credit progress, delta/beta-delta, IV rank, and IV change.
 - Visible management checks for 21 DTE, 50% profit, 2x loss, and low IV rank.
-- Position/chart views and a single-leg bracket-order workflow.
+- A position attention queue with explicit Greek units, refresh/error states, charts, and leg detail.
+- A single-leg bracket-order workflow that previews by default and requires explicit live confirmation.
 - Historical price charts and a versioned equity analysis package.
 - LLM-friendly position, market-data, volatility, and equity-analysis responses.
 
@@ -43,6 +45,20 @@ considered.
 docker compose up --build
 ```
 
+## Safety configuration
+
+Live bracket-order submission is disabled by default. The UI always creates a
+server preview first and requires an explicit acknowledgement before sending.
+To permit the confirmed submission on a trusted host, set:
+
+```dotenv
+LIVE_TRADING_ENABLED=true
+```
+
+Leave the value false or unset anywhere that should remain read-only. Production
+UI requests use same-origin `/v1` routing through Nginx. `CORS_ORIGINS` is only
+needed for separately hosted development clients and accepts a comma-separated
+list of allowed origins.
 ## Pi deployment
 
 Initial setup:
@@ -50,8 +66,9 @@ Initial setup:
 ```bash
 git clone https://github.com/Robooto/trade-journal.git
 cd trade-journal
+cp .env.example .env
 nano .env
-# Add broker credentials and endpoint configuration.
+# Add broker credentials and deliberately choose whether live trading is enabled.
 docker compose up --build -d
 ```
 

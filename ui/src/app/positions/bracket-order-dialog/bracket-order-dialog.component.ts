@@ -24,6 +24,7 @@ export class BracketOrderDialogComponent {
   reviewMode = false;
   isReviewLoading = false;
   isSending = false;
+  confirmationAccepted = false;
   apiError = '';
   serverPreview?: BracketOrderResponse;
 
@@ -158,6 +159,7 @@ export class BracketOrderDialogComponent {
     if (this.reviewMode) {
       this.reviewMode = false;
       this.serverPreview = undefined;
+      this.confirmationAccepted = false;
       this.apiError = '';
       return;
     }
@@ -178,7 +180,7 @@ export class BracketOrderDialogComponent {
   }
 
   submitOrder(): void {
-    if (this.isSending || this.isReviewLoading) {
+    if (this.isSending || this.isReviewLoading || !this.reviewMode || !this.serverPreview || !this.confirmationAccepted) {
       return;
     }
     this.apiError = '';
@@ -195,6 +197,10 @@ export class BracketOrderDialogComponent {
           this.apiError = err?.error?.detail || 'Failed to submit order.';
         },
       });
+  }
+
+  setConfirmationAccepted(value: boolean): void {
+    this.confirmationAccepted = value;
   }
 
   get action(): string {
@@ -261,6 +267,7 @@ export class BracketOrderDialogComponent {
       'take-profit-percent': this.takeProfitPercent,
       'stop-loss-percent': this.stopLossPercent,
       'dry-run': dryRun,
+      confirmed: !dryRun && this.confirmationAccepted,
     };
   }
 

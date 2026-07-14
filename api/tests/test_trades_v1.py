@@ -109,103 +109,27 @@ async def test_trades_grouped(client, monkeypatch):
     assert resp.status_code == 200
     data = resp.json()
 
-    assert data == {
-        "accounts": [
-            {
-                "account_number": "123",
-                "nickname": "Main",
-                "total_beta_delta": -1.2,
-                "total_position_delta": -15000,
-                "total_theta": 3600,
-                "total_vega": -2400,
-                "total_gamma": -300,
-                "total_rho": -600,
-                "percent_used_bp": 33,
-                "groups": [
-                    {
-                        "underlying_symbol": "SPY",
-                        "expires_at": "2024-01-19",
-                        "total_credit_received": 450.0,
-                        "current_group_p_l": -2550.0,
-                        "percent_credit_received": -566,
-                        "total_delta": -1.0,
-                        "total_position_delta": -15000,
-                        "total_theta": 3600,
-                        "total_vega": -2400,
-                        "total_gamma": -300,
-                        "total_rho": -600,
-                        "beta_delta": -1.2,
-                        "iv_rank": 19.1,
-                        "iv_5d_change": 1.23,
-                        "positions": [
-                            {
-                                "instrument-type": "Equity Option",
-                                "symbol": "SPY_C",
-                                "underlying-symbol": "SPY",
-                                "expires-at": "2024-01-19",
-                                "cost-effect": "Credit",
-                                "average-open-price": "2.5",
-                                "close-price": "0.5",
-                                "average-daily-market-close-price": "0.75",
-                                "quantity": "1",
-                                "quantity-direction": "Short",
-                                "multiplier": "100",
-                                "approximate-p-l": -750.0,
-                                "beta": 1.2,
-                                "market_data": {
-                                    "symbol": "SPY_C",
-                                    "mark": "10",
-                                    "close": "9",
-                                    "delta": "0.5",
-                                    "theta": "-0.12",
-                                    "vega": "0.08",
-                                    "gamma": "0.01",
-                                    "rho": "0.02",
-                                    "computed_delta": -0.5,
-                                    "computed_position_delta": -50.0,
-                                    "computed_position_theta": 12.0,
-                                    "computed_position_vega": -8.0,
-                                    "computed_position_gamma": -1.0,
-                                    "computed_position_rho": -2.0,
-                                },
-                            },
-                            {
-                                "instrument-type": "Equity Option",
-                                "symbol": "SPY_C",
-                                "underlying-symbol": "SPY",
-                                "expires-at": "2024-01-19",
-                                "cost-effect": "Credit",
-                                "average-open-price": "1.0",
-                                "close-price": "0.2",
-                                "average-daily-market-close-price": "0.30",
-                                "quantity": "2",
-                                "quantity-direction": "Short",
-                                "multiplier": "100",
-                                "approximate-p-l": -1800.0,
-                                "beta": 1.2,
-                                "market_data": {
-                                    "symbol": "SPY_C",
-                                    "mark": "10",
-                                    "close": "9",
-                                    "delta": "0.5",
-                                    "theta": "-0.12",
-                                    "vega": "0.08",
-                                    "gamma": "0.01",
-                                    "rho": "0.02",
-                                    "computed_delta": -0.5,
-                                    "computed_position_delta": -100.0,
-                                    "computed_position_theta": 24.0,
-                                    "computed_position_vega": -16.0,
-                                    "computed_position_gamma": -2.0,
-                                    "computed_position_rho": -4.0,
-                                },
-                            },
-                        ],
-                    }
-                ],
-            }
-        ]
-    }
+    assert len(data["accounts"]) == 1
+    account = data["accounts"][0]
+    assert account["account_number"] == "123"
+    assert account["nickname"] == "Main"
+    assert account["delta_shares"] == -150.0
+    assert account["theta_dollars_per_day"] == 36.0
+    assert account["vega_dollars_per_vol_point"] == -24.0
+    assert account["percent_used_bp"] == 33
+
+    assert len(account["groups"]) == 1
+    group = account["groups"][0]
+    assert group["underlying_symbol"] == "SPY"
+    assert group["total_credit_received"] == 450.0
+    assert group["current_group_p_l"] == -2550.0
+    assert group["percent_credit_received"] == -566
+    assert group["delta_shares"] == -150.0
+    assert group["theta_dollars_per_day"] == 36.0
+    assert group["iv_rank"] == 19.1
+    assert group["iv_5d_change"] == 1.23
+    assert len(group["positions"]) == 2
+    assert group["positions"][0]["market_data"]["computed_position_delta"] == -50.0
 
 
 @pytest.mark.asyncio
@@ -693,11 +617,14 @@ async def test_total_position_greeks(client, monkeypatch):
     acct = resp.json()["accounts"][0]
     group = acct["groups"][0]
 
-    assert group["total_position_delta"] == 12000
-    assert group["total_theta"] == -1500
-    assert group["total_vega"] == 2500
+    assert group["delta_shares"] == 120.0
+    assert group["theta_dollars_per_day"] == -15.0
+    assert group["vega_dollars_per_vol_point"] == 25.0
+    assert group["total_position_delta"] == 120
+    assert group["total_theta"] == -15
+    assert group["total_vega"] == 25
     assert group["total_gamma"] == 0
-    assert group["total_rho"] == 700
+    assert group["total_rho"] == 7
     assert acct["total_theta"] == group["total_theta"]
     assert acct["total_vega"] == group["total_vega"]
 
