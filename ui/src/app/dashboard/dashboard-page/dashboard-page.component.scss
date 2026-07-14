@@ -167,3 +167,51 @@
     grid-template-columns: 1fr;
   }
 }
+.recent-journal {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #bfdbfe;
+}
+
+.recent-label {
+  color: #64748b;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.recent-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: 8px;
+  padding: 7px 8px;
+  color: #0f172a;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background: #dbeafe;
+  }
+
+  span {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  small {
+    color: #2563eb;
+  }
+
+  mat-icon {
+    width: 18px;
+    height: 18px;
+    font-size: 18px;
+  }
+}

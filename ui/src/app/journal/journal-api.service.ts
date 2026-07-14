@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient }   from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable }   from 'rxjs';
 import { environment }  from '../../environments/environment';
 import {JournalEntry, JournalEvent, PaginatedJournalEntries, MarketData} from './journal.models';
@@ -10,10 +10,22 @@ export class JournalApiService {
 
   constructor(private http: HttpClient) {}
 
-  list(skip: number = 0, limit: number = 20): Observable<PaginatedJournalEntries> {
-    return this.http.get<PaginatedJournalEntries>(
-      `${this.base}?skip=${skip}&limit=${limit}`
-    );
+  list(
+    skip: number = 0,
+    limit: number = 20,
+    query: string = '',
+    ticker: string = ''
+  ): Observable<PaginatedJournalEntries> {
+    let params = new HttpParams()
+      .set('skip', skip)
+      .set('limit', limit);
+    if (query.trim()) {
+      params = params.set('q', query.trim());
+    }
+    if (ticker.trim()) {
+      params = params.set('ticker', ticker.trim().toUpperCase());
+    }
+    return this.http.get<PaginatedJournalEntries>(this.base, { params });
   }
 
   create(entry: Omit<JournalEntry,'id'>): Observable<JournalEntry> {

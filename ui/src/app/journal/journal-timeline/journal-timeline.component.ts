@@ -21,19 +21,23 @@ export class JournalTimelineComponent {
   }
 
   private formatEntryForCopy(entry: JournalEntry): string {
-    let text = `${entry.date} - ES ${entry.esPrice} ${entry.marketDirection === 'up' ? '↑' : '↓'}`;
+    let text = `${entry.date} - ES ${entry.esPrice} ${entry.marketDirection === 'up' ? 'up' : 'down'}`;
     if (entry.delta !== undefined && entry.delta !== null) {
       text += ` - Delta: ${entry.delta}`;
     }
+    if (entry.tickers?.length) {
+      text += ` - Tickers: ${entry.tickers.join(', ')}`;
+    }
     text += `\n\n${entry.notes}`;
-    
-    if (entry.events && entry.events.length > 0) {
+    if (entry.sourceUrl) {
+      text += `\nContext: ${entry.sourceLabel || entry.sourceUrl} - ${entry.sourceUrl}`;
+    }
+    if (entry.events?.length) {
       text += '\n\nIntraday Events:';
       entry.events.forEach(event => {
         text += `\n${event.time} @ ${event.price} - ${event.note}`;
       });
     }
-    
     return text;
   }
 

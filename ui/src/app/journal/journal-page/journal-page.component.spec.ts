@@ -8,7 +8,7 @@ import { JournalEntry, PaginatedJournalEntries } from '../journal.models';
 
 class MockJournalApiService {
   response: PaginatedJournalEntries = { total: 0, items: [], skip: 0, limit: 20 };
-  list(_skip: number = 0, _limit: number = 20) {
+  list(_skip: number = 0, _limit: number = 20, _query: string = '', _ticker: string = '') {
     return of(this.response);
   }
 }
@@ -48,9 +48,9 @@ describe('JournalPageComponent', () => {
 
     component.loadNextPage();
 
-    expect(component.entries.map(e => e.id)).toEqual(['x', 'a', 'b']);
+    expect(component.entries.map(e => e.id)).toEqual(['x', 'b', 'a']);
     expect(component.totalEntries).toBe(3);
-    expect(component.pageSkip).toBe(15);
+    expect(component.pageSkip).toBe(2);
   });
 
   it('onEntrySelected stores the selected entry', () => {
@@ -73,7 +73,7 @@ describe('JournalPageComponent', () => {
     component.onEntrySaved(component.selectedEntry);
 
     expect(component.selectedEntry).toBeUndefined();
-    expect(component.pageSkip).toBe(15);
+    expect(component.pageSkip).toBe(1);
     expect(component.entries.map(e => e.id)).toEqual(['new']);
     expect(component.totalEntries).toBe(1);
   });

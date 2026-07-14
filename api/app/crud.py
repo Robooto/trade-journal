@@ -5,39 +5,58 @@ from typing import List
 from uuid import UUID
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import or_
 
-from app.models import JournalEntryORM, EventORM, SessionTokenORM, PivotLevelORM
+from app.models import JournalEntryORM, JournalReferenceORM, JournalTickerORM, EventORM, SessionTokenORM, PivotLevelORM
 from app.schemas.journal import Event, JournalEntryCreate, JournalEntryUpdate
 from app.schemas.pivots import PivotLevelCreate
 
 
-def count_entries(db: Session) -> int:
-    """
-    Return the total number of journal entries in the database.
-    """
-    return db.query(func.count(JournalEntryORM.id)).scalar() or 0
+def _normalize_tickers(tickers: List[str] | None) -> list[str]:
+    return list(dict.fromkeys(
+        ticker.strip().upper()
+        for ticker in (tickers or [])
+        if ticker and ticker.strip()
+    ))
+
+
+def _entries_query(db: Session, q: str | None = None, ticker: str | None = None):
+    query = db.query(JournalEntryORM)
+    search = (q or "").strip()
+    if search:
+        pattern = f"%{search}%"
+        query = query.filter(or_(
+            JournalEntryORM.notes.ilike(pattern),
+            JournalEntryORM.ticker_rows.any(JournalTickerORM.symbol.ilike(pattern)),
+        ))
+    normalized_ticker = (ticker or "").strip().upper()
+    if normalized_ticker:
+        query = query.filter(
+            JournalEntryORM.ticker_rows.any(JournalTickerORM.symbol == normalized_ticker)
+        )
+    return query
+
+
+def count_entries(db: Session, q: str | None = None, ticker: str | None = None) -> int:
+    """Return the number of journal entries matching the optional filters."""
+    return _entries_query(db, q=q, ticker=ticker).count()
 
 
 def get_entries(
     db: Session,
     skip: int = 0,
-    limit: int = 20
+    limit: int = 20,
+    q: str | None = None,
+    ticker: str | None = None,
 ) -> List[JournalEntryORM]:
-    """
-    Return a page of journal entries, sorted newest-first by date.
-    - skip: how many to skip (offset)
-    - limit: how many to return
-    By default, skip=0 and limit=20 (so you get the 20 most recent entries).
-    """
+    """Return matching journal entries sorted newest-first by date."""
     return (
-        db.query(JournalEntryORM)
-          .order_by(desc(JournalEntryORM.date))
-          .offset(skip)
-          .limit(limit)
-          .all()
+        _entries_query(db, q=q, ticker=ticker)
+        .order_by(desc(JournalEntryORM.date), desc(JournalEntryORM.id))
+        .offset(skip)
+        .limit(limit)
+        .all()
     )
-
 
 def get_entry(db: Session, entry_id: UUID) -> JournalEntryORM | None:
     """
@@ -59,6 +78,16 @@ def create_entry(
         notes=entry_in.notes,
         market_direction=entry_in.market_direction,
     )
+
+    if entry_in.source_url or entry_in.source_label:
+        orm_entry.reference = JournalReferenceORM(
+            url=(entry_in.source_url or "").strip() or None,
+            label=(entry_in.source_label or "").strip() or None,
+            entry=orm_entry,
+        )
+
+    for symbol in _normalize_tickers(entry_in.tickers):
+        orm_entry.ticker_rows.append(JournalTickerORM(symbol=symbol, entry=orm_entry))
 
     for ev in entry_in.events:
         orm_ev = EventORM(
@@ -88,7 +117,29 @@ def update_entry(
     if not orm_entry:
         return None
 
-    data = changes.model_dump(by_alias=True, exclude_unset=True)
+    data = changes.model_dump(by_alias=False, exclude_unset=True)
+
+    if "source_url" in data or "source_label" in data:
+        current_url = orm_entry.reference.url if orm_entry.reference else None
+        current_label = orm_entry.reference.label if orm_entry.reference else None
+        source_url = (data.pop("source_url", current_url) or "").strip() or None
+        source_label = (data.pop("source_label", current_label) or "").strip() or None
+        if source_url or source_label:
+            if orm_entry.reference is None:
+                orm_entry.reference = JournalReferenceORM()
+            orm_entry.reference.url = source_url
+            orm_entry.reference.label = source_label
+        else:
+            orm_entry.reference = None
+
+    if "tickers" in data:
+        desired_tickers = set(_normalize_tickers(data.pop("tickers") or []))
+        existing_tickers = {row.symbol: row for row in orm_entry.ticker_rows}
+        for symbol, row in existing_tickers.items():
+            if symbol not in desired_tickers:
+                orm_entry.ticker_rows.remove(row)
+        for symbol in sorted(desired_tickers - existing_tickers.keys()):
+            orm_entry.ticker_rows.append(JournalTickerORM(symbol=symbol, entry=orm_entry))
 
     if "events" in data:
         # delete old events via relationship.clear()

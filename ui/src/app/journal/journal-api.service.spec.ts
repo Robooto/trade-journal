@@ -31,6 +31,14 @@ describe('JournalApiService', () => {
     req.flush(dummy);
   });
 
+  it('list should include normalized search filters', () => {
+    const dummy: PaginatedJournalEntries = { total: 0, items: [], skip: 15, limit: 15 };
+
+    service.list(15, 15, ' morning plan ', ' spy ').subscribe(res => expect(res).toEqual(dummy));
+    const req = http.expectOne(`${base}?skip=15&limit=15&q=morning%20plan&ticker=SPY`);
+    expect(req.request.method).toBe('GET');
+    req.flush(dummy);
+  });
   it('create should perform POST request', () => {
     const newEntry: Omit<JournalEntry, 'id'> = { date: '2025-01-01', esPrice: 0, delta: 0, marketDirection: 'up', notes: '', events: [] };
     const created: JournalEntry = { ...newEntry, id: '1' };

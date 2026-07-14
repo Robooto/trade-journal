@@ -28,6 +28,9 @@ class JournalEntryBase(BaseModel):
     notes: str
     market_direction: MarketDirection = Field(..., alias="marketDirection")
     events: List[Event] = Field(default_factory=list)
+    tickers: List[str] = Field(default_factory=list)
+    source_url: Optional[str] = Field(None, alias="sourceUrl", max_length=2048)
+    source_label: Optional[str] = Field(None, alias="sourceLabel", max_length=120)
 
     model_config = {
         "populate_by_name": True,
@@ -40,12 +43,15 @@ class JournalEntryCreate(JournalEntryBase):
 
 
 class JournalEntryUpdate(BaseModel):
-    date: Optional[date]
+    date: Optional[date] = None
     es_price: Optional[float] = Field(None, alias="esPrice")
     delta: Optional[float] = None
     notes: Optional[str] = None
     market_direction: Optional[MarketDirection] = Field(None, alias="marketDirection")
     events: Optional[List[Event]] = None
+    tickers: Optional[List[str]] = None
+    source_url: Optional[str] = Field(None, alias="sourceUrl", max_length=2048)
+    source_label: Optional[str] = Field(None, alias="sourceLabel", max_length=120)
 
     model_config = {
         "populate_by_name": True,

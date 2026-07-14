@@ -129,3 +129,83 @@ async def test_get_created_entry(client):
     assert fetched["marketDirection"] == sample_entry["marketDirection"]
     assert fetched["events"] == sample_entry["events"]
 
+
+@pytest.mark.asyncio
+async def test_entry_tickers_are_normalized_and_searchable(client):
+    entry = {
+        **sample_entry,
+        "date": "2024-02-01",
+        "notes": "Watching semiconductor momentum",
+        "tickers": ["nvda", " SPY ", "NVDA", ""],
+        "sourceUrl": "http://market-pipeline.local/flowpatrol/2024-02-01/NVDA",
+        "sourceLabel": "FlowPatrol NVDA idea",
+    }
+    create_resp = await client.post("/v1/entries", json=entry)
+    assert create_resp.status_code == 201
+    created = create_resp.json()
+    assert created["tickers"] == ["NVDA", "SPY"]
+    assert created["sourceUrl"].endswith("/NVDA")
+    assert created["sourceLabel"] == "FlowPatrol NVDA idea"
+
+    note_search = await client.get("/v1/entries?q=semiconductor")
+    assert note_search.status_code == 200
+    assert [item["id"] for item in note_search.json()["items"]] == [created["id"]]
+
+    symbol_search = await client.get("/v1/entries?q=nvda")
+    assert symbol_search.status_code == 200
+    assert created["id"] in [item["id"] for item in symbol_search.json()["items"]]
+
+    ticker_filter = await client.get("/v1/entries?ticker=spy")
+    assert ticker_filter.status_code == 200
+    assert created["id"] in [item["id"] for item in ticker_filter.json()["items"]]
+
+
+@pytest.mark.asyncio
+async def test_update_replaces_tickers(client):
+    create_resp = await client.post(
+        "/v1/entries",
+        json={**sample_entry, "date": "2024-02-02", "tickers": ["AAPL", "SPY"]},
+    )
+    created = create_resp.json()
+
+    update_resp = await client.put(
+        f"/v1/entries/{created['id']}",
+        json={"tickers": ["msft"]},
+    )
+
+    assert update_resp.status_code == 200
+    assert update_resp.json()["tickers"] == ["MSFT"]
+
+    repeated_update = await client.put(
+        f"/v1/entries/{created['id']}",
+        json={"tickers": ["MSFT", "msft"]},
+    )
+    assert repeated_update.status_code == 200
+    assert repeated_update.json()["tickers"] == ["MSFT"]
+
+    old_filter = await client.get("/v1/entries?ticker=AAPL")
+    assert created["id"] not in [item["id"] for item in old_filter.json()["items"]]
+@pytest.mark.asyncio
+async def test_partial_update_persists_aliased_fields_and_context_link(client):
+    create_resp = await client.post(
+        "/v1/entries",
+        json={**sample_entry, "date": "2024-02-03"},
+    )
+    created = create_resp.json()
+
+    update_resp = await client.put(
+        f"/v1/entries/{created['id']}",
+        json={
+            "esPrice": 5100.5,
+            "marketDirection": "down",
+            "sourceUrl": "/positions",
+            "sourceLabel": "Current positions",
+        },
+    )
+
+    assert update_resp.status_code == 200
+    updated = update_resp.json()
+    assert updated["esPrice"] == 5100.5
+    assert updated["marketDirection"] == "down"
+    assert updated["sourceUrl"] == "/positions"
+    assert updated["sourceLabel"] == "Current positions"

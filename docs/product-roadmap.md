@@ -10,8 +10,13 @@ Record free-form thoughts plus the structured thesis, entry plan, invalidation,
 management, exit, and post-trade review. Brokerage history records what
 happened; the journal records why.
 
-Current: journal CRUD API and UI, with the morning dashboard handing off from the
-research-link routine directly into a new journal entry.
+Current:
+
+- Journal CRUD API and streamlined daily-entry UI.
+- Automatic local draft recovery for new entries.
+- Optional normalized ticker tags plus note/ticker search.
+- Optional context links back to positions, FlowPatrol ideas, or other research.
+- Morning dashboard handoff directly into today's editor and recent entries.
 
 Next:
 

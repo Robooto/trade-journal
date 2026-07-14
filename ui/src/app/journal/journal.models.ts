@@ -12,6 +12,9 @@ export interface JournalEntry {
   notes: string;
   events: JournalEvent[];
   marketDirection: 'up' | 'down';
+  tickers?: string[];
+  sourceUrl?: string | null;
+  sourceLabel?: string | null;
 }
 
 export interface PaginatedJournalEntries {

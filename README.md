@@ -12,7 +12,10 @@ Tastytrade client.
 ## Current capabilities
 
 - A morning dashboard that preserves the daily research links and hands off directly to the journal.
-- Journal entry API and Angular journal views for recording trading thoughts.
+- Journal entry API and Angular journal views with automatic local drafts, optional
+  ticker tags, note/symbol search, context links to positions/research, and a fast
+  today-entry workflow.
+- Recent journal activity on the morning dashboard, immediately after research.
 - Tastytrade authentication, account discovery, balances, positions, quote
   snapshots, and volatility metrics.
 - Option positions grouped by account, underlying, and expiration with marks,

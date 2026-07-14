@@ -1,13 +1,9 @@
-
-import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
-import {
-  FormBuilder,
-  FormArray,
-  FormGroup,
-  Validators
-} from '@angular/forms';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Subscription, debounceTime, finalize } from 'rxjs';
 import { JournalEntry } from '../journal.models';
-import {JournalApiService} from '../journal-api.service';
+import { JournalApiService } from '../journal-api.service';
+import { JournalDraftService } from '../journal-draft.service';
 import { FuturesService } from '../../shared/futures.service';
 
 @Component({
@@ -16,7 +12,7 @@ import { FuturesService } from '../../shared/futures.service';
   styleUrls: ['./journal-entry-form.component.scss'],
   standalone: false,
 })
-export class JournalEntryFormComponent implements OnInit, OnChanges  {
+export class JournalEntryFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() entry?: JournalEntry;
   @Output() saved = new EventEmitter<JournalEntry>();
   @Output() cancelled = new EventEmitter<void>();
@@ -24,190 +20,246 @@ export class JournalEntryFormComponent implements OnInit, OnChanges  {
 
   form!: FormGroup;
   showTimelineSection = false;
+  draftRestored = false;
+  draftSavedAt?: Date;
+  isSaving = false;
+  saveError = '';
+  private draftSubscription?: Subscription;
 
   constructor(
     private fb: FormBuilder,
     private api: JournalApiService,
+    private drafts: JournalDraftService,
     private futures: FuturesService
   ) {}
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.buildForm();
+    if (this.entry) {
+      this.populateFormWithEntry();
+      return;
+    }
 
-    // Populate form with entry data if available
+    const restored = this.restoreDraft();
+    if (!restored || !this.form.get('esPrice')?.value) {
+      this.loadOpeningMarketContext();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['entry'] || !this.form) {
+      return;
+    }
     if (this.entry) {
       this.populateFormWithEntry();
     } else {
-      // Only load market data if this is a new entry (no existing entry)
-      const symbol = this.futures.getCurrentESContract();
-      this.api
-        .getMarketData([], [], [symbol], [])
-        .subscribe({
-          next: (data) => {
-            if (!data || !data.length) {
-              console.warn('No market data received');
-              return;
-            }
-            const item = data[0];
-            
-            // Validate market data fields exist
-            if (!item.hasOwnProperty('mark') || !item.hasOwnProperty('open')) {
-              console.warn('Market data missing required fields (mark/open)');
-              return;
-            }
-            
-            const mark = parseFloat(item['mark']);
-            const open = parseFloat(item['open']);
-            
-            if (!isNaN(mark)) {
-              this.form.patchValue({ esPrice: parseInt(String(mark), 10) });
-            }
-            
-            if (!isNaN(mark) && !isNaN(open)) {
-              let direction: 'up' | 'down';
-              if (mark > open) {
-                direction = 'up';
-              } else if (mark < open) {
-                direction = 'down';
-              } else {
-                // When mark === open, default to 'up' but this could be configurable
-                direction = 'up';
-              }
-              this.form.patchValue({ marketDirection: direction });
-            }
-          },
-          error: (error) => {
-            console.error('Failed to load market data:', error);
-            // Set a default direction when API fails
-            this.form.patchValue({ marketDirection: 'up' });
-          }
-        });
+      this.resetForm();
+      this.restoreDraft();
     }
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['entry'] && this.form) {
-      if (this.entry) {
-        this.populateFormWithEntry();
-      } else {
-        // reset to blank
-        this.resetForm();
-      }
+  ngOnDestroy(): void {
+    if (this.form && !this.form.get('id')?.value && this.form.dirty) {
+      this.persistDraft();
     }
+    this.draftSubscription?.unsubscribe();
   }
 
-  get events() {
+  get events(): FormArray {
     return this.form.get('events') as FormArray;
   }
 
-  private populateFormWithEntry() {
-    if (!this.entry || !this.form) return;
-    
-    // patch existing
-    this.form.patchValue({
-      id: this.entry.id,
-      date: this.entry.date,
-      esPrice: this.entry.esPrice,
-      delta: this.entry.delta ?? null,
-      marketDirection: this.entry.marketDirection,
-      notes: this.entry.notes
-    });
-    
-    // rebuild events array
-    const arr = this.form.get('events') as FormArray;
-    arr.clear();
-    if (this.entry.events && this.entry.events.length > 0) {
-      this.entry.events.forEach(ev =>
-        arr.push(this.fb.group({
-          time: [ev.time, Validators.required],
-          price: [ev.price, Validators.required],
-          note: [ev.note]
-        }))
-      );
-      // Show timeline section if entry has events
-      this.showTimelineSection = true;
-    } else {
-      this.showTimelineSection = false;
-    }
-  }
-
-  buildForm() {
+  buildForm(): void {
+    this.draftSubscription?.unsubscribe();
     this.form = this.fb.group({
       id: [null],
-      date: [
-        new Date().toISOString().substring(0, 10), Validators.required
-      ],
+      date: [new Date().toISOString().substring(0, 10), Validators.required],
       esPrice: [null, Validators.required],
       delta: [null],
       marketDirection: [null, Validators.required],
+      tickers: [''],
+      sourceLabel: [''],
+      sourceUrl: [''],
       notes: [''],
       events: this.fb.array([]),
     });
+    this.draftSubscription = this.form.valueChanges.pipe(debounceTime(600)).subscribe(() => {
+      if (!this.form.get('id')?.value && this.form.dirty) {
+        this.persistDraft();
+      }
+    });
   }
 
-  resetForm() {
+  private restoreDraft(): boolean {
+    const draft = this.drafts.load<Record<string, any>>();
+    if (!draft?.value) {
+      return false;
+    }
+    this.applyFormValue(draft.value);
+    this.draftRestored = true;
+    this.draftSavedAt = new Date(draft.savedAt);
+    return true;
+  }
+
+  private persistDraft(): void {
+    const draft = this.drafts.save(this.form.getRawValue());
+    this.draftSavedAt = new Date(draft.savedAt);
+  }
+
+  clearDraft(): void {
+    this.drafts.clear();
+    this.draftRestored = false;
+    this.draftSavedAt = undefined;
+    this.resetForm();
+    this.loadOpeningMarketContext();
+  }
+
+  private populateFormWithEntry(): void {
+    if (!this.entry || !this.form) {
+      return;
+    }
+    this.applyFormValue({
+      ...this.entry,
+      tickers: (this.entry.tickers ?? []).join(', '),
+    });
+    this.form.markAsPristine();
+    this.draftRestored = false;
+    this.draftSavedAt = undefined;
+  }
+
+  private applyFormValue(value: Record<string, any>): void {
+    this.form.patchValue({
+      id: value['id'] ?? null,
+      date: value['date'] ?? new Date().toISOString().substring(0, 10),
+      esPrice: value['esPrice'] ?? null,
+      delta: value['delta'] ?? null,
+      marketDirection: value['marketDirection'] ?? null,
+      tickers: Array.isArray(value['tickers']) ? value['tickers'].join(', ') : (value['tickers'] ?? ''),
+      sourceLabel: value['sourceLabel'] ?? '',
+      sourceUrl: value['sourceUrl'] ?? '',
+      notes: value['notes'] ?? '',
+    }, { emitEvent: false });
+
+    this.events.clear();
+    for (const event of value['events'] ?? []) {
+      this.events.push(this.fb.group({
+        time: [event.time, Validators.required],
+        price: [event.price, Validators.required],
+        note: [event.note ?? ''],
+      }));
+    }
+    this.showTimelineSection = this.events.length > 0;
+  }
+
+  private loadOpeningMarketContext(): void {
+    const symbol = this.futures.getCurrentESContract();
+    this.api.getMarketData([], [], [symbol], []).subscribe({
+      next: data => {
+        if (!data?.length) {
+          return;
+        }
+        const item = data[0];
+        const mark = Number.parseFloat(item['mark']);
+        const open = Number.parseFloat(item['open'] ?? item['close']);
+        if (Number.isFinite(mark)) {
+          this.form.patchValue({ esPrice: Math.trunc(mark) });
+        }
+        if (Number.isFinite(mark) && Number.isFinite(open)) {
+          this.form.patchValue({ marketDirection: mark >= open ? 'up' : 'down' });
+        }
+      },
+      error: () => {
+        if (!this.form.get('marketDirection')?.value) {
+          this.form.patchValue({ marketDirection: 'up' });
+        }
+      },
+    });
+  }
+
+  resetForm(): void {
     this.buildForm();
     this.showTimelineSection = false;
+    this.saveError = '';
   }
 
-  toggleTimelineSection() {
+  toggleTimelineSection(): void {
     this.showTimelineSection = !this.showTimelineSection;
     if (this.showTimelineSection && this.events.length === 0) {
       this.addEvent();
     }
   }
 
-  addEvent() {
+  addEvent(): void {
     const group = this.fb.group({
       time: [new Date().toLocaleTimeString(), Validators.required],
-      price: [null, Validators.required],
-      note: ['']
+      price: this.fb.control<number | null>(null, Validators.required),
+      note: [''],
     });
     this.events.push(group);
+    this.form.markAsDirty();
 
     const symbol = this.futures.getCurrentESContract();
-    this.api
-      .getMarketData([], [], [symbol], [])
-      .subscribe((data) => {
-        if (!data || !data.length) return;
-        const item = data[0];
-        const mark = parseFloat(item['mark']);
-        if (!isNaN(mark)) {
-          group.patchValue({ price: parseInt(String(mark), 10) as any });
-        }
-      });
+    this.api.getMarketData([], [], [symbol], []).subscribe(data => {
+      const mark = Number.parseFloat(data?.[0]?.['mark']);
+      if (Number.isFinite(mark)) {
+        group.patchValue({ price: Math.trunc(mark) });
+      }
+    });
   }
 
-  submit() {
-    if (this.form.invalid) return;
-
-    const formValue : JournalEntry = this.form.value;
-
-    if (formValue.id) {
-      this.api.update(formValue).subscribe(e => this.saved.emit(e));
-    } else {
-      this.api.create(formValue).subscribe(e => {
-        this.form.patchValue({ id: e.id });
-        this.saved.emit(e);
-      });
+  submit(): void {
+    if (this.form.invalid || this.isSaving) {
+      this.form.markAllAsTouched();
+      return;
     }
 
+    this.isSaving = true;
+    this.saveError = '';
+    const value = this.form.getRawValue();
+    const tickers = this.normalizeTickers(value.tickers);
+    const request = value.id
+      ? this.api.update({ ...value, id: value.id, tickers } as JournalEntry)
+      : this.api.create({
+          date: value.date,
+          esPrice: value.esPrice,
+          delta: value.delta,
+          marketDirection: value.marketDirection,
+          notes: value.notes,
+          events: value.events,
+          tickers,
+          sourceLabel: value.sourceLabel?.trim() || null,
+          sourceUrl: value.sourceUrl?.trim() || null,
+        });
+    request.pipe(finalize(() => (this.isSaving = false))).subscribe({
+      next: entry => {
+        this.drafts.clear();
+        this.form.patchValue({ id: entry.id }, { emitEvent: false });
+        this.saved.emit(entry);
+      },
+      error: error => {
+        this.saveError = error?.error?.detail || 'The journal entry could not be saved.';
+      },
+    });
   }
 
-  cancel() {
+  cancel(): void {
     this.resetForm();
     this.cancelled.emit();
   }
 
-  confirmDelete() {
+  confirmDelete(): void {
     const id = this.form.get('id')?.value;
-    if (!id) return;
-
-    if (confirm('Delete this entry?')) {
-      this.api.delete(id).subscribe(() => {
-        this.deleted.emit(id);
-        this.resetForm();
-      });
+    if (!id || !confirm('Delete this entry?')) {
+      return;
     }
+    this.api.delete(id).subscribe(() => {
+      this.deleted.emit(id);
+      this.resetForm();
+    });
+  }
+
+  private normalizeTickers(value: string | string[] | null | undefined): string[] {
+    const values = Array.isArray(value) ? value : (value ?? '').split(',');
+    return [...new Set(values.map(ticker => ticker.trim().toUpperCase()).filter(Boolean))];
   }
 }

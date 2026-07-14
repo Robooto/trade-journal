@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime, func
+from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime, UniqueConstraint, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -21,6 +21,33 @@ class JournalEntryORM(Base):
         nullable=False
     )
 
+    reference = relationship(
+        "JournalReferenceORM",
+        back_populates="entry",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+        uselist=False
+    )
+
+    @property
+    def source_url(self):
+        return self.reference.url if self.reference else None
+
+    @property
+    def source_label(self):
+        return self.reference.label if self.reference else None
+
+    ticker_rows = relationship(
+        "JournalTickerORM",
+        back_populates="entry",
+        cascade="all, delete-orphan",
+        lazy="selectin"
+    )
+
+    @property
+    def tickers(self):
+        return [row.symbol for row in self.ticker_rows]
+
     events = relationship(
         "EventORM",
         back_populates="entry",
@@ -28,6 +55,24 @@ class JournalEntryORM(Base):
         lazy="selectin"
     )
 
+
+class JournalReferenceORM(Base):
+    __tablename__ = "journal_entry_references"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entry_id = Column(String(36), ForeignKey("journal_entries.id"), nullable=False, unique=True, index=True)
+    label = Column(String(120), nullable=True)
+    url = Column(String(2048), nullable=True)
+    entry = relationship("JournalEntryORM", back_populates="reference")
+
+class JournalTickerORM(Base):
+    __tablename__ = "journal_entry_tickers"
+    __table_args__ = (UniqueConstraint("entry_id", "symbol", name="uq_journal_entry_ticker"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entry_id = Column(String(36), ForeignKey("journal_entries.id"), nullable=False, index=True)
+    symbol = Column(String(16), nullable=False, index=True)
+    entry = relationship("JournalEntryORM", back_populates="ticker_rows")
 
 class EventORM(Base):
     __tablename__ = "events"

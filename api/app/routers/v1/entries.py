@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, Query, status
 from uuid import UUID
 from sqlalchemy.orm import Session
 
@@ -19,9 +19,16 @@ router = APIRouter(
 )
 
 @router.get("", response_model=PaginatedEntries)
-async def list_entries(*, skip: int = 0, limit: int = 20, db: Session = Depends(get_db)):
-    total = crud.count_entries(db)
-    items = crud.get_entries(db, skip=skip, limit=limit)
+async def list_entries(
+    *,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    q: str | None = Query(None, max_length=200),
+    ticker: str | None = Query(None, max_length=16),
+    db: Session = Depends(get_db),
+):
+    total = crud.count_entries(db, q=q, ticker=ticker)
+    items = crud.get_entries(db, skip=skip, limit=limit, q=q, ticker=ticker)
     return PaginatedEntries(total=total, items=items, skip=skip, limit=limit)
 
 

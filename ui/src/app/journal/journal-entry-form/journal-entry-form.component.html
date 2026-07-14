@@ -1,4 +1,9 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="minimalist-form">
+  <div *ngIf="draftRestored || draftSavedAt" class="draft-status" role="status">
+    <mat-icon>{{ draftRestored ? 'restore' : 'cloud_done' }}</mat-icon>
+    <span>{{ draftRestored ? 'Draft restored' : 'Draft saved' }}<ng-container *ngIf="draftSavedAt"> at {{ draftSavedAt | date:'shortTime' }}</ng-container></span>
+    <button mat-button type="button" (click)="clearDraft()">Discard draft</button>
+  </div>
   <!-- Single line with all main fields -->
   <div class="form-header">
     <div class="header-fields">
@@ -40,6 +45,31 @@
           <input matInput type="number" formControlName="delta" placeholder="+20" />
         </mat-form-field>
       </div>
+      <div class="field-group ticker-group">
+        <mat-icon>sell</mat-icon>
+        <mat-form-field appearance="outline" class="ticker-field">
+          <mat-label>Tickers (optional)</mat-label>
+          <input matInput formControlName="tickers" placeholder="AAPL, SPY" autocomplete="off" />
+          <mat-hint>Comma separated</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+
+  <div class="context-link-section">
+    <div class="context-link-heading">
+      <mat-icon>link</mat-icon>
+      <span>Related position or research (optional)</span>
+    </div>
+    <div class="context-link-fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Link label</mat-label>
+        <input matInput formControlName="sourceLabel" placeholder="FlowPatrol NVDA idea" maxlength="120" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="context-url-field">
+        <mat-label>URL or app path</mat-label>
+        <input matInput formControlName="sourceUrl" placeholder="https://… or /positions" maxlength="2048" />
+      </mat-form-field>
     </div>
   </div>
 
@@ -109,15 +139,20 @@
     </div>
   </div>
 
+  <div *ngIf="saveError" class="save-error" role="alert">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ saveError }}</span>
+  </div>
+
   <!-- Action Buttons -->
   <div class="form-actions">
     <div class="left-actions">
       <button mat-button type="button" (click)="cancel()" *ngIf="form.get('id')?.value">
         Clear
       </button>
-      <button mat-raised-button color="primary" type="submit" class="save-btn">
+      <button mat-raised-button color="primary" type="submit" class="save-btn" [disabled]="isSaving">
         <mat-icon>save</mat-icon>
-        {{ form.get('id')?.value ? 'Update' : 'Save' }} Entry
+        {{ isSaving ? 'Saving...' : (form.get('id')?.value ? 'Update Entry' : 'Save Entry') }}
       </button>
     </div>
     

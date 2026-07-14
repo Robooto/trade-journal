@@ -17,11 +17,14 @@
           </span>
         </div>
       </div>
+      <div class="ticker-chips" *ngIf="entry.tickers?.length">
+        <span *ngFor="let ticker of entry.tickers">{{ ticker }}</span>
+      </div>
       <div class="entry-actions">
-        <button mat-icon-button (click)="onEditEntry(entry)" matTooltip="Edit entry">
+        <button mat-icon-button (click)="onEditEntry(entry)" matTooltip="Edit entry" [attr.aria-label]="'Edit journal entry for ' + entry.date">
           <mat-icon>edit</mat-icon>
         </button>
-        <button mat-icon-button (click)="copyEntry(entry)" matTooltip="Copy to clipboard">
+        <button mat-icon-button (click)="copyEntry(entry)" matTooltip="Copy to clipboard" [attr.aria-label]="'Copy journal entry for ' + entry.date">
           <mat-icon>content_copy</mat-icon>
         </button>
       </div>
@@ -32,6 +35,11 @@
       <div class="entry-notes">
         <div class="notes-text" [innerHTML]="entry.notes | nl2br"></div>
       </div>
+
+      <a *ngIf="entry.sourceUrl" class="context-link" [href]="entry.sourceUrl" target="_blank" rel="noopener">
+        <mat-icon>open_in_new</mat-icon>
+        {{ entry.sourceLabel || 'Open related context' }}
+      </a>
 
       <!-- Intraday Events Timeline -->
       <div class="events-timeline" *ngIf="entry.events && entry.events.length > 0">

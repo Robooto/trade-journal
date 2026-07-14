@@ -64,7 +64,17 @@
           </div>
         </div>
         <p>Capture what you see, your directional lean, important levels and what would change your mind.</p>
-        <a mat-flat-button color="primary" routerLink="/journal">Start today’s entry</a>
+        <a mat-flat-button color="primary" routerLink="/journal" [queryParams]="{ new: 1 }">Start today's entry</a>
+        <div class="recent-journal" *ngIf="recentEntries.length">
+          <span class="recent-label">Recent entries</span>
+          <a *ngFor="let entry of recentEntries" routerLink="/journal" class="recent-entry">
+            <span>
+              <strong>{{ entry.date | date:'mediumDate' }}</strong>
+              <small *ngIf="entry.tickers?.length">{{ entry.tickers?.join(', ') }}</small>
+            </span>
+            <mat-icon>chevron_right</mat-icon>
+          </a>
+        </div>
       </article>
 
       <article class="workflow-card positions-step">

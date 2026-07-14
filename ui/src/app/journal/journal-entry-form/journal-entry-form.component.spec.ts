@@ -8,6 +8,7 @@ import { JournalEntryFormComponent } from './journal-entry-form.component';
 import { JournalApiService } from '../journal-api.service';
 import { FuturesService } from '../../shared/futures.service';
 import { JournalEntry } from '../journal.models';
+import { JournalDraftService } from '../journal-draft.service';
 
 describe('JournalEntryFormComponent', () => {
   let component: JournalEntryFormComponent;
@@ -15,10 +16,14 @@ describe('JournalEntryFormComponent', () => {
 
   let apiSpy: jasmine.SpyObj<JournalApiService>;
   let futuresSpy: jasmine.SpyObj<FuturesService>;
+  let draftSpy: jasmine.SpyObj<JournalDraftService>;
 
   beforeEach(async () => {
     apiSpy = jasmine.createSpyObj('JournalApiService', ['create', 'update', 'delete', 'getMarketData']);
     apiSpy.getMarketData.and.returnValue(of([{ mark: '6000', close: '5990' }]));
+    draftSpy = jasmine.createSpyObj('JournalDraftService', ['load', 'save', 'clear']);
+    draftSpy.load.and.returnValue(null);
+    draftSpy.save.and.callFake(value => ({ savedAt: '2026-07-14T12:00:00Z', value }));
     futuresSpy = jasmine.createSpyObj('FuturesService', ['getCurrentESContract']);
     futuresSpy.getCurrentESContract.and.returnValue('/ESU5');
 
@@ -27,6 +32,7 @@ describe('JournalEntryFormComponent', () => {
       imports: [ReactiveFormsModule, SharedMaterialModule],
       providers: [
         { provide: JournalApiService, useValue: apiSpy },
+        { provide: JournalDraftService, useValue: draftSpy },
         { provide: FuturesService, useValue: futuresSpy }
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
@@ -59,6 +65,9 @@ describe('JournalEntryFormComponent', () => {
       'esPrice',
       'delta',
       'marketDirection',
+      'tickers',
+      'sourceLabel',
+      'sourceUrl',
       'notes',
       'events'
     ]);
@@ -81,6 +90,9 @@ describe('JournalEntryFormComponent', () => {
       delta: 50,
       marketDirection: 'down',
       notes: 'test note',
+      tickers: ['SPY'],
+      sourceLabel: 'FlowPatrol SPY',
+      sourceUrl: '/flowpatrol/SPY',
       events: [
         { time: '10:00', price: 4200, note: 'open' },
         { time: '11:00', price: 4210, note: 'move' }
@@ -94,6 +106,8 @@ describe('JournalEntryFormComponent', () => {
 
     expect(component.form.get('id')?.value).toBe(entry.id);
     expect(component.form.get('date')?.value).toBe(entry.date);
+    expect(component.form.get('tickers')?.value).toBe('SPY');
+    expect(component.form.get('sourceUrl')?.value).toBe('/flowpatrol/SPY');
     expect(component.events.length).toBe(entry.events.length);
     expect(component.events.at(0).value).toEqual(entry.events[0]);
   });

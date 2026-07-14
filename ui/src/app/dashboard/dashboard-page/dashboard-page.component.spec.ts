@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { of } from 'rxjs';
 import { DashboardPageComponent } from './dashboard-page.component';
 import { dailyOverviewAnalysis, spotGammaToolLinks, dailyGuidelines, tradeGuidelines } from '../dashboard-data';
+import { JournalApiService } from '../../journal/journal-api.service';
 
 describe('DashboardPageComponent', () => {
   let component: DashboardPageComponent;
@@ -10,6 +12,10 @@ describe('DashboardPageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [DashboardPageComponent],
+      providers: [{
+        provide: JournalApiService,
+        useValue: { list: () => of({ total: 0, items: [], skip: 0, limit: 3 }) }
+      }],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     }).compileComponents();
 
