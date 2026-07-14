@@ -6,6 +6,7 @@ from app.schemas.trades import (
     VolatilityDataSummaryResponse,
 )
 from app.services.trades_service import (
+    apply_balance,
     augment_positions_with_market_data,
     build_llm_positions_summary,
     build_market_data_summary,
@@ -384,3 +385,89 @@ def test_group_totals_compute_real_pl_credit_capture_and_normalized_greeks():
     assert group["theta_dollars_per_day"] == 10.0
     assert group["vega_dollars_per_vol_point"] == 23.0
     assert account["total_beta_delta_shares"] == 129.89
+
+
+def test_apply_balance_adds_risk_context_and_concentration(monkeypatch):
+    monkeypatch.setattr(
+        "app.services.trades_service.tastytrade.fetch_account_balance",
+        lambda token, account: {
+            "net-liquidating-value": "10000",
+            "margin-equity": "9800",
+            "used-derivative-buying-power": "3200",
+            "derivative-buying-power": "6800",
+            "equity-buying-power": "13600",
+        },
+    )
+    accounts = [{
+        "account_number": "123",
+        "theta_dollars_per_day": 25,
+        "vega_dollars_per_vol_point": -150,
+        "groups": [
+            {"underlying_symbol": "SPY", "delta_shares": 30, "beta_delta_shares": 30},
+            {"underlying_symbol": "QQQ", "delta_shares": -10, "beta_delta_shares": -10},
+        ],
+    }]
+
+    apply_balance("FAKE", accounts)
+
+    account = accounts[0]
+    assert account["net_liquidating_value_dollars"] == 10000
+    assert account["buying_power_utilization_percent"] == 32.0
+    assert account["percent_used_bp"] == 32
+    assert account["buying_power_zone"] == "elevated"
+    assert account["theta_percent_of_net_liq_per_day"] == 0.25
+    assert account["vega_plus_one_point_percent_of_net_liq"] == -1.5
+    assert account["balance_status"] == "ok"
+    assert account["balance_warnings"] == []
+    assert account["largest_underlying_concentration"]["underlying_symbol"] == "SPY"
+    assert account["largest_underlying_concentration"]["absolute_beta_delta_share_percent"] == 75.0
+    assert account["largest_underlying_concentration"]["exposure_basis"] == "beta_delta_shares"
+
+
+def test_apply_balance_marks_failed_fetch_unavailable(monkeypatch):
+    def fail_balance(token, account):
+        raise RuntimeError("offline")
+
+    monkeypatch.setattr(
+        "app.services.trades_service.tastytrade.fetch_account_balance",
+        fail_balance,
+    )
+    accounts = [{"account_number": "123", "groups": []}]
+
+    apply_balance("FAKE", accounts)
+
+    assert accounts[0]["balance_status"] == "unavailable"
+    assert accounts[0]["buying_power_zone"] == "unavailable"
+    assert accounts[0]["percent_used_bp"] is None
+    assert accounts[0]["balance_warnings"] == ["Brokerage balance could not be fetched."]
+
+
+def test_positions_summary_carries_portfolio_balance_context():
+    account = {
+        "account_number": "123",
+        "nickname": "Main",
+        "groups": [],
+        "net_liquidating_value_dollars": 10000,
+        "used_derivative_buying_power_dollars": 2500,
+        "derivative_buying_power_dollars": 7500,
+        "buying_power_utilization_percent": 25.0,
+        "buying_power_zone": "elevated",
+        "theta_dollars_per_day": 20,
+        "theta_percent_of_net_liq_per_day": 0.2,
+        "vega_dollars_per_vol_point": -100,
+        "vega_plus_one_point_dollars": -100,
+        "vega_plus_one_point_percent_of_net_liq": -1.0,
+        "balance_status": "ok",
+        "balance_warnings": [],
+        "underlying_concentrations": [],
+    }
+
+    parsed = LlmPositionsSummaryResponse.model_validate(build_llm_positions_summary([account]))
+
+    assert parsed.portfolio.balance_account_count == 1
+    assert parsed.portfolio.net_liquidating_value_dollars == 10000
+    assert parsed.portfolio.buying_power_utilization_percent == 25.0
+    assert parsed.portfolio.theta_percent_of_net_liq_per_day == 0.2
+    assert parsed.portfolio.vega_plus_one_point_percent_of_net_liq == -1.0
+    assert parsed.accounts[0].buying_power_zone == "elevated"
+    assert parsed.units["absolute_beta_delta_share_percent"].startswith("share of total absolute")

@@ -65,6 +65,15 @@ class GroupedPositions(BaseModel):
     }
 
 
+class UnderlyingConcentration(BaseModel):
+    underlying_symbol: str
+    delta_shares: float
+    beta_delta_shares: float
+    absolute_beta_delta_share_percent: Optional[float] = None
+    group_count: int
+    exposure_basis: str
+
+
 class AccountPositions(BaseModel):
     account_number: str
     nickname: str
@@ -82,6 +91,21 @@ class AccountPositions(BaseModel):
     total_gamma: Optional[int] = None
     total_rho: Optional[int] = None
     percent_used_bp: Optional[int] = None
+    net_liquidating_value_dollars: Optional[float] = None
+    margin_equity_dollars: Optional[float] = None
+    used_derivative_buying_power_dollars: Optional[float] = None
+    derivative_buying_power_dollars: Optional[float] = None
+    equity_buying_power_dollars: Optional[float] = None
+    buying_power_utilization_percent: Optional[float] = None
+    buying_power_zone: str = "unavailable"
+    theta_percent_of_net_liq_per_day: Optional[float] = None
+    vega_plus_one_point_dollars: Optional[float] = None
+    vega_plus_one_point_percent_of_net_liq: Optional[float] = None
+    underlying_concentrations: List[UnderlyingConcentration] = Field(default_factory=list)
+    largest_underlying_concentration: Optional[UnderlyingConcentration] = None
+    balance_status: str = "unavailable"
+    balance_warnings: List[str] = Field(default_factory=list)
+    balance_fetched_at: Optional[str] = None
 
     model_config = {
         "populate_by_name": True,
@@ -256,6 +280,21 @@ class LlmAccountPositionsSummary(BaseModel):
     account_number: str
     nickname: str
     percent_used_bp: Optional[int] = None
+    net_liquidating_value_dollars: Optional[float] = None
+    margin_equity_dollars: Optional[float] = None
+    used_derivative_buying_power_dollars: Optional[float] = None
+    derivative_buying_power_dollars: Optional[float] = None
+    equity_buying_power_dollars: Optional[float] = None
+    buying_power_utilization_percent: Optional[float] = None
+    buying_power_zone: str = "unavailable"
+    theta_percent_of_net_liq_per_day: Optional[float] = None
+    vega_plus_one_point_dollars: Optional[float] = None
+    vega_plus_one_point_percent_of_net_liq: Optional[float] = None
+    underlying_concentrations: List[UnderlyingConcentration] = Field(default_factory=list)
+    largest_underlying_concentration: Optional[UnderlyingConcentration] = None
+    balance_status: str = "unavailable"
+    balance_warnings: List[str] = Field(default_factory=list)
+    balance_fetched_at: Optional[str] = None
     total_beta_delta: Optional[float] = None
     total_beta_delta_raw: Optional[float] = None
     total_beta_delta_shares: Optional[float] = None
@@ -279,6 +318,14 @@ class LlmPortfolioSummary(BaseModel):
     strategy_group_count: Optional[int] = None
     position_count: int
     percent_used_bp: Optional[int] = None
+    net_liquidating_value_dollars: Optional[float] = None
+    used_derivative_buying_power_dollars: Optional[float] = None
+    derivative_buying_power_dollars: Optional[float] = None
+    buying_power_utilization_percent: Optional[float] = None
+    theta_percent_of_net_liq_per_day: Optional[float] = None
+    vega_plus_one_point_dollars: Optional[float] = None
+    vega_plus_one_point_percent_of_net_liq: Optional[float] = None
+    balance_account_count: int = 0
     total_beta_delta: Optional[float] = None
     total_beta_delta_raw: Optional[float] = None
     total_beta_delta_shares: Optional[float] = None

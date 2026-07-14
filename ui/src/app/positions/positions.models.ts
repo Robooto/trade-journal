@@ -27,6 +27,15 @@ export interface PositionGroup {
   positions: Position[];
 }
 
+export interface UnderlyingConcentration {
+  underlying_symbol: string;
+  delta_shares: number;
+  beta_delta_shares: number;
+  absolute_beta_delta_share_percent?: number | null;
+  group_count: number;
+  exposure_basis: 'beta_delta_shares' | 'delta_shares_fallback' | 'mixed';
+}
+
 export interface AccountPositions {
   account_number: string;
   nickname?: string;
@@ -43,6 +52,21 @@ export interface AccountPositions {
   total_gamma?: number | null;
   total_rho?: number | null;
   percent_used_bp?: number | null;
+  net_liquidating_value_dollars?: number | null;
+  margin_equity_dollars?: number | null;
+  used_derivative_buying_power_dollars?: number | null;
+  derivative_buying_power_dollars?: number | null;
+  equity_buying_power_dollars?: number | null;
+  buying_power_utilization_percent?: number | null;
+  buying_power_zone?: 'comfortable' | 'elevated' | 'high' | 'unavailable';
+  theta_percent_of_net_liq_per_day?: number | null;
+  vega_plus_one_point_dollars?: number | null;
+  vega_plus_one_point_percent_of_net_liq?: number | null;
+  underlying_concentrations?: UnderlyingConcentration[];
+  largest_underlying_concentration?: UnderlyingConcentration | null;
+  balance_status?: 'ok' | 'partial' | 'unavailable';
+  balance_warnings?: string[];
+  balance_fetched_at?: string | null;
 }
 
 export interface PositionsResponse {

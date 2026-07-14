@@ -91,6 +91,36 @@ export class PositionsPageComponent implements OnInit {
     return (group.rules ?? []).map(rule => `${rule.detail} ${rule.action}`).join('\n');
   }
 
+  buyingPowerZoneLabel(account: AccountPositions): string {
+    const labels = {
+      comfortable: 'Comfortable',
+      elevated: 'Elevated',
+      high: 'High',
+      unavailable: 'Unavailable',
+    };
+    return labels[account.buying_power_zone ?? 'unavailable'];
+  }
+
+  buyingPowerTooltip(account: AccountPositions): string {
+    const utilization = account.buying_power_utilization_percent;
+    const value = utilization == null ? 'unavailable' : `${utilization.toFixed(1)}%`;
+    return `Used derivative buying power ÷ net liquidating value: ${value}. App review zones: comfortable below 25%, elevated 25–39.9%, high 40%+. These are review cues, not brokerage rules.`;
+  }
+
+  concentrationTooltip(account: AccountPositions): string {
+    const item = account.largest_underlying_concentration;
+    if (!item) {
+      return 'No beta-delta concentration is available.';
+    }
+    const basis = item.exposure_basis === 'delta_shares_fallback' ? 'delta shares (beta unavailable)' : item.exposure_basis === 'mixed' ? 'mixed beta-delta and delta fallback' : 'beta-delta shares';
+    return `${item.underlying_symbol} represents ${item.absolute_beta_delta_share_percent?.toFixed(1) ?? '—'}% of total absolute Greek exposure using ${basis}. This is not capital or notional concentration.`;
+  }
+
+  balanceTooltip(account: AccountPositions): string {
+    const warnings = account.balance_warnings ?? [];
+    return warnings.length ? warnings.join('\n') : 'Brokerage balance fields were available when positions were refreshed.';
+  }
+
   onUnderlyingClick(group: PositionGroup, event: Event, account: AccountPositions): void {
     event.stopPropagation();
     if (!this.isValidChartSymbol(group.underlying_symbol)) {

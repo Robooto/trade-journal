@@ -2,7 +2,7 @@ import logging
 import re
 from collections import defaultdict
 from typing import Any, Dict, List, Tuple, Set, Optional
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -664,25 +664,130 @@ def apply_volatility(token: str, accounts_data: List[dict]) -> None:
             g["iv_5d_change"] = vol_change_map.get(root)
 
 
+def _buying_power_zone(utilization_percent: Optional[float]) -> str:
+    """Return the app's review zone; these thresholds are not brokerage rules."""
+    if utilization_percent is None:
+        return "unavailable"
+    if utilization_percent < 25:
+        return "comfortable"
+    if utilization_percent < 40:
+        return "elevated"
+    return "high"
+
+
+def _underlying_concentrations(groups: List[dict]) -> List[dict]:
+    """Rank underlying Greek exposure by its share of absolute beta-delta."""
+    by_underlying: dict[str, dict[str, float | int | str]] = {}
+    for group in groups:
+        symbol = group.get("underlying_symbol") or "Unknown"
+        item = by_underlying.setdefault(symbol, {
+            "underlying_symbol": symbol,
+            "delta_shares": 0.0,
+            "beta_delta_shares": 0.0,
+            "group_count": 0,
+            "beta_delta_group_count": 0,
+            "delta_fallback_group_count": 0,
+        })
+        item["delta_shares"] = float(item["delta_shares"]) + (
+            group.get("delta_shares") or 0
+        )
+        beta_delta = group.get("beta_delta_shares")
+        item["beta_delta_shares"] = float(item["beta_delta_shares"]) + (
+            beta_delta if beta_delta is not None else group.get("delta_shares") or 0
+        )
+        basis_key = (
+            "beta_delta_group_count"
+            if beta_delta is not None
+            else "delta_fallback_group_count"
+        )
+        item[basis_key] = int(item[basis_key]) + 1
+        item["group_count"] = int(item["group_count"]) + 1
+
+    total_absolute_exposure = sum(
+        abs(float(item["beta_delta_shares"])) for item in by_underlying.values()
+    )
+    results = []
+    for item in by_underlying.values():
+        beta_count = int(item["beta_delta_group_count"])
+        fallback_count = int(item["delta_fallback_group_count"])
+        exposure_basis = (
+            "mixed" if beta_count and fallback_count
+            else "beta_delta_shares" if beta_count
+            else "delta_shares_fallback"
+        )
+        results.append({
+            "underlying_symbol": item["underlying_symbol"],
+            "delta_shares": round(float(item["delta_shares"]), 2),
+            "beta_delta_shares": round(float(item["beta_delta_shares"]), 2),
+            "absolute_beta_delta_share_percent": (
+                round(
+                    abs(float(item["beta_delta_shares"]))
+                    / total_absolute_exposure
+                    * 100,
+                    1,
+                )
+                if total_absolute_exposure
+                else None
+            ),
+            "group_count": item["group_count"],
+            "exposure_basis": exposure_basis,
+        })
+    return sorted(results, key=lambda item: abs(item["beta_delta_shares"]), reverse=True)
+
+
 def apply_balance(token: str, accounts_data: List[dict]) -> None:
-    """Attach margin balance usage to each account."""
+    """Attach normalized balance, utilization, and Greek risk context to each account."""
 
     for acct in accounts_data:
         acct_num = acct["account_number"]
+        fetched_at = datetime.now(timezone.utc).isoformat()
+        warnings: list[str] = []
+        values = {
+            "net_liquidating_value_dollars": None,
+            "margin_equity_dollars": None,
+            "used_derivative_buying_power_dollars": None,
+            "derivative_buying_power_dollars": None,
+            "equity_buying_power_dollars": None,
+        }
 
-        percent_used_bp = None
         try:
             bal = _as_tasty_dict(tastytrade.fetch_account_balance(token, acct_num))
-            used = bal.get("used-derivative-buying-power")
-            deriv = bal.get("margin-equity")
-            if used is not None and deriv is not None:
-                denom = float(deriv)
-                if denom:
-                    percent_used_bp = int(float(used) / denom * 100)
+            values["margin_equity_dollars"] = _optional_float(bal.get("margin-equity"))
+            values["net_liquidating_value_dollars"] = _optional_float(bal.get("net-liquidating-value")) or values["margin_equity_dollars"]
+            values["used_derivative_buying_power_dollars"] = _optional_float(bal.get("used-derivative-buying-power"))
+            values["derivative_buying_power_dollars"] = _optional_float(bal.get("derivative-buying-power"))
+            values["equity_buying_power_dollars"] = _optional_float(bal.get("equity-buying-power"))
+            if bal.get("net-liquidating-value") is None and values["margin_equity_dollars"] is not None:
+                warnings.append("Net liquidating value unavailable; margin equity used as fallback.")
+            missing = [label for key, label in (("net_liquidating_value_dollars", "net liquidating value"), ("used_derivative_buying_power_dollars", "used derivative buying power"), ("derivative_buying_power_dollars", "derivative buying power")) if values[key] is None]
+            if missing:
+                warnings.append("Missing " + ", ".join(missing) + ".")
+            status = "partial" if missing or warnings else "ok"
         except Exception as e:
             logging.error(f"Failed to fetch balance for account {acct_num}: {e}")
+            warnings.append("Brokerage balance could not be fetched.")
+            status = "unavailable"
 
-        acct["percent_used_bp"] = percent_used_bp
+        net_liq = values["net_liquidating_value_dollars"]
+        used = values["used_derivative_buying_power_dollars"]
+        utilization = round(used / net_liq * 100, 1) if used is not None and net_liq else None
+        theta = acct.get("theta_dollars_per_day")
+        vega = acct.get("vega_dollars_per_vol_point")
+        concentrations = _underlying_concentrations(acct.get("groups", []))
+        acct.update({
+            **values,
+            "percent_used_bp": int(utilization) if utilization is not None else None,
+            "buying_power_utilization_percent": utilization,
+            "buying_power_zone": _buying_power_zone(utilization),
+            "theta_percent_of_net_liq_per_day": round(theta / net_liq * 100, 4) if theta is not None and net_liq else None,
+            "vega_plus_one_point_dollars": vega,
+            "vega_plus_one_point_percent_of_net_liq": round(vega / net_liq * 100, 4) if vega is not None and net_liq else None,
+            "underlying_concentrations": concentrations,
+            "largest_underlying_concentration": concentrations[0] if concentrations else None,
+            "balance_status": status,
+            "balance_warnings": warnings,
+            "balance_fetched_at": fetched_at,
+        })
 
 
 def build_market_data_summary(items: List[Any], requested_symbols: List[str]) -> dict:
@@ -764,6 +869,14 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
         "strategy_group_count": 0,
         "position_count": 0,
         "percent_used_bp": None,
+        "net_liquidating_value_dollars": 0.0,
+        "used_derivative_buying_power_dollars": 0.0,
+        "derivative_buying_power_dollars": 0.0,
+        "buying_power_utilization_percent": None,
+        "theta_percent_of_net_liq_per_day": None,
+        "vega_plus_one_point_dollars": 0.0,
+        "vega_plus_one_point_percent_of_net_liq": None,
+        "balance_account_count": 0,
         "total_beta_delta": 0.0,
         "total_beta_delta_raw": 0.0,
         "total_beta_delta_shares": 0.0,
@@ -787,6 +900,15 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
         portfolio["account_count"] += 1
         if account.get("percent_used_bp") is not None:
             percent_used_values.append(account["percent_used_bp"])
+        net_liq = account.get("net_liquidating_value_dollars")
+        used_buying_power = account.get("used_derivative_buying_power_dollars")
+        if net_liq is not None and used_buying_power is not None:
+            portfolio["balance_account_count"] += 1
+            portfolio["net_liquidating_value_dollars"] += net_liq
+            portfolio["used_derivative_buying_power_dollars"] += used_buying_power
+            portfolio["derivative_buying_power_dollars"] += (
+                account.get("derivative_buying_power_dollars") or 0
+            )
         portfolio["total_beta_delta"] += account.get("total_beta_delta") or 0
         portfolio["total_beta_delta_raw"] += account.get("total_beta_delta_raw") or account.get("total_beta_delta") or 0
         portfolio["total_beta_delta_shares"] += account.get("total_beta_delta_shares") or 0
@@ -1025,6 +1147,21 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
             "account_number": account.get("account_number", ""),
             "nickname": account.get("nickname", ""),
             "percent_used_bp": account.get("percent_used_bp"),
+            "net_liquidating_value_dollars": account.get("net_liquidating_value_dollars"),
+            "margin_equity_dollars": account.get("margin_equity_dollars"),
+            "used_derivative_buying_power_dollars": account.get("used_derivative_buying_power_dollars"),
+            "derivative_buying_power_dollars": account.get("derivative_buying_power_dollars"),
+            "equity_buying_power_dollars": account.get("equity_buying_power_dollars"),
+            "buying_power_utilization_percent": account.get("buying_power_utilization_percent"),
+            "buying_power_zone": account.get("buying_power_zone", "unavailable"),
+            "theta_percent_of_net_liq_per_day": account.get("theta_percent_of_net_liq_per_day"),
+            "vega_plus_one_point_dollars": account.get("vega_plus_one_point_dollars"),
+            "vega_plus_one_point_percent_of_net_liq": account.get("vega_plus_one_point_percent_of_net_liq"),
+            "underlying_concentrations": account.get("underlying_concentrations", []),
+            "largest_underlying_concentration": account.get("largest_underlying_concentration"),
+            "balance_status": account.get("balance_status", "unavailable"),
+            "balance_warnings": account.get("balance_warnings", []),
+            "balance_fetched_at": account.get("balance_fetched_at"),
             "total_beta_delta": account.get("total_beta_delta"),
             "total_beta_delta_raw": account.get("total_beta_delta_raw"),
             "total_beta_delta_shares": account.get("total_beta_delta_shares"),
@@ -1044,6 +1181,22 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
 
     if percent_used_values:
         portfolio["percent_used_bp"] = max(percent_used_values)
+    net_liq = portfolio["net_liquidating_value_dollars"]
+    if portfolio["balance_account_count"] and net_liq:
+        portfolio["buying_power_utilization_percent"] = round(
+            portfolio["used_derivative_buying_power_dollars"] / net_liq * 100, 1
+        )
+        portfolio["theta_percent_of_net_liq_per_day"] = round(
+            portfolio["theta_dollars_per_day"] / net_liq * 100, 4
+        )
+        portfolio["vega_plus_one_point_percent_of_net_liq"] = round(
+            portfolio["vega_dollars_per_vol_point"] / net_liq * 100, 4
+        )
+    else:
+        portfolio["net_liquidating_value_dollars"] = None
+        portfolio["used_derivative_buying_power_dollars"] = None
+        portfolio["derivative_buying_power_dollars"] = None
+    portfolio["vega_plus_one_point_dollars"] = portfolio["vega_dollars_per_vol_point"]
     portfolio["total_beta_delta"] = round(portfolio["total_beta_delta"], 2)
     portfolio["total_beta_delta_raw"] = round(portfolio["total_beta_delta_raw"], 2)
     portfolio["total_beta_delta_shares"] = round(portfolio["total_beta_delta_shares"], 2)
@@ -1066,7 +1219,18 @@ def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
         "buying_power_effect_dollars": "dollars or null when unknown",
         "current_pl": "dollars",
         "approximate_pl": "dollars",
-        "percent_used_bp": "percent",
+        "percent_used_bp": "legacy whole percent; use buying_power_utilization_percent",
+        "net_liquidating_value_dollars": "dollars; broker net liquidating value, with margin equity fallback noted in balance_warnings",
+        "margin_equity_dollars": "dollars",
+        "used_derivative_buying_power_dollars": "dollars",
+        "derivative_buying_power_dollars": "dollars available as reported by brokerage",
+        "equity_buying_power_dollars": "dollars available as reported by brokerage",
+        "buying_power_utilization_percent": "used derivative buying power divided by net liquidating value; percent",
+        "theta_percent_of_net_liq_per_day": "theta dollars per day divided by net liquidating value; percent",
+        "vega_plus_one_point_dollars": "estimated signed dollar change for a one-point increase in implied volatility",
+        "vega_plus_one_point_percent_of_net_liq": "signed +1 volatility-point estimate divided by net liquidating value; percent",
+        "absolute_beta_delta_share_percent": "share of total absolute Greek exposure; beta-delta shares when available, delta-shares fallback otherwise; not capital or notional concentration",
+        "balance_fetched_at": "UTC timestamp when the app fetched the brokerage balance",
         "percent_credit_received": "legacy percent; use percent_credit_captured for credit trades",
         "percent_credit_captured": "percent of opening credit captured for net credit trades; null otherwise",
         "percent_max_profit_or_target": "percent or null when not available",

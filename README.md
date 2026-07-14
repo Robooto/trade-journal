@@ -22,6 +22,7 @@ Tastytrade client.
   approximate P/L, credit progress, delta/beta-delta, IV rank, and IV change.
 - Visible management checks for 21 DTE, 50% profit, 2x loss, and low IV rank.
 - A position attention queue with explicit Greek units, refresh/error states, charts, and leg detail.
+- Account risk context with net liquidity, brokerage buying power, review zones, theta/vega relative to net liquidity, beta-delta concentration, and balance data-quality notes.
 - A single-leg bracket-order workflow that previews by default and requires explicit live confirmation.
 - Historical price charts and a versioned equity analysis package.
 - LLM-friendly position, market-data, volatility, and equity-analysis responses.

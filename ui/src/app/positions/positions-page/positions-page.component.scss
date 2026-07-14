@@ -83,7 +83,7 @@
 
 .account-metrics {
   display: grid;
-  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
   gap: 8px;
 }
 
@@ -104,6 +104,64 @@
 
 .metric strong {
   font-size: 1rem;
+}
+
+.metric small {
+  color: #64748b;
+  font-size: 0.68rem;
+}
+
+.zone {
+  width: fit-content;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-weight: 700;
+}
+
+.zone.comfortable {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.zone.elevated {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.zone.high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.zone.unavailable {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.balance-quality {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+  font-size: 0.75rem;
+}
+
+.balance-quality mat-icon {
+  width: 17px;
+  height: 17px;
+  font-size: 17px;
+}
+
+.balance-quality.ok mat-icon {
+  color: #15803d;
+}
+
+.balance-quality.partial mat-icon {
+  color: #b45309;
+}
+
+.balance-quality.unavailable mat-icon {
+  color: #b91c1c;
 }
 
 .table-shell,

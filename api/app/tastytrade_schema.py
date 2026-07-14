@@ -70,6 +70,9 @@ class TastyAccountBalance(TastyModel):
         None, alias="equity-buying-power"
     )
     margin_equity: Optional[str | int | float] = Field(None, alias="margin-equity")
+    net_liquidating_value: Optional[str | int | float] = Field(
+        None, alias="net-liquidating-value"
+    )
 
 
 class TastyComplexOrderResponse(TastyModel):

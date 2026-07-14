@@ -66,4 +66,24 @@ describe('PositionsPageComponent', () => {
     group.rules = undefined;
     expect(component.getRuleClass(group)).toBe('');
   });
+  it('labels buying-power zones and explains Greek concentration', () => {
+    const account: AccountPositions = {
+      account_number: '1',
+      groups: [],
+      buying_power_utilization_percent: 32,
+      buying_power_zone: 'elevated',
+      largest_underlying_concentration: {
+        underlying_symbol: 'SPY',
+        delta_shares: 30,
+        beta_delta_shares: 30,
+        absolute_beta_delta_share_percent: 75,
+        group_count: 1,
+        exposure_basis: 'beta_delta_shares'
+      }
+    };
+
+    expect(component.buyingPowerZoneLabel(account)).toBe('Elevated');
+    expect(component.buyingPowerTooltip(account)).toContain('not brokerage rules');
+    expect(component.concentrationTooltip(account)).toContain('not capital or notional concentration');
+  });
 });

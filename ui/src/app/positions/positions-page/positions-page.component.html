@@ -46,29 +46,51 @@
         <span class="account-number" *ngIf="account.nickname">{{ account.account_number }}</span>
       </div>
       <div class="account-metrics">
-        <div class="metric">
+        <div class="metric" matTooltip="Share-equivalent portfolio delta adjusted by each underlying beta.">
           <span>Beta Δ shares</span>
           <strong>{{ (account.total_beta_delta_shares ?? account.total_beta_delta) | number:'1.0-1' }}</strong>
         </div>
-        <div class="metric">
+        <div class="metric" matTooltip="Share-equivalent directional delta across the account.">
           <span>Delta shares</span>
           <strong>{{ (account.delta_shares ?? account.total_position_delta) | number:'1.0-1' }}</strong>
         </div>
-        <div class="metric">
+        <div class="metric" matTooltip="Brokerage net liquidating value. Margin equity is used only when net liquidating value is unavailable.">
+          <span>Net liquidity</span>
+          <strong>{{ account.net_liquidating_value_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+        <div class="metric" matTooltip="Derivative buying power available as reported by the brokerage.">
+          <span>Available BP</span>
+          <strong>{{ account.derivative_buying_power_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+        </div>
+        <div class="metric" [matTooltip]="buyingPowerTooltip(account)">
+          <span>Buying power used</span>
+          <strong>{{ account.buying_power_utilization_percent | number:'1.0-1' }}%</strong>
+          <span class="zone" [ngClass]="account.buying_power_zone">{{ buyingPowerZoneLabel(account) }}</span>
+        </div>
+        <div class="metric" matTooltip="Current theta divided by net liquidating value. This is a Greek estimate, not guaranteed daily income.">
           <span>Theta / day</span>
           <strong>{{ (account.theta_dollars_per_day ?? account.total_theta) | currency:'USD':'symbol':'1.0-0' }}</strong>
+          <small>{{ account.theta_percent_of_net_liq_per_day | number:'1.0-3' }}% of net liq</small>
         </div>
-        <div class="metric">
-          <span>Vega / vol pt</span>
-          <strong>{{ (account.vega_dollars_per_vol_point ?? account.total_vega) | currency:'USD':'symbol':'1.0-0' }}</strong>
+        <div class="metric" matTooltip="Estimated signed portfolio change for a one-point increase in implied volatility, based on current vega.">
+          <span>+1 vol point</span>
+          <strong>{{ account.vega_plus_one_point_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+          <small>{{ account.vega_plus_one_point_percent_of_net_liq | number:'1.0-3' }}% of net liq</small>
         </div>
-        <div class="metric">
-          <span>Buying power used</span>
-          <strong>{{ account.percent_used_bp | number:'1.0-0' }}%</strong>
+        <div class="metric" [matTooltip]="concentrationTooltip(account)">
+          <span>Top Greek exposure</span>
+          <strong>{{ account.largest_underlying_concentration?.underlying_symbol || '—' }}</strong>
+          <small>{{ account.largest_underlying_concentration?.absolute_beta_delta_share_percent | number:'1.0-1' }}% of absolute Greek exposure</small>
         </div>
       </div>
     </div>
 
+    <div class="balance-quality" [ngClass]="account.balance_status" [matTooltip]="balanceTooltip(account)" matTooltipClass="multiline-tooltip">
+      <mat-icon>{{ account.balance_status === 'ok' ? 'verified' : account.balance_status === 'partial' ? 'warning_amber' : 'cloud_off' }}</mat-icon>
+      <span>Balance data {{ account.balance_status || 'unavailable' }}</span>
+      <span *ngIf="account.balance_fetched_at">Fetched {{ account.balance_fetched_at | date:'shortTime' }}</span>
+      <span *ngIf="account.balance_warnings?.length">{{ account.balance_warnings?.length }} data note{{ account.balance_warnings?.length === 1 ? '' : 's' }}</span>
+    </div>
     <div class="table-shell" *ngIf="visibleGroups(account).length; else noMatchingGroups">
       <table mat-table [dataSource]="visibleGroups(account)" class="positions-table">
         <ng-container matColumnDef="underlying">

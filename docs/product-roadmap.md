@@ -35,6 +35,10 @@ Current:
 - Positions grouped by account, underlying, and expiration.
 - Marks, approximate P/L, credit progress, delta/beta-delta, IV rank, and IV
   change where available.
+- Account net liquidity, available/used buying power, configurable review zones,
+  theta and +1-vol-point estimates as a percentage of net liquidity, and ranked
+  underlying beta-delta exposure.
+- Balance fetch time plus complete, partial, or unavailable data-quality status.
 - Rules for 21 DTE, 50% profit, 2x loss, and low IV rank.
 - Position chart expansion and a safeguarded bracket-order workflow: dry-run by
   default, mandatory UI review, explicit confirmation, and a server-side live
@@ -42,13 +46,14 @@ Current:
 
 Next:
 
-1. Account buying-power zones and net-liq context.
-2. Portfolio theta targets and vega shock as a percentage of net liq.
-3. Ticker, sector, and correlated-index concentration.
-4. Assignment exposure and event/earnings risk.
-5. Strategy fit by VIX regime.
-6. Versioned rule results and whether warnings were followed.
-7. Position/account history rather than current snapshot only.
+1. Turn the displayed theta and vega context into configurable personal targets
+   after reviewing enough history; current zones are review cues only.
+2. Extend Greek exposure into ticker, sector, correlated-index, capital, and
+   notional concentration once the required reference and margin data exist.
+3. Assignment exposure and event/earnings risk.
+4. Strategy fit by VIX regime.
+5. Versioned rule results and whether warnings were followed.
+6. Position/account history rather than current snapshot only.
 
 ### Brokerage boundary and LLM packs
 
@@ -60,11 +65,12 @@ Current:
 - Accounts, balances, positions, quotes, volatility metrics, and complex-order
   client support.
 - LLM-friendly position, market-data, volatility, and equity-analysis packages.
+- Normalized account risk fields and explicit brokerage balance freshness/missing-data metadata in both the positions API and LLM positions pack.
 - Historical price/chart features and portable JSON/Markdown handoffs.
 
 Next:
 
-1. Normalized account summary and trading status.
+1. Add a broader trading-status model beyond the implemented account risk summary.
 2. Orders, order detail, transactions/fills, fees, assignments, and expirations.
 3. Nested option chains, margin requirements, order dry-run, and margin dry-run.
 4. Portfolio-review and trade-review packs with freshness and missing-data
