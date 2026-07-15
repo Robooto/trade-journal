@@ -71,6 +71,7 @@ For the current tastytrade route analysis and recommended build order, see
 Document stable local endpoints here as they are implemented.
 
 ```text
+GET /v1/broker/holdings
 GET /v1/broker/accounts
 GET /v1/broker/summary
 GET /v1/broker/positions
@@ -82,7 +83,7 @@ GET /v1/broker/options/{symbol}/chain
 
 ## Wave 1 Foundation Status
 
-Implemented backend foundations, not yet public routes:
+Implemented backend foundations:
 
 - `HoldingSnapshotV1` preserves every brokerage account and asset class,
   including empty accounts, while the existing option-group projection remains
@@ -94,11 +95,15 @@ Implemented backend foundations, not yet public routes:
   quality status.
 - Read-only client methods cover private watchlists, bounded dated orders,
   bounded dated transactions, pagination metadata, and historical earnings.
+- `GET /v1/broker/holdings` exposes the normalized holding snapshot without
+  changing the option-specific `GET /v1/trades` contract. A failure to list
+  accounts returns `502`; a per-account position failure preserves that
+  account with `unavailable` source status and a safe warning.
 - Sanitized fixtures represent options, buy-and-hold, and mixed account roles.
 
-The next step is to expose these foundations through stable read APIs and add
-daily metric persistence. Current IV rank and the broker's five-day IV-index
-change remain separate observations.
+The next step is daily metric persistence, followed by a batch research-symbol
+context API. Current IV rank and the broker's five-day IV-index change remain
+separate observations.
 
 ## Safety Rules
 
@@ -118,8 +123,8 @@ Use this table while discovering routes.
 | Area | Broker route | Method | Local endpoint | Mutates account | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | Auth | `/sessions` | POST | Internal only | No | Known | Creates broker session token. |
-| Accounts | `/customers/me/accounts` | GET | TBD | No | Known | Lists accounts available to the session. |
-| Positions | `/accounts/{account_number}/positions` | GET | TBD | No | Known | Fetches positions for one account. |
+| Accounts | `/customers/me/accounts` | GET | `GET /v1/broker/holdings` | No | Implemented | Every returned account is retained, including empty accounts. |
+| Positions | `/accounts/{account_number}/positions` | GET | `GET /v1/broker/holdings` | No | Implemented | Returns all asset classes; per-account failures are explicit and non-fatal. |
 | Watchlists | `/watchlists` | GET | Planned batch research context | No | Client implemented | Private watchlists parse into typed fixtures. |
 | Orders | `/accounts/{account_number}/orders` | GET | Planned activity API | No | Client implemented | Requires bounded dates and exposes pagination state. |
 | Transactions | `/accounts/{account_number}/transactions` | GET | Planned activity API | No | Client implemented | Preserves broker transaction/order/group-fill identifiers. |

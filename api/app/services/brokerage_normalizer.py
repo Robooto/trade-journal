@@ -159,9 +159,11 @@ def build_holding_snapshot(
     positions_by_account: Mapping[str, Iterable[TastyPosition | Mapping]],
     *,
     fetched_at: datetime,
+    account_errors: Mapping[str, str] | None = None,
 ) -> HoldingSnapshotV1:
     account_snapshots: list[AccountHoldingSnapshotV1] = []
     source_status: list[SourceMetadataV1] = []
+    account_errors = account_errors or {}
 
     for account_value in accounts:
         account = _as_dict(account_value)
@@ -178,13 +180,20 @@ def build_holding_snapshot(
                 for field in holding.missing_fields
             }
         )
-        status = DataStatus.PARTIAL if missing else DataStatus.OK
+        error = account_errors.get(account_number)
+        if error:
+            status = DataStatus.UNAVAILABLE
+            warnings = [error]
+        else:
+            status = DataStatus.PARTIAL if missing else DataStatus.OK
+            warnings = []
         source = SourceMetadataV1(
             source="tastytrade",
             endpoint=f"/accounts/{account_number}/positions",
             fetched_at=fetched_at,
             status=status,
             missing_fields=missing,
+            warnings=warnings,
         )
         account_snapshots.append(
             AccountHoldingSnapshotV1(

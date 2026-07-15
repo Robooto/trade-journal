@@ -9,6 +9,7 @@ from app import models
 from app.db import engine
 from app.settings import settings
 from app.routers.v1 import (
+    broker as broker_v1,
     hello as hello_v1,
     entries as entries_v1,
     trades as trades_v1,
@@ -40,6 +41,7 @@ app.add_middleware(
 logging.basicConfig(level=logging.ERROR)
 
 app.include_router(hello_v1.router)
+app.include_router(broker_v1.router)
 app.include_router(entries_v1.router)
 app.include_router(trades_v1.router)
 app.include_router(charts_v1.router)

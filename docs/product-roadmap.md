@@ -113,25 +113,24 @@ Next:
 Goal: show the complete contents of all brokerage accounts—including buy-and-hold
 equities—while retaining the detailed option-management workflow.
 
-Current limitation:
+Current:
 
-- The backend explicitly removes `Equity` positions before normalization.
-- The remaining response is organized around option expiration groups, opening
-  credit, Greeks, and option-management rules. Simply removing the filter would
-  give equities misleading option fields and grouping.
+- `GET /v1/broker/holdings` returns a versioned snapshot of every brokerage
+  account and asset class, including equities, options, and empty accounts.
+- Account and holding source metadata distinguishes complete, partial, and
+  unavailable data. A single account failure does not remove the account or
+  fail the complete response.
+- The existing `GET /v1/trades` option projection and its management rules
+  remain unchanged.
 
-Planned backend work:
+Next backend work:
 
-1. Define a normalized all-asset holding model with account, symbol, asset type,
-   quantity/direction, cost basis, mark, market value, unrealized and daily P/L,
-   and explicit missing-data status.
-2. Return every brokerage account even when it has no option positions.
-3. Add account-level totals and allocation views without mixing capital/value
+1. Add account-level totals and allocation views without mixing capital/value
    metrics with option Greek exposure.
-4. Preserve option strategy groups and management rules as an option-specific
-   projection over the same source snapshot.
-5. Add stable filters/read models for account and asset class, then include the
+2. Add stable filters/read models for account and asset class, then include the
    complete account picture in portfolio-review LLM packs and history snapshots.
+3. Have both all-asset and option-specific projections consume the same
+   fetched source snapshot where practical, avoiding duplicate broker calls.
 
 Planned UI work:
 
@@ -156,13 +155,14 @@ Current:
 - Normalized account risk fields and explicit brokerage balance freshness/missing-data metadata in both the positions API and LLM positions pack.
 - Historical price/chart features and portable JSON/Markdown handoffs.
 - Wave 1 brokerage foundation: sanitized mixed-account fixtures, versioned
-  holding/activity/research-context contracts, explicit source quality,
-  read-only watchlist/order/transaction/historical-earnings clients, and pure
-  normalization services. These foundations are not public API routes yet.
+  holding/activity/research-context contracts, explicit source quality, read-only
+  watchlist/order/transaction/historical-earnings clients, pure normalization
+  services, and a public read-only all-account holdings route.
 
 Next:
 
-1. Expose a batch research-symbol context for FlowPatrol and watchlist workflows:
+1. Persist daily research metrics, then expose a batch research-symbol context
+   for FlowPatrol and watchlist workflows:
    watchlist membership, current/short-window price context, IV metrics,
    liquidity, earnings status, existing exposure, freshness, and missing-data
    warnings. Persist daily snapshots when a trend cannot be supplied directly

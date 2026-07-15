@@ -77,19 +77,22 @@ pagination metadata or warnings so incomplete history is never silent.
 Completed on 2026-07-15:
 
 - Packets 1A through 1D are implemented in the backend foundation.
-- The complete gate passes with 94 backend tests and 48 frontend tests.
-- No new public route, database table, UI behavior, or live-order behavior was
-  introduced.
-- The next vertical slice is the read-only all-account holding snapshot API,
-  followed by daily research metric persistence.
+- The complete gate passes with 100 backend tests and 48 frontend tests.
+- The first Wave 2 slice now exposes `GET /v1/broker/holdings`, returning
+  every account and asset class while preserving per-account failures as
+  explicit source status.
+- The existing option-position route, UI, database, and live-order behavior are
+  unchanged.
+- The next enabling slice is daily research metric persistence, followed by
+  the batch research-symbol context API.
 
 ## Wave 2: highest-value vertical slices
 
-1. Return all-account/all-asset holdings while preserving the current
-   option-specific projection and management rules.
-2. Build a batch research-symbol context API.
-3. Persist daily mark, IV index, IV rank, IV percentile, and broker five-day
+1. **Implemented:** return all-account/all-asset holdings while preserving the
+   current option-specific projection and management rules.
+2. Persist daily mark, IV index, IV rank, IV percentile, and broker five-day
    IV-index-change snapshots.
+3. Build a batch research-symbol context API over current and persisted data.
 4. Normalize previous-session fills into opened, added, reduced, rolled, closed,
    assignment, and expiration review events.
 
