@@ -1,0 +1,62 @@
+{
+  "data": {
+    "items": [
+      {
+        "id": 81001,
+        "account-number": "FAKE-OPTIONS",
+        "transaction-type": "Trade",
+        "transaction-sub-type": "Sell to Open",
+        "transaction-date": "2026-07-14",
+        "executed-at": "2026-07-14T15:32:01+00:00",
+        "description": "Sold AAPL put",
+        "symbol": "AAPL  260821P00200000",
+        "underlying-symbol": "AAPL",
+        "instrument-type": "Equity Option",
+        "action": "Sell to Open",
+        "quantity": "1",
+        "price": "2.50",
+        "value": "250.00",
+        "value-effect": "Credit",
+        "net-value": "248.85",
+        "net-value-effect": "Credit",
+        "commission": "1.00",
+        "clearing-fees": "0.10",
+        "regulatory-fees": "0.05",
+        "order-id": 70001,
+        "leg-count": 2,
+        "ext-group-fill-id": "FAKE-GROUP-1"
+      },
+      {
+        "id": 81002,
+        "account-number": "FAKE-OPTIONS",
+        "transaction-type": "Trade",
+        "transaction-sub-type": "Buy to Open",
+        "transaction-date": "2026-07-14",
+        "executed-at": "2026-07-14T15:32:01+00:00",
+        "description": "Bought AAPL put",
+        "symbol": "AAPL  260821P00195000",
+        "underlying-symbol": "AAPL",
+        "instrument-type": "Equity Option",
+        "action": "Buy to Open",
+        "quantity": "1",
+        "price": "1.10",
+        "value": "110.00",
+        "value-effect": "Debit",
+        "net-value": "111.15",
+        "net-value-effect": "Debit",
+        "commission": "1.00",
+        "clearing-fees": "0.10",
+        "regulatory-fees": "0.05",
+        "order-id": 70001,
+        "leg-count": 2,
+        "ext-group-fill-id": "FAKE-GROUP-1"
+      }
+    ],
+    "pagination": {
+      "page-offset": 0,
+      "per-page": 2000,
+      "total-items": 2,
+      "total-pages": 1
+    }
+  }
+}

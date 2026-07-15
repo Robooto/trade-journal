@@ -1,0 +1,27 @@
+{
+  "data": {
+    "items": [
+      {
+        "account": {
+          "account-number": "FAKE-OPTIONS",
+          "nickname": "Options",
+          "account-type-name": "Individual"
+        }
+      },
+      {
+        "account": {
+          "account-number": "FAKE-HOLD",
+          "nickname": "Long Term",
+          "account-type-name": "Individual"
+        }
+      },
+      {
+        "account": {
+          "account-number": "FAKE-MIXED",
+          "nickname": "Retirement",
+          "account-type-name": "Roth IRA"
+        }
+      }
+    ]
+  }
+}

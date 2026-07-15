@@ -1,0 +1,29 @@
+{
+  "data": {
+    "items": [
+      {
+        "instrument-type": "Equity",
+        "symbol": "NVDA",
+        "underlying-symbol": "NVDA",
+        "average-open-price": "120.00",
+        "mark": "175.00",
+        "close-price": "173.25",
+        "quantity": "40",
+        "quantity-direction": "Long",
+        "multiplier": "1"
+      },
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "NVDA  260821C00190000",
+        "underlying-symbol": "NVDA",
+        "expires-at": "2026-08-21T20:00:00+00:00",
+        "average-open-price": "3.10",
+        "mark": null,
+        "close-price": null,
+        "quantity": "1",
+        "quantity-direction": "Short",
+        "multiplier": "100"
+      }
+    ]
+  }
+}

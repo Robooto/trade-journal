@@ -1,0 +1,30 @@
+{
+  "data": {
+    "items": [
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "AAPL  260821P00200000",
+        "underlying-symbol": "AAPL",
+        "expires-at": "2026-08-21T20:00:00+00:00",
+        "average-open-price": "2.50",
+        "mark": "1.75",
+        "close-price": "1.70",
+        "quantity": "1",
+        "quantity-direction": "Short",
+        "multiplier": "100"
+      },
+      {
+        "instrument-type": "Equity Option",
+        "symbol": "AAPL  260821P00195000",
+        "underlying-symbol": "AAPL",
+        "expires-at": "2026-08-21T20:00:00+00:00",
+        "average-open-price": "1.10",
+        "mark": "0.70",
+        "close-price": "0.68",
+        "quantity": "1",
+        "quantity-direction": "Long",
+        "multiplier": "100"
+      }
+    ]
+  }
+}

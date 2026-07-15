@@ -80,6 +80,26 @@ GET /v1/broker/quotes?symbols=SPY,QQQ
 GET /v1/broker/options/{symbol}/chain
 ```
 
+## Wave 1 Foundation Status
+
+Implemented backend foundations, not yet public routes:
+
+- `HoldingSnapshotV1` preserves every brokerage account and asset class,
+  including empty accounts, while the existing option-group projection remains
+  unchanged.
+- `BrokerActivityEventV1` retains transaction, order, and group-fill IDs,
+  signed values, fees, source timestamps, and explicit grouping ambiguity.
+- `ResearchSymbolContextV1` joins watchlist membership, current price and IV
+  observations, existing exposure, earnings availability, and per-source
+  quality status.
+- Read-only client methods cover private watchlists, bounded dated orders,
+  bounded dated transactions, pagination metadata, and historical earnings.
+- Sanitized fixtures represent options, buy-and-hold, and mixed account roles.
+
+The next step is to expose these foundations through stable read APIs and add
+daily metric persistence. Current IV rank and the broker's five-day IV-index
+change remain separate observations.
+
 ## Safety Rules
 
 - Start read-only.
@@ -100,8 +120,16 @@ Use this table while discovering routes.
 | Auth | `/sessions` | POST | Internal only | No | Known | Creates broker session token. |
 | Accounts | `/customers/me/accounts` | GET | TBD | No | Known | Lists accounts available to the session. |
 | Positions | `/accounts/{account_number}/positions` | GET | TBD | No | Known | Fetches positions for one account. |
+| Watchlists | `/watchlists` | GET | Planned batch research context | No | Client implemented | Private watchlists parse into typed fixtures. |
+| Orders | `/accounts/{account_number}/orders` | GET | Planned activity API | No | Client implemented | Requires bounded dates and exposes pagination state. |
+| Transactions | `/accounts/{account_number}/transactions` | GET | Planned activity API | No | Client implemented | Preserves broker transaction/order/group-fill identifiers. |
+| Historical earnings | `/market-metrics/historic-corporate-events/earnings-reports/{symbol}` | GET | Planned research context | No | Client implemented | Historical only; does not establish the next earnings date. |
 
 ## Sample Notes
 
 Keep redacted examples or links to local sample files here once discovery
 starts.
+
+Wave 1 fixtures live under `api/tests/fixtures/tastytrade/`. A safety test
+rejects credential-like keys and bearer tokens from the representative fixture
+set. Account identifiers use the `FAKE-` prefix.

@@ -155,10 +155,14 @@ Current:
 - LLM-friendly position, market-data, volatility, and equity-analysis packages.
 - Normalized account risk fields and explicit brokerage balance freshness/missing-data metadata in both the positions API and LLM positions pack.
 - Historical price/chart features and portable JSON/Markdown handoffs.
+- Wave 1 brokerage foundation: sanitized mixed-account fixtures, versioned
+  holding/activity/research-context contracts, explicit source quality,
+  read-only watchlist/order/transaction/historical-earnings clients, and pure
+  normalization services. These foundations are not public API routes yet.
 
 Next:
 
-1. Add a batch research-symbol context for FlowPatrol and watchlist workflows:
+1. Expose a batch research-symbol context for FlowPatrol and watchlist workflows:
    watchlist membership, current/short-window price context, IV metrics,
    liquidity, earnings status, existing exposure, freshness, and missing-data
    warnings. Persist daily snapshots when a trend cannot be supplied directly

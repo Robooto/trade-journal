@@ -77,3 +77,74 @@ class TastyAccountBalance(TastyModel):
 
 class TastyComplexOrderResponse(TastyModel):
     pass
+
+
+class TastyWatchlistEntry(TastyModel):
+    symbol: str
+    instrument_type: Optional[str] = Field(None, alias="instrument-type")
+
+
+class TastyWatchlist(TastyModel):
+    name: str
+    group_name: Optional[str] = Field(None, alias="group-name")
+    order_index: Optional[int] = Field(None, alias="order-index")
+    watchlist_entries: list[TastyWatchlistEntry] = Field(
+        default_factory=list, alias="watchlist-entries"
+    )
+
+
+class TastyOrderLeg(TastyModel):
+    symbol: str
+    instrument_type: str = Field("", alias="instrument-type")
+    action: Optional[str] = None
+    quantity: Optional[str | int | float] = None
+
+
+class TastyOrder(TastyModel):
+    id: str | int
+    account_number: Optional[str] = Field(None, alias="account-number")
+    underlying_symbol: Optional[str] = Field(None, alias="underlying-symbol")
+    status: Optional[str] = None
+    order_type: Optional[str] = Field(None, alias="order-type")
+    price: Optional[str | int | float] = None
+    price_effect: Optional[str] = Field(None, alias="price-effect")
+    received_at: Optional[str] = Field(None, alias="received-at")
+    legs: list[TastyOrderLeg] = Field(default_factory=list)
+
+
+class TastyTransaction(TastyModel):
+    id: str | int
+    account_number: Optional[str] = Field(None, alias="account-number")
+    transaction_type: Optional[str] = Field(None, alias="transaction-type")
+    transaction_sub_type: Optional[str] = Field(
+        None, alias="transaction-sub-type"
+    )
+    transaction_date: Optional[str] = Field(None, alias="transaction-date")
+    executed_at: Optional[str] = Field(None, alias="executed-at")
+    created_at: Optional[str] = Field(None, alias="created-at")
+    description: Optional[str] = None
+    symbol: Optional[str] = None
+    underlying_symbol: Optional[str] = Field(None, alias="underlying-symbol")
+    instrument_type: Optional[str] = Field(None, alias="instrument-type")
+    action: Optional[str] = None
+    quantity: Optional[str | int | float] = None
+    price: Optional[str | int | float] = None
+    value: Optional[str | int | float] = None
+    value_effect: Optional[str] = Field(None, alias="value-effect")
+    net_value: Optional[str | int | float] = Field(None, alias="net-value")
+    net_value_effect: Optional[str] = Field(None, alias="net-value-effect")
+    commission: Optional[str | int | float] = None
+    clearing_fees: Optional[str | int | float] = Field(
+        None, alias="clearing-fees"
+    )
+    regulatory_fees: Optional[str | int | float] = Field(
+        None, alias="regulatory-fees"
+    )
+    order_id: Optional[str | int] = Field(None, alias="order-id")
+    leg_count: Optional[int] = Field(None, alias="leg-count")
+    ext_group_fill_id: Optional[str] = Field(None, alias="ext-group-fill-id")
+
+
+class TastyEarningsReport(TastyModel):
+    occurred_date: str = Field(..., alias="occurred-date")
+    eps: Optional[str | int | float] = None

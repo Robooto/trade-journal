@@ -1,0 +1,22 @@
+{
+  "data": {
+    "items": [
+      {
+        "symbol": "AAPL",
+        "implied-volatility-index": "0.285",
+        "implied-volatility-index-rank": "0.440",
+        "implied-volatility-percentile": "0.610",
+        "implied-volatility-index-5-day-change": "0.018",
+        "liquidity-rating": "5"
+      },
+      {
+        "symbol": "NVDA",
+        "implied-volatility-index": "0.515",
+        "implied-volatility-index-rank": "0.720",
+        "implied-volatility-percentile": "0.830",
+        "implied-volatility-index-5-day-change": "-0.026",
+        "liquidity-rating": "5"
+      }
+    ]
+  }
+}

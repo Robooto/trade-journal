@@ -1,0 +1,28 @@
+{
+  "data": {
+    "items": [
+      {
+        "instrument-type": "Equity",
+        "symbol": "AAPL",
+        "underlying-symbol": "AAPL",
+        "average-open-price": "150.00",
+        "mark": "210.00",
+        "close-price": "208.50",
+        "quantity": "25",
+        "quantity-direction": "Long",
+        "multiplier": "1"
+      },
+      {
+        "instrument-type": "Equity",
+        "symbol": "MSFT",
+        "underlying-symbol": "MSFT",
+        "average-open-price": "320.00",
+        "mark": "505.00",
+        "close-price": "501.00",
+        "quantity": "12",
+        "quantity-direction": "Long",
+        "multiplier": "1"
+      }
+    ]
+  }
+}

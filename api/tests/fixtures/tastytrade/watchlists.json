@@ -1,0 +1,25 @@
+{
+  "data": {
+    "items": [
+      {
+        "name": "Core Options",
+        "group-name": "Personal",
+        "order-index": 1,
+        "watchlist-entries": [
+          {"symbol": "AAPL", "instrument-type": "Equity"},
+          {"symbol": "NVDA", "instrument-type": "Equity"},
+          {"symbol": "AMD", "instrument-type": "Equity"}
+        ]
+      },
+      {
+        "name": "Earnings Research",
+        "group-name": "Personal",
+        "order-index": 2,
+        "watchlist-entries": [
+          {"symbol": "MSFT", "instrument-type": "Equity"},
+          {"symbol": "META", "instrument-type": "Equity"}
+        ]
+      }
+    ]
+  }
+}
