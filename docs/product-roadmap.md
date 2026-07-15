@@ -22,7 +22,11 @@ Next:
 
 - Add structured thesis/plan/management/outcome fields without making quick
   notes cumbersome.
-- Link entries to positions, orders, fills, and originating research ideas.
+- Add context-aware entry points such as **Journal this FlowPatrol idea** and
+  **Add note for this position**, pre-filling the ticker, link label, and source
+  path while leaving the user in control of the note.
+- Link entries to positions, orders, fills, and originating research ideas with
+  stable backend identifiers beyond the current optional context link.
 - Add weekly summaries and rule-adherence review.
 
 ### Position list and rule supervision
@@ -90,6 +94,25 @@ Next:
 - Show thesis/invalidation levels and important journal notes.
 - Allow a chart/date range to be exported with a consistent LLM data pack.
 - Keep option marks and P/L clearly distinguished from underlying price.
+
+## Future unified operator UI
+
+TODO, intentionally not part of the current implementation queue:
+
+- Use the `trade-journal` Angular application as the eventual shared operator
+  shell for journal, positions, Trace context, FlowPatrol ideas, research
+  handoffs, and later review workflows.
+- Keep `trade-journal`, `market-data-pipeline`, and assistant services as
+  separate backend ownership boundaries. UI consolidation must not become
+  backend consolidation.
+- Keep scoring, normalization, history, trading rules, source provenance,
+  freshness, and safety policy in the owning backend. The frontend should
+  request documented read models, render them, collect user input, and invoke
+  explicit commands; it should not reproduce business logic.
+- Add shared navigation, consistent theming, loading/error/quality states, and
+  deep-link contracts before migrating individual screens.
+- Migrate one vertical slice at a time only after its API contract is stable;
+  retain the existing source UI until the replacement reaches parity.
 
 ## Safety boundaries
 
