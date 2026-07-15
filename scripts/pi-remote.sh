@@ -87,7 +87,7 @@ deploy_revision() {
 
   echo "Deploying $target_revision (previous: $current_revision)"
   git checkout --detach "$target_revision"
-  docker compose up --build --detach --remove-orphans
+  docker compose up --build --detach --remove-orphans --force-recreate
   wait_for_health
 }
 
