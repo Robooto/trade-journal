@@ -59,6 +59,41 @@ Next:
 5. Versioned rule results and whether warnings were followed.
 6. Position/account history rather than current snapshot only.
 
+### All-account portfolio and holdings
+
+Goal: show the complete contents of all brokerage accounts—including buy-and-hold
+equities—while retaining the detailed option-management workflow.
+
+Current limitation:
+
+- The backend explicitly removes `Equity` positions before normalization.
+- The remaining response is organized around option expiration groups, opening
+  credit, Greeks, and option-management rules. Simply removing the filter would
+  give equities misleading option fields and grouping.
+
+Planned backend work:
+
+1. Define a normalized all-asset holding model with account, symbol, asset type,
+   quantity/direction, cost basis, mark, market value, unrealized and daily P/L,
+   and explicit missing-data status.
+2. Return every brokerage account even when it has no option positions.
+3. Add account-level totals and allocation views without mixing capital/value
+   metrics with option Greek exposure.
+4. Preserve option strategy groups and management rules as an option-specific
+   projection over the same source snapshot.
+5. Add stable filters/read models for account and asset class, then include the
+   complete account picture in portfolio-review LLM packs and history snapshots.
+
+Planned UI work:
+
+- Default to an all-holdings account view with filters for **All**, **Options**,
+  **Stocks**, and later other supported asset classes.
+- Filter by one or more of the three brokerage accounts.
+- Give buy-and-hold accounts useful value, allocation, cost-basis, and P/L views;
+  show expiration groups, Greeks, and management signals only where applicable.
+- Keep filtering and presentation in the UI, while classification, totals,
+  normalization, and risk calculations remain backend responsibilities.
+
 ### Brokerage boundary and LLM packs
 
 Keep Tastytrade authentication and normalization here, then serve stable,
@@ -74,7 +109,8 @@ Current:
 
 Next:
 
-1. Add a broader trading-status model beyond the implemented account risk summary.
+1. Add the normalized all-account/all-asset portfolio summary and a broader
+   trading-status model beyond the implemented option risk summary.
 2. Orders, order detail, transactions/fills, fees, assignments, and expirations.
 3. Nested option chains, margin requirements, order dry-run, and margin dry-run.
 4. Portfolio-review and trade-review packs with freshness and missing-data
