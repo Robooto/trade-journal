@@ -146,23 +146,32 @@ export class OptionChartComponent implements OnInit, OnDestroy, OnChanges {
         return;
       }
 
-      // Create the chart
+      const rootStyles = getComputedStyle(document.documentElement);
+      const themeColor = (token: string, fallback: string) =>
+        rootStyles.getPropertyValue(token).trim() || fallback;
+      const chartSurface = themeColor('--mat-sys-surface-container', '#111318');
+      const chartText = themeColor('--mat-sys-on-surface', '#e2e2e9');
+      const chartGrid = themeColor('--mat-sys-surface-container-highest', '#33353a');
+      const chartOutline = themeColor('--mat-sys-outline-variant', '#44474e');
+
+      // Lightweight Charts renders to canvas, so pass the active Material theme
+      // colors explicitly instead of relying on surrounding CSS.
       this.chart = createChart(this.chartContainer.nativeElement, {
         width: this.chartContainer.nativeElement.clientWidth,
         height: 300, // Smaller height for embedded chart
         layout: {
-          background: { color: '#ffffff' },
-          textColor: '#333',
+          background: { color: chartSurface },
+          textColor: chartText,
         },
         grid: {
-          vertLines: { color: '#f0f0f0' },
-          horzLines: { color: '#f0f0f0' },
+          vertLines: { color: chartGrid },
+          horzLines: { color: chartGrid },
         },
         rightPriceScale: {
-          borderColor: '#cccccc',
+          borderColor: chartOutline,
         },
         timeScale: {
-          borderColor: '#cccccc',
+          borderColor: chartOutline,
           timeVisible: true,
           secondsVisible: false,
         },

@@ -25,12 +25,12 @@
 .morning-header > div > p:last-child,
 .workflow-card > p {
   margin: 7px 0 0;
-  color: #64748b;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #2563eb;
+  color: var(--mat-sys-primary);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -50,11 +50,11 @@
 
 .workflow-card,
 .guideline-card {
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 16px;
   padding: 20px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgb(15 23 42 / 5%);
+  background: var(--mat-sys-surface-container-low);
+  box-shadow: var(--mat-sys-level-1);
 }
 
 .research-step {
@@ -63,8 +63,8 @@
 }
 
 .journal-step {
-  border-color: #93c5fd;
-  background: linear-gradient(145deg, #eff6ff, #fff 70%);
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 55%, var(--mat-sys-outline-variant));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface-container-low)), var(--mat-sys-surface-container-low) 70%);
 }
 
 .step-heading {
@@ -78,8 +78,8 @@
   place-items: center;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #1d4ed8;
-  color: #fff;
+  background: var(--mat-sys-primary);
+  color: var(--mat-sys-on-primary);
   font-weight: 800;
 }
 
@@ -99,23 +99,23 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 10px;
   padding: 12px;
-  color: #0f172a;
+  color: var(--mat-sys-on-surface);
   text-decoration: none;
 }
 
 .resource-links a:hover,
 .resource-links a:focus-visible {
-  border-color: #60a5fa;
-  background: #eff6ff;
+  border-color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-primary) 10%, var(--mat-sys-surface-container));
 }
 
 .resource-links mat-icon {
   width: 17px;
   height: 17px;
-  color: #2563eb;
+  color: var(--mat-sys-primary);
   font-size: 17px;
 }
 
@@ -142,7 +142,7 @@
 .guideline-card mat-icon {
   width: 18px;
   height: 18px;
-  color: #2563eb;
+  color: var(--mat-sys-primary);
   font-size: 18px;
 }
 
@@ -172,11 +172,11 @@
   gap: 6px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid #bfdbfe;
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .recent-label {
-  color: #64748b;
+  color: var(--mat-sys-on-surface-variant);
   font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -190,12 +190,12 @@
   gap: 8px;
   border-radius: 8px;
   padding: 7px 8px;
-  color: #0f172a;
+  color: var(--mat-sys-on-surface);
   text-decoration: none;
 
   &:hover,
   &:focus-visible {
-    background: #dbeafe;
+    background: color-mix(in srgb, var(--mat-sys-primary) 14%, var(--mat-sys-surface-container));
   }
 
   span {
@@ -206,7 +206,7 @@
   }
 
   small {
-    color: #2563eb;
+    color: var(--mat-sys-primary);
   }
 
   mat-icon {
