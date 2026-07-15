@@ -13,7 +13,7 @@ docker-compose build api && docker-compose up api
 Install the dependencies and run `pytest` from the repository root:
 
 ```
-pip install -r api/requirements.txt
+pip install --require-hashes -r api/requirements-dev.txt
 pytest
 ```
 

@@ -10,6 +10,9 @@ else
   PYTHON_BIN="${PYTHON_BIN:-python3}"
 fi
 
+echo "==> Development dependencies"
+"$PYTHON_BIN" -m pip install --require-hashes -r api/requirements-dev.txt
+
 echo "==> Backend tests"
 PYTHONPATH=api "$PYTHON_BIN" -m pytest api/tests -q
 
