@@ -1,7 +1,7 @@
 # Direct production dependencies imported by the API or used as its entrypoint.
-fastapi==0.101.0
+fastapi==0.139.0
 uvicorn==0.23.0
-pydantic==2.6.0
+pydantic==2.13.4
 SQLAlchemy==2.0.20
 requests==2.34.2
 pandas==2.3.1
