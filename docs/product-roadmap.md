@@ -158,13 +158,18 @@ Current:
 
 Next:
 
-1. Add the normalized all-account/all-asset portfolio summary and a broader
+1. Add a batch research-symbol context for FlowPatrol and watchlist workflows:
+   watchlist membership, current/short-window price context, IV metrics,
+   liquidity, earnings status, existing exposure, freshness, and missing-data
+   warnings. Persist daily snapshots when a trend cannot be supplied directly
+   by the broker.
+2. Add the normalized all-account/all-asset portfolio summary and a broader
    trading-status model beyond the implemented option risk summary.
-2. Orders, order detail, transactions/fills, fees, assignments, and expirations.
-3. Nested option chains, margin requirements, order dry-run, and margin dry-run.
-4. Portfolio-review and trade-review packs with freshness and missing-data
+3. Orders, order detail, transactions/fills, fees, assignments, and expirations.
+4. Nested option chains, margin requirements, order dry-run, and margin dry-run.
+5. Portfolio-review and trade-review packs with freshness and missing-data
    status.
-5. Document all stable cross-project contracts.
+6. Document all stable cross-project contracts.
 
 ### Trade visualization
 
