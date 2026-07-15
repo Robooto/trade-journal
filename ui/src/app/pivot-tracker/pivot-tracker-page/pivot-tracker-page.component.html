@@ -13,22 +13,23 @@
   </div>
 
   <mat-card class="p-6">
-    <div class="flex items-center justify-between gap-4" *ngIf="latest$ | async as latest; else emptyState">
-      <div class="pivot-pill">
-        <span class="label">{{ latest.index }} Pivot</span>
-        <span class="value">{{ latest.price | number:'1.2-2' }}</span>
-        <span class="date">{{ latest.date | date:'mediumDate' }}</span>
+    @if (latest$ | async; as latest) {
+      <div class="flex items-center justify-between gap-4">
+        <div class="pivot-pill">
+          <span class="label">{{ latest.index }} Pivot</span>
+          <span class="value">{{ latest.price | number:'1.2-2' }}</span>
+          <span class="date">{{ latest.date | date:'mediumDate' }}</span>
+        </div>
+        <button mat-icon-button color="accent" (click)="openEditor()" matTooltip="Update pivot level">
+          <mat-icon>edit</mat-icon>
+        </button>
       </div>
-      <button mat-icon-button color="accent" (click)="openEditor()" matTooltip="Update pivot level">
-        <mat-icon>edit</mat-icon>
-      </button>
-    </div>
-    <ng-template #emptyState>
+    } @else {
       <div class="flex flex-col gap-4 text-center">
         <p>{{ latestError || 'No pivot level recorded yet.' }}</p>
         <button mat-stroked-button color="primary" (click)="openEditor()">Add Pivot</button>
       </div>
-    </ng-template>
+    }
   </mat-card>
 
   <section class="flex flex-col gap-4">
@@ -38,18 +39,25 @@
         <mat-icon>refresh</mat-icon>
       </button>
     </div>
-    <mat-progress-bar *ngIf="historyLoading" mode="indeterminate"></mat-progress-bar>
-    <mat-list *ngIf="!historyLoading && history.length">
-      <mat-list-item *ngFor="let pivot of history">
-        <div matListItemTitle>{{ pivot.price | number:'1.2-2' }}</div>
-        <div matListItemLine>{{ pivot.index }} — {{ pivot.date | date:'mediumDate' }}</div>
-      </mat-list-item>
-    </mat-list>
-    <div
-      class="italic text-[color:var(--mat-sys-on-surface-variant,rgba(255,255,255,0.6))]"
-      *ngIf="!historyLoading && !history.length"
-    >
-      {{ historyError || 'No history captured yet.' }}
-    </div>
+    @if (historyLoading) {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    }
+    @if (!historyLoading && history.length) {
+      <mat-list>
+        @for (pivot of history; track pivot) {
+          <mat-list-item>
+            <div matListItemTitle>{{ pivot.price | number:'1.2-2' }}</div>
+            <div matListItemLine>{{ pivot.index }} — {{ pivot.date | date:'mediumDate' }}</div>
+          </mat-list-item>
+        }
+      </mat-list>
+    }
+    @if (!historyLoading && !history.length) {
+      <div
+        class="italic text-[color:var(--mat-sys-on-surface-variant,rgba(255,255,255,0.6))]"
+        >
+        {{ historyError || 'No history captured yet.' }}
+      </div>
+    }
   </section>
 </div>

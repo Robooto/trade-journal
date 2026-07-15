@@ -1,9 +1,13 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="minimalist-form">
-  <div *ngIf="draftRestored || draftSavedAt" class="draft-status" role="status">
-    <mat-icon>{{ draftRestored ? 'restore' : 'cloud_done' }}</mat-icon>
-    <span>{{ draftRestored ? 'Draft restored' : 'Draft saved' }}<ng-container *ngIf="draftSavedAt"> at {{ draftSavedAt | date:'shortTime' }}</ng-container></span>
-    <button mat-button type="button" (click)="clearDraft()">Discard draft</button>
-  </div>
+  @if (draftRestored || draftSavedAt) {
+    <div class="draft-status" role="status">
+      <mat-icon>{{ draftRestored ? 'restore' : 'cloud_done' }}</mat-icon>
+      <span>{{ draftRestored ? 'Draft restored' : 'Draft saved' }}@if (draftSavedAt) {
+        at {{ draftSavedAt | date:'shortTime' }}
+      }</span>
+      <button mat-button type="button" (click)="clearDraft()">Discard draft</button>
+    </div>
+  }
   <!-- Single line with all main fields -->
   <div class="form-header">
     <div class="header-fields">
@@ -13,7 +17,7 @@
           <input matInput type="date" formControlName="date" />
         </mat-form-field>
       </div>
-      
+
       <div class="field-group">
         <mat-icon>trending_up</mat-icon>
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="compact-field">
@@ -21,13 +25,13 @@
           <input matInput type="number" formControlName="esPrice" placeholder="6272" />
         </mat-form-field>
       </div>
-      
+
       <mat-button-toggle-group
         formControlName="marketDirection"
         aria-label="Market Up or Down"
         appearance="standard"
         class="direction-toggle"
-      >
+        >
         <mat-button-toggle value="up">
           <mat-icon>arrow_upward</mat-icon>
           Up
@@ -37,7 +41,7 @@
           Down
         </mat-button-toggle>
       </mat-button-toggle-group>
-      
+
       <div class="field-group">
         <span class="delta-symbol">Δ</span>
         <mat-form-field appearance="outline" subscriptSizing="dynamic" class="compact-field">
@@ -98,69 +102,75 @@
         {{ showTimelineSection ? 'Hide Timeline Events' : 'Add Timeline Events' }}
       </button>
     </div>
-    
-    <div *ngIf="showTimelineSection" class="timeline-content">
-      <div class="timeline-divider"></div>
-      
-      <div formArrayName="events" class="events-container">
-        <div
-          *ngFor="let ev of events.controls; let i = index"
-          [formGroupName]="i"
-          class="timeline-event-form"
-        >
-          <!-- Time and Price on same line -->
-          <div class="event-time-price">
-            <mat-icon>access_time</mat-icon>
-            <mat-form-field appearance="outline" class="time-field">
-              <input matInput formControlName="time" placeholder="10:15 AM" />
-            </mat-form-field>
-            <span class="price-separator">&#64;</span>
-            <mat-form-field appearance="outline" class="price-field">
-              <input matInput type="number" formControlName="price" placeholder="5855" />
-            </mat-form-field>
-          </div>
-          
-          <!-- Note below -->
-          <mat-form-field appearance="outline" class="event-note-field">
-            <textarea
-              matInput
-              formControlName="note"
-              rows="2"
-              placeholder="What happened at this time..."
-            ></textarea>
-          </mat-form-field>
+
+    @if (showTimelineSection) {
+      <div class="timeline-content">
+        <div class="timeline-divider"></div>
+        <div formArrayName="events" class="events-container">
+          @for (ev of events.controls; track ev; let i = $index) {
+            <div
+              [formGroupName]="i"
+              class="timeline-event-form"
+              >
+              <!-- Time and Price on same line -->
+              <div class="event-time-price">
+                <mat-icon>access_time</mat-icon>
+                <mat-form-field appearance="outline" class="time-field">
+                  <input matInput formControlName="time" placeholder="10:15 AM" />
+                </mat-form-field>
+                <span class="price-separator">&#64;</span>
+                <mat-form-field appearance="outline" class="price-field">
+                  <input matInput type="number" formControlName="price" placeholder="5855" />
+                </mat-form-field>
+              </div>
+              <!-- Note below -->
+              <mat-form-field appearance="outline" class="event-note-field">
+                <textarea
+                  matInput
+                  formControlName="note"
+                  rows="2"
+                  placeholder="What happened at this time..."
+                ></textarea>
+              </mat-form-field>
+            </div>
+          }
         </div>
+        <button mat-button type="button" (click)="addEvent()" class="add-event-btn">
+          <mat-icon>add</mat-icon>
+          Add Event
+        </button>
       </div>
-      
-      <button mat-button type="button" (click)="addEvent()" class="add-event-btn">
-        <mat-icon>add</mat-icon>
-        Add Event
-      </button>
-    </div>
+    }
   </div>
 
-  <div *ngIf="saveError" class="save-error" role="alert">
-    <mat-icon>error_outline</mat-icon>
-    <span>{{ saveError }}</span>
-  </div>
+  @if (saveError) {
+    <div class="save-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ saveError }}</span>
+    </div>
+  }
 
   <!-- Action Buttons -->
   <div class="form-actions">
     <div class="left-actions">
-      <button mat-button type="button" (click)="cancel()" *ngIf="form.get('id')?.value">
-        Clear
-      </button>
+      @if (form.get('id')?.value) {
+        <button mat-button type="button" (click)="cancel()">
+          Clear
+        </button>
+      }
       <button mat-raised-button color="primary" type="submit" class="save-btn" [disabled]="isSaving">
         <mat-icon>save</mat-icon>
         {{ isSaving ? 'Saving...' : (form.get('id')?.value ? 'Update Entry' : 'Save Entry') }}
       </button>
     </div>
-    
+
     <div class="right-actions">
-      <button mat-stroked-button color="warn" type="button" (click)="confirmDelete()" *ngIf="form.get('id')?.value">
-        <mat-icon>delete</mat-icon>
-        Delete
-      </button>
+      @if (form.get('id')?.value) {
+        <button mat-stroked-button color="warn" type="button" (click)="confirmDelete()">
+          <mat-icon>delete</mat-icon>
+          Delete
+        </button>
+      }
     </div>
   </div>
 </form>

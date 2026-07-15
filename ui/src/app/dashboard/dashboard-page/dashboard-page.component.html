@@ -30,10 +30,12 @@
           </button>
         </div>
         <div class="resource-links">
-          <a *ngFor="let resource of dailyOverview" [href]="resource.url" target="_blank" rel="noopener">
-            <span>{{ resource.name }}</span>
-            <mat-icon>north_east</mat-icon>
-          </a>
+          @for (resource of dailyOverview; track resource) {
+            <a [href]="resource.url" target="_blank" rel="noopener">
+              <span>{{ resource.name }}</span>
+              <mat-icon>north_east</mat-icon>
+            </a>
+          }
         </div>
       </div>
 
@@ -46,10 +48,12 @@
           </button>
         </div>
         <div class="resource-links">
-          <a *ngFor="let resource of spotGammaTools" [href]="resource.url" target="_blank" rel="noopener">
-            <span>{{ resource.name }}</span>
-            <mat-icon>north_east</mat-icon>
-          </a>
+          @for (resource of spotGammaTools; track resource) {
+            <a [href]="resource.url" target="_blank" rel="noopener">
+              <span>{{ resource.name }}</span>
+              <mat-icon>north_east</mat-icon>
+            </a>
+          }
         </div>
       </div>
     </article>
@@ -65,16 +69,22 @@
         </div>
         <p>Capture what you see, your directional lean, important levels and what would change your mind.</p>
         <a mat-flat-button color="primary" routerLink="/journal" [queryParams]="{ new: 1 }">Start today's entry</a>
-        <div class="recent-journal" *ngIf="recentEntries.length">
-          <span class="recent-label">Recent entries</span>
-          <a *ngFor="let entry of recentEntries" routerLink="/journal" class="recent-entry">
-            <span>
-              <strong>{{ entry.date | date:'mediumDate' }}</strong>
-              <small *ngIf="entry.tickers?.length">{{ entry.tickers?.join(', ') }}</small>
-            </span>
-            <mat-icon>chevron_right</mat-icon>
-          </a>
-        </div>
+        @if (recentEntries.length) {
+          <div class="recent-journal">
+            <span class="recent-label">Recent entries</span>
+            @for (entry of recentEntries; track entry) {
+              <a routerLink="/journal" class="recent-entry">
+                <span>
+                  <strong>{{ entry.date | date:'mediumDate' }}</strong>
+                  @if (entry.tickers?.length) {
+                    <small>{{ entry.tickers?.join(', ') }}</small>
+                  }
+                </span>
+                <mat-icon>chevron_right</mat-icon>
+              </a>
+            }
+          </div>
+        }
       </article>
 
       <article class="workflow-card positions-step">
@@ -95,13 +105,17 @@
     <article class="guideline-card">
       <h2>Daily checklist</h2>
       <ul>
-        <li *ngFor="let rule of dailyGuidelines"><mat-icon>check_circle_outline</mat-icon><span>{{ rule }}</span></li>
+        @for (rule of dailyGuidelines; track rule) {
+          <li><mat-icon>check_circle_outline</mat-icon><span>{{ rule }}</span></li>
+        }
       </ul>
     </article>
     <article class="guideline-card">
       <h2>Trading guardrails</h2>
       <ul>
-        <li *ngFor="let rule of tradeGuidelines"><mat-icon>shield</mat-icon><span>{{ rule }}</span></li>
+        @for (rule of tradeGuidelines; track rule) {
+          <li><mat-icon>shield</mat-icon><span>{{ rule }}</span></li>
+        }
       </ul>
     </article>
   </section>

@@ -29,11 +29,15 @@ if [[ -n "$NPM_BIN" && "$NPM_BIN" != /mnt/* ]]; then
 
   echo "==> UI spec type-check"
   npm --prefix ui exec -- tsc -p tsconfig.spec.json --noEmit
+
+  echo "==> UI unit tests"
+  npm --prefix ui test -- --watch=false
 else
-  echo "==> UI build and type-check in Linux container"
-  docker build --target builder -f ui/Dockerfile -t trade-journal-ui-check:local .
-  docker run --rm trade-journal-ui-check:local \
+  echo "==> UI build, type-check, and tests in Linux container"
+  docker build --target test -f ui/Dockerfile -t trade-journal-ui-test:local .
+  docker run --rm trade-journal-ui-test:local \
     npm exec -- tsc -p tsconfig.spec.json --noEmit
+  docker run --rm trade-journal-ui-test:local
 fi
 
 echo "==> Compose configuration"

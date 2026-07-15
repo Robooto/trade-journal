@@ -15,26 +15,32 @@
           <!-- Symbol Input -->
           <mat-form-field appearance="outline" class="symbol-field">
             <mat-label>Symbol</mat-label>
-            <input matInput 
-                   formControlName="symbol" 
-                   placeholder="AAPL"
-                   class="uppercase"
-                   maxlength="10">
-            <mat-error *ngIf="chartForm.get('symbol')?.hasError('required')">
-              Symbol is required
-            </mat-error>
-            <mat-error *ngIf="chartForm.get('symbol')?.hasError('pattern')">
-              Enter a valid stock symbol (1-10 characters)
-            </mat-error>
+            <input matInput
+              formControlName="symbol"
+              placeholder="AAPL"
+              class="uppercase"
+              maxlength="10">
+            @if (chartForm.get('symbol')?.hasError('required')) {
+              <mat-error>
+                Symbol is required
+              </mat-error>
+            }
+            @if (chartForm.get('symbol')?.hasError('pattern')) {
+              <mat-error>
+                Enter a valid stock symbol (1-10 characters)
+              </mat-error>
+            }
           </mat-form-field>
 
           <!-- Resolution Dropdown -->
           <mat-form-field appearance="outline" class="resolution-field">
             <mat-label>Resolution</mat-label>
             <mat-select formControlName="resolution">
-              <mat-option *ngFor="let res of resolutionOptions" [value]="res.value">
-                {{ res.label }}
-              </mat-option>
+              @for (res of resolutionOptions; track res) {
+                <mat-option [value]="res.value">
+                  {{ res.label }}
+                </mat-option>
+              }
             </mat-select>
             <mat-hint>Chart resolution</mat-hint>
           </mat-form-field>
@@ -44,9 +50,9 @@
           <!-- From Date -->
           <mat-form-field appearance="outline" class="date-field">
             <mat-label>From Date</mat-label>
-            <input matInput 
-                   [matDatepicker]="fromPicker" 
-                   formControlName="fromDate">
+            <input matInput
+              [matDatepicker]="fromPicker"
+              formControlName="fromDate">
             <mat-datepicker-toggle matIconSuffix [for]="fromPicker"></mat-datepicker-toggle>
             <mat-datepicker #fromPicker></mat-datepicker>
             <mat-hint>Maximum 60-day range</mat-hint>
@@ -55,22 +61,28 @@
           <!-- To Date -->
           <mat-form-field appearance="outline" class="date-field">
             <mat-label>To Date</mat-label>
-            <input matInput 
-                   [matDatepicker]="toPicker" 
-                   formControlName="toDate">
+            <input matInput
+              [matDatepicker]="toPicker"
+              formControlName="toDate">
             <mat-datepicker-toggle matIconSuffix [for]="toPicker"></mat-datepicker-toggle>
             <mat-datepicker #toPicker></mat-datepicker>
           </mat-form-field>
 
           <!-- Submit Button -->
-          <button mat-raised-button 
-                  color="primary" 
-                  type="submit" 
-                  [disabled]="chartForm.invalid || isLoading"
-                  class="load-button">
-            <mat-icon *ngIf="isLoading">refresh</mat-icon>
-            <span *ngIf="!isLoading">Load Chart</span>
-            <span *ngIf="isLoading">Loading...</span>
+          <button mat-raised-button
+            color="primary"
+            type="submit"
+            [disabled]="chartForm.invalid || isLoading"
+            class="load-button">
+            @if (isLoading) {
+              <mat-icon>refresh</mat-icon>
+            }
+            @if (!isLoading) {
+              <span>Load Chart</span>
+            }
+            @if (isLoading) {
+              <span>Loading...</span>
+            }
           </button>
         </div>
       </form>
@@ -78,14 +90,16 @@
   </mat-card>
 
   <!-- Error Display -->
-  <mat-card *ngIf="error" class="error-card">
-    <mat-card-content>
-      <div class="error-message">
-        <mat-icon color="warn">error</mat-icon>
-        <span>{{ error }}</span>
-      </div>
-    </mat-card-content>
-  </mat-card>
+  @if (error) {
+    <mat-card class="error-card">
+      <mat-card-content>
+        <div class="error-message">
+          <mat-icon color="warn">error</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
 
   <!-- Price Lines Management -->
   <mat-card class="price-lines-card">
@@ -98,81 +112,95 @@
     </mat-card-header>
     <mat-card-content>
       <!-- Add Price Line Form -->
-      <form *ngIf="showPriceLineForm" [formGroup]="priceLineForm" (ngSubmit)="addPriceLine()" class="price-line-form">
-        <div class="price-line-form-row">
-          <mat-form-field appearance="outline" class="price-field">
-            <mat-label>Price</mat-label>
-            <input matInput 
-                   type="number" 
-                   step="0.01" 
-                   formControlName="price" 
-                   placeholder="625.50">
-            <mat-error *ngIf="priceLineForm.get('price')?.hasError('required')">
-              Price is required
-            </mat-error>
-            <mat-error *ngIf="priceLineForm.get('price')?.hasError('min')">
-              Price must be greater than 0
-            </mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="color-field">
-            <mat-label>Color</mat-label>
-            <mat-select formControlName="color">
-              <mat-option *ngFor="let color of colorOptions" [value]="color.value">
-                <div class="color-option">
-                  <div class="color-swatch" [style.background-color]="color.value"></div>
-                  {{ color.label }}
-                </div>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="style-field">
-            <mat-label>Line Style</mat-label>
-            <mat-select formControlName="lineStyle">
-              <mat-option *ngFor="let style of lineStyleOptions" [value]="style.value">
-                {{ style.label }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="label-field">
-            <mat-label>Label (Optional)</mat-label>
-            <input matInput formControlName="label" placeholder="Support Level">
-          </mat-form-field>
-
-          <button mat-raised-button 
-                  color="primary" 
-                  type="submit" 
-                  [disabled]="priceLineForm.invalid"
-                  class="add-line-button">
-            <mat-icon>add</mat-icon>
-            Add Line
-          </button>
-        </div>
-      </form>
+      @if (showPriceLineForm) {
+        <form [formGroup]="priceLineForm" (ngSubmit)="addPriceLine()" class="price-line-form">
+          <div class="price-line-form-row">
+            <mat-form-field appearance="outline" class="price-field">
+              <mat-label>Price</mat-label>
+              <input matInput
+                type="number"
+                step="0.01"
+                formControlName="price"
+                placeholder="625.50">
+              @if (priceLineForm.get('price')?.hasError('required')) {
+                <mat-error>
+                  Price is required
+                </mat-error>
+              }
+              @if (priceLineForm.get('price')?.hasError('min')) {
+                <mat-error>
+                  Price must be greater than 0
+                </mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="color-field">
+              <mat-label>Color</mat-label>
+              <mat-select formControlName="color">
+                @for (color of colorOptions; track color) {
+                  <mat-option [value]="color.value">
+                    <div class="color-option">
+                      <div class="color-swatch" [style.background-color]="color.value"></div>
+                      {{ color.label }}
+                    </div>
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="style-field">
+              <mat-label>Line Style</mat-label>
+              <mat-select formControlName="lineStyle">
+                @for (style of lineStyleOptions; track style) {
+                  <mat-option [value]="style.value">
+                    {{ style.label }}
+                  </mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="label-field">
+              <mat-label>Label (Optional)</mat-label>
+              <input matInput formControlName="label" placeholder="Support Level">
+            </mat-form-field>
+            <button mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="priceLineForm.invalid"
+              class="add-line-button">
+              <mat-icon>add</mat-icon>
+              Add Line
+            </button>
+          </div>
+        </form>
+      }
 
       <!-- Existing Price Lines List -->
-      <div *ngIf="priceLines.length > 0" class="price-lines-list">
-        <div *ngFor="let priceLine of priceLines" class="price-line-item">
-          <div class="price-line-info">
-            <div class="price-line-swatch" [style.background-color]="priceLine.color"></div>
-            <span class="price-line-price">${{ priceLine.price }}</span>
-            <span class="price-line-style">{{ priceLine.lineStyle }}</span>
-            <span class="price-line-label" *ngIf="priceLine.label">{{ priceLine.label }}</span>
-          </div>
-          <button mat-icon-button 
-                  color="warn" 
-                  (click)="removePriceLine(priceLine.id)"
-                  aria-label="Remove price line">
-            <mat-icon>delete</mat-icon>
-          </button>
+      @if (priceLines.length > 0) {
+        <div class="price-lines-list">
+          @for (priceLine of priceLines; track priceLine) {
+            <div class="price-line-item">
+              <div class="price-line-info">
+                <div class="price-line-swatch" [style.background-color]="priceLine.color"></div>
+                <span class="price-line-price">${{ priceLine.price }}</span>
+                <span class="price-line-style">{{ priceLine.lineStyle }}</span>
+                @if (priceLine.label) {
+                  <span class="price-line-label">{{ priceLine.label }}</span>
+                }
+              </div>
+              <button mat-icon-button
+                color="warn"
+                (click)="removePriceLine(priceLine.id)"
+                aria-label="Remove price line">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          }
         </div>
-      </div>
+      }
 
-      <div *ngIf="priceLines.length === 0 && !showPriceLineForm" class="no-price-lines">
-        <p>No price lines added. Click the + button to add your first price line.</p>
-      </div>
+      @if (priceLines.length === 0 && !showPriceLineForm) {
+        <div class="no-price-lines">
+          <p>No price lines added. Click the + button to add your first price line.</p>
+        </div>
+      }
     </mat-card-content>
   </mat-card>
 
@@ -186,16 +214,18 @@
     </mat-card-header>
     <mat-card-content>
       <!-- Loading Indicator -->
-      <div *ngIf="isLoading" class="loading-container">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading chart data...</p>
-      </div>
+      @if (isLoading) {
+        <div class="loading-container">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading chart data...</p>
+        </div>
+      }
 
       <!-- Chart Container -->
-      <div #chartContainer 
-           class="chart-container"
-           [class.loading]="isLoading"
-           (window:resize)="onResize()">
+      <div #chartContainer
+        class="chart-container"
+        [class.loading]="isLoading"
+        (window:resize)="onResize()">
       </div>
     </mat-card-content>
   </mat-card>
@@ -232,16 +262,22 @@
           One versioned package for OpenClaw or ChatGPT, including chart bars,
           brokerage context, SpotGamma status, portfolio exposure, and explicit warnings.
         </div>
-        <div class="volatility-error" *ngIf="analysisPackageError">
-          <mat-icon color="warn">warning</mat-icon>
-          <span>{{ analysisPackageError }}</span>
-        </div>
-        <div class="market-details" *ngIf="analysisPackage?.warnings?.length">
-          <div class="market-detail" *ngFor="let warning of analysisPackage?.warnings">
-            <div class="detail-label">Warning</div>
-            <div class="detail-value">{{ warning }}</div>
+        @if (analysisPackageError) {
+          <div class="volatility-error">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>{{ analysisPackageError }}</span>
           </div>
-        </div>
+        }
+        @if (analysisPackage?.warnings?.length) {
+          <div class="market-details">
+            @for (warning of analysisPackage?.warnings; track warning) {
+              <div class="market-detail">
+                <div class="detail-label">Warning</div>
+                <div class="detail-value">{{ warning }}</div>
+              </div>
+            }
+          </div>
+        }
         <pre class="prompt-output">{{ promptOutput }}</pre>
       </div>
     </mat-expansion-panel>
@@ -251,13 +287,15 @@
         <mat-panel-title>Volatility &amp; Correlation</mat-panel-title>
         <mat-panel-description class="volatility-header-actions">
           <span class="volatility-header-status">
-            <ng-container *ngIf="volatilityLoading">Loading...</ng-container>
-            <ng-container *ngIf="!volatilityLoading && volatilityData">
+            @if (volatilityLoading) {
+              Loading...
+            }
+            @if (!volatilityLoading && volatilityData) {
               {{ volatilityData.symbol }}
-            </ng-container>
+            }
           </span>
-          <button 
-            mat-icon-button 
+          <button
+            mat-icon-button
             matTooltip="Copy raw JSON"
             aria-label="Copy volatility JSON"
             [disabled]="!lastVolatilityRawData"
@@ -268,17 +306,21 @@
       </mat-expansion-panel-header>
 
       <div class="volatility-content">
-        <div *ngIf="volatilityLoading" class="volatility-loading">
-          <mat-spinner diameter="40"></mat-spinner>
-          <span>Fetching volatility snapshot...</span>
-        </div>
+        @if (volatilityLoading) {
+          <div class="volatility-loading">
+            <mat-spinner diameter="40"></mat-spinner>
+            <span>Fetching volatility snapshot...</span>
+          </div>
+        }
 
-        <div *ngIf="!volatilityLoading && volatilityError" class="volatility-error">
-          <mat-icon color="warn">warning</mat-icon>
-          <span>{{ volatilityError }}</span>
-        </div>
+        @if (!volatilityLoading && volatilityError) {
+          <div class="volatility-error">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>{{ volatilityError }}</span>
+          </div>
+        }
 
-        <ng-container *ngIf="!volatilityLoading && !volatilityError && volatilityData as vol">
+        @if (!volatilityLoading && !volatilityError && volatilityData; as vol) {
           <div class="volatility-metrics">
             <div class="volatility-metric">
               <div class="metric-label">Implied Volatility Index</div>
@@ -309,22 +351,27 @@
               <div class="metric-value">{{ formatDecimal(vol.liquidityRating, 1) }}</div>
             </div>
           </div>
-
           <div class="option-expirations">
             <div class="option-expirations-header">Option Expiration Implied Volatility</div>
-            <div *ngIf="vol.optionExpirationImpliedVolatilities.length === 0" class="no-option-expirations">
-              <span>No option expiration data available.</span>
-            </div>
-            <div *ngIf="vol.optionExpirationImpliedVolatilities.length > 0" class="option-expirations-list">
-              <div 
-                class="option-expiration-item" 
-                *ngFor="let expiration of vol.optionExpirationImpliedVolatilities">
-                <div class="expiration-date">{{ expiration.expirationDate | date:'MMM d, y' }}</div>
-                <div class="expiration-iv">{{ formatPercent(expiration.impliedVolatility) }}</div>
+            @if (vol.optionExpirationImpliedVolatilities.length === 0) {
+              <div class="no-option-expirations">
+                <span>No option expiration data available.</span>
               </div>
-            </div>
+            }
+            @if (vol.optionExpirationImpliedVolatilities.length > 0) {
+              <div class="option-expirations-list">
+                @for (expiration of vol.optionExpirationImpliedVolatilities; track expiration) {
+                  <div
+                    class="option-expiration-item"
+                    >
+                    <div class="expiration-date">{{ expiration.expirationDate | date:'MMM d, y' }}</div>
+                    <div class="expiration-iv">{{ formatPercent(expiration.impliedVolatility) }}</div>
+                  </div>
+                }
+              </div>
+            }
           </div>
-        </ng-container>
+        }
       </div>
     </mat-expansion-panel>
 
@@ -333,13 +380,15 @@
         <mat-panel-title>Market Data Snapshot</mat-panel-title>
         <mat-panel-description class="volatility-header-actions">
           <span class="volatility-header-status">
-            <ng-container *ngIf="marketDataLoading">Loading...</ng-container>
-            <ng-container *ngIf="!marketDataLoading && lastMarketDataRaw">
+            @if (marketDataLoading) {
+              Loading...
+            }
+            @if (!marketDataLoading && lastMarketDataRaw) {
               {{ lastMarketDataRaw.symbol }}
-            </ng-container>
+            }
           </span>
-          <button 
-            mat-icon-button 
+          <button
+            mat-icon-button
             matTooltip="Copy raw JSON"
             aria-label="Copy market data JSON"
             [disabled]="!lastMarketDataRaw"
@@ -350,35 +399,47 @@
       </mat-expansion-panel-header>
 
       <div class="market-content">
-        <div *ngIf="marketDataLoading" class="volatility-loading">
-          <mat-spinner diameter="40"></mat-spinner>
-          <span>Fetching market snapshot...</span>
-        </div>
+        @if (marketDataLoading) {
+          <div class="volatility-loading">
+            <mat-spinner diameter="40"></mat-spinner>
+            <span>Fetching market snapshot...</span>
+          </div>
+        }
 
-        <div *ngIf="!marketDataLoading && marketDataError" class="volatility-error">
-          <mat-icon color="warn">warning</mat-icon>
-          <span>{{ marketDataError }}</span>
-        </div>
+        @if (!marketDataLoading && marketDataError) {
+          <div class="volatility-error">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>{{ marketDataError }}</span>
+          </div>
+        }
 
-        <ng-container *ngIf="!marketDataLoading && !marketDataError && lastMarketDataRaw">
-          <div *ngIf="marketDataHighlights.length > 0" class="market-metrics">
-            <div class="market-metric" *ngFor="let metric of marketDataHighlights">
-              <div class="metric-label">{{ metric.label }}</div>
-              <div class="metric-value">{{ metric.value }}</div>
+        @if (!marketDataLoading && !marketDataError && lastMarketDataRaw) {
+          @if (marketDataHighlights.length > 0) {
+            <div class="market-metrics">
+              @for (metric of marketDataHighlights; track metric) {
+                <div class="market-metric">
+                  <div class="metric-label">{{ metric.label }}</div>
+                  <div class="metric-value">{{ metric.value }}</div>
+                </div>
+              }
             </div>
-          </div>
-
-          <div *ngIf="marketDataDetails.length > 0" class="market-details">
-            <div class="market-detail" *ngFor="let detail of marketDataDetails">
-              <div class="detail-label">{{ detail.label }}</div>
-              <div class="detail-value">{{ detail.value }}</div>
+          }
+          @if (marketDataDetails.length > 0) {
+            <div class="market-details">
+              @for (detail of marketDataDetails; track detail) {
+                <div class="market-detail">
+                  <div class="detail-label">{{ detail.label }}</div>
+                  <div class="detail-value">{{ detail.value }}</div>
+                </div>
+              }
             </div>
-          </div>
-
-          <div *ngIf="marketDataHighlights.length === 0 && marketDataDetails.length === 0" class="market-empty">
-            <span>No market data fields available.</span>
-          </div>
-        </ng-container>
+          }
+          @if (marketDataHighlights.length === 0 && marketDataDetails.length === 0) {
+            <div class="market-empty">
+              <span>No market data fields available.</span>
+            </div>
+          }
+        }
 
       </div>
     </mat-expansion-panel>
@@ -392,9 +453,9 @@
           <div class="equity-hub-description">Open Equity Hub for deeper SpotGamma levels on the selected symbol.</div>
         </div>
         <a class="equity-hub-link"
-           [href]="equityHubUrl"
-           target="_blank"
-           rel="noopener noreferrer">
+          [href]="equityHubUrl"
+          target="_blank"
+          rel="noopener noreferrer">
           Open Equity Hub
           <mat-icon>open_in_new</mat-icon>
         </a>

@@ -31,8 +31,8 @@ describe('ChartsPageComponent', () => {
   });
 
   it('should have default form values', () => {
-    expect(component.chartForm.get('symbol')?.value).toBe('AAPL');
-    expect(component.chartForm.get('resolution')?.value).toBe('1d');
+    expect(component.chartForm.get('symbol')?.value).toBe('SPY');
+    expect(component.chartForm.get('resolution')?.value).toBe('1h');
   });
 
   it('should validate symbol format', () => {

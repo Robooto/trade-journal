@@ -6,7 +6,9 @@
       <p class="subtitle">See what needs attention, then inspect the complete position list.</p>
     </div>
     <div class="page-actions">
-      <span class="freshness" *ngIf="lastRefreshed">Updated {{ lastRefreshed | date:'shortTime' }}</span>
+      @if (lastRefreshed) {
+        <span class="freshness">Updated {{ lastRefreshed | date:'shortTime' }}</span>
+      }
       <button mat-stroked-button type="button" (click)="toggleAttentionOnly()" [attr.aria-pressed]="attentionOnly">
         <mat-icon>{{ attentionOnly ? 'filter_alt_off' : 'filter_alt' }}</mat-icon>
         {{ attentionOnly ? 'Show all' : 'Needs review' }}
@@ -18,220 +20,233 @@
     </div>
   </header>
 
-  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+  @if (loading) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
 
-  <section *ngIf="errorMessage" class="state-panel error-state" role="alert">
-    <mat-icon>error_outline</mat-icon>
-    <div>
-      <strong>Unable to load positions</strong>
-      <p>{{ errorMessage }}</p>
-    </div>
-    <button mat-stroked-button type="button" (click)="loadPositions()">Try again</button>
-  </section>
-
-  <section *ngIf="!loading && !errorMessage && accounts.length" class="attention-summary" [class.has-alerts]="attentionCount > 0">
-    <mat-icon>{{ attentionCount > 0 ? 'priority_high' : 'check_circle' }}</mat-icon>
-    <div>
-      <strong>{{ attentionCount > 0 ? attentionCount + ' position groups need attention' : 'No urgent rule triggers' }}</strong>
-      <p>{{ attentionCount > 0 ? 'Filter the table to focus on current warnings and management thresholds.' : 'Review the full list for context and discretionary decisions.' }}</p>
-    </div>
-    <button *ngIf="attentionCount > 0" mat-button type="button" (click)="attentionOnly = true">Review them</button>
-  </section>
-
-  <section *ngFor="let account of accounts" class="account-section">
-    <div class="account-heading">
+  @if (errorMessage) {
+    <section class="state-panel error-state" role="alert">
+      <mat-icon>error_outline</mat-icon>
       <div>
-        <p class="eyebrow">Account</p>
-        <h2>{{ account.nickname || account.account_number }}</h2>
-        <span class="account-number" *ngIf="account.nickname">{{ account.account_number }}</span>
+        <strong>Unable to load positions</strong>
+        <p>{{ errorMessage }}</p>
       </div>
-      <div class="account-metrics">
-        <div class="metric" matTooltip="Share-equivalent portfolio delta adjusted by each underlying beta.">
-          <span>Beta Δ shares</span>
-          <strong>{{ (account.total_beta_delta_shares ?? account.total_beta_delta) | number:'1.0-1' }}</strong>
+      <button mat-stroked-button type="button" (click)="loadPositions()">Try again</button>
+    </section>
+  }
+
+  @if (!loading && !errorMessage && accounts.length) {
+    <section class="attention-summary" [class.has-alerts]="attentionCount > 0">
+      <mat-icon>{{ attentionCount > 0 ? 'priority_high' : 'check_circle' }}</mat-icon>
+      <div>
+        <strong>{{ attentionCount > 0 ? attentionCount + ' position groups need attention' : 'No urgent rule triggers' }}</strong>
+        <p>{{ attentionCount > 0 ? 'Filter the table to focus on current warnings and management thresholds.' : 'Review the full list for context and discretionary decisions.' }}</p>
+      </div>
+      @if (attentionCount > 0) {
+        <button mat-button type="button" (click)="attentionOnly = true">Review them</button>
+      }
+    </section>
+  }
+
+  @for (account of accounts; track account) {
+    <section class="account-section">
+      <div class="account-heading">
+        <div>
+          <p class="eyebrow">Account</p>
+          <h2>{{ account.nickname || account.account_number }}</h2>
+          @if (account.nickname) {
+            <span class="account-number">{{ account.account_number }}</span>
+          }
         </div>
-        <div class="metric" matTooltip="Share-equivalent directional delta across the account.">
-          <span>Delta shares</span>
-          <strong>{{ (account.delta_shares ?? account.total_position_delta) | number:'1.0-1' }}</strong>
-        </div>
-        <div class="metric" matTooltip="Brokerage net liquidating value. Margin equity is used only when net liquidating value is unavailable.">
-          <span>Net liquidity</span>
-          <strong>{{ account.net_liquidating_value_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
-        </div>
-        <div class="metric" matTooltip="Derivative buying power available as reported by the brokerage.">
-          <span>Available BP</span>
-          <strong>{{ account.derivative_buying_power_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
-        </div>
-        <div class="metric" [matTooltip]="buyingPowerTooltip(account)">
-          <span>Buying power used</span>
-          <strong>{{ account.buying_power_utilization_percent | number:'1.0-1' }}%</strong>
-          <span class="zone" [ngClass]="account.buying_power_zone">{{ buyingPowerZoneLabel(account) }}</span>
-        </div>
-        <div class="metric" matTooltip="Current theta divided by net liquidating value. This is a Greek estimate, not guaranteed daily income.">
-          <span>Theta / day</span>
-          <strong>{{ (account.theta_dollars_per_day ?? account.total_theta) | currency:'USD':'symbol':'1.0-0' }}</strong>
-          <small>{{ account.theta_percent_of_net_liq_per_day | number:'1.0-3' }}% of net liq</small>
-        </div>
-        <div class="metric" matTooltip="Estimated signed portfolio change for a one-point increase in implied volatility, based on current vega.">
-          <span>+1 vol point</span>
-          <strong>{{ account.vega_plus_one_point_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
-          <small>{{ account.vega_plus_one_point_percent_of_net_liq | number:'1.0-3' }}% of net liq</small>
-        </div>
-        <div class="metric" [matTooltip]="concentrationTooltip(account)">
-          <span>Top Greek exposure</span>
-          <strong>{{ account.largest_underlying_concentration?.underlying_symbol || '—' }}</strong>
-          <small>{{ account.largest_underlying_concentration?.absolute_beta_delta_share_percent | number:'1.0-1' }}% of absolute Greek exposure</small>
+        <div class="account-metrics">
+          <div class="metric" matTooltip="Share-equivalent portfolio delta adjusted by each underlying beta.">
+            <span>Beta Δ shares</span>
+            <strong>{{ (account.total_beta_delta_shares ?? account.total_beta_delta) | number:'1.0-1' }}</strong>
+          </div>
+          <div class="metric" matTooltip="Share-equivalent directional delta across the account.">
+            <span>Delta shares</span>
+            <strong>{{ (account.delta_shares ?? account.total_position_delta) | number:'1.0-1' }}</strong>
+          </div>
+          <div class="metric" matTooltip="Brokerage net liquidating value. Margin equity is used only when net liquidating value is unavailable.">
+            <span>Net liquidity</span>
+            <strong>{{ account.net_liquidating_value_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+          </div>
+          <div class="metric" matTooltip="Derivative buying power available as reported by the brokerage.">
+            <span>Available BP</span>
+            <strong>{{ account.derivative_buying_power_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+          </div>
+          <div class="metric" [matTooltip]="buyingPowerTooltip(account)">
+            <span>Buying power used</span>
+            <strong>{{ account.buying_power_utilization_percent | number:'1.0-1' }}%</strong>
+            <span class="zone" [ngClass]="account.buying_power_zone">{{ buyingPowerZoneLabel(account) }}</span>
+          </div>
+          <div class="metric" matTooltip="Current theta divided by net liquidating value. This is a Greek estimate, not guaranteed daily income.">
+            <span>Theta / day</span>
+            <strong>{{ (account.theta_dollars_per_day ?? account.total_theta) | currency:'USD':'symbol':'1.0-0' }}</strong>
+            <small>{{ account.theta_percent_of_net_liq_per_day | number:'1.0-3' }}% of net liq</small>
+          </div>
+          <div class="metric" matTooltip="Estimated signed portfolio change for a one-point increase in implied volatility, based on current vega.">
+            <span>+1 vol point</span>
+            <strong>{{ account.vega_plus_one_point_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+            <small>{{ account.vega_plus_one_point_percent_of_net_liq | number:'1.0-3' }}% of net liq</small>
+          </div>
+          <div class="metric" [matTooltip]="concentrationTooltip(account)">
+            <span>Top Greek exposure</span>
+            <strong>{{ account.largest_underlying_concentration?.underlying_symbol || '—' }}</strong>
+            <small>{{ account.largest_underlying_concentration?.absolute_beta_delta_share_percent | number:'1.0-1' }}% of absolute Greek exposure</small>
+          </div>
         </div>
       </div>
-    </div>
+      <div class="balance-quality" [ngClass]="account.balance_status" [matTooltip]="balanceTooltip(account)" matTooltipClass="multiline-tooltip">
+        <mat-icon>{{ account.balance_status === 'ok' ? 'verified' : account.balance_status === 'partial' ? 'warning_amber' : 'cloud_off' }}</mat-icon>
+        <span>Balance data {{ account.balance_status || 'unavailable' }}</span>
+        @if (account.balance_fetched_at) {
+          <span>Fetched {{ account.balance_fetched_at | date:'shortTime' }}</span>
+        }
+        @if (account.balance_warnings?.length) {
+          <span>{{ account.balance_warnings?.length }} data note{{ account.balance_warnings?.length === 1 ? '' : 's' }}</span>
+        }
+      </div>
+      @if (visibleGroups(account).length) {
+        <div class="table-shell">
+          <table mat-table [dataSource]="visibleGroups(account)" class="positions-table">
+            <ng-container matColumnDef="underlying">
+              <th mat-header-cell *matHeaderCellDef>Underlying</th>
+              <td mat-cell *matCellDef="let group" class="underlying-cell">
+                @if (isValidChartSymbol(group.underlying_symbol)) {
+                  <button
+                    type="button"
+                    class="symbol-button"
+                    [class.expanded]="isChartExpanded(group, account)"
+                    [attr.aria-expanded]="isChartExpanded(group, account)"
+                    [attr.aria-label]="'Toggle chart for ' + group.underlying_symbol"
+                    (click)="onUnderlyingClick(group, $event, account)"
+                    >
+                    {{ group.underlying_symbol }}
+                    <mat-icon>{{ isChartExpanded(group, account) ? 'expand_less' : 'show_chart' }}</mat-icon>
+                  </button>
+                } @else {
+                  {{ group.underlying_symbol }}
+                }
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="expires">
+              <th mat-header-cell *matHeaderCellDef>Expires</th>
+              <td mat-cell *matCellDef="let group">{{ group.expires_at | date:'mediumDate' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="credit">
+              <th mat-header-cell *matHeaderCellDef>Opening credit</th>
+              <td mat-cell *matCellDef="let group">{{ group.total_credit_received | currency:'USD':'symbol':'1.0-0' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="price">
+              <th mat-header-cell *matHeaderCellDef>P/L</th>
+              <td mat-cell *matCellDef="let group" [ngClass]="{ positive: group.current_group_p_l > 0, negative: group.current_group_p_l < 0 }">
+                {{ group.current_group_p_l | currency:'USD':'symbol':'1.0-0' }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="percent">
+              <th mat-header-cell *matHeaderCellDef>Credit captured</th>
+              <td mat-cell *matCellDef="let group">{{ group.percent_credit_received | number:'1.0-0' }}%</td>
+            </ng-container>
+            <ng-container matColumnDef="delta">
+              <th mat-header-cell *matHeaderCellDef>Delta shares</th>
+              <td mat-cell *matCellDef="let group">{{ (group.delta_shares ?? group.total_position_delta) | number:'1.0-1' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="betadelta">
+              <th mat-header-cell *matHeaderCellDef>Beta Δ shares</th>
+              <td mat-cell *matCellDef="let group">{{ (group.beta_delta_shares ?? group.beta_delta) | number:'1.0-1' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="ivrank">
+              <th mat-header-cell *matHeaderCellDef>IV rank</th>
+              <td mat-cell *matCellDef="let group">{{ group.iv_rank | number:'1.0-1' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="ivchange">
+              <th mat-header-cell *matHeaderCellDef>IV 5d</th>
+              <td mat-cell *matCellDef="let group" [ngClass]="{ positive: group.iv_5d_change > 0, negative: group.iv_5d_change < 0 }">
+                {{ group.iv_5d_change | number:'1.0-1' }}%
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="rules">
+              <th mat-header-cell *matHeaderCellDef>Review signals</th>
+              <td mat-cell *matCellDef="let group">
+                <div class="rule-list" [matTooltip]="ruleTooltip(group)" matTooltipClass="multiline-tooltip">
+                  @for (rule of group.rules; track rule) {
+                    <span class="rule-chip" [ngClass]="rule.level">
+                      {{ rule.label }}
+                    </span>
+                  }
+                  @if (!group.rules?.length) {
+                    <span class="quiet">None</span>
+                  }
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="positions">
+              <th mat-header-cell *matHeaderCellDef>Legs</th>
+              <td mat-cell *matCellDef="let group">
+                <mat-expansion-panel class="legs-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>{{ group.positions.length }} {{ group.positions.length === 1 ? 'leg' : 'legs' }}</mat-panel-title>
+                  </mat-expansion-panel-header>
+                  <div class="nested-table-shell">
+                    <table mat-table [dataSource]="group.positions" class="nested-table">
+                      <ng-container matColumnDef="symbol">
+                        <th mat-header-cell *matHeaderCellDef>Symbol</th>
+                        <td mat-cell *matCellDef="let position">{{ position['symbol'] || position['instrument-symbol'] }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="qty">
+                        <th mat-header-cell *matHeaderCellDef>Qty</th>
+                        <td mat-cell *matCellDef="let position">{{ position['quantity'] }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="type">
+                        <th mat-header-cell *matHeaderCellDef>Type</th>
+                        <td mat-cell *matCellDef="let position">{{ position['instrument-type'] }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="plpos">
+                        <th mat-header-cell *matHeaderCellDef>P/L</th>
+                        <td mat-cell *matCellDef="let position">{{ position['approximate-p-l'] | currency:'USD':'symbol':'1.0-0' }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="cdelta">
+                        <th mat-header-cell *matHeaderCellDef>Delta shares</th>
+                        <td mat-cell *matCellDef="let position">{{ position['market_data']?.computed_position_delta | number:'1.0-1' }}</td>
+                      </ng-container>
+                      <ng-container matColumnDef="bo">
+                        <th mat-header-cell *matHeaderCellDef>Exit</th>
+                        <td mat-cell *matCellDef="let position">
+                          <button mat-stroked-button color="primary" type="button" (click)="openBracketOrder(position, account)">
+                            Manage exit
+                          </button>
+                        </td>
+                      </ng-container>
+                      <tr mat-header-row *matHeaderRowDef="positionCols"></tr>
+                      <tr mat-row *matRowDef="let row; columns: positionCols"></tr>
+                    </table>
+                  </div>
+                </mat-expansion-panel>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="groupCols"></tr>
+            <tr mat-row *matRowDef="let row; columns: groupCols" [ngClass]="getRuleClass(row)"></tr>
+          </table>
+        </div>
+      } @else {
+        <div class="state-panel compact">No position groups match the current filter.</div>
+      }
+      @if (getExpandedChartForAccount(account)) {
+        <div class="chart-expansion">
+          <app-option-chart [positionGroup]="getExpandedChartForAccount(account)!"></app-option-chart>
+        </div>
+      }
+    </section>
+  }
 
-    <div class="balance-quality" [ngClass]="account.balance_status" [matTooltip]="balanceTooltip(account)" matTooltipClass="multiline-tooltip">
-      <mat-icon>{{ account.balance_status === 'ok' ? 'verified' : account.balance_status === 'partial' ? 'warning_amber' : 'cloud_off' }}</mat-icon>
-      <span>Balance data {{ account.balance_status || 'unavailable' }}</span>
-      <span *ngIf="account.balance_fetched_at">Fetched {{ account.balance_fetched_at | date:'shortTime' }}</span>
-      <span *ngIf="account.balance_warnings?.length">{{ account.balance_warnings?.length }} data note{{ account.balance_warnings?.length === 1 ? '' : 's' }}</span>
-    </div>
-    <div class="table-shell" *ngIf="visibleGroups(account).length; else noMatchingGroups">
-      <table mat-table [dataSource]="visibleGroups(account)" class="positions-table">
-        <ng-container matColumnDef="underlying">
-          <th mat-header-cell *matHeaderCellDef>Underlying</th>
-          <td mat-cell *matCellDef="let group" class="underlying-cell">
-            <button
-              *ngIf="isValidChartSymbol(group.underlying_symbol); else plainSymbol"
-              type="button"
-              class="symbol-button"
-              [class.expanded]="isChartExpanded(group, account)"
-              [attr.aria-expanded]="isChartExpanded(group, account)"
-              [attr.aria-label]="'Toggle chart for ' + group.underlying_symbol"
-              (click)="onUnderlyingClick(group, $event, account)"
-            >
-              {{ group.underlying_symbol }}
-              <mat-icon>{{ isChartExpanded(group, account) ? 'expand_less' : 'show_chart' }}</mat-icon>
-            </button>
-            <ng-template #plainSymbol>{{ group.underlying_symbol }}</ng-template>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="expires">
-          <th mat-header-cell *matHeaderCellDef>Expires</th>
-          <td mat-cell *matCellDef="let group">{{ group.expires_at | date:'mediumDate' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="credit">
-          <th mat-header-cell *matHeaderCellDef>Opening credit</th>
-          <td mat-cell *matCellDef="let group">{{ group.total_credit_received | currency:'USD':'symbol':'1.0-0' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="price">
-          <th mat-header-cell *matHeaderCellDef>P/L</th>
-          <td mat-cell *matCellDef="let group" [ngClass]="{ positive: group.current_group_p_l > 0, negative: group.current_group_p_l < 0 }">
-            {{ group.current_group_p_l | currency:'USD':'symbol':'1.0-0' }}
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="percent">
-          <th mat-header-cell *matHeaderCellDef>Credit captured</th>
-          <td mat-cell *matCellDef="let group">{{ group.percent_credit_received | number:'1.0-0' }}%</td>
-        </ng-container>
-
-        <ng-container matColumnDef="delta">
-          <th mat-header-cell *matHeaderCellDef>Delta shares</th>
-          <td mat-cell *matCellDef="let group">{{ (group.delta_shares ?? group.total_position_delta) | number:'1.0-1' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="betadelta">
-          <th mat-header-cell *matHeaderCellDef>Beta Δ shares</th>
-          <td mat-cell *matCellDef="let group">{{ (group.beta_delta_shares ?? group.beta_delta) | number:'1.0-1' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="ivrank">
-          <th mat-header-cell *matHeaderCellDef>IV rank</th>
-          <td mat-cell *matCellDef="let group">{{ group.iv_rank | number:'1.0-1' }}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="ivchange">
-          <th mat-header-cell *matHeaderCellDef>IV 5d</th>
-          <td mat-cell *matCellDef="let group" [ngClass]="{ positive: group.iv_5d_change > 0, negative: group.iv_5d_change < 0 }">
-            {{ group.iv_5d_change | number:'1.0-1' }}%
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="rules">
-          <th mat-header-cell *matHeaderCellDef>Review signals</th>
-          <td mat-cell *matCellDef="let group">
-            <div class="rule-list" [matTooltip]="ruleTooltip(group)" matTooltipClass="multiline-tooltip">
-              <span *ngFor="let rule of group.rules" class="rule-chip" [ngClass]="rule.level">
-                {{ rule.label }}
-              </span>
-              <span *ngIf="!group.rules?.length" class="quiet">None</span>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="positions">
-          <th mat-header-cell *matHeaderCellDef>Legs</th>
-          <td mat-cell *matCellDef="let group">
-            <mat-expansion-panel class="legs-panel">
-              <mat-expansion-panel-header>
-                <mat-panel-title>{{ group.positions.length }} {{ group.positions.length === 1 ? 'leg' : 'legs' }}</mat-panel-title>
-              </mat-expansion-panel-header>
-              <div class="nested-table-shell">
-                <table mat-table [dataSource]="group.positions" class="nested-table">
-                  <ng-container matColumnDef="symbol">
-                    <th mat-header-cell *matHeaderCellDef>Symbol</th>
-                    <td mat-cell *matCellDef="let position">{{ position['symbol'] || position['instrument-symbol'] }}</td>
-                  </ng-container>
-                  <ng-container matColumnDef="qty">
-                    <th mat-header-cell *matHeaderCellDef>Qty</th>
-                    <td mat-cell *matCellDef="let position">{{ position['quantity'] }}</td>
-                  </ng-container>
-                  <ng-container matColumnDef="type">
-                    <th mat-header-cell *matHeaderCellDef>Type</th>
-                    <td mat-cell *matCellDef="let position">{{ position['instrument-type'] }}</td>
-                  </ng-container>
-                  <ng-container matColumnDef="plpos">
-                    <th mat-header-cell *matHeaderCellDef>P/L</th>
-                    <td mat-cell *matCellDef="let position">{{ position['approximate-p-l'] | currency:'USD':'symbol':'1.0-0' }}</td>
-                  </ng-container>
-                  <ng-container matColumnDef="cdelta">
-                    <th mat-header-cell *matHeaderCellDef>Delta shares</th>
-                    <td mat-cell *matCellDef="let position">{{ position['market_data']?.computed_position_delta | number:'1.0-1' }}</td>
-                  </ng-container>
-                  <ng-container matColumnDef="bo">
-                    <th mat-header-cell *matHeaderCellDef>Exit</th>
-                    <td mat-cell *matCellDef="let position">
-                      <button mat-stroked-button color="primary" type="button" (click)="openBracketOrder(position, account)">
-                        Manage exit
-                      </button>
-                    </td>
-                  </ng-container>
-                  <tr mat-header-row *matHeaderRowDef="positionCols"></tr>
-                  <tr mat-row *matRowDef="let row; columns: positionCols"></tr>
-                </table>
-              </div>
-            </mat-expansion-panel>
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="groupCols"></tr>
-        <tr mat-row *matRowDef="let row; columns: groupCols" [ngClass]="getRuleClass(row)"></tr>
-      </table>
-    </div>
-
-    <ng-template #noMatchingGroups>
-      <div class="state-panel compact">No position groups match the current filter.</div>
-    </ng-template>
-
-    <div *ngIf="getExpandedChartForAccount(account)" class="chart-expansion">
-      <app-option-chart [positionGroup]="getExpandedChartForAccount(account)!"></app-option-chart>
-    </div>
-  </section>
-
-  <section *ngIf="!loading && !errorMessage && !accounts.length" class="state-panel empty-state">
-    <mat-icon>inventory_2</mat-icon>
-    <div>
-      <strong>No option positions found</strong>
-      <p>Refresh after brokerage positions are available.</p>
-    </div>
-  </section>
+  @if (!loading && !errorMessage && !accounts.length) {
+    <section class="state-panel empty-state">
+      <mat-icon>inventory_2</mat-icon>
+      <div>
+        <strong>No option positions found</strong>
+        <p>Refresh after brokerage positions are available.</p>
+      </div>
+    </section>
+  }
 </div>

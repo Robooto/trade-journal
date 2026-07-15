@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { RouterModule } from '@angular/router';
 import { of } from 'rxjs';
 import { DashboardPageComponent } from './dashboard-page.component';
 import { dailyOverviewAnalysis, spotGammaToolLinks, dailyGuidelines, tradeGuidelines } from '../dashboard-data';
@@ -12,6 +13,7 @@ describe('DashboardPageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [DashboardPageComponent],
+      imports: [RouterModule.forRoot([])],
       providers: [{
         provide: JournalApiService,
         useValue: { list: () => of({ total: 0, items: [], skip: 0, limit: 3 }) }

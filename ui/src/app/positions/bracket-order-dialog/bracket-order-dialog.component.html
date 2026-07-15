@@ -33,7 +33,7 @@
         [value]="takeProfitPercent"
         (input)="setTakeProfitPercent($any($event.target).value)"
         class="w-full"
-      />
+        />
       <div class="min-w-[52px] text-right text-sm font-semibold text-emerald-200">
         {{ takeProfitPercent }}%
       </div>
@@ -68,7 +68,7 @@
         [value]="stopLossPercent"
         (input)="setStopLossPercent($any($event.target).value)"
         class="w-full"
-      />
+        />
       <div class="min-w-[52px] text-right text-sm font-semibold text-rose-200">
         {{ stopLossPercent }}%
       </div>
@@ -91,31 +91,32 @@
     </div>
   </section>
 
-  <section *ngIf="reviewMode" class="rounded border border-slate-700 bg-slate-950/70 p-3">
-    <div class="flex items-center justify-between gap-2">
-      <div class="text-sm font-semibold text-slate-200">Review</div>
-      <div class="text-xs text-slate-400">Preview payload</div>
-    </div>
-    <div class="mt-3 grid grid-cols-1 gap-1 text-xs text-slate-200/90">
-      <div>Account: {{ data.accountNumber }}</div>
-      <div>Symbol: {{ symbol }} · Quantity: {{ quantity }}</div>
-      <div>Action: {{ action }}</div>
-      <div>Limit: {{ previewTakeProfitPrice | number:'1.2-2' }} · Stop: {{ previewStopLossPrice | number:'1.2-2' }}</div>
-      <div>Take Profit: +{{ takeProfitAmount | number:'1.2-2' }} · +${{ takeProfitDollar | number:'1.2-2' }}</div>
-      <div>Net Loss: {{ stopLossAmount | number:'1.2-2' }} · ${{ stopLossDollar | number:'1.2-2' }}</div>
-    </div>
-    <pre class="mt-3 max-h-48 overflow-auto rounded bg-slate-950 p-2 text-[11px] text-slate-200">{{ previewPayload | json }}</pre>
-
-    <label class="mt-3 flex cursor-pointer items-start gap-2 rounded border border-amber-500/40 bg-amber-900/10 p-3 text-xs text-amber-100">
-      <input
-        type="checkbox"
-        class="mt-0.5"
-        [checked]="confirmationAccepted"
-        (change)="setConfirmationAccepted($any($event.target).checked)"
-      />
-      <span>I reviewed the account, symbol, quantity, limit and stop. Submit this live OCO order.</span>
-    </label>
-  </section>
+  @if (reviewMode) {
+    <section class="rounded border border-slate-700 bg-slate-950/70 p-3">
+      <div class="flex items-center justify-between gap-2">
+        <div class="text-sm font-semibold text-slate-200">Review</div>
+        <div class="text-xs text-slate-400">Preview payload</div>
+      </div>
+      <div class="mt-3 grid grid-cols-1 gap-1 text-xs text-slate-200/90">
+        <div>Account: {{ data.accountNumber }}</div>
+        <div>Symbol: {{ symbol }} · Quantity: {{ quantity }}</div>
+        <div>Action: {{ action }}</div>
+        <div>Limit: {{ previewTakeProfitPrice | number:'1.2-2' }} · Stop: {{ previewStopLossPrice | number:'1.2-2' }}</div>
+        <div>Take Profit: +{{ takeProfitAmount | number:'1.2-2' }} · +${{ takeProfitDollar | number:'1.2-2' }}</div>
+        <div>Net Loss: {{ stopLossAmount | number:'1.2-2' }} · ${{ stopLossDollar | number:'1.2-2' }}</div>
+      </div>
+      <pre class="mt-3 max-h-48 overflow-auto rounded bg-slate-950 p-2 text-[11px] text-slate-200">{{ previewPayload | json }}</pre>
+      <label class="mt-3 flex cursor-pointer items-start gap-2 rounded border border-amber-500/40 bg-amber-900/10 p-3 text-xs text-amber-100">
+        <input
+          type="checkbox"
+          class="mt-0.5"
+          [checked]="confirmationAccepted"
+          (change)="setConfirmationAccepted($any($event.target).checked)"
+          />
+        <span>I reviewed the account, symbol, quantity, limit and stop. Submit this live OCO order.</span>
+      </label>
+    </section>
+  }
 </div>
 
 <div mat-dialog-actions align="end">
@@ -128,11 +129,13 @@
     color="primary"
     (click)="submitOrder()"
     [disabled]="isSending || isReviewLoading || !reviewMode || !serverPreview || !confirmationAccepted"
-  >
+    >
     {{ isSending ? 'Sending...' : 'Submit live order' }}
   </button>
 </div>
 
-<div *ngIf="apiError" class="mt-2 text-xs text-rose-300">
-  {{ apiError }}
-</div>
+@if (apiError) {
+  <div class="mt-2 text-xs text-rose-300">
+    {{ apiError }}
+  </div>
+}

@@ -11,20 +11,22 @@
     </button>
   </header>
 
-  <section *ngIf="showForm" class="editor-shell">
-    <div class="editor-heading">
-      <div>
-        <strong>{{ selectedEntry ? 'Edit journal entry' : 'Write today’s plan' }}</strong>
-        <span>{{ selectedEntry ? selectedEntry.date : 'Drafts save automatically on this device.' }}</span>
+  @if (showForm) {
+    <section class="editor-shell">
+      <div class="editor-heading">
+        <div>
+          <strong>{{ selectedEntry ? 'Edit journal entry' : 'Write today’s plan' }}</strong>
+          <span>{{ selectedEntry ? selectedEntry.date : 'Drafts save automatically on this device.' }}</span>
+        </div>
       </div>
-    </div>
-    <app-journal-entry-form
-      [entry]="selectedEntry"
-      (saved)="onEntrySaved($event)"
-      (cancelled)="onEditCancelled()"
-      (deleted)="onEntryDeleted($event)"
-    ></app-journal-entry-form>
-  </section>
+      <app-journal-entry-form
+        [entry]="selectedEntry"
+        (saved)="onEntrySaved($event)"
+        (cancelled)="onEditCancelled()"
+        (deleted)="onEntryDeleted($event)"
+      ></app-journal-entry-form>
+    </section>
+  }
 
   <section class="journal-tools">
     <div class="filter-fields">
@@ -38,27 +40,35 @@
         <mat-icon matPrefix>sell</mat-icon>
         <input matInput [formControl]="tickerControl" placeholder="AAPL" maxlength="16" />
       </mat-form-field>
-      <button *ngIf="hasFilters" mat-button type="button" (click)="clearFilters()">Clear filters</button>
+      @if (hasFilters) {
+        <button mat-button type="button" (click)="clearFilters()">Clear filters</button>
+      }
     </div>
     <span class="result-count">{{ totalEntries }} {{ totalEntries === 1 ? 'entry' : 'entries' }}</span>
   </section>
 
-  <mat-progress-bar *ngIf="loading && !entries.length" mode="indeterminate"></mat-progress-bar>
+  @if (loading && !entries.length) {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  }
 
-  <section *ngIf="errorMessage" class="load-error" role="alert">
-    <mat-icon>error_outline</mat-icon>
-    <span>{{ errorMessage }}</span>
-    <button mat-button type="button" (click)="reload()">Try again</button>
-  </section>
+  @if (errorMessage) {
+    <section class="load-error" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ errorMessage }}</span>
+      <button mat-button type="button" (click)="reload()">Try again</button>
+    </section>
+  }
 
   <app-journal-timeline
     [entries]="entries"
     (entrySelected)="onEntrySelected($event)"
   ></app-journal-timeline>
 
-  <div class="load-more" *ngIf="entries.length < totalEntries">
-    <button mat-stroked-button type="button" (click)="loadNextPage()" [disabled]="loading">
-      {{ loading ? 'Loading…' : 'Load older entries' }}
-    </button>
-  </div>
+  @if (entries.length < totalEntries) {
+    <div class="load-more">
+      <button mat-stroked-button type="button" (click)="loadNextPage()" [disabled]="loading">
+        {{ loading ? 'Loading…' : 'Load older entries' }}
+      </button>
+    </div>
+  }
 </div>

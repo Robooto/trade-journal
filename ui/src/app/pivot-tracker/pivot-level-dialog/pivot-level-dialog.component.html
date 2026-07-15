@@ -4,9 +4,11 @@
     <mat-form-field appearance="outline">
       <mat-label>Pivot price</mat-label>
       <input matInput type="number" formControlName="price" />
-      <mat-error *ngIf="form.controls['price']?.hasError('required')">
-        Price is required
-      </mat-error>
+      @if (form.controls['price']?.hasError('required')) {
+        <mat-error>
+          Price is required
+        </mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline">
@@ -19,9 +21,11 @@
     <mat-form-field appearance="outline">
       <mat-label>Index</mat-label>
       <input matInput formControlName="index" />
-      <mat-error *ngIf="form.controls['index']?.hasError('required')">
-        Index is required
-      </mat-error>
+      @if (form.controls['index']?.hasError('required')) {
+        <mat-error>
+          Index is required
+        </mat-error>
+      }
     </mat-form-field>
   </form>
 </div>
