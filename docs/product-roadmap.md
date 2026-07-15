@@ -20,6 +20,8 @@ Current:
 
 Next:
 
+- Build the previous-session review assistant described below so the premarket
+  journal starts with yesterday's actual activity rather than an empty form.
 - Add structured thesis/plan/management/outcome fields without making quick
   notes cumbersome.
 - Add context-aware entry points such as **Journal this FlowPatrol idea** and
@@ -28,6 +30,53 @@ Next:
 - Link entries to positions, orders, fills, and originating research ideas with
   stable backend identifiers beyond the current optional context link.
 - Add weekly summaries and rule-adherence review.
+
+### Previous-session journal assistant
+
+Goal: make the normal 5:20–5:40 a.m. journal useful without requiring the user
+to reconstruct the prior trading session by hand. Because equity options are
+usually not moving during this workflow, historical activity and entry-time
+context matter more than live option quotes.
+
+Proposed experience:
+
+1. Open the morning journal to a compact **Previous session activity** inbox.
+2. Use the prior completed U.S. market session—not simply calendar yesterday—so
+   weekends and market holidays resolve correctly.
+3. Show fills grouped into understandable trade events such as opened, added,
+   reduced, rolled, and closed, with account, ticker, strategy/legs, time,
+   quantity, and execution price.
+4. Let **Add to journal** attach an event and pre-fill a small factual summary;
+   the user writes why it was done, what was expected, and what would invalidate
+   the decision.
+5. Offer **Reviewed** or **Skip** so a quiet day does not create busywork.
+
+Backend responsibilities:
+
+- Fetch and normalize orders, transactions, and fills at the existing
+  `trade-journal` brokerage boundary.
+- Reconstruct multi-leg and related activity conservatively, retaining raw
+  identifiers and marking ambiguous grouping rather than guessing.
+- Build a dated review-context read model with source timestamps, missing-data
+  warnings, and stable references that can be attached to a journal entry.
+- Enrich each event with available historical underlying price at execution,
+  session OHLC, broad-market context, and existing position/account exposure.
+- Pull Trace, FlowPatrol, or SpotGamma context only through documented APIs and
+  label unavailable historical context explicitly.
+- Keep imported facts separate from the user's explanation so a later refresh
+  cannot silently rewrite the journal record.
+
+Charts and screenshots:
+
+- First generate a small entry-time chart card from historical bars, marking the
+  fill and relevant position legs where data permits.
+- Later allow pasted/uploaded screenshots and preserve attachment metadata and
+  provenance in the backend.
+- A screenshot is supporting evidence; accessible text and normalized facts
+  remain available to searches and LLM packs.
+
+Success means the user can review the previous session and create useful linked
+notes in a few minutes without retyping broker activity.
 
 ### Position list and rule supervision
 
