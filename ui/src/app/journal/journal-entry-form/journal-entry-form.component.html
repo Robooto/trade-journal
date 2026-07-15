@@ -9,14 +9,14 @@
     <div class="header-fields">
       <div class="field-group">
         <mat-icon>calendar_today</mat-icon>
-        <mat-form-field appearance="outline" class="date-field">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="date-field">
           <input matInput type="date" formControlName="date" />
         </mat-form-field>
       </div>
       
       <div class="field-group">
         <mat-icon>trending_up</mat-icon>
-        <mat-form-field appearance="outline" class="compact-field">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="compact-field">
           <mat-label>ES Price</mat-label>
           <input matInput type="number" formControlName="esPrice" placeholder="6272" />
         </mat-form-field>
@@ -40,14 +40,14 @@
       
       <div class="field-group">
         <span class="delta-symbol">Δ</span>
-        <mat-form-field appearance="outline" class="compact-field">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="compact-field">
           <mat-label>Delta</mat-label>
           <input matInput type="number" formControlName="delta" placeholder="+20" />
         </mat-form-field>
       </div>
       <div class="field-group ticker-group">
         <mat-icon>sell</mat-icon>
-        <mat-form-field appearance="outline" class="ticker-field">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic" class="ticker-field">
           <mat-label>Tickers (optional)</mat-label>
           <input matInput formControlName="tickers" placeholder="AAPL, SPY" autocomplete="off" />
           <mat-hint>Comma separated</mat-hint>
