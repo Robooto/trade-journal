@@ -1,6 +1,6 @@
 # Trade Journal Product Roadmap
 
-Last reviewed: 2026-07-14
+Last reviewed: 2026-07-15
 
 ## Product goals
 
@@ -198,6 +198,42 @@ TODO, intentionally not part of the current implementation queue:
   deep-link contracts before migrating individual screens.
 - Migrate one vertical slice at a time only after its API contract is stable;
   retain the existing source UI until the replacement reaches parity.
+
+## Stack maintenance backlog
+
+The July 2026 modernization established the current supported baseline: Angular
+21 on Node 22, Vitest and jsdom for UI tests, Python 3.11 for the API, hashed
+Python dependency locks, slim multi-stage containers, a non-root API runtime,
+container health checks, and guarded Pi deployment with backup and rollback.
+
+Next maintenance batch (low risk):
+
+- Recreate the local Python virtual environment from `requirements-dev.txt` to
+  remove packages left over from earlier experiments. This does not affect the
+  deployed API image, which installs only the production lock.
+- Upgrade SQLAlchemy within the 2.0 line, regenerate both hashed lock files,
+  and run the complete local deployment gate.
+- Review compatible patch/minor updates for the current frontend and backend
+  major versions without combining them with feature work.
+
+Breaking migrations to schedule and test separately:
+
+- Angular Material/CDK 22 and the matching Angular major-version migration.
+- Tailwind CSS 4, including configuration and visual-regression review.
+- pandas 3 and yfinance 1.x, with focused brokerage/market-data regression
+  tests.
+- Uvicorn, HTTPX, pytest, pytest-asyncio, and NumPy major or compatibility-line
+  upgrades.
+- Move the API from Python 3.11 to a newer supported runtime only after all
+  production dependencies have ARM64 wheels and the Pi image passes the full
+  gate.
+
+Container hardening follow-up:
+
+- Pin Python, Node, and Nginx base images by digest for reproducible releases,
+  and adopt an explicit process for refreshing those digests after testing.
+- Periodically review the Pi OS, Docker Engine, and Compose versions separately
+  from application dependency upgrades.
 
 ## Safety boundaries
 
