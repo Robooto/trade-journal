@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 import pandas as pd
@@ -52,8 +52,8 @@ def get_chart_history(
     
     try:
         # Convert timestamps to datetime objects for yfinance
-        start_date = datetime.fromtimestamp(from_ts)
-        end_date = datetime.fromtimestamp(to_ts)
+        start_date = datetime.fromtimestamp(from_ts, tz=timezone.utc)
+        end_date = datetime.fromtimestamp(to_ts, tz=timezone.utc)
         
         # Map resolution to yfinance interval format
         interval_map = {

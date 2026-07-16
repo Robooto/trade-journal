@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 # Sample yfinance DataFrame response
@@ -104,16 +104,54 @@ async def test_get_chart_history_default_timestamps(client):
             mock_datetime.fromtimestamp.side_effect = datetime.fromtimestamp
             
             resp = await client.get("/v1/charts/history/SPY")
-            
+
             assert resp.status_code == 200
-            
+
             # Check that default timestamps were used (30 days ago to now)
             call_kwargs = mock_ticker.history.call_args[1]
-            expected_end = mock_now
-            expected_start = mock_now - timedelta(days=30)
-            
+            expected_end = datetime.fromtimestamp(
+                int(mock_now.timestamp()),
+                tz=timezone.utc,
+            )
+            expected_start = datetime.fromtimestamp(
+                int((mock_now - timedelta(days=30)).timestamp()),
+                tz=timezone.utc,
+            )
+
             assert call_kwargs["end"] == expected_end
             assert call_kwargs["start"] == expected_start
+
+@pytest.mark.asyncio
+async def test_get_chart_history_preserves_epoch_as_timezone_aware_utc(client):
+    with patch('app.services.charts_service.yf.Ticker') as mock_ticker_class:
+        mock_ticker = MagicMock()
+        mock_ticker.history.return_value = sample_yfinance_data
+        mock_ticker_class.return_value = mock_ticker
+        with patch('app.services.charts_service.get_cache') as mock_cache:
+            mock_cache_obj = MagicMock()
+            mock_cache_obj.get.return_value = None
+            mock_cache.return_value = mock_cache_obj
+            from_ts = 1784112300
+            to_ts = 1784136300
+
+            response = await client.get(
+                "/v1/charts/history/AAPL",
+                params={
+                    "resolution": "5m",
+                    "from_ts": from_ts,
+                    "to_ts": to_ts,
+                },
+            )
+
+            assert response.status_code == 200
+            call_kwargs = mock_ticker.history.call_args.kwargs
+            assert call_kwargs["start"] == datetime.fromtimestamp(
+                from_ts, tz=timezone.utc,
+            )
+            assert call_kwargs["end"] == datetime.fromtimestamp(
+                to_ts, tz=timezone.utc,
+            )
+
 
 
 @pytest.mark.asyncio
