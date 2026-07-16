@@ -4,9 +4,47 @@ import { of } from 'rxjs';
 
 import { JournalPageComponent } from './journal-page.component';
 import { JournalApiService } from '../journal-api.service';
-import { JournalEntry, PaginatedJournalEntries } from '../journal.models';
+import {
+  BrokerActivityInbox,
+  JournalEntry,
+  PaginatedJournalEntries,
+} from '../journal.models';
+
+const activityInbox: BrokerActivityInbox = {
+  schema_version: 'broker-activity-inbox.v1',
+  session_date: '2026-07-15',
+  generated_at: '2026-07-16T12:00:00Z',
+  source_status: [],
+  warnings: [],
+  events: [{
+    activity_group_id: 'tastytrade:FAKE:group-fill:1',
+    session_date: '2026-07-15',
+    account_number: 'FAKE-OPTIONS',
+    review_kind: 'opening',
+    occurred_at: '2026-07-15T15:30:00Z',
+    underlying_symbol: 'AAPL',
+    grouping_status: 'explicit',
+    leg_count: 2,
+    net_value_dollars: 137.7,
+    fees_dollars: 2.3,
+    summary: 'AAPL - opening activity - 2 legs - $137.70 net credit',
+    legs: [{
+      activity_id: 'leg-1',
+      kind: 'fill',
+      occurred_at: '2026-07-15T15:30:00Z',
+      action: 'Sell to Open',
+      quantity: 1,
+      symbol: 'AAPL 260821P00100000',
+      price: 2.5,
+    }],
+  }],
+};
 
 class MockJournalApiService {
+  activityResponse = activityInbox;
+  activityInbox() {
+    return of(this.activityResponse);
+  }
   response: PaginatedJournalEntries = { total: 0, items: [], skip: 0, limit: 20 };
   list(_skip: number = 0, _limit: number = 20, _query: string = '', _ticker: string = '') {
     return of(this.response);
@@ -96,5 +134,29 @@ describe('JournalPageComponent', () => {
     expect(component.entries).toEqual([e2]);
     expect(component.totalEntries).toBe(1);
     expect(component.selectedEntry).toBeUndefined();
+  });
+
+  it('loads the previous-session activity inbox', () => {
+    component.loadActivityInbox();
+
+    expect(component.activityInbox).toEqual(activityInbox);
+    expect(component.activityError).toBe('');
+  });
+
+  it('prefills a factual journal draft from brokerage activity', () => {
+    component.activityInbox = activityInbox;
+
+    component.addActivityToJournal(activityInbox.events[0]);
+
+    expect(component.showForm).toBe(true);
+    expect(component.entryPrefill?.tickers).toEqual(['AAPL']);
+    expect(component.entryPrefill?.sourceUrl).toContain('activityDate=2026-07-15');
+    expect(component.entryPrefill?.notes).toContain(
+      'AAPL - opening activity - 2 legs - $137.70 net credit'
+    );
+    expect(component.entryPrefill?.notes).toContain('Why I made this trade:');
+    expect(component.entryPrefill?.notes).toContain(
+      'Sell to Open 1x AAPL 260821P00100000 @ $2.50'
+    );
   });
 });

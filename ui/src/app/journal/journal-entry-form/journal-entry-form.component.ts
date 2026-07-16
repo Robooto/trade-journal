@@ -1,7 +1,10 @@
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription, debounceTime, finalize } from 'rxjs';
-import { JournalEntry } from '../journal.models';
+import {
+  JournalEntry,
+  JournalEntryPrefill,
+} from '../journal.models';
 import { JournalApiService } from '../journal-api.service';
 import { JournalDraftService } from '../journal-draft.service';
 import { FuturesService } from '../../shared/futures.service';
@@ -14,6 +17,7 @@ import { FuturesService } from '../../shared/futures.service';
 })
 export class JournalEntryFormComponent implements OnInit, OnChanges, OnDestroy {
   @Input() entry?: JournalEntry;
+  @Input() prefill?: JournalEntryPrefill;
   @Output() saved = new EventEmitter<JournalEntry>();
   @Output() cancelled = new EventEmitter<void>();
   @Output() deleted = new EventEmitter<string>();
@@ -41,20 +45,26 @@ export class JournalEntryFormComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     const restored = this.restoreDraft();
+    this.applyPrefill();
     if (!restored || !this.form.get('esPrice')?.value) {
       this.loadOpeningMarketContext();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (!changes['entry'] || !this.form) {
+    if (!this.form) {
       return;
     }
-    if (this.entry) {
-      this.populateFormWithEntry();
-    } else {
-      this.resetForm();
-      this.restoreDraft();
+    if (changes['entry']) {
+      if (this.entry) {
+        this.populateFormWithEntry();
+      } else {
+        this.resetForm();
+        this.restoreDraft();
+      }
+    }
+    if (changes['prefill'] && !this.entry) {
+      this.applyPrefill();
     }
   }
 
@@ -149,6 +159,31 @@ export class JournalEntryFormComponent implements OnInit, OnChanges, OnDestroy {
       }));
     }
     this.showTimelineSection = this.events.length > 0;
+  }
+
+  private applyPrefill(): void {
+    if (!this.prefill) {
+      return;
+    }
+    const tickers = this.normalizeTickers([
+      ...this.normalizeTickers(this.form.get('tickers')?.value),
+      ...(this.prefill.tickers ?? []),
+    ]);
+    const currentNotes = String(this.form.get('notes')?.value ?? '').trim();
+    const importedNotes = this.prefill.notes?.trim() ?? '';
+    const notes = importedNotes && !currentNotes.includes(importedNotes)
+      ? [currentNotes, importedNotes].filter(Boolean).join('\n\n')
+      : currentNotes;
+
+    this.form.patchValue({
+      tickers: tickers.join(', '),
+      sourceLabel:
+        this.form.get('sourceLabel')?.value || this.prefill.sourceLabel || '',
+      sourceUrl:
+        this.form.get('sourceUrl')?.value || this.prefill.sourceUrl || '',
+      notes,
+    });
+    this.form.markAsDirty();
   }
 
   private loadOpeningMarketContext(): void {

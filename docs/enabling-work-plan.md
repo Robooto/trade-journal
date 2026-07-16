@@ -99,19 +99,21 @@ Completed on 2026-07-15:
    IV percentile, broker five-day IV-index change, and liquidity observations.
 3. **Implemented:** batch research-symbol context API over current and
    persisted data.
-4. **Backend foundation implemented:** normalize an explicitly selected
-   session's activity into opening, closing, roll, fill, assignment,
-   expiration, cash, and other review events. Group only on broker-provided
-   group-fill IDs, retain ambiguous rows, join available order metadata, and
-   expose per-source quality. Next add verified prior-session calendar
-   resolution and position-state evidence before claiming opened versus added
-   or reduced versus fully closed.
+4. **Implemented:** normalize prior-session activity into opening, closing,
+   roll, fill, assignment, expiration, cash, and other review events. The API
+   resolves the prior U.S. equity session across recurring holidays and known
+   exceptional closures, while retaining an explicit-date override. The journal
+   UI shows a compact inbox and can merge factual legs, ticker, source ID, and
+   writing prompts into a local draft. Grouping remains broker-ID-only and
+   ambiguous rows stay explicit. Position-state evidence is still required
+   before claiming opened versus added or reduced versus fully closed.
 
 ## Wave 3: workflow features
 
 - Enrich FlowPatrol using the documented batch broker contract.
 - Add FlowPatrol, brokerage-watchlist, overlap, and combined-universe modes.
-- Add journal handoffs for research ideas, positions, and activity events.
+- Add journal handoffs for research ideas and positions; the brokerage activity
+  handoff is implemented.
 - Plot entries, fills, adjustments, exits, and current positions on charts.
 - Produce portfolio-review, trade-review, and research-context LLM packs.
 - Save investigate/watch/dismiss/traded dispositions.

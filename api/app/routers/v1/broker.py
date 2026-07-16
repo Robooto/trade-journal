@@ -20,6 +20,9 @@ from app.schemas.brokerage import (
 )
 from app.settings import settings
 from app.services.activity_inbox_service import fetch_activity_inbox
+from app.services.market_session_service import (
+    previous_us_equity_market_session,
+)
 from app.services.brokerage_service import fetch_holding_snapshot
 from app.services.research_context_orchestration import (
     fetch_research_symbol_context,
@@ -140,10 +143,11 @@ def add_watchlist_symbol(
     response_model_exclude_none=True,
 )
 def get_activity_inbox(
-    session_date: date,
+    session_date: date | None = None,
     db: Session = Depends(get_db),
 ):
     token = _token_or_403(db)
+    session_date = session_date or previous_us_equity_market_session()
     try:
         return fetch_activity_inbox(token, session_date)
     except TastytradeFetchError as exc:

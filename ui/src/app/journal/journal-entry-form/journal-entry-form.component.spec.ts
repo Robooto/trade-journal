@@ -218,4 +218,36 @@ describe('JournalEntryFormComponent', () => {
         expect(component.form.get('id')?.value).toBeNull();
         expect(cancelledSpy).toHaveBeenCalled();
     });
+
+    it('merges brokerage prefill into a draft without replacing notes', () => {
+        component.form.patchValue({
+            tickers: 'SPY',
+            notes: 'Existing morning plan',
+            sourceLabel: '',
+            sourceUrl: ''
+        });
+        component.prefill = {
+            tickers: ['AAPL'],
+            sourceLabel: 'Broker activity · AAPL · 2026-07-15',
+            sourceUrl: '/journal?activityDate=2026-07-15',
+            notes: 'AAPL opening activity\n\nWhy I made this trade:'
+        };
+
+        component.ngOnChanges({
+            prefill: new SimpleChange(null, component.prefill, true)
+        });
+
+        expect(component.form.get('tickers')?.value).toBe('SPY, AAPL');
+        expect(component.form.get('notes')?.value).toContain('Existing morning plan');
+        expect(component.form.get('notes')?.value).toContain('AAPL opening activity');
+        expect(component.form.get('sourceLabel')?.value).toContain('Broker activity');
+        expect(component.form.dirty).toBe(true);
+
+        component.ngOnChanges({
+            prefill: new SimpleChange(component.prefill, component.prefill, false)
+        });
+        expect(
+            component.form.get('notes')?.value.match(/AAPL opening activity/g)
+        ).toHaveLength(1);
+    });
 });

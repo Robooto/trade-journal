@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -316,3 +316,35 @@ async def test_post_research_context_rejects_empty_symbols(
     assert response.json() == {
         "detail": "At least one non-empty symbol is required."
     }
+
+
+@pytest.mark.asyncio
+async def test_get_activity_inbox_defaults_to_previous_market_session(
+    client,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+    monkeypatch.setattr(
+        broker,
+        "previous_us_equity_market_session",
+        lambda: date(2026, 7, 15),
+    )
+
+    def fake_inbox(token, session_date):
+        assert token == "Bearer FAKE"
+        assert session_date == date(2026, 7, 15)
+        return BrokerActivityInboxV1(
+            session_date=session_date,
+            generated_at=GENERATED_AT,
+            events=[],
+            source_status=[],
+        )
+
+    monkeypatch.setattr(broker, "fetch_activity_inbox", fake_inbox)
+
+    response = await client.get("/v1/broker/activity-inbox")
+
+    assert response.status_code == 200
+    assert response.json()["session_date"] == "2026-07-15"

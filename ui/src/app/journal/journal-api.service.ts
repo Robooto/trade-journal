@@ -2,7 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable }   from 'rxjs';
 import { environment }  from '../../environments/environment';
-import {JournalEntry, JournalEvent, PaginatedJournalEntries, MarketData} from './journal.models';
+import {
+  BrokerActivityInbox,
+  JournalEntry,
+  JournalEvent,
+  MarketData,
+  PaginatedJournalEntries,
+} from './journal.models';
 
 @Injectable({ providedIn: 'root' })
 export class JournalApiService {
@@ -26,6 +32,17 @@ export class JournalApiService {
       params = params.set('ticker', ticker.trim().toUpperCase());
     }
     return this.http.get<PaginatedJournalEntries>(this.base, { params });
+  }
+
+  activityInbox(sessionDate?: string): Observable<BrokerActivityInbox> {
+    let params = new HttpParams();
+    if (sessionDate) {
+      params = params.set('session_date', sessionDate);
+    }
+    return this.http.get<BrokerActivityInbox>(
+      `${environment.apiUrl}/broker/activity-inbox`,
+      { params }
+    );
   }
 
   create(entry: Omit<JournalEntry,'id'>): Observable<JournalEntry> {

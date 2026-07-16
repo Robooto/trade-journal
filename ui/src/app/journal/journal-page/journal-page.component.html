@@ -11,6 +11,87 @@
     </button>
   </header>
 
+  <section class="activity-shell" aria-labelledby="previous-session-heading">
+    <header class="activity-heading">
+      <div>
+        <p class="eyebrow">Review before planning</p>
+        <h2 id="previous-session-heading">Previous session activity</h2>
+        @if (activityInbox) {
+          <span>{{ activityInbox.session_date | date:'EEE, MMM d':'UTC' }}</span>
+        }
+      </div>
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="loadActivityInbox()"
+        [disabled]="activityLoading"
+      >
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </header>
+
+    @if (activityLoading) {
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    } @else if (activityError) {
+      <div class="activity-message activity-message-error" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ activityError }}</span>
+        <button mat-button type="button" (click)="loadActivityInbox()">Try again</button>
+      </div>
+    } @else if (activityInbox) {
+      @if (activityInbox.warnings.length) {
+        <div class="activity-message" role="status">
+          <mat-icon>info_outline</mat-icon>
+          <span>Some brokerage context is incomplete. Available activity is still shown.</span>
+        </div>
+      }
+      @if (activityInbox.events.length) {
+        <div class="activity-list">
+          @for (event of activityInbox.events; track event.activity_group_id) {
+            <article class="activity-card">
+              <div class="activity-card-copy">
+                <div class="activity-title-row">
+                  <strong>{{ event.underlying_symbol || 'Account activity' }}</strong>
+                  <span class="activity-kind">{{ event.review_kind }}</span>
+                  @if (event.grouping_status === 'ambiguous') {
+                    <span class="activity-warning">Review grouping</span>
+                  }
+                </div>
+                <p>{{ event.summary }}</p>
+                <div class="activity-meta">
+                  <span>Account {{ event.account_number }}</span>
+                  <span>{{ event.occurred_at | date:'shortTime' }}</span>
+                  <span>{{ event.leg_count }} {{ event.leg_count === 1 ? 'leg' : 'legs' }}</span>
+                  @if (event.fees_dollars != null) {
+                    <span>{{ event.fees_dollars | currency }} fees</span>
+                  }
+                </div>
+              </div>
+              <button
+                mat-flat-button
+                color="primary"
+                type="button"
+                (click)="addActivityToJournal(event)"
+              >
+                <mat-icon>edit_note</mat-icon>
+                Add to journal
+              </button>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="activity-empty">
+          <mat-icon>check_circle</mat-icon>
+          <div>
+            <strong>No brokerage activity found</strong>
+            <span>There is nothing to review for this completed market session.</span>
+          </div>
+        </div>
+      }
+    }
+  </section>
+
   @if (showForm) {
     <section class="editor-shell">
       <div class="editor-heading">
@@ -21,6 +102,7 @@
       </div>
       <app-journal-entry-form
         [entry]="selectedEntry"
+        [prefill]="entryPrefill"
         (saved)="onEntrySaved($event)"
         (cancelled)="onEditCancelled()"
         (deleted)="onEntryDeleted($event)"

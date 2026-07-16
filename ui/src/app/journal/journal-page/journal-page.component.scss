@@ -98,6 +98,148 @@
   flex: 1;
 }
 
+
+
+.activity-shell {
+  overflow: hidden;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  background: var(--mat-sys-surface);
+  box-shadow: var(--mat-sys-level-1);
+}
+
+.activity-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  background: color-mix(in srgb, var(--mat-sys-primary) 7%, transparent);
+}
+
+.activity-heading h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.activity-heading span {
+  display: block;
+  margin-top: 3px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.78rem;
+}
+
+.activity-list {
+  display: grid;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.activity-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.activity-card:last-child {
+  border-bottom: 0;
+}
+
+.activity-card-copy {
+  min-width: 0;
+}
+
+.activity-title-row,
+.activity-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-card p {
+  margin: 5px 0;
+  color: var(--mat-sys-on-surface);
+}
+
+.activity-kind,
+.activity-warning {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.activity-kind {
+  background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+.activity-warning {
+  border-color: #f59e0b;
+  background: color-mix(in srgb, #f59e0b 13%, transparent);
+  color: #fbbf24;
+}
+
+.activity-meta {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.72rem;
+}
+
+.activity-meta span + span::before {
+  margin-right: 8px;
+  content: "·";
+}
+
+.activity-message,
+.activity-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.activity-message span {
+  flex: 1;
+}
+
+.activity-message-error {
+  color: var(--mat-sys-error);
+}
+
+.activity-empty strong,
+.activity-empty span {
+  display: block;
+}
+
+.activity-empty span {
+  margin-top: 2px;
+  font-size: 0.8rem;
+}
+
+.activity-empty mat-icon {
+  color: #22c55e;
+}
+
+@media (max-width: 700px) {
+  .activity-heading,
+  .activity-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .activity-card button {
+    width: 100%;
+  }
+}
+
 .load-more {
   display: flex;
   justify-content: center;

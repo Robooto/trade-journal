@@ -17,15 +17,17 @@ Current:
 - Optional normalized ticker tags plus note/ticker search.
 - Optional context links back to positions, FlowPatrol ideas, or other research.
 - Morning dashboard handoff directly into today's editor and recent entries.
-- Read-only `GET /v1/broker/activity-inbox` foundation for reviewing one
-  explicit session across all brokerage accounts. Broker-supplied fill groups
-  are joined to order metadata; ambiguous activity remains ungrouped and
-  source quality remains visible.
+- Previous-session activity assistant across all brokerage accounts. The API
+  resolves the prior U.S. equity-market session or accepts an explicit date;
+  broker-supplied fill groups join to order metadata while ambiguous activity
+  remains ungrouped.
+- Compact journal inbox with **Add to journal**, merging factual legs, ticker,
+  source reference, and writing prompts without replacing existing draft notes.
 
 Next:
 
-- Build the previous-session review assistant described below so the premarket
-  journal starts with yesterday's actual activity rather than an empty form.
+- Persist **Reviewed** and **Skip** dispositions so the inbox tracks morning
+  review progress without creating journal busywork.
 - Add structured thesis/plan/management/outcome fields without making quick
   notes cumbersome.
 - Add context-aware entry points such as **Journal this FlowPatrol idea** and
@@ -72,14 +74,18 @@ Backend responsibilities:
   cannot silently rewrite the journal record.
 Implemented foundation:
 
-- An explicit `session_date` is currently required. A verified U.S. exchange
-  calendar resolver is the next dependency before the UI can default safely to
-  the prior completed session, including holidays and Good Friday.
+- The default date follows New York time and recurring U.S. equity-market
+  holidays, including Good Friday and Juneteenth, plus known exceptional
+  closures. Explicit dates remain available for historical review and backfill.
 - Orders and transactions are fetched with the same bounded date across every
   account. Per-source failures and pagination truncation are explicit and
   non-fatal.
 - Transactions group only by Tastytrade's group-fill ID. Without that ID, even
   apparent multi-leg activity remains individually reviewable and ambiguous.
+- The Angular journal loads the compact inbox independently from journal
+  history. **Add to journal** preserves imported facts as editable draft text
+  and adds prompts for why, expectations, and invalidation.
+
 
 
 Charts and screenshots:

@@ -2,7 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { JournalApiService } from './journal-api.service';
 import { environment } from '../../environments/environment';
-import { JournalEntry, JournalEvent, PaginatedJournalEntries } from './journal.models';
+import {
+  BrokerActivityInbox,
+  JournalEntry,
+  JournalEvent,
+  PaginatedJournalEntries,
+} from './journal.models';
 
 describe('JournalApiService', () => {
   let service: JournalApiService;
@@ -84,5 +89,38 @@ describe('JournalApiService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body.future).toEqual(['/ESU5']);
     req.flush(resp);
+  });
+
+  it('activityInbox resolves the previous session when no date is supplied', () => {
+    const response: BrokerActivityInbox = {
+      schema_version: 'broker-activity-inbox.v1',
+      session_date: '2026-07-15',
+      generated_at: '2026-07-16T12:00:00Z',
+      events: [],
+      source_status: [],
+      warnings: [],
+    };
+
+    service.activityInbox().subscribe(result => expect(result).toEqual(response));
+    const req = http.expectOne(`${environment.apiUrl}/broker/activity-inbox`);
+    expect(req.request.method).toBe('GET');
+    expect(req.request.params.keys()).toEqual([]);
+    req.flush(response);
+  });
+
+  it('activityInbox can request an explicit historical session', () => {
+    service.activityInbox('2026-07-14').subscribe();
+    const req = http.expectOne(
+      `${environment.apiUrl}/broker/activity-inbox?session_date=2026-07-14`
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      schema_version: 'broker-activity-inbox.v1',
+      session_date: '2026-07-14',
+      generated_at: '2026-07-16T12:00:00Z',
+      events: [],
+      source_status: [],
+      warnings: [],
+    });
   });
 });
