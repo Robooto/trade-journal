@@ -208,3 +208,43 @@ class ResearchSymbolContextRequestV1(BaseModel):
     symbols: list[str] = Field(min_length=1, max_length=100)
 
     model_config = {"extra": "forbid"}
+
+
+class BrokerWatchlistSummaryV1(BaseModel):
+    name: str
+    group_name: Optional[str] = None
+    order_index: Optional[int] = None
+    symbols: list[str] = Field(default_factory=list)
+    symbol_count: int
+
+    model_config = {"extra": "forbid"}
+
+
+class BrokerWatchlistListV1(BaseModel):
+    schema_version: Literal["broker-watchlists.v1"] = "broker-watchlists.v1"
+    writes_enabled: bool
+    watchlists: list[BrokerWatchlistSummaryV1]
+
+    model_config = {"extra": "forbid"}
+
+
+class AddWatchlistSymbolRequestV1(BaseModel):
+    symbol: str = Field(
+        min_length=1,
+        max_length=32,
+        pattern=r"^[A-Za-z0-9.^/-]+$",
+    )
+    instrument_type: Literal["Equity"] = "Equity"
+
+    model_config = {"extra": "forbid"}
+
+
+class AddWatchlistSymbolResultV1(BaseModel):
+    schema_version: Literal["watchlist-symbol-write.v1"] = (
+        "watchlist-symbol-write.v1"
+    )
+    watchlist: BrokerWatchlistSummaryV1
+    symbol: str
+    added: bool
+
+    model_config = {"extra": "forbid"}

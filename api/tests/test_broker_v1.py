@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from types import SimpleNamespace
 
 import pytest
 
@@ -10,6 +11,7 @@ from app.schemas.brokerage import (
     SourceMetadataV1,
     ResearchSymbolContextV1,
 )
+from app.tastytrade_schema import TastyWatchlist
 from app.services.trades_errors import TastytradeFetchError
 
 
@@ -94,6 +96,115 @@ async def test_get_holdings_returns_bad_gateway_for_account_failure(
     assert response.json() == {
         "detail": "Unable to fetch brokerage accounts."
     }
+
+
+@pytest.mark.asyncio
+async def test_get_watchlists_returns_private_lists_and_write_state(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+    monkeypatch.setattr(
+        broker.tastytrade,
+        "fetch_watchlists",
+        lambda token: [
+            TastyWatchlist.model_validate(
+                {
+                    "name": "Core Options",
+                    "group-name": "Personal",
+                    "order-index": 1,
+                    "watchlist-entries": [
+                        {"symbol": "AAPL", "instrument-type": "Equity"},
+                        {"symbol": "NVDA", "instrument-type": "Equity"},
+                    ],
+                }
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        broker,
+        "settings",
+        SimpleNamespace(brokerage_watchlist_writes_enabled=True),
+    )
+
+    response = await client.get("/v1/broker/watchlists")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "schema_version": "broker-watchlists.v1",
+        "writes_enabled": True,
+        "watchlists": [
+            {
+                "name": "Core Options",
+                "group_name": "Personal",
+                "order_index": 1,
+                "symbols": ["AAPL", "NVDA"],
+                "symbol_count": 2,
+            }
+        ],
+    }
+
+
+@pytest.mark.asyncio
+async def test_add_watchlist_symbol_requires_explicit_write_setting(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        broker,
+        "settings",
+        SimpleNamespace(brokerage_watchlist_writes_enabled=False),
+    )
+
+    response = await client.post(
+        "/v1/broker/watchlists/Core%20Options/symbols",
+        json={"symbol": "TSLA"},
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Brokerage watchlist writes are disabled."
+
+
+@pytest.mark.asyncio
+async def test_add_watchlist_symbol_returns_updated_membership(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        broker,
+        "settings",
+        SimpleNamespace(brokerage_watchlist_writes_enabled=True),
+    )
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+    updated = TastyWatchlist.model_validate(
+        {
+            "name": "Core Options",
+            "group-name": "Personal",
+            "order-index": 1,
+            "watchlist-entries": [
+                {"symbol": "AAPL", "instrument-type": "Equity"},
+                {"symbol": "TSLA", "instrument-type": "Equity"},
+            ],
+        }
+    )
+    monkeypatch.setattr(
+        broker.tastytrade,
+        "add_symbol_to_watchlist",
+        lambda token, watchlist_name, symbol, instrument_type: (updated, True),
+    )
+
+    response = await client.post(
+        "/v1/broker/watchlists/Core%20Options/symbols",
+        json={"symbol": "tsla"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["schema_version"] == "watchlist-symbol-write.v1"
+    assert payload["symbol"] == "TSLA"
+    assert payload["added"] is True
+    assert payload["watchlist"]["symbols"] == ["AAPL", "TSLA"]
 
 
 @pytest.mark.asyncio

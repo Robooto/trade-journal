@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from typing import Generic, Tuple, List, TypeVar
+from urllib.parse import quote
 
 from app import crud
 from app.settings import settings
@@ -18,6 +19,7 @@ from app.tastytrade_schema import (
     TastyTransaction,
     TastyVolatilityMetric,
     TastyWatchlist,
+    TastyWatchlistEntry,
 )
 
 
@@ -265,6 +267,66 @@ def fetch_watchlists(token: str) -> List[TastyWatchlist]:
         TastyWatchlist.model_validate(item)
         for item in _items_from_response(data)
     ]
+
+
+def add_symbol_to_watchlist(
+    token: str,
+    watchlist_name: str,
+    symbol: str,
+    *,
+    instrument_type: str = "Equity",
+) -> tuple[TastyWatchlist, bool]:
+    """Append one symbol while preserving every existing watchlist property."""
+    requested_name = watchlist_name.strip()
+    normalized_symbol = symbol.strip().upper()
+    if not requested_name:
+        raise ValueError("Watchlist name is required.")
+    if not normalized_symbol:
+        raise ValueError("Symbol is required.")
+
+    watchlists = fetch_watchlists(token)
+    watchlist = next(
+        (
+            item
+            for item in watchlists
+            if item.name.casefold() == requested_name.casefold()
+        ),
+        None,
+    )
+    if watchlist is None:
+        raise LookupError("Brokerage watchlist not found.")
+    if any(
+        entry.symbol.upper() == normalized_symbol
+        for entry in watchlist.watchlist_entries
+    ):
+        return watchlist, False
+
+    entries = [
+        entry.to_tasty_dict()
+        for entry in watchlist.watchlist_entries
+    ]
+    entries.append(
+        TastyWatchlistEntry(
+            symbol=normalized_symbol,
+            instrument_type=instrument_type,
+        ).to_tasty_dict()
+    )
+    payload = {
+        "name": watchlist.name,
+        "watchlist-entries": entries,
+    }
+    if watchlist.group_name is not None:
+        payload["group-name"] = watchlist.group_name
+    if watchlist.order_index is not None:
+        payload["order-index"] = watchlist.order_index
+
+    _request_json(
+        "PUT",
+        f"/watchlists/{quote(watchlist.name, safe='')}",
+        headers=_headers(token, content_type="application/json"),
+        json=payload,
+    )
+    return TastyWatchlist.model_validate(payload), True
 
 
 def fetch_orders(

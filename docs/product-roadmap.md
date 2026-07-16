@@ -1,6 +1,6 @@
 # Trade Journal Product Roadmap
 
-Last reviewed: 2026-07-15
+Last reviewed: 2026-07-16
 
 ## Product goals
 
@@ -166,10 +166,15 @@ Current:
   exposure, daily persistence, and five-session price/IV-rank changes.
 - Per-source failures and persistence failures remain explicit without
   discarding the rest of a useful batch.
+- Private watchlists have a stable list contract plus an idempotent,
+  separately gated add-symbol command. Flow Ideas uses these routes through
+  market-data-pipeline without duplicating brokerage authentication or
+  replacement logic.
+
 Next:
 
-1. Consume the batch research-symbol context from FlowPatrol and brokerage
-   watchlist workflows without changing FlowPatrol priority scoring.
+1. Add useful watchlist filters and brokerage-watchlist idea-generation views
+   without changing FlowPatrol priority scoring.
 2. Add the normalized all-account/all-asset portfolio summary and a broader
    trading-status model beyond the implemented option risk summary.
 3. Orders, order detail, transactions/fills, fees, assignments, and expirations.

@@ -16,6 +16,7 @@ class Settings:
     tastytrade_timeout_seconds: float = float(os.getenv("TASTYTRADE_TIMEOUT_SECONDS", "20"))
     tastytrade_user_agent: str = "trade-journal/0.1"
     live_trading_enabled: bool = _env_bool("LIVE_TRADING_ENABLED", False)
+    brokerage_watchlist_writes_enabled: bool = _env_bool("BROKERAGE_WATCHLIST_WRITES_ENABLED", False)
     cors_origins: tuple[str, ...] = tuple(
         origin.strip()
         for origin in os.getenv(

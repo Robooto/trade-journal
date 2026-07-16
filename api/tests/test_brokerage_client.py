@@ -30,6 +30,67 @@ def test_fetch_watchlists_uses_read_only_endpoint(monkeypatch):
     assert watchlists[0].name == "Core Options"
 
 
+def test_add_symbol_replaces_complete_watchlist_without_losing_entries(
+    monkeypatch,
+):
+    calls = []
+
+    def fake_request(method, path, **kwargs):
+        calls.append((method, path, kwargs))
+        if method == "GET":
+            return load_fixture("watchlists.json")
+        return {"data": {}}
+
+    monkeypatch.setattr(tastytrade, "_request_json", fake_request)
+
+    watchlist, added = tastytrade.add_symbol_to_watchlist(
+        "Bearer FAKE",
+        "Core Options",
+        "tsla",
+    )
+
+    assert added is True
+    assert watchlist.name == "Core Options"
+    assert [entry.symbol for entry in watchlist.watchlist_entries] == [
+        "AAPL",
+        "NVDA",
+        "AMD",
+        "TSLA",
+    ]
+    method, path, kwargs = calls[1]
+    assert method == "PUT"
+    assert path == "/watchlists/Core%20Options"
+    assert kwargs["json"] == {
+        "name": "Core Options",
+        "group-name": "Personal",
+        "order-index": 1,
+        "watchlist-entries": [
+            {"symbol": "AAPL", "instrument-type": "Equity"},
+            {"symbol": "NVDA", "instrument-type": "Equity"},
+            {"symbol": "AMD", "instrument-type": "Equity"},
+            {"symbol": "TSLA", "instrument-type": "Equity"},
+        ],
+    }
+
+
+def test_add_existing_symbol_is_idempotent_and_does_not_replace(monkeypatch):
+    calls = []
+
+    def fake_request(method, path, **kwargs):
+        calls.append((method, path, kwargs))
+        return load_fixture("watchlists.json")
+
+    monkeypatch.setattr(tastytrade, "_request_json", fake_request)
+
+    watchlist, added = tastytrade.add_symbol_to_watchlist(
+        "Bearer FAKE", "core options", "aapl"
+    )
+
+    assert watchlist.name == "Core Options"
+    assert added is False
+    assert [call[0] for call in calls] == ["GET"]
+
+
 def test_fetch_orders_retains_pagination_and_bounded_dates(monkeypatch):
     captured = {}
 
