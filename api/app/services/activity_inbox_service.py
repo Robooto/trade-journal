@@ -58,7 +58,7 @@ def fetch_activity_inbox(
                 token,
                 account_number,
                 date_text,
-                per_page=250,
+                per_page=100,
             )
             source_status.append(
                 _source_status(

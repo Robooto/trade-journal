@@ -185,7 +185,7 @@ def test_fetch_activity_inbox_retains_source_status_and_grouped_events(
         return TastyPage(
             items=orders,
             page_offset=0,
-            per_page=250,
+            per_page=100,
             total_items=1,
             total_pages=1,
             has_more=False,

@@ -112,9 +112,27 @@ def test_fetch_orders_retains_pagination_and_bounded_dates(monkeypatch):
     assert captured["kwargs"]["params"]["start-date"] == "2026-07-14"
     assert captured["kwargs"]["params"]["end-date"] == "2026-07-14"
     assert captured["kwargs"]["params"]["sort"] == "Asc"
+    assert captured["kwargs"]["params"]["per-page"] == 100
     assert page.total_items == 1
     assert page.has_more is False
     assert page.items[0].legs[0].action == "Sell to Open"
+
+
+def test_fetch_orders_rejects_page_size_above_live_limit(monkeypatch):
+    monkeypatch.setattr(
+        tastytrade,
+        "_request_json",
+        lambda *args, **kwargs: pytest.fail("Request should not be sent."),
+    )
+
+    with pytest.raises(ValueError, match="between 1 and 100"):
+        tastytrade.fetch_orders(
+            "Bearer FAKE",
+            "FAKE-OPTIONS",
+            start_date="2026-07-14",
+            end_date="2026-07-14",
+            per_page=101,
+        )
 
 
 def test_fetch_transactions_requests_max_safe_page_and_keeps_metadata(monkeypatch):

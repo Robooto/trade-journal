@@ -336,13 +336,13 @@ def fetch_orders(
     start_date: str,
     end_date: str,
     page_offset: int = 0,
-    per_page: int = 250,
+    per_page: int = 100,
 ) -> TastyPage[TastyOrder]:
     _validate_page_window(
         start_date,
         end_date,
         per_page=per_page,
-        maximum_per_page=250,
+        maximum_per_page=100,
     )
     params = {
         "start-date": start_date,

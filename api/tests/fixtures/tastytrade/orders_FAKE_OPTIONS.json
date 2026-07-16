@@ -28,7 +28,7 @@
     ],
     "pagination": {
       "page-offset": 0,
-      "per-page": 250,
+      "per-page": 100,
       "total-items": 1,
       "total-pages": 1
     }
