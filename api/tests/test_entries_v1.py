@@ -209,3 +209,27 @@ async def test_partial_update_persists_aliased_fields_and_context_link(client):
     assert updated["marketDirection"] == "down"
     assert updated["sourceUrl"] == "/positions"
     assert updated["sourceLabel"] == "Current positions"
+
+@pytest.mark.asyncio
+async def test_update_accepts_full_entry_response_from_edit_form(client):
+    create_resp = await client.post(
+        "/v1/entries",
+        json={
+            **sample_entry,
+            "date": "2026-07-16",
+            "tickers": ["AAPL"],
+            "sourceLabel": "Morning research",
+            "sourceUrl": "/dashboard",
+        },
+    )
+    assert create_resp.status_code == 201
+    created = create_resp.json()
+
+    update_resp = await client.put(
+        f"/v1/entries/{created['id']}",
+        json={**created, "notes": "Edited after the close"},
+    )
+
+    assert update_resp.status_code == 200
+    assert update_resp.json()["date"] == "2026-07-16"
+    assert update_resp.json()["notes"] == "Edited after the close"

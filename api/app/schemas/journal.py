@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date as Date, datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID, uuid4
@@ -22,7 +22,7 @@ class Event(BaseModel):
 
 
 class JournalEntryBase(BaseModel):
-    date: date
+    date: Date
     es_price: float = Field(..., alias="esPrice")
     delta: Optional[float] = None
     notes: str
@@ -43,7 +43,7 @@ class JournalEntryCreate(JournalEntryBase):
 
 
 class JournalEntryUpdate(BaseModel):
-    date: Optional[date] = None
+    date: Optional[Date] = None
     es_price: Optional[float] = Field(None, alias="esPrice")
     delta: Optional[float] = None
     notes: Optional[str] = None
