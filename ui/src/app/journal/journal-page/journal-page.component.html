@@ -90,7 +90,7 @@
                 @if (event.review_status === 'pending') {
                   <button mat-flat-button color="primary" type="button" (click)="addActivityToJournal(event)">
                     <mat-icon>edit_note</mat-icon>
-                    Add to journal
+                    {{ showForm ? 'Add to open entry' : 'Add to journal' }}
                   </button>
                   <button
                     mat-stroked-button
@@ -141,7 +141,11 @@
       <div class="editor-heading">
         <div>
           <strong>{{ selectedEntry ? 'Edit journal entry' : 'Write today’s plan' }}</strong>
-          <span>{{ selectedEntry ? selectedEntry.date : 'Drafts save automatically on this device.' }}</span>
+          <span>
+            {{ entryPrefill
+              ? 'Broker activity added to this open entry.'
+              : (selectedEntry ? selectedEntry.date : 'Drafts save automatically on this device.') }}
+          </span>
         </div>
       </div>
       <app-journal-entry-form

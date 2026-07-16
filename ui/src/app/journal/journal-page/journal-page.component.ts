@@ -34,6 +34,10 @@ export class JournalPageComponent implements OnInit, OnDestroy {
   showCompletedActivity = false;
   dispositionSaving = new Set<string>();
   entryPrefill?: JournalEntryPrefill;
+  pendingActivityReviews: Array<{
+    activityGroupId: string;
+    sessionDate: string;
+  }> = [];
 
   readonly searchControl = new FormControl('', { nonNullable: true });
   readonly tickerControl = new FormControl('', { nonNullable: true });
@@ -97,7 +101,19 @@ export class JournalPageComponent implements OnInit, OnDestroy {
   addActivityToJournal(event: BrokerActivityReviewEvent): void {
     const symbol = event.underlying_symbol?.trim().toUpperCase();
     const activityDate = this.activityInbox?.session_date || event.session_date;
-    this.selectedEntry = undefined;
+    if (!this.showForm) {
+      this.selectedEntry = undefined;
+      this.pendingActivityReviews = [];
+    }
+    if (!this.pendingActivityReviews.some(
+      item => item.activityGroupId === event.activity_group_id
+        && item.sessionDate === activityDate
+    )) {
+      this.pendingActivityReviews.push({
+        activityGroupId: event.activity_group_id,
+        sessionDate: activityDate,
+      });
+    }
     this.entryPrefill = {
       tickers: symbol ? [symbol] : [],
       sourceLabel: `Broker activity · ${symbol || 'Account'} · ${activityDate}`,
@@ -232,6 +248,7 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     this.selectedEntry = undefined;
     this.showForm = true;
     this.entryPrefill = undefined;
+    this.pendingActivityReviews = [];
   }
 
   toggleForm(): void {
@@ -239,6 +256,7 @@ export class JournalPageComponent implements OnInit, OnDestroy {
       this.showForm = false;
       this.selectedEntry = undefined;
       this.entryPrefill = undefined;
+      this.pendingActivityReviews = [];
     } else {
       this.openNewEntry();
     }
@@ -246,20 +264,22 @@ export class JournalPageComponent implements OnInit, OnDestroy {
 
   onEntrySelected(entry: JournalEntry): void {
     this.entryPrefill = undefined;
+    this.pendingActivityReviews = [];
     this.selectedEntry = entry;
     this.showForm = true;
   }
 
   onEntrySaved(entry: JournalEntry): void {
-    const activityGroupId = this.entryPrefill?.activityGroupId;
-    const activitySessionDate = this.entryPrefill?.activitySessionDate;
-    const activityEvent = this.activityInbox?.events.find(
-      item => item.activity_group_id === activityGroupId
-        && item.session_date === activitySessionDate
-    );
-    if (activityEvent) {
-      this.setActivityDisposition(activityEvent, 'reviewed', entry.id);
+    for (const pending of this.pendingActivityReviews) {
+      const activityEvent = this.activityInbox?.events.find(
+        item => item.activity_group_id === pending.activityGroupId
+          && item.session_date === pending.sessionDate
+      );
+      if (activityEvent) {
+        this.setActivityDisposition(activityEvent, 'reviewed', entry.id);
+      }
     }
+    this.pendingActivityReviews = [];
     this.selectedEntry = undefined;
     this.showForm = false;
     this.reload();
@@ -270,6 +290,7 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     this.selectedEntry = undefined;
     this.showForm = false;
     this.entryPrefill = undefined;
+    this.pendingActivityReviews = [];
   }
 
   onEntryDeleted(id: string): void {
@@ -278,5 +299,6 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     this.selectedEntry = undefined;
     this.showForm = false;
     this.entryPrefill = undefined;
+    this.pendingActivityReviews = [];
   }
 }

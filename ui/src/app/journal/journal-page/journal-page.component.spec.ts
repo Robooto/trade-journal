@@ -184,6 +184,23 @@ describe('JournalPageComponent', () => {
     );
   });
 
+  it('adds brokerage activity to the already-open journal entry', () => {
+    component.activityInbox = structuredClone(activityInbox);
+    const existing = makeEntry('existing-entry', '2026-07-16');
+    existing.notes = 'Morning plan';
+    component.selectedEntry = existing;
+    component.showForm = true;
+
+    component.addActivityToJournal(component.activityInbox.events[0]);
+
+    expect(component.selectedEntry).toBe(existing);
+    expect(component.entryPrefill?.notes).toContain('AAPL - opening activity');
+    expect(component.pendingActivityReviews).toEqual([{
+      activityGroupId: 'tastytrade:FAKE:group-fill:1',
+      sessionDate: '2026-07-15',
+    }]);
+  });
+
   it('hides completed activity unless Show reviewed is enabled', () => {
     component.activityInbox = structuredClone(activityInbox);
     const event = component.activityInbox.events[0];

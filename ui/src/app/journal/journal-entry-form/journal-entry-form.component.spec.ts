@@ -250,4 +250,40 @@ describe('JournalEntryFormComponent', () => {
             component.form.get('notes')?.value.match(/AAPL opening activity/g)
         ).toHaveLength(1);
     });
+
+    it('merges brokerage prefill into an existing journal entry', () => {
+        const entry: JournalEntry = {
+            id: 'existing-entry',
+            date: '2026-07-16',
+            esPrice: 6300,
+            marketDirection: 'up',
+            notes: 'Morning plan already written',
+            tickers: ['SPY'],
+            events: [],
+        };
+        component.entry = entry;
+        component.ngOnChanges({
+            entry: new SimpleChange(null, entry, true)
+        });
+        component.prefill = {
+            tickers: ['AAPL'],
+            sourceLabel: 'Broker activity · AAPL · 2026-07-15',
+            sourceUrl: '/journal?activityDate=2026-07-15',
+            notes: 'AAPL opening activity\n\nWhy I made this trade:'
+        };
+
+        component.ngOnChanges({
+            prefill: new SimpleChange(null, component.prefill, true)
+        });
+
+        expect(component.form.get('id')?.value).toBe('existing-entry');
+        expect(component.form.get('tickers')?.value).toBe('SPY, AAPL');
+        expect(component.form.get('notes')?.value).toContain(
+            'Morning plan already written'
+        );
+        expect(component.form.get('notes')?.value).toContain(
+            'AAPL opening activity'
+        );
+        expect(component.form.dirty).toBe(true);
+    });
 });

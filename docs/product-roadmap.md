@@ -91,6 +91,12 @@ Implemented foundation:
 - Saving a journal entry created from **Add to journal** automatically marks
   that activity reviewed and stores the journal-entry ID. A review-state write
   failure does not undo the journal save and remains visible for retry.
+- **Add to journal** is context-aware: when an existing entry or unsaved draft
+  is open, brokerage facts and tickers merge into that editor without replacing
+  its notes. With no editor open, the action starts the normal new-entry flow.
+- Multiple imported activities can be accumulated before one save and all link
+  to the saved entry. Timeline events remain the optional tool for manual
+  intraday observations, and the primary notes editor is sized for daily use.
 
 
 

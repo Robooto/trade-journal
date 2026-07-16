@@ -63,7 +63,7 @@ export class JournalEntryFormComponent implements OnInit, OnChanges, OnDestroy {
         this.restoreDraft();
       }
     }
-    if (changes['prefill'] && !this.entry) {
+    if (changes['prefill']) {
       this.applyPrefill();
     }
   }
