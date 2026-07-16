@@ -1,4 +1,6 @@
 import logging
+from datetime import date
+
 import requests
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -9,6 +11,7 @@ from app.db import get_db
 from app.schemas.brokerage import (
     AddWatchlistSymbolRequestV1,
     AddWatchlistSymbolResultV1,
+    BrokerActivityInboxV1,
     BrokerWatchlistListV1,
     BrokerWatchlistSummaryV1,
     HoldingSnapshotV1,
@@ -16,6 +19,7 @@ from app.schemas.brokerage import (
     ResearchSymbolContextV1,
 )
 from app.settings import settings
+from app.services.activity_inbox_service import fetch_activity_inbox
 from app.services.brokerage_service import fetch_holding_snapshot
 from app.services.research_context_orchestration import (
     fetch_research_symbol_context,
@@ -127,6 +131,23 @@ def add_watchlist_symbol(
         symbol=symbol,
         added=added,
     )
+
+
+@router.get(
+    "/activity-inbox",
+    summary="Get normalized brokerage activity for one review session",
+    response_model=BrokerActivityInboxV1,
+    response_model_exclude_none=True,
+)
+def get_activity_inbox(
+    session_date: date,
+    db: Session = Depends(get_db),
+):
+    token = _token_or_403(db)
+    try:
+        return fetch_activity_inbox(token, session_date)
+    except TastytradeFetchError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @router.post(

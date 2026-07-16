@@ -72,6 +72,7 @@ Document stable local endpoints here as they are implemented.
 
 ```text
 GET /v1/broker/holdings
+GET /v1/broker/activity-inbox?session_date=YYYY-MM-DD
 POST /v1/broker/research-symbol-context
 GET /v1/broker/watchlists
 POST /v1/broker/watchlists/{watchlist_name}/symbols
@@ -93,6 +94,10 @@ Implemented backend foundations:
   unchanged.
 - `BrokerActivityEventV1` retains transaction, order, and group-fill IDs,
   signed values, fees, source timestamps, and explicit grouping ambiguity.
+- `BrokerActivityInboxV1` groups one explicitly selected session's normalized
+  transactions only when Tastytrade provides a group-fill identifier. It joins
+  matching order metadata, preserves every normalized leg, and reports source
+  failures without discarding activity from other available sources/accounts.
 - `ResearchSymbolContextV1` joins watchlist membership, current price and IV
   observations, existing exposure, earnings availability, and per-source
   quality status.
@@ -145,8 +150,8 @@ Use this table while discovering routes.
 | Watchlists | `/watchlists/{watchlist_name}` | PUT | `POST /v1/broker/watchlists/{watchlist_name}/symbols` | Yes | Implemented, gated | Idempotent equity add; fetches and preserves the complete list before replacement. |
 | Market data | `/market-data/by-type` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | Current mark and prior close; partial failures are explicit. |
 | Volatility | `/market-metrics` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | IV index/rank/percentile, broker five-day IV-index change, and liquidity. |
-| Orders | `/accounts/{account_number}/orders` | GET | Planned activity API | No | Client implemented | Requires bounded dates and exposes pagination state. |
-| Transactions | `/accounts/{account_number}/transactions` | GET | Planned activity API | No | Client implemented | Preserves broker transaction/order/group-fill identifiers. |
+| Orders | `/accounts/{account_number}/orders` | GET | `GET /v1/broker/activity-inbox` | No | Implemented | Exact requested session date; matching metadata enriches normalized transaction groups. |
+| Transactions | `/accounts/{account_number}/transactions` | GET | `GET /v1/broker/activity-inbox` | No | Implemented | Exact requested session date; preserves broker transaction/order/group-fill identifiers. |
 | Historical earnings | `/market-metrics/historic-corporate-events/earnings-reports/{symbol}` | GET | Planned research context | No | Client implemented | Historical only; does not establish the next earnings date. |
 
 ## Sample Notes

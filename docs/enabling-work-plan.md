@@ -1,6 +1,6 @@
 # Enabling Work Plan
 
-Last reviewed: 2026-07-15
+Last reviewed: 2026-07-16
 
 This plan orders the product roadmap by dependency. Each wave should ship as
 small API-backed vertical slices. Brokerage authentication and normalization
@@ -99,8 +99,13 @@ Completed on 2026-07-15:
    IV percentile, broker five-day IV-index change, and liquidity observations.
 3. **Implemented:** batch research-symbol context API over current and
    persisted data.
-4. Normalize previous-session fills into opened, added, reduced, rolled, closed,
-   assignment, and expiration review events.
+4. **Backend foundation implemented:** normalize an explicitly selected
+   session's activity into opening, closing, roll, fill, assignment,
+   expiration, cash, and other review events. Group only on broker-provided
+   group-fill IDs, retain ambiguous rows, join available order metadata, and
+   expose per-source quality. Next add verified prior-session calendar
+   resolution and position-state evidence before claiming opened versus added
+   or reduced versus fully closed.
 
 ## Wave 3: workflow features
 

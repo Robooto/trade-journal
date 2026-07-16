@@ -17,6 +17,10 @@ Current:
 - Optional normalized ticker tags plus note/ticker search.
 - Optional context links back to positions, FlowPatrol ideas, or other research.
 - Morning dashboard handoff directly into today's editor and recent entries.
+- Read-only `GET /v1/broker/activity-inbox` foundation for reviewing one
+  explicit session across all brokerage accounts. Broker-supplied fill groups
+  are joined to order metadata; ambiguous activity remains ungrouped and
+  source quality remains visible.
 
 Next:
 
@@ -43,9 +47,10 @@ Proposed experience:
 1. Open the morning journal to a compact **Previous session activity** inbox.
 2. Use the prior completed U.S. market session—not simply calendar yesterday—so
    weekends and market holidays resolve correctly.
-3. Show fills grouped into understandable trade events such as opened, added,
-   reduced, rolled, and closed, with account, ticker, strategy/legs, time,
-   quantity, and execution price.
+3. Show fills grouped into understandable trade events. The first contract uses
+   factual labels such as opening, closing, roll, assignment, and expiration;
+   opened versus added and reduced versus fully closed require position-state
+   evidence and must not be guessed from fill action alone.
 4. Let **Add to journal** attach an event and pre-fill a small factual summary;
    the user writes why it was done, what was expected, and what would invalidate
    the decision.
@@ -65,6 +70,17 @@ Backend responsibilities:
   label unavailable historical context explicitly.
 - Keep imported facts separate from the user's explanation so a later refresh
   cannot silently rewrite the journal record.
+Implemented foundation:
+
+- An explicit `session_date` is currently required. A verified U.S. exchange
+  calendar resolver is the next dependency before the UI can default safely to
+  the prior completed session, including holidays and Good Friday.
+- Orders and transactions are fetched with the same bounded date across every
+  account. Per-source failures and pagination truncation are explicit and
+  non-fatal.
+- Transactions group only by Tastytrade's group-fill ID. Without that ID, even
+  apparent multi-leg activity remains individually reviewable and ambiguous.
+
 
 Charts and screenshots:
 
@@ -177,7 +193,8 @@ Next:
    without changing FlowPatrol priority scoring.
 2. Add the normalized all-account/all-asset portfolio summary and a broader
    trading-status model beyond the implemented option risk summary.
-3. Orders, order detail, transactions/fills, fees, assignments, and expirations.
+3. Extend the implemented session activity inbox with verified prior-session
+   resolution, position-state classification, and journal attachments.
 4. Nested option chains, margin requirements, order dry-run, and margin dry-run.
 5. Portfolio-review and trade-review packs with freshness and missing-data
    status.

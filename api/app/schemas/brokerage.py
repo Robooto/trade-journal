@@ -118,6 +118,55 @@ class BrokerActivityEventV1(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+class BrokerActivityReviewKind(str, Enum):
+    OPENING = "opening"
+    CLOSING = "closing"
+    ROLL = "roll"
+    FILL = "fill"
+    ASSIGNMENT = "assignment"
+    EXPIRATION = "expiration"
+    CASH = "cash"
+    OTHER = "other"
+
+
+class BrokerActivityReviewEventV1(BaseModel):
+    schema_version: Literal["broker-activity-review-event.v1"] = (
+        "broker-activity-review-event.v1"
+    )
+    activity_group_id: str
+    session_date: date
+    account_number: str
+    review_kind: BrokerActivityReviewKind
+    occurred_at: datetime
+    underlying_symbol: Optional[str] = None
+    group_fill_id: Optional[str] = None
+    grouping_status: Literal["explicit", "ungrouped", "ambiguous"]
+    order_ids: list[str] = Field(default_factory=list)
+    order_status: Optional[str] = None
+    order_type: Optional[str] = None
+    order_price: Optional[float] = None
+    order_price_effect: Optional[str] = None
+    leg_count: int
+    legs: list[BrokerActivityEventV1]
+    net_value_dollars: Optional[float] = None
+    fees_dollars: Optional[float] = None
+    summary: str
+    warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class BrokerActivityInboxV1(BaseModel):
+    schema_version: Literal["broker-activity-inbox.v1"] = "broker-activity-inbox.v1"
+    session_date: date
+    generated_at: datetime
+    events: list[BrokerActivityReviewEventV1]
+    source_status: list[SourceMetadataV1]
+    warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
 class WatchlistMembershipV1(BaseModel):
     name: str
     group_name: Optional[str] = None
