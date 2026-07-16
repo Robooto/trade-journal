@@ -108,3 +108,20 @@ def test_iv_rank_and_broker_five_day_iv_change_remain_distinct():
 
         assert saved.iv_rank_percent == 42.0
         assert saved.iv_index_5_day_change_percent == 3.2
+
+
+def test_partial_same_day_refresh_does_not_erase_existing_values():
+    with session() as db:
+        original = observation(date(2026, 7, 15), iv_rank_percent=42.0)
+        upsert_research_metric(db, original)
+        partial = original.model_copy(
+            update={
+                "mark": None,
+                "iv_rank_percent": 47.5,
+            }
+        )
+
+        updated = upsert_research_metric(db, partial)
+
+        assert updated.mark == 210.25
+        assert updated.iv_rank_percent == 47.5

@@ -77,7 +77,7 @@ pagination metadata or warnings so incomplete history is never silent.
 Completed on 2026-07-15:
 
 - Packets 1A through 1D are implemented in the backend foundation.
-- The complete gate passes with 100 backend tests and 48 frontend tests.
+- The complete gate passes with 111 backend tests and 48 frontend tests.
 - The first Wave 2 slice now exposes `GET /v1/broker/holdings`, returning
   every account and asset class while preserving per-account failures as
   explicit source status.
@@ -87,17 +87,18 @@ Completed on 2026-07-15:
   versioned observation contract, idempotent symbol/date/source upserts, and
   bounded ordered history reads. IV rank and broker five-day IV-index change
   remain distinct fields.
-- The next enabling slice is wiring daily broker observations into this store,
-  followed by the batch research-symbol context API.
+- `POST /v1/broker/research-symbol-context` now wires explicit symbol batches
+  into current broker data, all-account exposure, daily persistence, and
+  six-observation price/IV-rank trends with per-source failure status.
 
 ## Wave 2: highest-value vertical slices
 
 1. **Implemented:** return all-account/all-asset holdings while preserving the
    current option-specific projection and management rules.
-2. **Storage foundation implemented:** persist daily mark, IV index, IV rank,
+2. **Implemented:** persist daily mark, IV index, IV rank,
    IV percentile, broker five-day IV-index change, and liquidity observations.
-   Daily collection wiring remains.
-3. Build a batch research-symbol context API over current and persisted data.
+3. **Implemented:** batch research-symbol context API over current and
+   persisted data.
 4. Normalize previous-session fills into opened, added, reduced, rolled, closed,
    assignment, and expiration review events.
 

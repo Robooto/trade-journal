@@ -139,6 +139,41 @@ def _exposure_by_symbol(
         for symbol, item in raw.items()
     }
 
+def _holding_source(
+    snapshot: HoldingSnapshotV1,
+) -> SourceMetadataV1:
+    statuses = [source.status for source in snapshot.source_status]
+    if statuses and all(
+        status == DataStatus.UNAVAILABLE for status in statuses
+    ):
+        status = DataStatus.UNAVAILABLE
+    elif any(status != DataStatus.OK for status in statuses):
+        status = DataStatus.PARTIAL
+    else:
+        status = DataStatus.OK
+    warnings = list(
+        dict.fromkeys(
+            warning
+            for source in snapshot.source_status
+            for warning in source.warnings
+        )
+    )
+    missing_fields = list(
+        dict.fromkeys(
+            field
+            for source in snapshot.source_status
+            for field in source.missing_fields
+        )
+    )
+    return SourceMetadataV1(
+        source="trade-journal",
+        endpoint="/brokerage/holding-snapshot",
+        fetched_at=snapshot.generated_at,
+        status=status,
+        missing_fields=missing_fields,
+        warnings=warnings,
+    )
+
 
 def build_research_symbol_context(
     symbols: Sequence[str],
@@ -163,6 +198,7 @@ def build_research_symbol_context(
         if item.get("symbol")
     }
     exposure_map = _exposure_by_symbol(holding_snapshot)
+    holding_source = _holding_source(holding_snapshot)
     earnings_map = {
         symbol.upper(): value
         for symbol, value in (earnings_by_symbol or {}).items()
@@ -214,12 +250,7 @@ def build_research_symbol_context(
                 available=volatility is not None,
                 missing_fields=metric_missing,
             ),
-            SourceMetadataV1(
-                source="trade-journal",
-                endpoint="/brokerage/holding-snapshot",
-                fetched_at=holding_snapshot.generated_at,
-                status=DataStatus.OK,
-            ),
+            holding_source.model_copy(deep=True),
             _source("/watchlists", fetched_at, available=True),
         ]
 
@@ -305,5 +336,6 @@ def build_research_symbol_context(
                 available=bool(volatility_map),
                 missing_fields=volatility_missing,
             ),
+            holding_source,
         ],
     )

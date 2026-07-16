@@ -72,6 +72,7 @@ Document stable local endpoints here as they are implemented.
 
 ```text
 GET /v1/broker/holdings
+POST /v1/broker/research-symbol-context
 GET /v1/broker/accounts
 GET /v1/broker/summary
 GET /v1/broker/positions
@@ -101,9 +102,14 @@ Implemented backend foundations:
   account with `unavailable` source status and a safe warning.
 - Sanitized fixtures represent options, buy-and-hold, and mixed account roles.
 
-The next step is daily metric persistence, followed by a batch research-symbol
-context API. Current IV rank and the broker's five-day IV-index change remain
-separate observations.
+- `POST /v1/broker/research-symbol-context` accepts up to 100 explicit
+  symbols, joins current price/volatility, private watchlists, and all-account
+  exposure, persists valid daily observations, and adds five-session price and
+  IV-rank changes after six dated observations exist.
+
+Current IV rank and the broker's five-day IV-index change remain separate
+observations. Upcoming earnings remain explicitly unavailable until a verified
+forward-looking source is added.
 
 ## Safety Rules
 
@@ -125,7 +131,9 @@ Use this table while discovering routes.
 | Auth | `/sessions` | POST | Internal only | No | Known | Creates broker session token. |
 | Accounts | `/customers/me/accounts` | GET | `GET /v1/broker/holdings` | No | Implemented | Every returned account is retained, including empty accounts. |
 | Positions | `/accounts/{account_number}/positions` | GET | `GET /v1/broker/holdings` | No | Implemented | Returns all asset classes; per-account failures are explicit and non-fatal. |
-| Watchlists | `/watchlists` | GET | Planned batch research context | No | Client implemented | Private watchlists parse into typed fixtures. |
+| Watchlists | `/watchlists` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | Private membership is joined per requested symbol. |
+| Market data | `/market-data/by-type` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | Current mark and prior close; partial failures are explicit. |
+| Volatility | `/market-metrics` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | IV index/rank/percentile, broker five-day IV-index change, and liquidity. |
 | Orders | `/accounts/{account_number}/orders` | GET | Planned activity API | No | Client implemented | Requires bounded dates and exposes pagination state. |
 | Transactions | `/accounts/{account_number}/transactions` | GET | Planned activity API | No | Client implemented | Preserves broker transaction/order/group-fill identifiers. |
 | Historical earnings | `/market-metrics/historic-corporate-events/earnings-reports/{symbol}` | GET | Planned research context | No | Client implemented | Historical only; does not establish the next earnings date. |

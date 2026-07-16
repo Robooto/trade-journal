@@ -139,3 +139,36 @@ def test_missing_mark_is_partial_not_silently_ok():
     market_source = nvda.source_status[0]
     assert market_source.status == DataStatus.PARTIAL
     assert market_source.missing_fields == ["mark"]
+
+
+def test_incomplete_account_positions_mark_exposure_partial():
+    snapshot = holding_snapshot()
+    snapshot.source_status[0].status = DataStatus.UNAVAILABLE
+    snapshot.source_status[0].warnings = [
+        "Brokerage positions are unavailable for this account."
+    ]
+
+    context = build_research_symbol_context(
+        ["AAPL"],
+        watchlists=[],
+        market_data=[],
+        volatility_metrics=[],
+        holding_snapshot=snapshot,
+        fetched_at=FETCHED_AT,
+    )
+
+    aggregate = next(
+        source
+        for source in context.source_status
+        if source.endpoint == "/brokerage/holding-snapshot"
+    )
+    item_source = next(
+        source
+        for source in context.items[0].source_status
+        if source.endpoint == "/brokerage/holding-snapshot"
+    )
+    assert aggregate.status == DataStatus.PARTIAL
+    assert item_source.status == DataStatus.PARTIAL
+    assert aggregate.warnings == [
+        "Brokerage positions are unavailable for this account."
+    ]

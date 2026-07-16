@@ -160,16 +160,16 @@ Current:
   services, and a public read-only all-account holdings route.
 
 - Additive daily research-metric storage with versioned observations,
-  idempotent symbol/date/source upserts, and bounded history reads. No scheduled
-  or request-driven collection is wired yet.
+  lossless same-day upserts, and bounded history reads.
+- Read-only `POST /v1/broker/research-symbol-context` batch enrichment for
+  current price and IV observations, private watchlists, complete-account
+  exposure, daily persistence, and five-session price/IV-rank changes.
+- Per-source failures and persistence failures remain explicit without
+  discarding the rest of a useful batch.
 Next:
 
-1. Persist daily research metrics, then expose a batch research-symbol context
-   for FlowPatrol and watchlist workflows:
-   watchlist membership, current/short-window price context, IV metrics,
-   liquidity, earnings status, existing exposure, freshness, and missing-data
-   warnings. Persist daily snapshots when a trend cannot be supplied directly
-   by the broker.
+1. Consume the batch research-symbol context from FlowPatrol and brokerage
+   watchlist workflows without changing FlowPatrol priority scoring.
 2. Add the normalized all-account/all-asset portfolio summary and a broader
    trading-status model beyond the implemented option risk summary.
 3. Orders, order detail, transactions/fills, fees, assignments, and expirations.

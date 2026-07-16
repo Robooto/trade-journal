@@ -41,6 +41,7 @@ def upsert_research_metric(
             ResearchMetricSnapshotORM.source == observation.source,
         )
     )
+    is_new = existing is None
     if existing is None:
         existing = ResearchMetricSnapshotORM(
             symbol=observation.symbol,
@@ -50,7 +51,13 @@ def upsert_research_metric(
         db.add(existing)
 
     for field in _VALUE_FIELDS:
-        setattr(existing, field, getattr(observation, field))
+        value = getattr(observation, field)
+        if (
+            field in {"observed_at", "fetched_at"}
+            or is_new
+            or value is not None
+        ):
+            setattr(existing, field, value)
     db.commit()
     db.refresh(existing)
     return _to_schema(existing)
@@ -62,6 +69,7 @@ def list_research_metric_history(
     *,
     start_date: date | None = None,
     end_date: date | None = None,
+    limit: int | None = None,
 ) -> list[ResearchMetricObservationV1]:
     statement = select(ResearchMetricSnapshotORM).where(
         ResearchMetricSnapshotORM.symbol == symbol.strip().upper()
@@ -74,9 +82,17 @@ def list_research_metric_history(
         statement = statement.where(
             ResearchMetricSnapshotORM.observation_date <= end_date
         )
-    rows = db.scalars(
-        statement.order_by(ResearchMetricSnapshotORM.observation_date)
-    ).all()
+    if limit is not None:
+        rows = db.scalars(
+            statement.order_by(
+                ResearchMetricSnapshotORM.observation_date.desc()
+            ).limit(limit)
+        ).all()
+        rows.reverse()
+    else:
+        rows = db.scalars(
+            statement.order_by(ResearchMetricSnapshotORM.observation_date)
+        ).all()
     return [_to_schema(row) for row in rows]
 
 

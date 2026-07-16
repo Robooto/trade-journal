@@ -8,6 +8,7 @@ from app.schemas.brokerage import (
     DataStatus,
     HoldingSnapshotV1,
     SourceMetadataV1,
+    ResearchSymbolContextV1,
 )
 from app.services.trades_errors import TastytradeFetchError
 
@@ -92,4 +93,66 @@ async def test_get_holdings_returns_bad_gateway_for_account_failure(
     assert response.status_code == 502
     assert response.json() == {
         "detail": "Unable to fetch brokerage accounts."
+    }
+
+
+@pytest.mark.asyncio
+async def test_post_research_context_returns_versioned_batch(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+
+    def fake_context(db, token, symbols):
+        return ResearchSymbolContextV1(
+            generated_at=GENERATED_AT,
+            requested_symbols=["AAPL"],
+            items=[],
+            missing_symbols=[],
+            source_status=[],
+        )
+
+    monkeypatch.setattr(
+        broker,
+        "fetch_research_symbol_context",
+        fake_context,
+    )
+
+    response = await client.post(
+        "/v1/broker/research-symbol-context",
+        json={"symbols": ["aapl"]},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["schema_version"] == "research-symbol-context.v1"
+    assert payload["requested_symbols"] == ["AAPL"]
+
+
+@pytest.mark.asyncio
+async def test_post_research_context_rejects_empty_symbols(
+    client, monkeypatch
+):
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+
+    def fail_empty(db, token, symbols):
+        raise ValueError("At least one non-empty symbol is required.")
+
+    monkeypatch.setattr(
+        broker,
+        "fetch_research_symbol_context",
+        fail_empty,
+    )
+
+    response = await client.post(
+        "/v1/broker/research-symbol-context",
+        json={"symbols": [" "]},
+    )
+
+    assert response.status_code == 422
+    assert response.json() == {
+        "detail": "At least one non-empty symbol is required."
     }

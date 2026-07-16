@@ -202,3 +202,9 @@ class ResearchMetricObservationV1(BaseModel):
     liquidity_rating: Optional[float] = None
 
     model_config = {"extra": "forbid"}
+
+
+class ResearchSymbolContextRequestV1(BaseModel):
+    symbols: list[str] = Field(min_length=1, max_length=100)
+
+    model_config = {"extra": "forbid"}
