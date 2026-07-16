@@ -182,3 +182,23 @@ class ResearchSymbolContextV1(BaseModel):
     source_status: list[SourceMetadataV1] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}
+
+
+class ResearchMetricObservationV1(BaseModel):
+    schema_version: Literal["research-metric-observation.v1"] = (
+        "research-metric-observation.v1"
+    )
+    symbol: str
+    observation_date: date
+    observed_at: datetime
+    fetched_at: datetime
+    source: str = "tastytrade"
+    mark: Optional[float] = None
+    previous_close: Optional[float] = None
+    iv_index_percent: Optional[float] = None
+    iv_rank_percent: Optional[float] = None
+    iv_percentile_percent: Optional[float] = None
+    iv_index_5_day_change_percent: Optional[float] = None
+    liquidity_rating: Optional[float] = None
+
+    model_config = {"extra": "forbid"}

@@ -159,6 +159,9 @@ Current:
   watchlist/order/transaction/historical-earnings clients, pure normalization
   services, and a public read-only all-account holdings route.
 
+- Additive daily research-metric storage with versioned observations,
+  idempotent symbol/date/source upserts, and bounded history reads. No scheduled
+  or request-driven collection is wired yet.
 Next:
 
 1. Persist daily research metrics, then expose a batch research-symbol context

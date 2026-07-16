@@ -99,3 +99,36 @@ class PivotLevelORM(Base):
     price = Column(Float, nullable=False)
     index = Column(String(16), nullable=False, default="SPX")
     date = Column(Date, nullable=False, server_default=func.current_date())
+
+
+class ResearchMetricSnapshotORM(Base):
+    __tablename__ = "research_metric_snapshots"
+    __table_args__ = (
+        UniqueConstraint(
+            "symbol",
+            "observation_date",
+            "source",
+            name="uq_research_metric_symbol_date_source",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    symbol = Column(String(16), nullable=False, index=True)
+    observation_date = Column(Date, nullable=False, index=True)
+    observed_at = Column(DateTime, nullable=False)
+    fetched_at = Column(DateTime, nullable=False)
+    source = Column(String(32), nullable=False, default="tastytrade")
+    mark = Column(Float, nullable=True)
+    previous_close = Column(Float, nullable=True)
+    iv_index_percent = Column(Float, nullable=True)
+    iv_rank_percent = Column(Float, nullable=True)
+    iv_percentile_percent = Column(Float, nullable=True)
+    iv_index_5_day_change_percent = Column(Float, nullable=True)
+    liquidity_rating = Column(Float, nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

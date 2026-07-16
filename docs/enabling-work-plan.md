@@ -83,15 +83,20 @@ Completed on 2026-07-15:
   explicit source status.
 - The existing option-position route, UI, database, and live-order behavior are
   unchanged.
-- The next enabling slice is daily research metric persistence, followed by
-  the batch research-symbol context API.
+- The additive `research_metric_snapshots` storage foundation now provides a
+  versioned observation contract, idempotent symbol/date/source upserts, and
+  bounded ordered history reads. IV rank and broker five-day IV-index change
+  remain distinct fields.
+- The next enabling slice is wiring daily broker observations into this store,
+  followed by the batch research-symbol context API.
 
 ## Wave 2: highest-value vertical slices
 
 1. **Implemented:** return all-account/all-asset holdings while preserving the
    current option-specific projection and management rules.
-2. Persist daily mark, IV index, IV rank, IV percentile, and broker five-day
-   IV-index-change snapshots.
+2. **Storage foundation implemented:** persist daily mark, IV index, IV rank,
+   IV percentile, broker five-day IV-index change, and liquidity observations.
+   Daily collection wiring remains.
 3. Build a batch research-symbol context API over current and persisted data.
 4. Normalize previous-session fills into opened, added, reduced, rolled, closed,
    assignment, and expiration review events.
