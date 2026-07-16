@@ -104,6 +104,12 @@ Implemented backend foundations:
   by activity-group ID and market-session date, optionally linking the resulting
   journal entry. Inbox responses include each event's status and aggregate
   pending/reviewed/skipped counts.
+- `BrokerActivityMarketContextV1` enriches symbol activity with cached
+  five-minute Yahoo bars, the nearest estimated underlying close, match
+  distance, session OHLC/change, SPY-at-activity context, and a compact bar
+  series. The original activity remains available when chart history fails;
+  context status and warnings distinguish estimated, session-only, and
+  unavailable data.
 - `ResearchSymbolContextV1` joins watchlist membership, current price and IV
   observations, existing exposure, earnings availability, and per-source
   quality status.

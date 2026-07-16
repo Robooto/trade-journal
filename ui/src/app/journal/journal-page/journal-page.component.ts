@@ -194,6 +194,32 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     if (legs.length) {
       lines.push(`Legs: ${legs.join('; ')}`);
     }
+    const underlying = event.market_context?.underlying;
+    const benchmark = event.market_context?.benchmark;
+    if (underlying?.activity_price != null) {
+      lines.push(
+        `Estimated entry-time context (nearest 5-minute close): ` +
+        `${underlying.symbol} $${underlying.activity_price.toFixed(2)}` +
+        `${this.formatSignedPercent(underlying.activity_from_open_percent, ' from open')}`
+      );
+      if (underlying.session_open != null && underlying.session_high != null
+          && underlying.session_low != null && underlying.session_close != null) {
+        lines.push(
+          `Session OHLC: $${underlying.session_open.toFixed(2)} / ` +
+          `$${underlying.session_high.toFixed(2)} / ` +
+          `$${underlying.session_low.toFixed(2)} / ` +
+          `$${underlying.session_close.toFixed(2)}`
+        );
+      }
+    } else if (underlying) {
+      lines.push(`Entry-time price context for ${underlying.symbol}: unavailable`);
+    }
+    if (benchmark?.activity_price != null) {
+      lines.push(
+        `${benchmark.symbol} near activity: $${benchmark.activity_price.toFixed(2)}` +
+        `${this.formatSignedPercent(benchmark.activity_from_open_percent, ' from open')}`
+      );
+    }
     if (event.grouping_status === 'ambiguous') {
       lines.push('Data note: broker grouping was ambiguous; review the legs.');
     }
@@ -206,6 +232,70 @@ export class JournalPageComponent implements OnInit, OnDestroy {
       'What would change my mind:'
     );
     return lines.join('\n');
+  }
+
+  formatSignedPercent(
+    value: number | null | undefined,
+    suffix: string = ''
+  ): string {
+    if (value == null) {
+      return '';
+    }
+    const sign = value > 0 ? '+' : '';
+    return ` ${sign}${value.toFixed(2)}%${suffix}`;
+  }
+
+  activityChartPoints(event: BrokerActivityReviewEvent): string {
+    const bars = event.market_context?.underlying?.bars ?? [];
+    if (bars.length < 2) {
+      return '';
+    }
+    const { low, range } = this.activityChartBounds(event);
+    return bars.map((bar, index) => {
+      const x = (index / (bars.length - 1)) * 100;
+      const y = 36 - (((bar.close - low) / range) * 32 + 2);
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
+  }
+
+  activityMarkerX(event: BrokerActivityReviewEvent): number {
+    const underlying = event.market_context?.underlying;
+    const bars = underlying?.bars ?? [];
+    if (!underlying?.matched_at || bars.length < 2) {
+      return 0;
+    }
+    const target = new Date(underlying.matched_at).getTime();
+    let closestIndex = 0;
+    let closestDistance = Number.POSITIVE_INFINITY;
+    bars.forEach((bar, index) => {
+      const distance = Math.abs(bar.time - target);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+    return (closestIndex / (bars.length - 1)) * 100;
+  }
+
+  activityMarkerY(event: BrokerActivityReviewEvent): number {
+    const price = event.market_context?.underlying?.activity_price;
+    if (price == null) {
+      return 0;
+    }
+    const { low, range } = this.activityChartBounds(event);
+    return 36 - (((price - low) / range) * 32 + 2);
+  }
+
+  private activityChartBounds(
+    event: BrokerActivityReviewEvent
+  ): { low: number; range: number } {
+    const bars = event.market_context?.underlying?.bars ?? [];
+    const low = Math.min(...bars.map(bar => bar.low));
+    const high = Math.max(...bars.map(bar => bar.high));
+    return {
+      low: Number.isFinite(low) ? low : 0,
+      range: Number.isFinite(high - low) && high !== low ? high - low : 1,
+    };
   }
 
   loadNextPage(): void {

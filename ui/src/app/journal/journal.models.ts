@@ -49,6 +49,42 @@ export interface BrokerActivityLeg {
   warnings?: string[];
 }
 
+export interface BrokerActivityMarketBar {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface BrokerActivitySymbolContext {
+  symbol: string;
+  source_symbol: string;
+  source: 'yahoo_chart';
+  status: 'ok' | 'partial' | 'stale' | 'unavailable';
+  resolution: '5m';
+  activity_price?: number | null;
+  matched_at?: string | null;
+  match_quality: 'nearest_5m_close' | 'session_only' | 'unavailable';
+  minutes_from_activity?: number | null;
+  session_open?: number | null;
+  session_high?: number | null;
+  session_low?: number | null;
+  session_close?: number | null;
+  session_change_percent?: number | null;
+  activity_from_open_percent?: number | null;
+  bars: BrokerActivityMarketBar[];
+  warnings: string[];
+}
+
+export interface BrokerActivityMarketContext {
+  schema_version: 'broker-activity-market-context.v1';
+  underlying?: BrokerActivitySymbolContext | null;
+  benchmark?: BrokerActivitySymbolContext | null;
+  warnings: string[];
+}
+
 export interface BrokerActivityReviewEvent {
   activity_group_id: string;
   session_date: string;
@@ -68,6 +104,7 @@ export interface BrokerActivityReviewEvent {
   summary: string;
   review_status: 'pending' | 'reviewed' | 'skipped';
   journal_entry_id?: string | null;
+  market_context?: BrokerActivityMarketContext | null;
   warnings?: string[];
 }
 

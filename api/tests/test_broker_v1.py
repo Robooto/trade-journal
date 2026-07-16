@@ -194,6 +194,11 @@ async def test_activity_disposition_is_idempotent_and_enriches_inbox(
         )
 
     monkeypatch.setattr(broker, "fetch_activity_inbox", fake_inbox)
+    monkeypatch.setattr(
+        broker,
+        "enrich_activity_market_context",
+        lambda inbox: inbox,
+    )
     enriched = await client.get(
         "/v1/broker/activity-inbox",
         params={"session_date": "2026-07-14"},

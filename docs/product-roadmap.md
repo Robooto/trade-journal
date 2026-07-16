@@ -97,14 +97,20 @@ Implemented foundation:
 - Multiple imported activities can be accumulated before one save and all link
   to the saved entry. Timeline events remain the optional tool for manual
   intraday observations, and the primary notes editor is sized for daily use.
+- Each symbol activity now includes an entry-time context card built from the
+  nearest five-minute underlying close, session OHLC, and SPY at the same time.
+  The compact session chart marks the matched bar. Estimates, match distance,
+  partial data, and unavailable history remain explicit.
+- **Add to journal** freezes the available estimated price, session OHLC, and
+  SPY comparison into factual note text so later market-data refreshes cannot
+  rewrite the decision record.
 
 
 
 Charts and screenshots:
 
-- First generate a small entry-time chart card from historical bars, marking the
-  fill and relevant position legs where data permits.
-- Later allow pasted/uploaded screenshots and preserve attachment metadata and
+- The first entry-time chart card is implemented with a matched activity marker.
+- Next allow pasted/uploaded screenshots and preserve attachment metadata and
   provenance in the backend.
 - A screenshot is supporting evidence; accessible text and normalized facts
   remain available to searches and LLM packs.

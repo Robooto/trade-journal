@@ -134,6 +134,54 @@ class BrokerActivityDispositionStatus(str, Enum):
     SKIPPED = "skipped"
 
 
+class BrokerActivityMarketBarV1(BaseModel):
+    time: int
+    open: float
+    high: float
+    low: float
+    close: float
+    volume: int = 0
+
+    model_config = {"extra": "forbid"}
+
+
+class BrokerActivitySymbolContextV1(BaseModel):
+    symbol: str
+    source_symbol: str
+    source: Literal["yahoo_chart"] = "yahoo_chart"
+    status: DataStatus
+    resolution: Literal["5m"] = "5m"
+    activity_price: Optional[float] = None
+    matched_at: Optional[datetime] = None
+    match_quality: Literal[
+        "nearest_5m_close",
+        "session_only",
+        "unavailable",
+    ] = "unavailable"
+    minutes_from_activity: Optional[float] = None
+    session_open: Optional[float] = None
+    session_high: Optional[float] = None
+    session_low: Optional[float] = None
+    session_close: Optional[float] = None
+    session_change_percent: Optional[float] = None
+    activity_from_open_percent: Optional[float] = None
+    bars: list[BrokerActivityMarketBarV1] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class BrokerActivityMarketContextV1(BaseModel):
+    schema_version: Literal["broker-activity-market-context.v1"] = (
+        "broker-activity-market-context.v1"
+    )
+    underlying: Optional[BrokerActivitySymbolContextV1] = None
+    benchmark: Optional[BrokerActivitySymbolContextV1] = None
+    warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
 class BrokerActivityReviewEventV1(BaseModel):
     schema_version: Literal["broker-activity-review-event.v1"] = (
         "broker-activity-review-event.v1"
@@ -158,6 +206,7 @@ class BrokerActivityReviewEventV1(BaseModel):
     summary: str
     review_status: Literal["pending", "reviewed", "skipped"] = "pending"
     journal_entry_id: Optional[str] = None
+    market_context: Optional[BrokerActivityMarketContextV1] = None
     warnings: list[str] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}

@@ -225,6 +225,106 @@
   content: "·";
 }
 
+.entry-context {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 5%, transparent);
+}
+
+.entry-context-copy {
+  display: grid;
+  flex: 1;
+  gap: 5px;
+  min-width: 230px;
+}
+
+.entry-context-primary,
+.entry-context-ohlc {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.entry-context-primary {
+  font-size: 0.76rem;
+}
+
+.entry-context-primary strong {
+  color: var(--mat-sys-on-surface);
+  font-size: 0.92rem;
+}
+
+.context-estimate {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  padding: 1px 6px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.64rem;
+}
+
+.entry-context-ohlc,
+.entry-context-benchmark,
+.entry-context-unavailable {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.68rem;
+}
+
+.entry-context-benchmark {
+  display: block;
+}
+
+.entry-context-unavailable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entry-context-unavailable mat-icon {
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
+}
+
+.context-positive {
+  color: #4ade80;
+}
+
+.context-negative {
+  color: #f87171;
+}
+
+.entry-context-chart {
+  width: 210px;
+  height: 70px;
+  overflow: visible;
+}
+
+.entry-context-chart polyline {
+  fill: none;
+  stroke: var(--mat-sys-primary);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.entry-context-chart line {
+  stroke: #fbbf24;
+  stroke-dasharray: 2 2;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.entry-context-chart circle {
+  fill: #fbbf24;
+  stroke: var(--mat-sys-surface);
+  stroke-width: 1;
+}
+
 .activity-message,
 .activity-empty {
   display: flex;
@@ -267,6 +367,16 @@
 
   .activity-card-actions button {
     width: 100%;
+  }
+
+  .entry-context {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .entry-context-chart {
+    width: 100%;
+    height: 86px;
   }
 }
 

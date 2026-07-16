@@ -32,6 +32,61 @@ const activityInbox: BrokerActivityInbox = {
     fees_dollars: 2.3,
     summary: 'AAPL - opening activity - 2 legs - $137.70 net credit',
     review_status: 'pending',
+    market_context: {
+      schema_version: 'broker-activity-market-context.v1',
+      warnings: [
+        'AAPL activity price is estimated from the nearest five-minute bar close.'
+      ],
+      underlying: {
+        symbol: 'AAPL',
+        source_symbol: 'AAPL',
+        source: 'yahoo_chart',
+        status: 'partial',
+        resolution: '5m',
+        activity_price: 203,
+        matched_at: '2026-07-15T15:30:00Z',
+        match_quality: 'nearest_5m_close',
+        minutes_from_activity: 0,
+        session_open: 200,
+        session_high: 206,
+        session_low: 198,
+        session_close: 205,
+        session_change_percent: 2.5,
+        activity_from_open_percent: 1.5,
+        bars: [
+          {
+            time: Date.parse('2026-07-15T13:30:00Z'),
+            open: 200,
+            high: 202,
+            low: 198,
+            close: 201,
+            volume: 100,
+          },
+          {
+            time: Date.parse('2026-07-15T15:30:00Z'),
+            open: 202,
+            high: 206,
+            low: 201,
+            close: 203,
+            volume: 200,
+          },
+        ],
+        warnings: [],
+      },
+      benchmark: {
+        symbol: 'SPY',
+        source_symbol: 'SPY',
+        source: 'yahoo_chart',
+        status: 'partial',
+        resolution: '5m',
+        activity_price: 630,
+        matched_at: '2026-07-15T15:30:00Z',
+        match_quality: 'nearest_5m_close',
+        activity_from_open_percent: -0.25,
+        bars: [],
+        warnings: [],
+      },
+    },
     legs: [{
       activity_id: 'leg-1',
       kind: 'fill',
@@ -179,6 +234,15 @@ describe('JournalPageComponent', () => {
     expect(component.entryPrefill?.notes).toContain(
       'Sell to Open 1x AAPL 260821P00100000 @ $2.50'
     );
+    expect(component.entryPrefill?.notes).toContain(
+      'Estimated entry-time context (nearest 5-minute close): AAPL $203.00 +1.50% from open'
+    );
+    expect(component.entryPrefill?.notes).toContain(
+      'SPY near activity: $630.00 -0.25% from open'
+    );
+    expect(component.activityChartPoints(activityInbox.events[0])).not.toBe('');
+    expect(component.activityMarkerX(activityInbox.events[0])).toBe(100);
+    expect(component.activityMarkerY(activityInbox.events[0])).toBeGreaterThan(0);
     expect(component.entryPrefill?.activityGroupId).toBe(
       'tastytrade:FAKE:group-fill:1'
     );

@@ -26,6 +26,9 @@ from app.services.activity_disposition_service import (
     apply_activity_dispositions,
     upsert_activity_disposition,
 )
+from app.services.activity_market_context_service import (
+    enrich_activity_market_context,
+)
 from app.services.market_session_service import (
     previous_us_equity_market_session,
 )
@@ -156,7 +159,8 @@ def get_activity_inbox(
     session_date = session_date or previous_us_equity_market_session()
     try:
         inbox = fetch_activity_inbox(token, session_date)
-        return apply_activity_dispositions(db, inbox)
+        inbox = apply_activity_dispositions(db, inbox)
+        return enrich_activity_market_context(inbox)
     except TastytradeFetchError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

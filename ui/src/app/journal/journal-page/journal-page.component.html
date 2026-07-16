@@ -85,6 +85,64 @@
                     <span>{{ event.fees_dollars | currency }} fees</span>
                   }
                 </div>
+                @if (event.market_context?.underlying; as context) {
+                  <div class="entry-context">
+                    <div class="entry-context-copy">
+                      @if (context.activity_price != null) {
+                        <div class="entry-context-primary">
+                          <strong>{{ context.activity_price | currency }}</strong>
+                          <span class="context-estimate">Estimated 5m close</span>
+                          @if (context.activity_from_open_percent != null) {
+                            <span
+                              [class.context-positive]="context.activity_from_open_percent > 0"
+                              [class.context-negative]="context.activity_from_open_percent < 0"
+                            >
+                              {{ formatSignedPercent(context.activity_from_open_percent) }} from open
+                            </span>
+                          }
+                        </div>
+                        <div class="entry-context-ohlc">
+                          <span>O {{ context.session_open | number:'1.2-2' }}</span>
+                          <span>H {{ context.session_high | number:'1.2-2' }}</span>
+                          <span>L {{ context.session_low | number:'1.2-2' }}</span>
+                          <span>C {{ context.session_close | number:'1.2-2' }}</span>
+                        </div>
+                      } @else {
+                        <div class="entry-context-unavailable">
+                          <mat-icon>query_stats</mat-icon>
+                          Entry-time price context unavailable
+                        </div>
+                      }
+                      @if (event.market_context?.benchmark?.activity_price != null) {
+                        <span class="entry-context-benchmark">
+                          {{ event.market_context?.benchmark?.symbol }}
+                          {{ event.market_context?.benchmark?.activity_price | currency }}
+                          {{ formatSignedPercent(event.market_context?.benchmark?.activity_from_open_percent) }}
+                          from open
+                        </span>
+                      }
+                    </div>
+                    @if (context.bars.length > 1) {
+                      <svg class="entry-context-chart" viewBox="0 0 100 36" role="img">
+                        <title>{{ context.symbol }} session with activity marker</title>
+                        <polyline [attr.points]="activityChartPoints(event)"></polyline>
+                        @if (context.activity_price != null) {
+                          <line
+                            [attr.x1]="activityMarkerX(event)"
+                            [attr.x2]="activityMarkerX(event)"
+                            y1="1"
+                            y2="35"
+                          ></line>
+                          <circle
+                            [attr.cx]="activityMarkerX(event)"
+                            [attr.cy]="activityMarkerY(event)"
+                            r="2.2"
+                          ></circle>
+                        }
+                      </svg>
+                    }
+                  </div>
+                }
               </div>
               <div class="activity-card-actions">
                 @if (event.review_status === 'pending') {
