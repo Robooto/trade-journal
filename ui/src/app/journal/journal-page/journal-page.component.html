@@ -18,8 +18,16 @@
         <h2 id="previous-session-heading">Previous session activity</h2>
         @if (activityInbox) {
           <span>{{ activityInbox.session_date | date:'EEE, MMM d':'UTC' }}</span>
+          <span>{{ completedActivityCount }} of {{ activityInbox.events.length }} complete</span>
         }
       </div>
+      <div class="activity-heading-actions">
+        @if (activityInbox?.events?.length) {
+          <button mat-button type="button" (click)="showCompletedActivity = !showCompletedActivity">
+            <mat-icon>{{ showCompletedActivity ? 'visibility_off' : 'visibility' }}</mat-icon>
+            {{ showCompletedActivity ? 'Hide completed' : 'Show reviewed' }}
+          </button>
+        }
       <button
         mat-stroked-button
         type="button"
@@ -29,6 +37,7 @@
         <mat-icon>refresh</mat-icon>
         Refresh
       </button>
+      </div>
     </header>
 
     @if (activityLoading) {
@@ -46,9 +55,15 @@
           <span>Some brokerage context is incomplete. Available activity is still shown.</span>
         </div>
       }
+      @if (activityActionError) {
+        <div class="activity-message activity-message-error" role="alert">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ activityActionError }}</span>
+        </div>
+      }
       @if (activityInbox.events.length) {
         <div class="activity-list">
-          @for (event of activityInbox.events; track event.activity_group_id) {
+          @for (event of visibleActivityEvents; track event.activity_group_id) {
             <article class="activity-card">
               <div class="activity-card-copy">
                 <div class="activity-title-row">
@@ -56,6 +71,9 @@
                   <span class="activity-kind">{{ event.review_kind }}</span>
                   @if (event.grouping_status === 'ambiguous') {
                     <span class="activity-warning">Review grouping</span>
+                  }
+                  @if (event.review_status !== 'pending') {
+                    <span class="activity-complete">{{ event.review_status }}</span>
                   }
                 </div>
                 <p>{{ event.summary }}</p>
@@ -68,16 +86,42 @@
                   }
                 </div>
               </div>
-              <button
-                mat-flat-button
-                color="primary"
-                type="button"
-                (click)="addActivityToJournal(event)"
-              >
-                <mat-icon>edit_note</mat-icon>
-                Add to journal
-              </button>
+              <div class="activity-card-actions">
+                @if (event.review_status === 'pending') {
+                  <button mat-flat-button color="primary" type="button" (click)="addActivityToJournal(event)">
+                    <mat-icon>edit_note</mat-icon>
+                    Add to journal
+                  </button>
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="setActivityDisposition(event, 'reviewed')"
+                    [disabled]="dispositionSaving.has(event.activity_group_id)"
+                  >
+                    <mat-icon>done</mat-icon>
+                    Reviewed
+                  </button>
+                  <button
+                    mat-button
+                    type="button"
+                    (click)="setActivityDisposition(event, 'skipped')"
+                    [disabled]="dispositionSaving.has(event.activity_group_id)"
+                  >
+                    Skip
+                  </button>
+                } @else if (event.journal_entry_id) {
+                  <span class="activity-linked"><mat-icon>link</mat-icon> Added to journal</span>
+                }
+              </div>
             </article>
+          } @empty {
+            <div class="activity-empty">
+              <mat-icon>task_alt</mat-icon>
+              <div>
+                <strong>Session review complete</strong>
+                <span>Use Show reviewed to revisit completed activity.</span>
+              </div>
+            </div>
           }
         </div>
       } @else {

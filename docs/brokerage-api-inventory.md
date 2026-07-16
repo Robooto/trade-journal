@@ -73,6 +73,7 @@ Document stable local endpoints here as they are implemented.
 ```text
 GET /v1/broker/holdings
 GET /v1/broker/activity-inbox[?session_date=YYYY-MM-DD]
+PUT /v1/broker/activity-disposition
 POST /v1/broker/research-symbol-context
 GET /v1/broker/watchlists
 POST /v1/broker/watchlists/{watchlist_name}/symbols
@@ -99,6 +100,10 @@ Implemented backend foundations:
   transactions only when Tastytrade provides a group-fill identifier, joins
   matching order metadata, preserves every normalized leg, and reports source
   failures without discarding activity from other available sources/accounts.
+- `BrokerActivityDispositionV1` persists Reviewed/Skip workflow state locally
+  by activity-group ID and market-session date, optionally linking the resulting
+  journal entry. Inbox responses include each event's status and aggregate
+  pending/reviewed/skipped counts.
 - `ResearchSymbolContextV1` joins watchlist membership, current price and IV
   observations, existing exposure, earnings availability, and per-source
   quality status.

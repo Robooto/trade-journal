@@ -15,6 +15,9 @@ const activityInbox: BrokerActivityInbox = {
   session_date: '2026-07-15',
   generated_at: '2026-07-16T12:00:00Z',
   source_status: [],
+  pending_count: 1,
+  reviewed_count: 0,
+  skipped_count: 0,
   warnings: [],
   events: [{
     activity_group_id: 'tastytrade:FAKE:group-fill:1',
@@ -28,6 +31,7 @@ const activityInbox: BrokerActivityInbox = {
     net_value_dollars: 137.7,
     fees_dollars: 2.3,
     summary: 'AAPL - opening activity - 2 legs - $137.70 net credit',
+    review_status: 'pending',
     legs: [{
       activity_id: 'leg-1',
       kind: 'fill',
@@ -44,6 +48,23 @@ class MockJournalApiService {
   activityResponse = activityInbox;
   activityInbox() {
     return of(this.activityResponse);
+  }
+  dispositionCalls: Array<Record<string, string | undefined>> = [];
+  setActivityDisposition(
+    activityGroupId: string,
+    sessionDate: string,
+    status: 'reviewed' | 'skipped',
+    journalEntryId?: string
+  ) {
+    this.dispositionCalls.push({ activityGroupId, sessionDate, status, journalEntryId });
+    return of({
+      schema_version: 'broker-activity-disposition.v1' as const,
+      activity_group_id: activityGroupId,
+      session_date: sessionDate,
+      status,
+      journal_entry_id: journalEntryId,
+      updated_at: '2026-07-16T12:00:00Z',
+    });
   }
   response: PaginatedJournalEntries = { total: 0, items: [], skip: 0, limit: 20 };
   list(_skip: number = 0, _limit: number = 20, _query: string = '', _ticker: string = '') {
@@ -158,5 +179,36 @@ describe('JournalPageComponent', () => {
     expect(component.entryPrefill?.notes).toContain(
       'Sell to Open 1x AAPL 260821P00100000 @ $2.50'
     );
+    expect(component.entryPrefill?.activityGroupId).toBe(
+      'tastytrade:FAKE:group-fill:1'
+    );
+  });
+
+  it('hides completed activity unless Show reviewed is enabled', () => {
+    component.activityInbox = structuredClone(activityInbox);
+    const event = component.activityInbox.events[0];
+
+    component.setActivityDisposition(event, 'skipped');
+
+    expect(component.visibleActivityEvents).toEqual([]);
+    expect(component.completedActivityCount).toBe(1);
+    expect(component.activityInbox.skipped_count).toBe(1);
+    component.showCompletedActivity = true;
+    expect(component.visibleActivityEvents).toEqual([event]);
+  });
+
+  it('marks imported activity reviewed after its journal entry saves', () => {
+    component.activityInbox = structuredClone(activityInbox);
+    component.addActivityToJournal(component.activityInbox.events[0]);
+    const saved = makeEntry('journal-entry-1', '2026-07-16');
+
+    component.onEntrySaved(saved);
+
+    expect(api.dispositionCalls).toEqual([{
+      activityGroupId: 'tastytrade:FAKE:group-fill:1',
+      sessionDate: '2026-07-15',
+      status: 'reviewed',
+      journalEntryId: 'journal-entry-1',
+    }]);
   });
 });

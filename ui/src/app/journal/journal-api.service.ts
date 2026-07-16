@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable }   from 'rxjs';
 import { environment }  from '../../environments/environment';
 import {
+  BrokerActivityDisposition,
+  BrokerActivityDispositionStatus,
   BrokerActivityInbox,
   JournalEntry,
   JournalEvent,
@@ -42,6 +44,23 @@ export class JournalApiService {
     return this.http.get<BrokerActivityInbox>(
       `${environment.apiUrl}/broker/activity-inbox`,
       { params }
+    );
+  }
+
+  setActivityDisposition(
+    activityGroupId: string,
+    sessionDate: string,
+    status: BrokerActivityDispositionStatus,
+    journalEntryId?: string
+  ): Observable<BrokerActivityDisposition> {
+    return this.http.put<BrokerActivityDisposition>(
+      `${environment.apiUrl}/broker/activity-disposition`,
+      {
+        activity_group_id: activityGroupId,
+        session_date: sessionDate,
+        status,
+        journal_entry_id: journalEntryId ?? null,
+      }
     );
   }
 

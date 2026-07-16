@@ -132,3 +132,27 @@ class ResearchMetricSnapshotORM(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+class BrokerActivityDispositionORM(Base):
+    __tablename__ = "broker_activity_dispositions"
+    __table_args__ = (
+        UniqueConstraint(
+            "activity_group_id",
+            "session_date",
+            name="uq_broker_activity_disposition_group_session",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    activity_group_id = Column(String(512), nullable=False, index=True)
+    session_date = Column(Date, nullable=False, index=True)
+    status = Column(String(16), nullable=False)
+    journal_entry_id = Column(String(36), nullable=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

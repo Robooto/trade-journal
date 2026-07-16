@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Subscription, debounceTime, distinctUntilChanged, finalize, merge } from 'rxjs';
 import {
   BrokerActivityInbox,
+  BrokerActivityDispositionStatus,
   BrokerActivityReviewEvent,
   JournalEntry,
   JournalEntryPrefill,
@@ -29,6 +30,9 @@ export class JournalPageComponent implements OnInit, OnDestroy {
   activityInbox?: BrokerActivityInbox;
   activityLoading = false;
   activityError = '';
+  activityActionError = '';
+  showCompletedActivity = false;
+  dispositionSaving = new Set<string>();
   entryPrefill?: JournalEntryPrefill;
 
   readonly searchControl = new FormControl('', { nonNullable: true });
@@ -58,12 +62,25 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     return Boolean(this.searchControl.value.trim() || this.tickerControl.value.trim());
   }
 
+  get visibleActivityEvents(): BrokerActivityReviewEvent[] {
+    const events = this.activityInbox?.events ?? [];
+    return this.showCompletedActivity
+      ? events
+      : events.filter(event => event.review_status === 'pending');
+  }
+
+  get completedActivityCount(): number {
+    return (this.activityInbox?.reviewed_count ?? 0)
+      + (this.activityInbox?.skipped_count ?? 0);
+  }
+
   loadActivityInbox(): void {
     if (this.activityLoading) {
       return;
     }
     this.activityLoading = true;
     this.activityError = '';
+    this.activityActionError = '';
     this.api.activityInbox().pipe(
       finalize(() => (this.activityLoading = false))
     ).subscribe({
@@ -88,8 +105,54 @@ export class JournalPageComponent implements OnInit, OnDestroy {
         `/journal?activityDate=${activityDate}` +
         `&activityId=${encodeURIComponent(event.activity_group_id)}`,
       notes: this.factualActivityNotes(event, activityDate),
+      activityGroupId: event.activity_group_id,
+      activitySessionDate: activityDate,
     };
     this.showForm = true;
+  }
+
+  setActivityDisposition(
+    event: BrokerActivityReviewEvent,
+    status: BrokerActivityDispositionStatus,
+    journalEntryId?: string
+  ): void {
+    if (this.dispositionSaving.has(event.activity_group_id)) {
+      return;
+    }
+    this.dispositionSaving.add(event.activity_group_id);
+    this.activityActionError = '';
+    this.api.setActivityDisposition(
+      event.activity_group_id,
+      event.session_date,
+      status,
+      journalEntryId
+    ).pipe(
+      finalize(() => this.dispositionSaving.delete(event.activity_group_id))
+    ).subscribe({
+      next: disposition => {
+        event.review_status = disposition.status;
+        event.journal_entry_id = disposition.journal_entry_id;
+        this.recountActivity();
+      },
+      error: error => {
+        this.activityActionError =
+          error?.error?.detail || 'Review status could not be saved. Try again.';
+      },
+    });
+  }
+
+  private recountActivity(): void {
+    if (!this.activityInbox) {
+      return;
+    }
+    this.activityInbox.reviewed_count = this.activityInbox.events.filter(
+      event => event.review_status === 'reviewed'
+    ).length;
+    this.activityInbox.skipped_count = this.activityInbox.events.filter(
+      event => event.review_status === 'skipped'
+    ).length;
+    this.activityInbox.pending_count = this.activityInbox.events.length
+      - this.completedActivityCount;
   }
 
   private factualActivityNotes(
@@ -187,7 +250,16 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     this.showForm = true;
   }
 
-  onEntrySaved(_entry: JournalEntry): void {
+  onEntrySaved(entry: JournalEntry): void {
+    const activityGroupId = this.entryPrefill?.activityGroupId;
+    const activitySessionDate = this.entryPrefill?.activitySessionDate;
+    const activityEvent = this.activityInbox?.events.find(
+      item => item.activity_group_id === activityGroupId
+        && item.session_date === activitySessionDate
+    );
+    if (activityEvent) {
+      this.setActivityDisposition(activityEvent, 'reviewed', entry.id);
+    }
     this.selectedEntry = undefined;
     this.showForm = false;
     this.reload();

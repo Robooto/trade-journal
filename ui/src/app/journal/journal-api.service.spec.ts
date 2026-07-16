@@ -98,6 +98,9 @@ describe('JournalApiService', () => {
       generated_at: '2026-07-16T12:00:00Z',
       events: [],
       source_status: [],
+      pending_count: 0,
+      reviewed_count: 0,
+      skipped_count: 0,
       warnings: [],
     };
 
@@ -120,7 +123,32 @@ describe('JournalApiService', () => {
       generated_at: '2026-07-16T12:00:00Z',
       events: [],
       source_status: [],
+      pending_count: 0,
+      reviewed_count: 0,
+      skipped_count: 0,
       warnings: [],
+    });
+  });
+
+  it('setActivityDisposition persists local review state', () => {
+    service.setActivityDisposition('group-1', '2026-07-15', 'reviewed', 'entry-1')
+      .subscribe(result => expect(result.status).toBe('reviewed'));
+
+    const req = http.expectOne(`${environment.apiUrl}/broker/activity-disposition`);
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({
+      activity_group_id: 'group-1',
+      session_date: '2026-07-15',
+      status: 'reviewed',
+      journal_entry_id: 'entry-1',
+    });
+    req.flush({
+      schema_version: 'broker-activity-disposition.v1',
+      activity_group_id: 'group-1',
+      session_date: '2026-07-15',
+      status: 'reviewed',
+      journal_entry_id: 'entry-1',
+      updated_at: '2026-07-16T12:00:00Z',
     });
   });
 });

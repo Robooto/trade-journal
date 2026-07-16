@@ -85,6 +85,12 @@ Implemented foundation:
 - The Angular journal loads the compact inbox independently from journal
   history. **Add to journal** preserves imported facts as editable draft text
   and adds prompts for why, expectations, and invalidation.
+- **Reviewed** and **Skip** persist locally by stable activity-group ID and
+  market-session date. Pending activity is the default view, completed activity
+  can be shown again, and the header reports session-review progress.
+- Saving a journal entry created from **Add to journal** automatically marks
+  that activity reviewed and stores the journal-entry ID. A review-state write
+  failure does not undo the journal save and remains visible for retry.
 
 
 

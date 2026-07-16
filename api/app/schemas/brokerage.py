@@ -129,6 +129,11 @@ class BrokerActivityReviewKind(str, Enum):
     OTHER = "other"
 
 
+class BrokerActivityDispositionStatus(str, Enum):
+    REVIEWED = "reviewed"
+    SKIPPED = "skipped"
+
+
 class BrokerActivityReviewEventV1(BaseModel):
     schema_version: Literal["broker-activity-review-event.v1"] = (
         "broker-activity-review-event.v1"
@@ -151,6 +156,8 @@ class BrokerActivityReviewEventV1(BaseModel):
     net_value_dollars: Optional[float] = None
     fees_dollars: Optional[float] = None
     summary: str
+    review_status: Literal["pending", "reviewed", "skipped"] = "pending"
+    journal_entry_id: Optional[str] = None
     warnings: list[str] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}
@@ -162,7 +169,32 @@ class BrokerActivityInboxV1(BaseModel):
     generated_at: datetime
     events: list[BrokerActivityReviewEventV1]
     source_status: list[SourceMetadataV1]
+    pending_count: int = 0
+    reviewed_count: int = 0
+    skipped_count: int = 0
     warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class BrokerActivityDispositionRequestV1(BaseModel):
+    activity_group_id: str = Field(min_length=1, max_length=512)
+    session_date: date
+    status: BrokerActivityDispositionStatus
+    journal_entry_id: Optional[str] = Field(default=None, max_length=36)
+
+    model_config = {"extra": "forbid"}
+
+
+class BrokerActivityDispositionV1(BaseModel):
+    schema_version: Literal["broker-activity-disposition.v1"] = (
+        "broker-activity-disposition.v1"
+    )
+    activity_group_id: str
+    session_date: date
+    status: BrokerActivityDispositionStatus
+    journal_entry_id: Optional[str] = None
+    updated_at: datetime
 
     model_config = {"extra": "forbid"}
 

@@ -66,6 +66,8 @@ export interface BrokerActivityReviewEvent {
   net_value_dollars?: number | null;
   fees_dollars?: number | null;
   summary: string;
+  review_status: 'pending' | 'reviewed' | 'skipped';
+  journal_entry_id?: string | null;
   warnings?: string[];
 }
 
@@ -75,7 +77,21 @@ export interface BrokerActivityInbox {
   generated_at: string;
   events: BrokerActivityReviewEvent[];
   source_status: BrokerSourceStatus[];
+  pending_count: number;
+  reviewed_count: number;
+  skipped_count: number;
   warnings: string[];
+}
+
+export type BrokerActivityDispositionStatus = 'reviewed' | 'skipped';
+
+export interface BrokerActivityDisposition {
+  schema_version: 'broker-activity-disposition.v1';
+  activity_group_id: string;
+  session_date: string;
+  status: BrokerActivityDispositionStatus;
+  journal_entry_id?: string | null;
+  updated_at: string;
 }
 
 export interface JournalEntryPrefill {
@@ -83,4 +99,6 @@ export interface JournalEntryPrefill {
   sourceLabel?: string;
   sourceUrl?: string;
   notes?: string;
+  activityGroupId?: string;
+  activitySessionDate?: string;
 }

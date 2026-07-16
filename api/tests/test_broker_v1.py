@@ -7,6 +7,7 @@ from app.routers.v1 import broker
 from app.schemas.brokerage import (
     AccountHoldingSnapshotV1,
     BrokerActivityInboxV1,
+    BrokerActivityReviewEventV1,
     DataStatus,
     HoldingSnapshotV1,
     SourceMetadataV1,
@@ -145,6 +146,73 @@ async def test_get_activity_inbox_requires_valid_explicit_session_date(client):
     )
 
     assert response.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_activity_disposition_is_idempotent_and_enriches_inbox(
+    client,
+    monkeypatch,
+):
+    activity_group_id = "tastytrade:FAKE:group-fill:review-test"
+    request = {
+        "activity_group_id": activity_group_id,
+        "session_date": "2026-07-14",
+        "status": "reviewed",
+        "journal_entry_id": "00000000-0000-0000-0000-000000000001",
+    }
+
+    first = await client.put("/v1/broker/activity-disposition", json=request)
+    second = await client.put("/v1/broker/activity-disposition", json=request)
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert second.json()["status"] == "reviewed"
+    assert second.json()["journal_entry_id"] == request["journal_entry_id"]
+
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+
+    def fake_inbox(token, session_date):
+        return BrokerActivityInboxV1(
+            session_date=session_date,
+            generated_at=GENERATED_AT,
+            events=[
+                BrokerActivityReviewEventV1(
+                    activity_group_id=activity_group_id,
+                    session_date=session_date,
+                    account_number="FAKE-OPTIONS",
+                    review_kind="opening",
+                    occurred_at=GENERATED_AT,
+                    grouping_status="explicit",
+                    leg_count=0,
+                    legs=[],
+                    summary="AAPL opening activity",
+                )
+            ],
+            source_status=[],
+        )
+
+    monkeypatch.setattr(broker, "fetch_activity_inbox", fake_inbox)
+    enriched = await client.get(
+        "/v1/broker/activity-inbox",
+        params={"session_date": "2026-07-14"},
+    )
+
+    assert enriched.status_code == 200
+    payload = enriched.json()
+    assert payload["pending_count"] == 0
+    assert payload["reviewed_count"] == 1
+    assert payload["skipped_count"] == 0
+    assert payload["events"][0]["review_status"] == "reviewed"
+    assert payload["events"][0]["journal_entry_id"] == request["journal_entry_id"]
+
+    request["status"] = "skipped"
+    request["journal_entry_id"] = None
+    changed = await client.put("/v1/broker/activity-disposition", json=request)
+    assert changed.status_code == 200
+    assert changed.json()["status"] == "skipped"
+    assert "journal_entry_id" not in changed.json()
 
 
 @pytest.mark.asyncio

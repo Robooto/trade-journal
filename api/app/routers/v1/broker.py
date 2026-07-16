@@ -11,6 +11,8 @@ from app.db import get_db
 from app.schemas.brokerage import (
     AddWatchlistSymbolRequestV1,
     AddWatchlistSymbolResultV1,
+    BrokerActivityDispositionRequestV1,
+    BrokerActivityDispositionV1,
     BrokerActivityInboxV1,
     BrokerWatchlistListV1,
     BrokerWatchlistSummaryV1,
@@ -20,6 +22,10 @@ from app.schemas.brokerage import (
 )
 from app.settings import settings
 from app.services.activity_inbox_service import fetch_activity_inbox
+from app.services.activity_disposition_service import (
+    apply_activity_dispositions,
+    upsert_activity_disposition,
+)
 from app.services.market_session_service import (
     previous_us_equity_market_session,
 )
@@ -149,9 +155,24 @@ def get_activity_inbox(
     token = _token_or_403(db)
     session_date = session_date or previous_us_equity_market_session()
     try:
-        return fetch_activity_inbox(token, session_date)
+        inbox = fetch_activity_inbox(token, session_date)
+        return apply_activity_dispositions(db, inbox)
     except TastytradeFetchError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.put(
+    "/activity-disposition",
+    summary="Record local review state for brokerage activity",
+    response_model=BrokerActivityDispositionV1,
+    response_model_exclude_none=True,
+)
+def put_activity_disposition(
+    request: BrokerActivityDispositionRequestV1,
+    db: Session = Depends(get_db),
+):
+    """Idempotently mark an activity group reviewed or skipped locally."""
+    return upsert_activity_disposition(db, request)
 
 
 @router.post(
