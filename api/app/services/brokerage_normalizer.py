@@ -272,8 +272,9 @@ def normalize_activity_event(
     ]
     fee_total = round(sum(abs(value) for value in fees if value is not None), 4)
     group_fill_id = raw.get("ext-group-fill-id")
+    order_id = raw.get("order-id")
     leg_count = int(_number(raw.get("leg-count")) or 0)
-    if group_fill_id:
+    if group_fill_id or order_id is not None:
         grouping_status = "explicit"
     elif leg_count > 1:
         grouping_status = "ambiguous"

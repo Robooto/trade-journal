@@ -103,6 +103,72 @@ def test_multi_leg_transaction_without_group_id_remains_ambiguous():
     ]
 
 
+
+def test_order_id_groups_spread_legs_and_keeps_open_close_orders_separate():
+    raw = [
+        {
+            "id": 93001,
+            "transaction-type": "Trade",
+            "executed-at": "2026-07-14T15:30:00Z",
+            "underlying-symbol": "SPX",
+            "symbol": "SPX LONG",
+            "action": "Buy to Open",
+            "quantity": "1",
+            "order-id": 111,
+            "leg-count": 2,
+        },
+        {
+            "id": 93002,
+            "transaction-type": "Trade",
+            "executed-at": "2026-07-14T15:30:00Z",
+            "underlying-symbol": "SPX",
+            "symbol": "SPX SHORT",
+            "action": "Sell to Open",
+            "quantity": "1",
+            "order-id": 111,
+            "leg-count": 2,
+        },
+        {
+            "id": 93003,
+            "transaction-type": "Trade",
+            "executed-at": "2026-07-14T18:30:00Z",
+            "underlying-symbol": "SPX",
+            "symbol": "SPX LONG",
+            "action": "Sell to Close",
+            "quantity": "1",
+            "order-id": 222,
+            "leg-count": 2,
+        },
+        {
+            "id": 93004,
+            "transaction-type": "Trade",
+            "executed-at": "2026-07-14T18:30:00Z",
+            "underlying-symbol": "SPX",
+            "symbol": "SPX SHORT",
+            "action": "Buy to Close",
+            "quantity": "1",
+            "order-id": 222,
+            "leg-count": 2,
+        },
+    ]
+    normalized = [
+        normalize_activity_event(
+            "FAKE-OPTIONS",
+            TastyTransaction.model_validate(item),
+            fetched_at=FETCHED_AT,
+        )
+        for item in raw
+    ]
+
+    result = build_activity_review_events(SESSION_DATE, normalized, [])
+
+    assert len(result) == 2
+    assert [event.review_kind.value for event in result] == ["opening", "closing"]
+    assert [event.leg_count for event in result] == [2, 2]
+    assert [event.grouping_status for event in result] == ["explicit", "explicit"]
+    assert result[0].activity_group_id.endswith("order:111")
+    assert result[1].activity_group_id.endswith("order:222")
+
 def test_open_and_close_legs_in_explicit_group_are_labeled_roll():
     raw = [
         {

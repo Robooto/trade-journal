@@ -95,15 +95,15 @@ Implemented backend foundations:
   unchanged.
 - `BrokerActivityEventV1` retains transaction, order, and group-fill IDs,
   signed values, fees, source timestamps, and explicit grouping ambiguity.
-- The journal activity card previews every leg in an explicit group fill and
-  attaches the complete spread to the open entry.
+- The journal activity card previews every leg in an explicit group-fill or
+  shared-order group and attaches the complete spread to the open entry.
 - Position groups expose `expiration_dates`, `strategy_label`,
   `strategy_confidence`, and `grouping_source`. Calendar/diagonal pairs are
   inferred only from singleton
   expiration buckets so same-expiration spreads cannot be split apart.
 - `BrokerActivityInboxV1` defaults to the prior U.S. equity-market session in
   New York time or accepts an explicit historical date. It groups normalized
-  transactions only when Tastytrade provides a group-fill identifier, joins
+  transactions by group-fill ID first and shared order ID second, joins
   matching order metadata, preserves every normalized leg, and reports source
   failures without discarding activity from other available sources/accounts.
 - `BrokerActivityDispositionV1` persists Reviewed/Skip workflow state locally

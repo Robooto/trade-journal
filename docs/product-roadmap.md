@@ -80,8 +80,9 @@ Implemented foundation:
 - Orders and transactions are fetched with the same bounded date across every
   account. Per-source failures and pagination truncation are explicit and
   non-fatal.
-- Transactions group only by Tastytrade's group-fill ID. Without that ID, even
-  apparent multi-leg activity remains individually reviewable and ambiguous.
+- Transactions group by Tastytrade group-fill ID first and shared order ID
+  second. Transactions lacking both identifiers remain individually reviewable
+  and ambiguous.
 - The Angular journal loads the compact inbox independently from journal
   history. **Add to journal** preserves imported facts as editable draft text
   and adds prompts for why, expectations, and invalidation.

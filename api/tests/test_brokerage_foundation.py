@@ -265,7 +265,7 @@ def test_transaction_fixture_normalizes_to_activity_events():
     assert events[0].occurred_at.isoformat() == "2026-07-14T15:32:01+00:00"
 
 
-def test_multi_leg_activity_without_group_id_is_explicitly_ambiguous():
+def test_multi_leg_activity_with_order_id_has_explicit_order_provenance():
     raw = fixture_items("transactions_FAKE_OPTIONS.json")[0].copy()
     raw.pop("ext-group-fill-id")
 
@@ -273,5 +273,5 @@ def test_multi_leg_activity_without_group_id_is_explicitly_ambiguous():
         "FAKE-OPTIONS", raw, fetched_at=FETCHED_AT
     )
 
-    assert event.grouping_status == "ambiguous"
-    assert "no broker group-fill identifier" in event.warnings[0]
+    assert event.grouping_status == "explicit"
+    assert event.warnings == []

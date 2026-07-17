@@ -164,6 +164,8 @@ def build_activity_review_events(
         key = (
             f"group-fill:{event.group_fill_id}"
             if event.group_fill_id
+            else f"order:{event.order_id}"
+            if event.order_id
             else event.activity_id
         )
         groups.setdefault(key, []).append(event)
@@ -185,17 +187,17 @@ def _review_event(
         (leg.group_fill_id for leg in legs if leg.group_fill_id),
         None,
     )
+    order_ids = list(
+        dict.fromkeys(leg.order_id for leg in legs if leg.order_id)
+    )
     grouping_status = (
         "explicit"
-        if group_fill_id
+        if group_fill_id or len(order_ids) == 1
         else (
             "ambiguous"
             if any(leg.grouping_status == "ambiguous" for leg in legs)
             else "ungrouped"
         )
-    )
-    order_ids = list(
-        dict.fromkeys(leg.order_id for leg in legs if leg.order_id)
     )
     order = (
         orders_by_id.get(order_ids[0])
@@ -226,7 +228,11 @@ def _review_event(
     activity_group_id = (
         f"tastytrade:{first.account_number}:group-fill:{group_fill_id}"
         if group_fill_id
-        else first.activity_id
+        else (
+            f"tastytrade:{first.account_number}:order:{order_ids[0]}"
+            if len(order_ids) == 1
+            else first.activity_id
+        )
     )
     return BrokerActivityReviewEventV1(
         activity_group_id=activity_group_id,
