@@ -126,8 +126,9 @@ trading plan.
 Current:
 
 - Positions grouped by account and strategy. Explicit broker fill groups take
-  priority when available; clear calendars and diagonals are safely inferred
-  across expirations, while ambiguous legs remain separated by expiration.
+  priority when available; calendars and diagonals are inferred only when each
+  expiration contains a single leg. Existing multi-leg expiration groups stay
+  intact, while ambiguous legs remain separated by expiration.
 - Multi-leg brokerage activity can be previewed and attached to a journal entry as one spread.
 - Marks, approximate P/L, credit progress, delta/beta-delta, IV rank, and IV
   change where available.

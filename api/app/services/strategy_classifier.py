@@ -59,6 +59,31 @@ def classify_strategy(positions: list[dict[str, Any]]) -> dict[str, str]:
             "reason": "Single short put leg.",
         }
 
+    if (
+        leg_count == 4
+        and len(expirations) == 1
+        and len(short_puts) == 1
+        and len(short_calls) == 1
+        and len(long_puts) == 1
+        and len(long_calls) == 1
+    ):
+        long_put_strike = long_puts[0]["strike"]
+        short_put_strike = short_puts[0]["strike"]
+        short_call_strike = short_calls[0]["strike"]
+        long_call_strike = long_calls[0]["strike"]
+        if (
+            None not in {
+                long_put_strike, short_put_strike,
+                short_call_strike, long_call_strike,
+            }
+            and long_put_strike < short_put_strike < short_call_strike < long_call_strike
+        ):
+            return {
+                "label": "iron_condor",
+                "confidence": "high",
+                "reason": "Defined-risk put and call spreads at the same expiration.",
+            }
+
     if leg_count == 3 and len(expirations) == 1 and len(short_puts) == 1 and len(short_calls) == 1 and len(long_calls) == 1:
         short_call_strike = short_calls[0]["strike"]
         long_call_strike = long_calls[0]["strike"]

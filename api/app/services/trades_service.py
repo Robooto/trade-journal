@@ -467,12 +467,25 @@ def _pair_unambiguous_cross_expiration_legs(
     *,
     same_strike: bool,
 ) -> tuple[list[list[dict]], list[dict]]:
+    expiration_dates = [
+        extract_expiration_date(position.get("expires-at", ""))
+        for position in positions
+    ]
+    expiration_counts: dict[str, int] = defaultdict(int)
+    for expiration_date in expiration_dates:
+        expiration_counts[expiration_date] += 1
+    eligible = {
+        index
+        for index, expiration_date in enumerate(expiration_dates)
+        if expiration_counts[expiration_date] == 1
+    }
     candidates: dict[int, list[int]] = {}
     for left_index, left in enumerate(positions):
         candidates[left_index] = [
             right_index
             for right_index, right in enumerate(positions)
-            if right_index != left_index
+            if left_index in eligible
+            and right_index in eligible
             and _cross_expiration_candidate(
                 left,
                 right,
