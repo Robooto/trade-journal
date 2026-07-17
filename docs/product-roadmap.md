@@ -125,10 +125,9 @@ trading plan.
 
 Current:
 
-- Positions grouped by account and strategy. Explicit broker fill groups take
-  priority when available; calendars and diagonals are inferred only when each
-  expiration contains a single leg. Existing multi-leg expiration groups stay
-  intact, while ambiguous legs remain separated by expiration.
+- Positions grouped by account and expiration. Calendars and diagonals are
+  inferred only when each expiration contains a single leg; existing multi-leg
+  expiration groups stay intact.
 - Multi-leg brokerage activity can be previewed and attached to a journal entry as one spread.
 - Marks, approximate P/L, credit progress, delta/beta-delta, IV rank, and IV
   change where available.
@@ -151,6 +150,9 @@ Next:
 4. Strategy fit by VIX regime.
 5. Versioned rule results and whether warnings were followed.
 6. Position/account history rather than current snapshot only.
+7. Build an open-position execution ledger from transaction group-fill IDs so
+   multiple spreads sharing an expiration can remain separate after partial
+   closes, rolls, and contract reuse.
 
 ### All-account portfolio and holdings
 
