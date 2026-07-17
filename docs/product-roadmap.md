@@ -152,7 +152,8 @@ Next:
 6. Position/account history rather than current snapshot only.
 7. Build an open-position execution ledger from transaction group-fill IDs so
    multiple spreads sharing an expiration can remain separate after partial
-   closes, rolls, and contract reuse.
+   closes, rolls, and contract reuse. Use opening order ID when group-fill ID
+   is absent; see `docs/open-position-execution-ledger-plan.md`.
 
 ### All-account portfolio and holdings
 
