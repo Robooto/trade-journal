@@ -191,7 +191,7 @@ def _place_complex_order_or_500(token: str, account_number: str, payload: dict):
 
 @router.get(
     "",
-    summary="Get all non-equity positions grouped by underlying-symbol and expiration",
+    summary="Get all non-equity positions grouped into reviewable strategies",
     response_model=PositionsResponse,
 )
 def get_all_positions(db: Session = Depends(get_db)):
@@ -201,7 +201,8 @@ def get_all_positions(db: Session = Depends(get_db)):
       - Any individual position where "instrument-type" == "Equity".
     For each remaining position:
       1. Compute an 'approximate-p-l'.
-      2. Group by 'underlying-symbol' and 'expires-at'.
+      2. Group by broker fill provenance, unambiguous cross-expiration
+         strategies, or underlying and expiration.
       3. For each group, compute:
          - total_credit_received using the quantity direction sign and group multiplier
         - current_group_p_l as the sum of the positions' approximate P/L values

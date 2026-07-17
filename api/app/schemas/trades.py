@@ -26,6 +26,10 @@ class Position(BaseModel):
 class GroupedPositions(BaseModel):
     underlying_symbol: str
     expires_at: str
+    expiration_dates: List[str] = Field(default_factory=list)
+    strategy_label: Optional[str] = None
+    strategy_confidence: Optional[str] = None
+    grouping_source: Optional[str] = None
     total_credit_received: float
     total_credit_points: Optional[float] = None
     total_credit_dollars: Optional[float] = None

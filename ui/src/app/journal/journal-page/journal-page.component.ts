@@ -244,6 +244,13 @@ export class JournalPageComponent implements OnInit, OnDestroy {
     const sign = value > 0 ? '+' : '';
     return ` ${sign}${value.toFixed(2)}%${suffix}`;
   }
+  activityActionLabel(event: BrokerActivityReviewEvent): string {
+    const target = this.showForm ? 'open entry' : 'journal';
+    return event.leg_count > 1
+      ? `Add ${event.leg_count}-leg spread to ${target}`
+      : `Add to ${target}`;
+  }
+
 
   activityChartPoints(event: BrokerActivityReviewEvent): string {
     const bars = event.market_context?.underlying?.bars ?? [];

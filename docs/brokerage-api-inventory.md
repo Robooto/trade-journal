@@ -94,6 +94,11 @@ Implemented backend foundations:
   including empty accounts, while the existing option-group projection remains
   unchanged.
 - `BrokerActivityEventV1` retains transaction, order, and group-fill IDs,
+- The journal activity card previews every leg in an explicit group fill and
+  attaches the complete spread to the open entry.
+- Position groups expose `expiration_dates`, `strategy_label`,
+  `strategy_confidence`, and `grouping_source`. Broker group-fill provenance is
+  preferred; only unambiguous calendar/diagonal pairs are inferred.
   signed values, fees, source timestamps, and explicit grouping ambiguity.
 - `BrokerActivityInboxV1` defaults to the prior U.S. equity-market session in
   New York time or accepts an explicit historical date. It groups normalized

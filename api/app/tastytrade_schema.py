@@ -34,6 +34,8 @@ class TastyPosition(TastyModel):
     quantity: Optional[str | int] = None
     quantity_direction: Optional[str] = Field(None, alias="quantity-direction")
     multiplier: Optional[str | int] = None
+    ext_group_fill_id: Optional[str] = Field(None, alias="ext-group-fill-id")
+    group_fill_id: Optional[str] = Field(None, alias="group-fill-id")
 
 
 class TastyMarketData(TastyModel):

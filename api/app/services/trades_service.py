@@ -425,10 +425,136 @@ def augment_positions_with_market_data(
                     p["option-type"] = option_type
 
 
+def _position_group_fill_id(position: dict) -> str:
+    return str(
+        position.get("ext-group-fill-id")
+        or position.get("group-fill-id")
+        or ""
+    ).strip()
+
+
+def _position_quantity(position: dict) -> float:
+    try:
+        return abs(float(position.get("quantity") or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _cross_expiration_candidate(
+    left: dict,
+    right: dict,
+    *,
+    same_strike: bool,
+) -> bool:
+    if (
+        left.get("instrument-type") != "Equity Option"
+        or right.get("instrument-type") != "Equity Option"
+        or left.get("option-type") not in {"C", "P"}
+        or left.get("option-type") != right.get("option-type")
+        or left.get("quantity-direction") == right.get("quantity-direction")
+        or extract_expiration_date(left.get("expires-at", ""))
+        == extract_expiration_date(right.get("expires-at", ""))
+        or _position_quantity(left) != _position_quantity(right)
+    ):
+        return False
+    if same_strike:
+        return left.get("strike") == right.get("strike")
+    return left.get("strike") != right.get("strike")
+
+
+def _pair_unambiguous_cross_expiration_legs(
+    positions: list[dict],
+    *,
+    same_strike: bool,
+) -> tuple[list[list[dict]], list[dict]]:
+    candidates: dict[int, list[int]] = {}
+    for left_index, left in enumerate(positions):
+        candidates[left_index] = [
+            right_index
+            for right_index, right in enumerate(positions)
+            if right_index != left_index
+            and _cross_expiration_candidate(
+                left,
+                right,
+                same_strike=same_strike,
+            )
+        ]
+
+    paired: set[int] = set()
+    groups: list[list[dict]] = []
+    for left_index, matches in candidates.items():
+        if left_index in paired or len(matches) != 1:
+            continue
+        right_index = matches[0]
+        if (
+            right_index in paired
+            or candidates.get(right_index) != [left_index]
+        ):
+            continue
+        paired.update({left_index, right_index})
+        groups.append([positions[left_index], positions[right_index]])
+    return groups, [
+        position
+        for index, position in enumerate(positions)
+        if index not in paired
+    ]
+
+
+def _position_strategy_groups(
+    positions: list[dict],
+) -> list[tuple[tuple[str, str], list[dict]]]:
+    by_underlying: Dict[str, list[dict]] = defaultdict(list)
+    for position in positions:
+        by_underlying[position.get("underlying-symbol", "") or ""].append(position)
+
+    result: list[tuple[tuple[str, str], list[dict]]] = []
+    for underlying, underlying_positions in by_underlying.items():
+        explicit: Dict[str, list[dict]] = defaultdict(list)
+        remaining = []
+        for position in underlying_positions:
+            group_fill_id = _position_group_fill_id(position)
+            if group_fill_id:
+                explicit[group_fill_id].append(position)
+            else:
+                remaining.append(position)
+        result.extend(
+            ((underlying, f"group-fill:{group_id}"), legs)
+            for group_id, legs in explicit.items()
+        )
+
+        calendars, remaining = _pair_unambiguous_cross_expiration_legs(
+            remaining,
+            same_strike=True,
+        )
+        diagonals, remaining = _pair_unambiguous_cross_expiration_legs(
+            remaining,
+            same_strike=False,
+        )
+        result.extend(
+            ((underlying, f"calendar:{index}"), legs)
+            for index, legs in enumerate(calendars)
+        )
+        result.extend(
+            ((underlying, f"diagonal:{index}"), legs)
+            for index, legs in enumerate(diagonals)
+        )
+
+        by_expiration: Dict[str, list[dict]] = defaultdict(list)
+        for position in remaining:
+            by_expiration[
+                extract_expiration_date(position.get("expires-at", "") or "")
+            ].append(position)
+        result.extend(
+            ((underlying, f"expiration:{expiration}"), legs)
+            for expiration, legs in by_expiration.items()
+        )
+    return result
+
+
 def group_positions_and_compute_totals(
     positions_by_account: List[dict], beta_map: Dict[str, float]
 ) -> List[dict]:
-    """Group positions by underlying and expiration and compute totals."""
+    """Group positions into explicit or safely inferred option strategies."""
     accounts_data: List[dict] = []
 
     for acct in positions_by_account:
@@ -447,19 +573,18 @@ def group_positions_and_compute_totals(
         account_vega = 0.0
         account_gamma = 0.0
         account_rho = 0.0
-        grouping: Dict[Tuple[str, str], List[dict]] = defaultdict(list)
-        for p in pos_list:
-            underlying = p.get("underlying-symbol", "") or ""
-            expires_full = p.get("expires-at", "") or ""
-            # Group by date only, ignoring time differences
-            expires_date = extract_expiration_date(expires_full)
-            grouping[(underlying, expires_date)].append(p)
-
         groups_list = []
-        for (underlying, expires_date), plist in grouping.items():
-            # Use the first position's full expires_at for display purposes
-            # All positions in this group should have the same date, just potentially different times
-            first_expires = plist[0].get("expires-at", "") if plist else expires_date
+        for (underlying, grouping_key), plist in _position_strategy_groups(pos_list):
+            expiration_dates = sorted({
+                extract_expiration_date(position.get("expires-at", "") or "")
+                for position in plist
+                if extract_expiration_date(position.get("expires-at", "") or "")
+            })
+            first_expires = min(
+                (position.get("expires-at", "") for position in plist),
+                key=extract_expiration_date,
+                default="",
+            )
             total_credit_unrounded = 0.0
             total_open_value_dollars = 0.0
             total_current_value_dollars = 0.0
@@ -560,9 +685,22 @@ def group_positions_and_compute_totals(
                 account_beta_delta += beta_delta
                 account_beta_delta_shares += beta_delta_shares
 
+            strategy = classify_strategy(plist)
+            grouping_source = (
+                "broker_group_fill"
+                if grouping_key.startswith("group-fill:")
+                else "inferred"
+                if grouping_key.startswith(("calendar:", "diagonal:"))
+                else "expiration"
+            )
+
             groups_list.append({
                 "underlying_symbol": underlying,
-                "expires_at": first_expires,  # Use the full timestamp from first position
+                "expires_at": first_expires,
+                "expiration_dates": expiration_dates,
+                "strategy_label": strategy["label"],
+                "strategy_confidence": strategy["confidence"],
+                "grouping_source": grouping_source,
                 "total_credit_received": total_credit_received,
                 "total_credit_points": round(total_credit_unrounded, 2),
                 "total_credit_dollars": total_credit_received,

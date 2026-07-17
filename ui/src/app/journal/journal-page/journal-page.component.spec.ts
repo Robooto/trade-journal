@@ -95,6 +95,14 @@ const activityInbox: BrokerActivityInbox = {
       quantity: 1,
       symbol: 'AAPL 260821P00100000',
       price: 2.5,
+    }, {
+      activity_id: 'leg-2',
+      kind: 'fill',
+      occurred_at: '2026-07-15T15:30:00Z',
+      action: 'Buy to Open',
+      quantity: 1,
+      symbol: 'AAPL 260821P00095000',
+      price: 1.12,
     }],
   }],
 };
@@ -235,6 +243,9 @@ describe('JournalPageComponent', () => {
       'Sell to Open 1x AAPL 260821P00100000 @ $2.50'
     );
     expect(component.entryPrefill?.notes).toContain(
+      'Buy to Open 1x AAPL 260821P00095000 @ $1.12'
+    );
+    expect(component.entryPrefill?.notes).toContain(
       'Estimated entry-time context (nearest 5-minute close): AAPL $203.00 +1.50% from open'
     );
     expect(component.entryPrefill?.notes).toContain(
@@ -245,6 +256,18 @@ describe('JournalPageComponent', () => {
     expect(component.activityMarkerY(activityInbox.events[0])).toBeGreaterThan(0);
     expect(component.entryPrefill?.activityGroupId).toBe(
       'tastytrade:FAKE:group-fill:1'
+    );
+  });
+
+  it('labels grouped multi-leg activity as a spread attachment', () => {
+    const spread = activityInbox.events[0];
+
+    expect(component.activityActionLabel(spread)).toBe(
+      'Add 2-leg spread to journal'
+    );
+    component.showForm = true;
+    expect(component.activityActionLabel(spread)).toBe(
+      'Add 2-leg spread to open entry'
     );
   });
 

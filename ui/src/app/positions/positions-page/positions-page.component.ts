@@ -101,6 +101,26 @@ export class PositionsPageComponent implements OnInit {
     return labels[account.buying_power_zone ?? 'unavailable'];
   }
 
+  expirationLabel(group: PositionGroup): string {
+    const dates = group.expiration_dates ?? [];
+    if (dates.length < 2) {
+      return new Date(group.expires_at).toLocaleDateString(
+        undefined,
+        { month: 'short', day: 'numeric', year: 'numeric' }
+      );
+    }
+    return dates
+      .map(value => new Date(`${value}T12:00:00`).toLocaleDateString(
+        undefined,
+        { month: 'short', day: 'numeric', year: 'numeric' }
+      ))
+      .join(' / ');
+  }
+
+  strategyLabel(group: PositionGroup): string {
+    return (group.strategy_label || '').replaceAll('_', ' ');
+  }
+
   buyingPowerTooltip(account: AccountPositions): string {
     const utilization = account.buying_power_utilization_percent;
     const value = utilization == null ? 'unavailable' : `${utilization.toFixed(1)}%`;

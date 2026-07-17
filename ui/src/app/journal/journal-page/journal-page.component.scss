@@ -224,6 +224,35 @@
   margin-right: 8px;
   content: "·";
 }
+.activity-legs {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.activity-leg {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-left: 2px solid var(--mat-sys-primary);
+  padding: 4px 8px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 4%, transparent);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.72rem;
+}
+
+.activity-leg strong {
+  color: var(--mat-sys-on-surface);
+  font-weight: 650;
+}
+
+.activity-leg-action {
+  color: var(--mat-sys-primary);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
 
 .entry-context {
   display: flex;

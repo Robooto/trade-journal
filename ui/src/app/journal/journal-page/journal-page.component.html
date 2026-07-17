@@ -85,6 +85,22 @@
                     <span>{{ event.fees_dollars | currency }} fees</span>
                   }
                 </div>
+                @if (event.legs.length) {
+                  <div class="activity-legs" [attr.aria-label]="event.leg_count + '-leg activity details'">
+                    @for (leg of event.legs; track leg.activity_id) {
+                      <div class="activity-leg">
+                        <span class="activity-leg-action">{{ leg.action || leg.kind }}</span>
+                        @if (leg.quantity != null) {
+                          <span>{{ leg.quantity | number:'1.0-4' }}x</span>
+                        }
+                        <strong>{{ leg.symbol || leg.description || 'Unknown instrument' }}</strong>
+                        @if (leg.price != null) {
+                          <span>&#64; {{ leg.price | currency }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
                 @if (event.market_context?.underlying; as context) {
                   <div class="entry-context">
                     <div class="entry-context-copy">
@@ -148,7 +164,7 @@
                 @if (event.review_status === 'pending') {
                   <button mat-flat-button color="primary" type="button" (click)="addActivityToJournal(event)">
                     <mat-icon>edit_note</mat-icon>
-                    {{ showForm ? 'Add to open entry' : 'Add to journal' }}
+                    {{ activityActionLabel(event) }}
                   </button>
                   <button
                     mat-stroked-button

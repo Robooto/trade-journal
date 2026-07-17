@@ -1,3 +1,11 @@
+.strategy-label {
+  display: block;
+  margin-top: 2px;
+  color: var(--mat-sys-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
 .positions-page {
   display: grid;
   gap: 20px;
