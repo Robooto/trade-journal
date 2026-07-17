@@ -247,6 +247,50 @@ class BrokerActivityDispositionV1(BaseModel):
 
     model_config = {"extra": "forbid"}
 
+class OpenExecutionLegV1(BaseModel):
+    broker_transaction_id: str
+    symbol: str
+    underlying_symbol: Optional[str] = None
+    action: Optional[str] = None
+    quantity: Optional[float] = None
+    price: Optional[float] = None
+    executed_at: datetime
+
+    model_config = {"extra": "forbid"}
+
+
+class OpenExecutionGroupV1(BaseModel):
+    schema_version: Literal["open-execution-group.v1"] = "open-execution-group.v1"
+    execution_group_id: str
+    account_number: str
+    broker_group_fill_id: Optional[str] = None
+    broker_order_id: Optional[str] = None
+    underlying_symbol: Optional[str] = None
+    opened_at: datetime
+    provenance_source: Literal["group_fill", "order", "unmatched"]
+    match_status: Literal["exact", "partial", "ambiguous", "unmatched"] = "unmatched"
+    legs: list[OpenExecutionLegV1] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class OpenExecutionGroupCollectionV1(BaseModel):
+    schema_version: Literal["open-execution-group-collection.v1"] = (
+        "open-execution-group-collection.v1"
+    )
+    account_number: str
+    start_date: date
+    end_date: date
+    generated_at: datetime
+    groups: list[OpenExecutionGroupV1] = Field(default_factory=list)
+    source: SourceMetadataV1
+    truncated: bool = False
+    warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
 
 class WatchlistMembershipV1(BaseModel):
     name: str
