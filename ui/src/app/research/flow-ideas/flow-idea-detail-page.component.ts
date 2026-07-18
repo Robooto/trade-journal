@@ -8,10 +8,12 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
+  EMPTY,
   Observable,
   Subscription,
   catchError,
   distinctUntilChanged,
+  finalize,
   forkJoin,
   map,
   of,
@@ -25,6 +27,8 @@ import {
   FlowCandidatesResponse,
   FlowContractsResponse,
   FlowSymbolHistoryResponse,
+  FlowWatchlistAddResponse,
+  FlowWatchlistsResponse,
 } from './flow-ideas.models';
 import { FlowIdeasApiService } from './data-access/flow-ideas-api.service';
 import { currentEquityHubUrl } from './utilities/equity-hub-url';
@@ -60,6 +64,12 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
   readonly brokerageContextMessage = signal(
     'Loading supporting brokerage context...',
   );
+  readonly watchlists = signal<FlowWatchlistsResponse | null>(null);
+  readonly watchlistsLoading = signal(true);
+  readonly watchlistsError = signal<string | null>(null);
+  readonly watchlistAdding = signal(false);
+  readonly watchlistResult = signal<FlowWatchlistAddResponse | null>(null);
+  readonly watchlistResultError = signal<string | null>(null);
   readonly currentEquityHubUrl = computed(() =>
     this.symbol() ? currentEquityHubUrl(this.symbol()) : '',
   );
@@ -84,14 +94,8 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
               contracts: this.asResult(
                 this.api.contracts(detail.tradingDate, detail.symbol),
               ),
-              candidate: this.asResult(
-                this.api.candidates({
-                  tradingDate: detail.tradingDate,
-                  symbol: detail.symbol,
-                  event: '',
-                  activeOnly: false,
-                }),
-              ),
+              candidate: this.asResult(this.candidateRequest(detail)),
+              watchlists: this.asResult(this.api.watchlists()),
             }),
           ),
         )
@@ -104,9 +108,30 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
             result.candidate.value,
             result.candidate.error,
           );
+          this.watchlists.set(result.watchlists.value);
+          this.watchlistsError.set(result.watchlists.error);
+          this.watchlistsLoading.set(false);
           this.loading.set(false);
         }),
     );
+  }
+
+  addToWatchlist(watchlistName: string): void {
+    if (this.watchlistAdding() || !this.symbol()) return;
+
+    this.watchlistAdding.set(true);
+    this.watchlistResult.set(null);
+    this.watchlistResultError.set(null);
+    this.api.addWatchlistSymbol(watchlistName, this.symbol()).pipe(
+      catchError(error => {
+        this.watchlistResultError.set(toSafeMessage(error));
+        return EMPTY;
+      }),
+      finalize(() => this.watchlistAdding.set(false)),
+    ).subscribe(result => {
+      this.watchlistResult.set(result);
+      this.refreshBrokerageReads();
+    });
   }
 
   backToQueue(): void {
@@ -129,6 +154,34 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
     this.loading.set(true);
     this.brokerageContext.set(null);
     this.brokerageContextMessage.set('Loading supporting brokerage context...');
+    this.watchlists.set(null);
+    this.watchlistsLoading.set(true);
+    this.watchlistsError.set(null);
+    this.watchlistResult.set(null);
+    this.watchlistResultError.set(null);
+  }
+
+  private candidateRequest(detail: DetailRoute): Observable<FlowCandidatesResponse> {
+    return this.api.candidates({
+      tradingDate: detail.tradingDate,
+      symbol: detail.symbol,
+      event: '',
+      activeOnly: false,
+    });
+  }
+
+  private refreshBrokerageReads(): void {
+    const detail = { tradingDate: this.tradingDate(), symbol: this.symbol() };
+    this.watchlistsLoading.set(true);
+    forkJoin({
+      candidate: this.asResult(this.candidateRequest(detail)),
+      watchlists: this.asResult(this.api.watchlists()),
+    }).subscribe(result => {
+      this.applyBrokerageContext(result.candidate.value, result.candidate.error);
+      this.watchlists.set(result.watchlists.value);
+      this.watchlistsError.set(result.watchlists.error);
+      this.watchlistsLoading.set(false);
+    });
   }
 
   private applyBrokerageContext(

@@ -73,6 +73,14 @@ describe('FlowIdeaDetailPageComponent', () => {
           },
         }),
       ),
+      watchlists: vi.fn(() =>
+        of({
+          schema_version: 'broker-watchlists.v1',
+          flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1' as const,
+          writes_enabled: true,
+          watchlists: [],
+        }),
+      ),
     };
 
     await TestBed.configureTestingModule({

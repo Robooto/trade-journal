@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import {
@@ -14,6 +15,8 @@ import {
 } from './flow-ideas.models';
 import { FlowChangeOption } from './components/flow-filters/flow-filters.component';
 import { FlowIdeasFacade } from './data-access/flow-ideas.facade';
+import { FlowIdeasApiService } from './data-access/flow-ideas-api.service';
+import { FlowUploadState } from './components/report-upload/report-upload.component';
 
 @Component({
   selector: 'app-flow-ideas-page',
@@ -25,6 +28,9 @@ import { FlowIdeasFacade } from './data-access/flow-ideas.facade';
 export class FlowIdeasPageComponent implements OnDestroy {
   private readonly subscriptions = new Subscription();
   private readonly symbolInput = new Subject<string>();
+
+  uploadState: FlowUploadState = 'idle';
+  uploadMessage: string | null = null;
 
   private routeState: FlowIdeasRouteState = {
     server: {
@@ -54,6 +60,7 @@ export class FlowIdeasPageComponent implements OnDestroy {
 
   constructor(
     readonly facade: FlowIdeasFacade,
+    private readonly api: FlowIdeasApiService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
   ) {
@@ -102,6 +109,25 @@ export class FlowIdeasPageComponent implements OnDestroy {
 
   refresh(): void {
     this.facade.reload();
+  }
+
+  onReportUpload(file: File): void {
+    if (this.uploadState === 'pending') return;
+    this.uploadState = 'pending';
+    this.uploadMessage = 'Processing report on the research mini...';
+    const subscription = this.api.uploadReport(file).subscribe({
+      next: receipt => {
+        this.uploadState = 'success';
+        this.uploadMessage = receipt.message || 'FlowPatrol report processed.';
+        this.facade.refreshAfterUpload(receipt.report_date ?? null, receipt.latest_trading_date ?? null);
+      },
+      error: error => {
+        const response = error as HttpErrorResponse;
+        this.uploadState = response.status === 409 ? 'conflict' : response.status === 400 ? 'validation' : 'error';
+        this.uploadMessage = safeUploadMessage(response);
+      },
+    });
+    this.subscriptions.add(subscription);
   }
 
   brokerageStatusTitle(status: FlowBrokerageEnrichment['status']): string {
@@ -186,4 +212,9 @@ function sameRouteState(
     left.server.activeOnly === right.server.activeOnly &&
     left.display.includeIndexEtfs === right.display.includeIndexEtfs
   );
+}
+
+function safeUploadMessage(error: HttpErrorResponse): string {
+  const body = error.error as { detail?: string; error?: { message?: string } } | null;
+  return body?.error?.message ?? body?.detail ?? 'FlowPatrol upload could not be completed.';
 }

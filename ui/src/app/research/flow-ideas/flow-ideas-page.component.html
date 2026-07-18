@@ -10,6 +10,11 @@
     </div>
 
     <div class="research-actions">
+      <app-flow-report-upload
+        [state]="uploadState"
+        [message]="uploadMessage"
+        (reportUpload)="onReportUpload($event)"
+      ></app-flow-report-upload>
       <a mat-stroked-button [href]="traceUrl" target="_blank" rel="noopener"
         aria-describedby="trace-on-mini-description">
         <mat-icon>open_in_new</mat-icon>

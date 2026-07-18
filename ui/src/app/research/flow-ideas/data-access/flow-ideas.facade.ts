@@ -157,6 +157,30 @@ export class FlowIdeasFacade {
     }
   }
 
+  refreshAfterUpload(
+    reportDate: string | null,
+    latestTradingDate: string | null,
+  ): void {
+    const subscription = this.api.dates().pipe(
+      catchError(error => {
+        this.datesError.set(toSafeMessage(error));
+        return EMPTY;
+      }),
+    ).subscribe(response => {
+      this.dates.set(response.dates);
+      const currentDate = this.serverFilters().tradingDate;
+      const available = new Set(response.dates.map(item => item.trading_date));
+      const selected = [reportDate, latestTradingDate, this.serverFilters().tradingDate]
+        .find((date): date is string => Boolean(date && available.has(date))) ??
+        response.dates[0]?.trading_date ?? '';
+      this.setServerFilters({ tradingDate: selected });
+      if (selected && selected === currentDate) {
+        this.reloadSubject.next(this.reloadSubject.value + 1);
+      }
+    });
+    this.subscriptions.add(subscription);
+  }
+
   setServerFilters(patch: Partial<FlowIdeasServerFilters>): void {
     const current = this.serverFilters();
     const next: FlowIdeasServerFilters = {

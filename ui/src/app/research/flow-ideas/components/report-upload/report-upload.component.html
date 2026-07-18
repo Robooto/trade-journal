@@ -1,0 +1,16 @@
+<section class="upload-control" aria-label="Add FlowPatrol report">
+  <label>
+    <span>Add report</span>
+    <input type="file" accept="application/pdf,.pdf" (change)="onFileChange($event)" [disabled]="pending" />
+  </label>
+  <button mat-stroked-button type="button" (click)="upload()" [disabled]="!file || !!validationMessage || pending">
+    @if (pending) { Processing... } @else { Upload & process }
+  </button>
+  @if (validationMessage) {
+    <p class="status error" role="alert">{{ validationMessage }}</p>
+  } @else if (message) {
+    <p class="status" [class.error]="state === 'conflict' || state === 'validation' || state === 'error'" role="status">
+      {{ message }}
+    </p>
+  }
+</section>

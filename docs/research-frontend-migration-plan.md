@@ -130,11 +130,11 @@ Completed: **RF-01** contract fixtures and parity inventory; **RF-02** proxy
 and failure isolation; **RF-03** Research shell/navigation; **RF-04** typed
 queue read path, filters, metrics, and source states; and **RF-05** dated
 ticker investigation with history, complete Spread ID evidence, read-only
-brokerage context, and a current-New-York-date EquityHub action.
+brokerage context, and a current-New-York-date EquityHub action; and **RF-06**
+explicit report-upload and private-watchlist commands.
 
-Next: **RF-06** explicit upload/watchlist commands, then **RF-07** parity,
-cutover, and cleanup after Angular and mini Flow Ideas are compared against the
-checked fixtures.
+Next: **RF-07** parity, cutover, and cleanup after Angular and mini Flow Ideas
+are compared against the checked fixtures.
 
 ### RF-01 - Contract fixtures and parity inventory
 

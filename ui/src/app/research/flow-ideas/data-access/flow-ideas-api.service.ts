@@ -8,6 +8,9 @@ import {
   FlowDatesResponse,
   FlowIdeasServerFilters,
   FlowSymbolHistoryResponse,
+  FlowUploadResponse,
+  FlowWatchlistAddResponse,
+  FlowWatchlistsResponse,
 } from '../flow-ideas.models';
 
 @Injectable({ providedIn: 'root' })
@@ -48,24 +51,39 @@ export class FlowIdeasApiService {
 
   history(symbol: string): Observable<FlowSymbolHistoryResponse> {
     return this.http.get<FlowSymbolHistoryResponse>(
-      this.baseUrl +
-        '/symbols/' +
-        encodeURIComponent(normalizeSymbol(symbol)) +
-        '/history',
+      this.baseUrl + '/symbols/' + encodeURIComponent(normalizeSymbol(symbol)) + '/history',
     );
   }
 
-  contracts(
-    tradingDate: string,
-    symbol: string,
-  ): Observable<FlowContractsResponse> {
+  contracts(tradingDate: string, symbol: string): Observable<FlowContractsResponse> {
     return this.http.get<FlowContractsResponse>(
+      this.baseUrl + '/' + encodeURIComponent(tradingDate) + '/symbols/' +
+        encodeURIComponent(normalizeSymbol(symbol)) + '/contracts',
+    );
+  }
+
+  uploadReport(file: File): Observable<FlowUploadResponse> {
+    const body = new FormData();
+    body.append('report', file, file.name);
+    return this.http.post<FlowUploadResponse>(this.baseUrl + '/upload', body);
+  }
+
+  watchlists(): Observable<FlowWatchlistsResponse> {
+    return this.http.get<FlowWatchlistsResponse>(
+      this.baseUrl + '/brokerage/watchlists',
+    );
+  }
+
+  addWatchlistSymbol(
+    watchlistName: string,
+    symbol: string,
+  ): Observable<FlowWatchlistAddResponse> {
+    return this.http.post<FlowWatchlistAddResponse>(
       this.baseUrl +
-        '/' +
-        encodeURIComponent(tradingDate) +
-        '/symbols/' +
-        encodeURIComponent(normalizeSymbol(symbol)) +
-        '/contracts',
+        '/brokerage/watchlists/' +
+        encodeURIComponent(watchlistName) +
+        '/symbols',
+      { symbol: normalizeSymbol(symbol) },
     );
   }
 }

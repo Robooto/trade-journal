@@ -189,10 +189,16 @@
   }
 
   .research-actions {
+    display: grid;
     width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .research-actions > * {
-    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .research-actions > app-flow-report-upload {
+    grid-column: 1 / -1;
   }
 }

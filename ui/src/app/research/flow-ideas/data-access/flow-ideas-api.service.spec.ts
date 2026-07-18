@@ -105,4 +105,39 @@ describe('FlowIdeasApiService', () => {
       rows: [],
     });
   });
+
+  it('uses multipart upload and explicit watchlist command routes', () => {
+    const file = new File(['pdf'], 'flowpatrol_2026_07_13.pdf', {
+      type: 'application/pdf',
+    });
+    api.uploadReport(file).subscribe();
+    api.watchlists().subscribe();
+    api.addWatchlistSymbol('Core Options', 'aapl').subscribe();
+
+    const upload = http.expectOne('/research-api/api/flowpatrol/upload');
+    expect(upload.request.method).toBe('POST');
+    expect(upload.request.body.get('report')).toBeTruthy();
+    upload.flush({ schema_version: 'flowpatrol-upload.v1', ok: true });
+
+    const lists = http.expectOne('/research-api/api/flowpatrol/brokerage/watchlists');
+    expect(lists.request.method).toBe('GET');
+    lists.flush({
+      schema_version: 'broker-watchlists.v1',
+      flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1',
+      writes_enabled: true,
+      watchlists: [],
+    });
+
+    const add = http.expectOne(
+      '/research-api/api/flowpatrol/brokerage/watchlists/Core%20Options/symbols',
+    );
+    expect(add.request.body).toEqual({ symbol: 'AAPL' });
+    add.flush({
+      schema_version: 'watchlist-symbol-write.v1',
+      flowpatrol_schema_version: 'flowpatrol-brokerage-watchlist-write.v1',
+      watchlist: { name: 'Core Options', symbols: ['AAPL'], symbol_count: 1 },
+      symbol: 'AAPL',
+      added: true,
+    });
+  });
 });

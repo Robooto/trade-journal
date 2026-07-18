@@ -41,6 +41,18 @@
     [unavailableMessage]="brokerageContextMessage()"
   ></app-brokerage-context>
 
+  <app-flow-watchlist-control
+    [watchlists]="watchlists()"
+    [symbol]="symbol()"
+    [context]="brokerageContext()"
+    [loading]="watchlistsLoading()"
+    [error]="watchlistsError()"
+    [adding]="watchlistAdding()"
+    [result]="watchlistResult()"
+    [resultError]="watchlistResultError()"
+    (addRequested)="addToWatchlist($event)"
+  ></app-flow-watchlist-control>
+
   <section class="detail-grid">
     <app-report-history
       [history]="history()"

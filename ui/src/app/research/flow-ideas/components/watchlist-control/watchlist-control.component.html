@@ -1,0 +1,36 @@
+<section class="watchlist-control" aria-labelledby="watchlist-heading">
+  <div>
+    <p class="eyebrow">Brokerage command</p>
+    <h2 id="watchlist-heading">Private watchlists</h2>
+  </div>
+  @if (loading) {
+    <p class="status" role="status">Loading available watchlists...</p>
+  } @else if (error) {
+    <p class="status error" role="alert">{{ error }}</p>
+  } @else if (!watchlists?.writes_enabled) {
+    <p class="status">Watchlist writes are disabled in this environment.</p>
+  } @else if ((watchlists?.watchlists?.length ?? 0) === 0) {
+    <p class="status">No private watchlists are available.</p>
+  } @else if (!available().length) {
+    <p class="status">This symbol is already in every available private watchlist.</p>
+  } @else {
+    <label>
+      <span>Add to</span>
+      <select [(ngModel)]="selectedName" [disabled]="adding">
+        <option value="">Choose a watchlist</option>
+        @for (list of available(); track list.name) {
+          <option [value]="list.name">{{ list.name }}</option>
+        }
+      </select>
+    </label>
+    <button mat-stroked-button type="button" (click)="requestAdd()" [disabled]="!selectedName || adding">
+      @if (adding) { Adding... } @else { Add {{ symbolLabel() }} }
+    </button>
+  }
+  @if (result) {
+    <p class="status" role="status">{{ result.added ? 'Added to ' : 'Already in ' }}{{ result.watchlist.name }}.</p>
+  }
+  @if (resultError) {
+    <p class="status error" role="alert">{{ resultError }}</p>
+  }
+</section>

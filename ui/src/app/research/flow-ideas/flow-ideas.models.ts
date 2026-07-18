@@ -189,3 +189,35 @@ export interface FlowContractEvidenceGroup {
   readonly label: string;
   readonly rows: readonly FlowContractEvidenceRow[];
 }
+
+export interface FlowUploadResponse {
+  readonly schema_version: 'flowpatrol-upload.v1';
+  readonly ok: boolean;
+  readonly filename?: string;
+  readonly report_date?: string | null;
+  readonly latest_trading_date?: string | null;
+  readonly message?: string;
+}
+
+export interface FlowBrokerageWatchlist {
+  readonly name: string;
+  readonly group_name?: string | null;
+  readonly order_index?: number | null;
+  readonly symbols: readonly string[];
+  readonly symbol_count: number;
+}
+
+export interface FlowWatchlistsResponse {
+  readonly schema_version: string;
+  readonly flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1';
+  readonly writes_enabled: boolean;
+  readonly watchlists: readonly FlowBrokerageWatchlist[];
+}
+
+export interface FlowWatchlistAddResponse {
+  readonly schema_version: string;
+  readonly flowpatrol_schema_version: 'flowpatrol-brokerage-watchlist-write.v1';
+  readonly watchlist: FlowBrokerageWatchlist;
+  readonly symbol: string;
+  readonly added: boolean;
+}
