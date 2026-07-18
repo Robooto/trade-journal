@@ -1,6 +1,6 @@
 # Trade Journal Product Roadmap
 
-Last reviewed: 2026-07-16
+Last reviewed: 2026-07-18
 
 ## Product goals
 
@@ -246,13 +246,17 @@ Next:
 - Allow a chart/date range to be exported with a consistent LLM data pack.
 - Keep option marks and P/L clearly distinguished from underlying price.
 
-## Future unified operator UI
+## Unified operator UI and research workspace
 
-TODO, intentionally not part of the current implementation queue:
+Active planned initiative: migrate Flow Ideas into the `trade-journal` Angular
+application while keeping its backend in `market-data-pipeline` on the mini.
+Trace remains on the mini for now. See
+[research-frontend-migration-plan.md](research-frontend-migration-plan.md).
 
-- Use the `trade-journal` Angular application as the eventual shared operator
-  shell for journal, positions, Trace context, FlowPatrol ideas, research
-  handoffs, and later review workflows.
+- Use the `trade-journal` Angular application as the shared operator shell for
+  journal, positions, FlowPatrol ideas, research handoffs, and later review
+  workflows. Keep an external Trace link until a separate Trace migration
+  reaches parity.
 - Keep `trade-journal`, `market-data-pipeline`, and assistant services as
   separate backend ownership boundaries. UI consolidation must not become
   backend consolidation.
@@ -260,8 +264,9 @@ TODO, intentionally not part of the current implementation queue:
   freshness, and safety policy in the owning backend. The frontend should
   request documented read models, render them, collect user input, and invoke
   explicit commands; it should not reproduce business logic.
-- Add shared navigation, consistent theming, loading/error/quality states, and
-  deep-link contracts before migrating individual screens.
+- First add a lazy-loaded Research shell, configurable same-origin proxy to the
+  mini, consistent theming, loading/error/quality states, and deep-link
+  contracts.
 - Migrate one vertical slice at a time only after its API contract is stable;
   retain the existing source UI until the replacement reaches parity.
 
