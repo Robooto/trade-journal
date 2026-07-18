@@ -4,8 +4,10 @@ import { Observable } from 'rxjs';
 
 import {
   FlowCandidatesResponse,
+  FlowContractsResponse,
   FlowDatesResponse,
   FlowIdeasServerFilters,
+  FlowSymbolHistoryResponse,
 } from '../flow-ideas.models';
 
 @Injectable({ providedIn: 'root' })
@@ -43,4 +45,31 @@ export class FlowIdeasApiService {
       { params },
     );
   }
+
+  history(symbol: string): Observable<FlowSymbolHistoryResponse> {
+    return this.http.get<FlowSymbolHistoryResponse>(
+      this.baseUrl +
+        '/symbols/' +
+        encodeURIComponent(normalizeSymbol(symbol)) +
+        '/history',
+    );
+  }
+
+  contracts(
+    tradingDate: string,
+    symbol: string,
+  ): Observable<FlowContractsResponse> {
+    return this.http.get<FlowContractsResponse>(
+      this.baseUrl +
+        '/' +
+        encodeURIComponent(tradingDate) +
+        '/symbols/' +
+        encodeURIComponent(normalizeSymbol(symbol)) +
+        '/contracts',
+    );
+  }
+}
+
+function normalizeSymbol(symbol: string): string {
+  return symbol.trim().toUpperCase();
 }

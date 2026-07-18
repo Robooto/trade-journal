@@ -1,0 +1,24 @@
+<section class="detail-panel" aria-labelledby="brokerage-context-heading">
+  <div>
+    <p class="eyebrow">Supporting context</p>
+    <h2 id="brokerage-context-heading">Brokerage context</h2>
+  </div>
+
+  @if (!context) {
+    <p class="detail-state" role="status">{{ unavailableMessage }}</p>
+  } @else {
+    <dl class="context-grid">
+      <div><dt>Mark</dt><dd>{{ context.price.mark ?? 'Unavailable' }}</dd></div>
+      <div><dt>5-day price</dt><dd>{{ formatPercent(context.price.five_session_change_percent) }}</dd></div>
+      <div><dt>IV rank</dt><dd>{{ formatPercent(context.volatility.iv_rank_percent) }}</dd></div>
+      <div><dt>5-day IV rank</dt><dd>{{ formatPercent(context.volatility.iv_rank_5_day_change_percent) }}</dd></div>
+      <div><dt>Held</dt><dd>{{ context.exposure.is_held ? 'Yes' : 'No' }}</dd></div>
+      <div><dt>Option positions</dt><dd>{{ formatNumber(context.exposure.option_position_count) }}</dd></div>
+      <div><dt>Earnings</dt><dd>{{ context.earnings.earnings_date || context.earnings.status }}</dd></div>
+      <div><dt>Watchlists</dt><dd>{{ context.watchlists.length ? context.watchlists.map(item => item.name).join(', ') : 'None' }}</dd></div>
+    </dl>
+    @if (context.warnings.length) {
+      <p class="context-warning">{{ context.warnings.join(' ') }}</p>
+    }
+  }
+</section>

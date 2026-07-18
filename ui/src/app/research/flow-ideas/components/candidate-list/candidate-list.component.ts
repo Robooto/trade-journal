@@ -23,7 +23,7 @@ export class CandidateListComponent {
   @Input() reportStatus: FlowReportStatus | null = null;
   @Input() selectedSymbol: string | null = null;
 
-  @Output() readonly candidateSelected = new EventEmitter<string>();
+  @Output() readonly candidateSelected = new EventEmitter<FlowCandidate>();
 
   trackCandidate(_: number, candidate: FlowCandidate): string {
     return candidate.symbol;

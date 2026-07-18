@@ -9,6 +9,7 @@ import {
 
 import {
   FlowBrokerageEnrichment,
+  FlowCandidate,
   FlowIdeasRouteState,
 } from './flow-ideas.models';
 import { FlowChangeOption } from './components/flow-filters/flow-filters.component';
@@ -91,8 +92,12 @@ export class FlowIdeasPageComponent implements OnDestroy {
     this.facade.setDisplayFilters({ includeIndexEtfs });
   }
 
-  selectCandidate(symbol: string): void {
-    this.facade.selectCandidate(symbol);
+  selectCandidate(candidate: FlowCandidate): void {
+    this.facade.selectCandidate(candidate.symbol);
+    void this.router.navigate(
+      ['/research/flow-ideas', candidate.trading_date, candidate.symbol],
+      { queryParams: this.route.snapshot.queryParams },
+    );
   }
 
   refresh(): void {

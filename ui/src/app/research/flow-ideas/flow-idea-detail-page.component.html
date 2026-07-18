@@ -1,0 +1,57 @@
+<main class="detail-page" aria-labelledby="flow-detail-title">
+  <header class="detail-header">
+    <div>
+      <p class="eyebrow">Flow Ideas investigation</p>
+      <h1 id="flow-detail-title">{{ symbol() || 'Flow idea' }}</h1>
+      <p>
+        Evidence from the {{ tradingDate() || 'selected' }} FlowPatrol report.
+        It is research context, not a trade recommendation.
+      </p>
+    </div>
+
+    <div class="detail-actions">
+      <button mat-stroked-button type="button" (click)="backToQueue()">
+        <mat-icon>arrow_back</mat-icon>
+        Back to queue
+      </button>
+      @if (currentEquityHubUrl()) {
+        <a
+          mat-flat-button
+          color="primary"
+          [href]="currentEquityHubUrl()"
+          target="_blank"
+          rel="noopener"
+        >
+          Open current EquityHub
+          <mat-icon>open_in_new</mat-icon>
+        </a>
+      }
+    </div>
+  </header>
+
+  @if (loading()) {
+    <section class="detail-loading" role="status">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <span>Loading FlowPatrol investigation...</span>
+    </section>
+  }
+
+  <app-brokerage-context
+    [context]="brokerageContext()"
+    [unavailableMessage]="brokerageContextMessage()"
+  ></app-brokerage-context>
+
+  <section class="detail-grid">
+    <app-report-history
+      [history]="history()"
+      [loading]="loading()"
+      [error]="historyError()"
+    ></app-report-history>
+
+    <app-contract-evidence
+      [contracts]="contracts()"
+      [loading]="loading()"
+      [error]="contractsError()"
+    ></app-contract-evidence>
+  </section>
+</main>

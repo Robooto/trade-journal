@@ -24,7 +24,7 @@
           class="flow-candidate"
           [class.selected]="selectedSymbol === candidate.symbol"
           [attr.aria-pressed]="selectedSymbol === candidate.symbol"
-          (click)="candidateSelected.emit(candidate.symbol)"
+          (click)="candidateSelected.emit(candidate)"
         >
           <span class="candidate-symbol">
             <strong>{{ candidate.symbol }}</strong>

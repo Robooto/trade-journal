@@ -1,0 +1,43 @@
+<section class="detail-panel" aria-labelledby="contract-evidence-heading">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">Source evidence</p>
+      <h2 id="contract-evidence-heading">Contract evidence</h2>
+    </div>
+  </div>
+
+  @if (loading) {
+    <p class="detail-state" role="status">Loading complete contract evidence...</p>
+  } @else if (error) {
+    <p class="detail-state detail-state-error" role="alert">{{ error }}</p>
+  } @else if (!contracts) {
+    <p class="detail-state" role="status">
+      Contract evidence is unavailable for this direct link.
+    </p>
+  } @else if (!contracts.rows.length) {
+    <p class="detail-state" role="status">No accepted contract evidence is available.</p>
+  } @else {
+    <div class="evidence-groups">
+      @for (group of groups; track group.key) {
+        <article class="evidence-group">
+          <h3>{{ group.label }}</h3>
+          <p>{{ group.rows.length }} {{ group.rows.length === 1 ? 'row' : 'rows' }}</p>
+          @for (row of group.rows; track row.source_row_index + '-' + row.source_row_text) {
+            <dl class="evidence-row">
+              <div><dt>Report</dt><dd>{{ row.report_date }}</dd></div>
+              <div><dt>Trading data</dt><dd>{{ row.trading_date }}</dd></div>
+              <div><dt>Section</dt><dd>{{ row.section || 'Unavailable' }}</dd></div>
+              <div><dt>Page</dt><dd>{{ row.source_page ?? 'Unavailable' }}</dd></div>
+              <div><dt>Measure</dt><dd>{{ formatMeasure(row) }}</dd></div>
+              <div><dt>Review</dt><dd>{{ row.review_status || 'Unavailable' }}</dd></div>
+              <div class="raw-evidence">
+                <dt>Raw evidence</dt>
+                <dd>{{ row.source_row_text || 'Unavailable' }}</dd>
+              </div>
+            </dl>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

@@ -1,0 +1,39 @@
+<section class="detail-panel" aria-labelledby="report-history-heading">
+  <div class="panel-heading">
+    <div>
+      <p class="eyebrow">FlowPatrol</p>
+      <h2 id="report-history-heading">Report history</h2>
+    </div>
+  </div>
+
+  @if (loading) {
+    <p class="detail-state" role="status">Loading ticker report history...</p>
+  } @else if (error) {
+    <p class="detail-state detail-state-error" role="alert">{{ error }}</p>
+  } @else if (!history) {
+    <p class="detail-state" role="status">
+      Report history is unavailable for this direct link.
+    </p>
+  } @else if (!history.rows.length) {
+    <p class="detail-state" role="status">No FlowPatrol history is available.</p>
+  } @else {
+    <ol class="history-list">
+      @for (row of history.rows; track row.trading_date) {
+        <li class="history-row">
+          <time [attr.datetime]="row.trading_date">{{ row.trading_date }}</time>
+          <strong>{{ formatPriority(row.research_priority) }}</strong>
+          <span>{{ row.change_event || 'watching' }}</span>
+          <span>
+            D {{ formatPercentile(row.delta_percentile) }} / G
+            {{ formatPercentile(row.gamma_percentile) }} / V
+            {{ formatPercentile(row.vega_percentile) }}
+          </span>
+          <a [href]="row.equityhub_url" target="_blank" rel="noopener">
+            Source-date EquityHub
+          </a>
+          <p>{{ row.reason_text || 'Active FlowPatrol watch.' }}</p>
+        </li>
+      }
+    </ol>
+  }
+</section>
