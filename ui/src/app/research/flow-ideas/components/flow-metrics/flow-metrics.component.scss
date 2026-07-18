@@ -1,0 +1,41 @@
+:host {
+  display: block;
+}
+
+.flow-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.flow-metric {
+  display: grid;
+  gap: 4px;
+  padding: 15px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  background: var(--mat-sys-surface-container-low);
+  box-shadow: var(--mat-sys-level-1);
+}
+
+.flow-metric span,
+.flow-metric small {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.76rem;
+}
+
+.flow-metric strong {
+  font-size: 1.75rem;
+}
+
+@media (max-width: 780px) {
+  .flow-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .flow-metrics {
+    grid-template-columns: 1fr;
+  }
+}

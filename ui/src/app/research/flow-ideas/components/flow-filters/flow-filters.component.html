@@ -1,0 +1,60 @@
+<section class="flow-filter-panel" aria-label="Flow Ideas filters">
+  <label class="flow-field">
+    <span>Report</span>
+    <select
+      [value]="serverFilters.tradingDate"
+      (change)="dateChange.emit($any($event.target).value)"
+      [disabled]="datesLoading"
+    >
+      @if (!dates.length && !datesLoading) {
+        <option value="">No reports loaded</option>
+      }
+      @for (date of dates; track trackDate($index, date)) {
+        <option [value]="date.trading_date">
+          {{ date.trading_date }} - {{ date.status }}
+        </option>
+      }
+    </select>
+  </label>
+
+  <label class="flow-field flow-symbol-field">
+    <span>Symbol</span>
+    <input
+      type="search"
+      [value]="symbolValue"
+      (input)="onSymbolInput($event)"
+      placeholder="AAPL"
+      autocomplete="off"
+    />
+  </label>
+
+  <label class="flow-field">
+    <span>Change</span>
+    <select
+      [value]="serverFilters.event"
+      (change)="eventChange.emit($any($event.target).value)"
+    >
+      @for (option of eventOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="flow-check">
+    <input
+      type="checkbox"
+      [checked]="serverFilters.activeOnly"
+      (change)="activeOnlyChange.emit($any($event.target).checked)"
+    />
+    <span>Active watch only</span>
+  </label>
+
+  <label class="flow-check">
+    <input
+      type="checkbox"
+      [checked]="includeIndexEtfs"
+      (change)="universeChange.emit($any($event.target).checked)"
+    />
+    <span>Show broad indexes/ETFs</span>
+  </label>
+</section>

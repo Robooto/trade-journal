@@ -1,0 +1,62 @@
+<article class="flow-queue-panel">
+  <div class="flow-panel-heading">
+    <div>
+      <p class="eyebrow">Ranked candidates</p>
+      <h2>Research queue</h2>
+    </div>
+    @if (total !== null) {
+      <span class="flow-count">{{ candidates.length }} of {{ total }}</span>
+    }
+  </div>
+
+  @if (loading) {
+    <div class="flow-loading" role="status">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <span>Loading FlowPatrol ideas...</span>
+    </div>
+  } @else if (hasResponse && reportStatus !== 'missing' && !candidates.length) {
+    <div class="flow-empty" role="status">No ideas match these filters.</div>
+  } @else {
+    <div class="flow-candidate-list">
+      @for (candidate of candidates; track trackCandidate($index, candidate)) {
+        <button
+          type="button"
+          class="flow-candidate"
+          [class.selected]="selectedSymbol === candidate.symbol"
+          [attr.aria-pressed]="selectedSymbol === candidate.symbol"
+          (click)="candidateSelected.emit(candidate.symbol)"
+        >
+          <span class="candidate-symbol">
+            <strong>{{ candidate.symbol }}</strong>
+            @if (candidate.sector) {
+              <small>{{ candidate.sector }}</small>
+            }
+          </span>
+          <span class="candidate-priority">
+            {{ formatPriority(candidate.research_priority) }}
+          </span>
+          <span class="candidate-reason">
+            <strong>{{ candidate.reason_text || 'Active watch' }}</strong>
+            <span class="candidate-tags">
+              @for (reason of candidate.reason_codes.slice(0, 3); track reason) {
+                <span>{{ reason.replaceAll('_', ' ') }}</span>
+              }
+            </span>
+          </span>
+          <span class="candidate-change">
+            <strong>{{ candidate.change_event || 'watching' }}</strong>
+            <small>
+              day {{ candidate.watch_day ?? '-' }} / streak
+              {{ candidate.appearance_streak ?? '-' }}
+            </small>
+          </span>
+          <span class="candidate-percentiles">
+            D {{ formatPercentile(candidate.delta_percentile) }} / G
+            {{ formatPercentile(candidate.gamma_percentile) }} / V
+            {{ formatPercentile(candidate.vega_percentile) }}
+          </span>
+        </button>
+      }
+    </div>
+  }
+</article>

@@ -1,0 +1,76 @@
+:host {
+  display: block;
+}
+
+.flow-filter-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  background: var(--mat-sys-surface-container-low);
+  box-shadow: var(--mat-sys-level-1);
+}
+
+.flow-field {
+  display: grid;
+  min-width: 150px;
+  gap: 5px;
+}
+
+.flow-field span,
+.flow-check {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.76rem;
+}
+
+.flow-field span {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.flow-field input,
+.flow-field select {
+  min-height: 40px;
+  border: 1px solid var(--mat-sys-outline);
+  border-radius: 8px;
+  padding: 0 10px;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: inherit;
+}
+
+.flow-symbol-field {
+  min-width: 190px;
+}
+
+.flow-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 0 4px;
+  cursor: pointer;
+}
+
+.flow-check input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--mat-sys-primary);
+}
+
+@media (max-width: 620px) {
+  .flow-filter-panel {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .flow-field,
+  .flow-symbol-field {
+    width: 100%;
+    min-width: 0;
+  }
+}

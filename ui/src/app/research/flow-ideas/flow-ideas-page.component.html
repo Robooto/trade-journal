@@ -4,26 +4,21 @@
       <p class="eyebrow">Research workspace</p>
       <h1 id="flow-ideas-title">Flow Ideas</h1>
       <p class="research-intro">
-        A single place to investigate interesting options-flow evidence, then
-        carry useful context into your journal.
+        Interesting options-flow evidence for research, not a trade probability
+        or recommendation.
       </p>
     </div>
 
     <div class="research-actions">
-      <a
-        mat-stroked-button
-        [href]="traceUrl"
-        target="_blank"
-        rel="noopener"
-        aria-describedby="trace-on-mini-description"
-      >
+      <a mat-stroked-button [href]="traceUrl" target="_blank" rel="noopener"
+        aria-describedby="trace-on-mini-description">
         <mat-icon>open_in_new</mat-icon>
         Trace on mini
       </a>
-      <span class="research-status" aria-label="Flow Ideas workspace status">
-        <mat-icon aria-hidden="true">construction</mat-icon>
-        Workspace setup
-      </span>
+      <button mat-flat-button color="primary" type="button" (click)="refresh()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
     </div>
   </header>
 
@@ -31,61 +26,115 @@
     Opens the existing Trace dashboard on the mini in a new tab.
   </p>
 
-  <section class="research-hero" aria-labelledby="research-workspace-title">
-    <div class="research-hero-copy">
-      <p class="eyebrow">FlowPatrol research</p>
-      <h2 id="research-workspace-title">The investigation workspace is ready.</h2>
-      <p>
-        The queue, ticker history, and contract evidence will appear here while
-        FlowPatrol continues to own ingestion, scoring, and brokerage context
-        on the mini.
-      </p>
-    </div>
+  <app-flow-filters
+    [serverFilters]="facade.serverFilters()"
+    [includeIndexEtfs]="facade.displayFilters().includeIndexEtfs"
+    [dates]="facade.dates()"
+    [datesLoading]="facade.datesLoading()"
+    [eventOptions]="eventOptions"
+    (dateChange)="onDateChange($event)"
+    (symbolInput)="onSymbolInput($event)"
+    (eventChange)="onEventChange($event)"
+    (activeOnlyChange)="onActiveOnlyChange($event)"
+    (universeChange)="onUniverseChange($event)"
+  ></app-flow-filters>
 
-    <dl class="research-boundary" aria-label="Research workspace ownership">
+  @if (facade.datesError(); as error) {
+    <section class="flow-state flow-state-error" role="alert">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
       <div>
-        <dt>Angular</dt>
-        <dd>Navigation, display, and research handoffs</dd>
+        <strong>Research service unavailable</strong>
+        <p>{{ error }} Journal and positions remain available.</p>
       </div>
-      <div>
-        <dt>Mini</dt>
-        <dd>Flow data, scoring, evidence, and source quality</dd>
-      </div>
-    </dl>
-  </section>
+    </section>
+  }
 
-  <section class="research-panels" aria-label="Planned Flow Ideas workflow">
-    <article class="research-panel">
-      <mat-icon aria-hidden="true">format_list_numbered</mat-icon>
+  @if (facade.candidateResponse()?.status === 'partial') {
+    <section class="flow-state flow-state-warning" role="status">
+      <mat-icon aria-hidden="true">warning</mat-icon>
       <div>
-        <h2>Scan the queue</h2>
+        <strong>Partial FlowPatrol report</strong>
         <p>
-          Filter report-day ideas and keep the visible research universe in
-          view.
+          Some source quality checks blocked scoring. Evidence remains useful
+          for research, but it should be reviewed with that context.
         </p>
       </div>
-    </article>
+    </section>
+  }
 
-    <article class="research-panel">
-      <mat-icon aria-hidden="true">manage_search</mat-icon>
+  @if (facade.candidatesError(); as error) {
+    <section class="flow-state flow-state-error" role="alert">
+      <mat-icon aria-hidden="true">cloud_off</mat-icon>
       <div>
-        <h2>Investigate the ticker</h2>
-        <p>
-          Compare report history, contract evidence, and supporting brokerage
-          context.
-        </p>
+        <strong>Flow Ideas are unavailable</strong>
+        <p>{{ error }} This does not affect journal or position data.</p>
       </div>
-    </article>
+    </section>
+  }
 
-    <article class="research-panel">
-      <mat-icon aria-hidden="true">edit_note</mat-icon>
+  @if (facade.brokerageEnrichment(); as context) {
+    @if (context.status !== 'ready') {
+      <section
+        class="flow-enrichment-status"
+        [class.flow-enrichment-warning]="context.status === 'partial'"
+        [class.flow-enrichment-muted]="context.status !== 'partial'"
+        role="status"
+      >
+        <mat-icon aria-hidden="true">
+          {{ context.status === 'partial' ? 'info' : 'cloud_off' }}
+        </mat-icon>
+        <div>
+          <strong>{{ brokerageStatusTitle(context.status) }}</strong>
+          <p>
+            {{ brokerageStatusMessage(context) }}
+            @if (context.warnings.length) {
+              {{ context.warnings.join(' ') }}
+            }
+          </p>
+        </div>
+      </section>
+    }
+  }
+
+  @if (facade.candidateResponse()?.status === 'missing') {
+    <section class="flow-state flow-state-muted" role="status">
+      <mat-icon aria-hidden="true">event_busy</mat-icon>
       <div>
-        <h2>Capture the thesis</h2>
-        <p>
-          Move the useful finding into the journal without treating flow as a
-          trade recommendation.
-        </p>
+        <strong>No report for this date</strong>
+        <p>Choose another report date or add this report when uploads are enabled.</p>
       </div>
-    </article>
+    </section>
+  }
+
+  <app-flow-metrics [metrics]="facade.metrics()"></app-flow-metrics>
+
+  <section class="flow-workspace" aria-label="Flow Ideas research queue">
+    <app-flow-candidate-list
+      [candidates]="facade.visibleCandidates()"
+      [total]="facade.candidateResponse()?.total ?? null"
+      [loading]="facade.candidatesLoading()"
+      [hasResponse]="!!facade.candidateResponse()"
+      [reportStatus]="facade.candidateResponse()?.status ?? null"
+      [selectedSymbol]="facade.selectedCandidate()?.symbol ?? null"
+      (candidateSelected)="selectCandidate($event)"
+    ></app-flow-candidate-list>
+
+    <aside class="flow-selection-panel" aria-live="polite">
+      <p class="eyebrow">Selection</p>
+      @if (facade.selectedCandidate(); as candidate) {
+        <h2>{{ candidate.symbol }}</h2>
+        <p>{{ candidate.reason_text || 'FlowPatrol evidence selected.' }}</p>
+        <p class="selection-note">
+          Report history, contract evidence, and brokerage context are the next
+          research step.
+        </p>
+      } @else {
+        <h2>Choose an idea</h2>
+        <p>
+          Select a queue item to keep your investigation focused. No trade
+          action is created here.
+        </p>
+      }
+    </aside>
   </section>
 </main>
