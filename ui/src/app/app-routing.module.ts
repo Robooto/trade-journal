@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-const routes: Routes = [
+export const appRoutes: Routes = [
   {
     path: 'journal',
     loadChildren: () =>
@@ -28,6 +28,11 @@ const routes: Routes = [
       import('./pivot-tracker/pivot-tracker.module').then(m => m.PivotTrackerModule)
   },
   {
+    path: 'research',
+    loadChildren: () =>
+      import('./research/research.module').then(m => m.ResearchModule)
+  },
+  {
     path: '',
     redirectTo: '/dashboard',
     pathMatch: 'full'
@@ -36,7 +41,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [ RouterModule.forRoot(routes) ],
+  imports: [ RouterModule.forRoot(appRoutes) ],
   exports: [ RouterModule ]
 })
 export class AppRoutingModule {}

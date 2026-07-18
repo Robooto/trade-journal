@@ -1,0 +1,91 @@
+<main class="research-page" aria-labelledby="flow-ideas-title">
+  <header class="research-header">
+    <div>
+      <p class="eyebrow">Research workspace</p>
+      <h1 id="flow-ideas-title">Flow Ideas</h1>
+      <p class="research-intro">
+        A single place to investigate interesting options-flow evidence, then
+        carry useful context into your journal.
+      </p>
+    </div>
+
+    <div class="research-actions">
+      <a
+        mat-stroked-button
+        [href]="traceUrl"
+        target="_blank"
+        rel="noopener"
+        aria-describedby="trace-on-mini-description"
+      >
+        <mat-icon>open_in_new</mat-icon>
+        Trace on mini
+      </a>
+      <span class="research-status" aria-label="Flow Ideas workspace status">
+        <mat-icon aria-hidden="true">construction</mat-icon>
+        Workspace setup
+      </span>
+    </div>
+  </header>
+
+  <p class="sr-only" id="trace-on-mini-description">
+    Opens the existing Trace dashboard on the mini in a new tab.
+  </p>
+
+  <section class="research-hero" aria-labelledby="research-workspace-title">
+    <div class="research-hero-copy">
+      <p class="eyebrow">FlowPatrol research</p>
+      <h2 id="research-workspace-title">The investigation workspace is ready.</h2>
+      <p>
+        The queue, ticker history, and contract evidence will appear here while
+        FlowPatrol continues to own ingestion, scoring, and brokerage context
+        on the mini.
+      </p>
+    </div>
+
+    <dl class="research-boundary" aria-label="Research workspace ownership">
+      <div>
+        <dt>Angular</dt>
+        <dd>Navigation, display, and research handoffs</dd>
+      </div>
+      <div>
+        <dt>Mini</dt>
+        <dd>Flow data, scoring, evidence, and source quality</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="research-panels" aria-label="Planned Flow Ideas workflow">
+    <article class="research-panel">
+      <mat-icon aria-hidden="true">format_list_numbered</mat-icon>
+      <div>
+        <h2>Scan the queue</h2>
+        <p>
+          Filter report-day ideas and keep the visible research universe in
+          view.
+        </p>
+      </div>
+    </article>
+
+    <article class="research-panel">
+      <mat-icon aria-hidden="true">manage_search</mat-icon>
+      <div>
+        <h2>Investigate the ticker</h2>
+        <p>
+          Compare report history, contract evidence, and supporting brokerage
+          context.
+        </p>
+      </div>
+    </article>
+
+    <article class="research-panel">
+      <mat-icon aria-hidden="true">edit_note</mat-icon>
+      <div>
+        <h2>Capture the thesis</h2>
+        <p>
+          Move the useful finding into the journal without treating flow as a
+          trade recommendation.
+        </p>
+      </div>
+    </article>
+  </section>
+</main>

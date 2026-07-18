@@ -46,6 +46,12 @@
           <span>Dashboard</span>
         }
       </a>
+      <a mat-list-item routerLink="/research/flow-ideas" routerLinkActive="active-link" matTooltip="Research" [matTooltipDisabled]="!isCollapsed">
+        <mat-icon matListItemIcon>travel_explore</mat-icon>
+        @if (!isCollapsed) {
+          <span>Research</span>
+        }
+      </a>
       <a mat-list-item routerLink="/journal" routerLinkActive="active-link" matTooltip="Journal" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>book</mat-icon>
         @if (!isCollapsed) {
