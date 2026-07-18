@@ -8,6 +8,8 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    environment:
+      RESEARCH_BACKEND_URL: ${RESEARCH_BACKEND_URL:-http://192.168.50.248:8765}
 
   api:
     build:

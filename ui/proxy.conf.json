@@ -1,0 +1,10 @@
+{
+  "/research-api": {
+    "target": "http://192.168.50.248:8765",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/research-api": ""
+    }
+  }
+}
