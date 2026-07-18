@@ -26,7 +26,9 @@ import {
   FlowIdeasServerFilters,
   FlowIdeaMetrics,
   FlowReportDate,
+  FlowWatchlistsResponse,
 } from '../flow-ideas.models';
+import { filterFlowCandidates } from '../utilities/filter-flow-candidates';
 import { FlowIdeasApiService } from './flow-ideas-api.service';
 
 const DEFAULT_SERVER_FILTERS: FlowIdeasServerFilters = {
@@ -38,6 +40,8 @@ const DEFAULT_SERVER_FILTERS: FlowIdeasServerFilters = {
 
 const DEFAULT_DISPLAY_FILTERS: FlowIdeasDisplayFilters = {
   includeIndexEtfs: true,
+  watchlist: 'all',
+  portfolio: 'all',
 };
 
 const CHANGE_EVENTS = new Set([
@@ -68,6 +72,9 @@ export class FlowIdeasFacade {
   readonly candidatesLoading = signal(false);
   readonly candidatesError = signal<string | null>(null);
   readonly candidateResponse = signal<FlowCandidatesResponse | null>(null);
+  readonly watchlists = signal<FlowWatchlistsResponse | null>(null);
+  readonly watchlistsLoading = signal(false);
+  readonly watchlistsError = signal<string | null>(null);
   readonly selectedSymbol = signal<string | null>(null);
 
   readonly routeStateChanges$: Observable<FlowIdeasRouteState> = combineLatest([
@@ -84,9 +91,11 @@ export class FlowIdeasFacade {
 
   readonly visibleCandidates = computed(() => {
     const rows = this.candidateResponse()?.rows ?? [];
-    return this.displayFilters().includeIndexEtfs
-      ? rows
-      : rows.filter(row => !row.is_index_etf);
+    return filterFlowCandidates(
+      rows,
+      this.displayFilters(),
+      this.watchlists(),
+    );
   });
 
   readonly selectedCandidate = computed<FlowCandidate | null>(() => {
@@ -149,8 +158,23 @@ export class FlowIdeasFacade {
     this.subscriptions.add(subscription);
   }
 
+  loadWatchlists(): void {
+    this.watchlistsLoading.set(true);
+    this.watchlistsError.set(null);
+    const subscription = this.api.watchlists().pipe(
+      finalize(() => this.watchlistsLoading.set(false)),
+      catchError(error => {
+        this.watchlists.set(null);
+        this.watchlistsError.set(toSafeMessage(error));
+        return EMPTY;
+      }),
+    ).subscribe(response => this.watchlists.set(response));
+    this.subscriptions.add(subscription);
+  }
+
   reload(): void {
     this.loadDates();
+    this.loadWatchlists();
 
     if (this.serverFilters().tradingDate) {
       this.reloadSubject.next(this.reloadSubject.value + 1);
@@ -270,7 +294,11 @@ function sameDisplayFilters(
   left: FlowIdeasDisplayFilters,
   right: FlowIdeasDisplayFilters,
 ): boolean {
-  return left.includeIndexEtfs === right.includeIndexEtfs;
+  return (
+    left.includeIndexEtfs === right.includeIndexEtfs &&
+    left.watchlist === right.watchlist &&
+    left.portfolio === right.portfolio
+  );
 }
 
 function toSafeMessage(error: unknown): string {

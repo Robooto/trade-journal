@@ -68,6 +68,8 @@ export interface FlowIdeasServerFilters {
 
 export interface FlowIdeasDisplayFilters {
   readonly includeIndexEtfs: boolean;
+  readonly watchlist: string;
+  readonly portfolio: 'all' | 'held' | 'not-held';
 }
 
 export interface FlowIdeasRouteState {

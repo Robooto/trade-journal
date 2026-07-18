@@ -57,4 +57,32 @@
     />
     <span>Show broad indexes/ETFs</span>
   </label>
+
+  <label class="flow-field">
+    <span>Research list</span>
+    <select
+      [value]="watchlistFilter"
+      [disabled]="watchlistsLoading"
+      (change)="watchlistChange.emit($any($event.target).value)"
+    >
+      <option value="all">All ideas</option>
+      <option value="any">On any watchlist</option>
+      <option value="none">Not on a watchlist</option>
+      @for (watchlist of watchlists; track watchlist.name) {
+        <option [value]="'list:' + watchlist.name">{{ watchlist.name }}</option>
+      }
+    </select>
+  </label>
+
+  <label class="flow-field">
+    <span>Portfolio</span>
+    <select
+      [value]="portfolioFilter"
+      (change)="portfolioChange.emit($any($event.target).value)"
+    >
+      <option value="all">All exposure</option>
+      <option value="held">Currently held</option>
+      <option value="not-held">Not currently held</option>
+    </select>
+  </label>
 </section>

@@ -36,4 +36,17 @@ export class CandidateListComponent {
   formatPercentile(value: number | null | undefined): string {
     return value == null ? '-' : String(Math.round(value));
   }
+
+  formatMoney(value: number | null | undefined): string {
+    return value == null ? 'Mark -' : '$' + value.toFixed(2);
+  }
+
+  formatNumber(value: number | null | undefined): string {
+    return value == null ? '-' : value.toFixed(1);
+  }
+
+  formatSigned(value: number | null | undefined, suffix: string): string {
+    if (value == null) return '-';
+    return (value > 0 ? '+' : '') + value.toFixed(1) + suffix;
+  }
 }

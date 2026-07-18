@@ -41,6 +41,8 @@ export class FlowIdeasPageComponent implements OnDestroy {
     },
     display: {
       includeIndexEtfs: true,
+      watchlist: 'all',
+      portfolio: 'all',
     },
   };
 
@@ -77,6 +79,7 @@ export class FlowIdeasPageComponent implements OnDestroy {
     );
 
     this.facade.loadDates();
+    this.facade.loadWatchlists();
   }
 
   onDateChange(tradingDate: string): void {
@@ -97,6 +100,14 @@ export class FlowIdeasPageComponent implements OnDestroy {
 
   onUniverseChange(includeIndexEtfs: boolean): void {
     this.facade.setDisplayFilters({ includeIndexEtfs });
+  }
+
+  onWatchlistChange(watchlist: string): void {
+    this.facade.setDisplayFilters({ watchlist });
+  }
+
+  onPortfolioChange(portfolio: 'all' | 'held' | 'not-held'): void {
+    this.facade.setDisplayFilters({ portfolio });
   }
 
   selectCandidate(candidate: FlowCandidate): void {
@@ -173,6 +184,8 @@ export class FlowIdeasPageComponent implements OnDestroy {
       },
       display: {
         includeIndexEtfs: params.get('universe') !== 'equities',
+        watchlist: params.get('watchlist') ?? 'all',
+        portfolio: parsePortfolio(params.get('portfolio')),
       },
     };
 
@@ -195,6 +208,8 @@ export class FlowIdeasPageComponent implements OnDestroy {
         event: next.server.event || null,
         active: String(next.server.activeOnly),
         universe: next.display.includeIndexEtfs ? 'all' : 'equities',
+        watchlist: next.display.watchlist === 'all' ? null : next.display.watchlist,
+        portfolio: next.display.portfolio === 'all' ? null : next.display.portfolio,
       },
       replaceUrl: true,
     });
@@ -210,8 +225,14 @@ function sameRouteState(
     left.server.symbol === right.server.symbol &&
     left.server.event === right.server.event &&
     left.server.activeOnly === right.server.activeOnly &&
-    left.display.includeIndexEtfs === right.display.includeIndexEtfs
+    left.display.includeIndexEtfs === right.display.includeIndexEtfs &&
+    left.display.watchlist === right.display.watchlist &&
+    left.display.portfolio === right.display.portfolio
   );
+}
+
+function parsePortfolio(value: string | null): 'all' | 'held' | 'not-held' {
+  return value === 'held' || value === 'not-held' ? value : 'all';
 }
 
 function safeUploadMessage(error: HttpErrorResponse): string {

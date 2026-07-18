@@ -131,10 +131,15 @@ and failure isolation; **RF-03** Research shell/navigation; **RF-04** typed
 queue read path, filters, metrics, and source states; and **RF-05** dated
 ticker investigation with history, complete Spread ID evidence, read-only
 brokerage context, and a current-New-York-date EquityHub action; and **RF-06**
-explicit report-upload and private-watchlist commands.
+explicit report-upload and private-watchlist commands; and **RF-07 code parity**
+including bookmarkable watchlist/portfolio filters, compact brokerage scan
+context, and a deterministic local parity gate.
 
-Next: **RF-07** parity, cutover, and cleanup after Angular and mini Flow Ideas
-are compared against the checked fixtures.
+Cutover remains pending. The live mini must first receive the frozen/current
+contract, start with brokerage enrichment environment variables, expose a
+classified index row for validation, and pass the Pi-to-mini browser comparison.
+See `docs/flow-ideas-rf07-parity-audit.md`. Keep the mini Flow Ideas view
+during this parity period.
 
 ### RF-01 - Contract fixtures and parity inventory
 
@@ -173,9 +178,13 @@ selection, navigation, or page load.
 
 ### RF-07 - Parity, cutover, and cleanup
 
-Run local tests and a Pi-to-mini smoke test. Compare old and new UIs on the same
-ready and partial dates. Keep mini Flow Ideas during a short parity period, then
-remove only its Flow presentation while retaining Trace and every API.
+Run the deterministic local parity gate and a Pi-to-mini smoke test. Compare old
+and new UIs on the same ready and partial dates. The Angular implementation is
+code-complete, but cutover is blocked by the live backend revision, disabled
+brokerage enrichment, and unvalidated live index classification documented in
+`docs/flow-ideas-rf07-parity-audit.md`. Keep mini Flow Ideas during a short
+parity period, then remove only its Flow presentation while retaining Trace and
+every API.
 
 ## Test and acceptance
 

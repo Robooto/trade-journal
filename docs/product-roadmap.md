@@ -221,8 +221,8 @@ Current:
 
 Next:
 
-1. Add useful watchlist filters and brokerage-watchlist idea-generation views
-   without changing FlowPatrol priority scoring.
+1. Extend watchlist idea generation with earnings, price/IV trend, and portfolio
+   exposure context without changing FlowPatrol priority scoring.
 2. Add the normalized all-account/all-asset portfolio summary and a broader
    trading-status model beyond the implemented option risk summary.
 3. Extend the implemented session activity inbox with verified prior-session
@@ -248,10 +248,10 @@ Next:
 
 ## Unified operator UI and research workspace
 
-Active planned initiative: migrate Flow Ideas into the `trade-journal` Angular
-application while keeping its backend in `market-data-pipeline` on the mini.
-Trace remains on the mini for now. See
-[research-frontend-migration-plan.md](research-frontend-migration-plan.md).
+Angular Flow Ideas is code-complete; live cutover remains pending. Its backend
+stays in `market-data-pipeline` on the mini, and Trace remains on the mini. See
+[research-frontend-migration-plan.md](research-frontend-migration-plan.md) and
+[flow-ideas-rf07-parity-audit.md](flow-ideas-rf07-parity-audit.md).
 
 - Use the `trade-journal` Angular application as the shared operator shell for
   journal, positions, FlowPatrol ideas, research handoffs, and later review
@@ -264,9 +264,13 @@ Trace remains on the mini for now. See
   freshness, and safety policy in the owning backend. The frontend should
   request documented read models, render them, collect user input, and invoke
   explicit commands; it should not reproduce business logic.
-- First add a lazy-loaded Research shell, configurable same-origin proxy to the
-  mini, consistent theming, loading/error/quality states, and deep-link
-  contracts.
+- The Angular slice now includes the lazy-loaded Research shell, same-origin
+  proxy, quality states, bookmarkable watchlist/portfolio filters, compact
+  brokerage scan context, upload/watchlist commands, and ticker history plus
+  complete Spread ID evidence.
+- Cutover is blocked until the mini runs the frozen/current API contract with
+  brokerage enrichment enabled, a classified live index row is validated, and
+  the Pi-to-mini browser comparison passes.
 - Migrate one vertical slice at a time only after its API contract is stable;
   retain the existing source UI until the replacement reaches parity.
 

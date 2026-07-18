@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 
 import {
+  FlowBrokerageWatchlist,
   FlowIdeasServerFilters,
   FlowReportDate,
 } from '../../flow-ideas.models';
@@ -28,6 +29,10 @@ export interface FlowChangeOption {
 export class FlowFiltersComponent implements OnChanges {
   @Input({ required: true }) serverFilters!: FlowIdeasServerFilters;
   @Input({ required: true }) includeIndexEtfs!: boolean;
+  @Input({ required: true }) watchlistFilter!: string;
+  @Input({ required: true }) portfolioFilter!: 'all' | 'held' | 'not-held';
+  @Input() watchlists: readonly FlowBrokerageWatchlist[] = [];
+  @Input() watchlistsLoading = false;
   @Input() dates: readonly FlowReportDate[] = [];
   @Input() datesLoading = false;
   @Input() eventOptions: readonly FlowChangeOption[] = [];
@@ -37,6 +42,9 @@ export class FlowFiltersComponent implements OnChanges {
   @Output() readonly eventChange = new EventEmitter<string>();
   @Output() readonly activeOnlyChange = new EventEmitter<boolean>();
   @Output() readonly universeChange = new EventEmitter<boolean>();
+  @Output() readonly watchlistChange = new EventEmitter<string>();
+  @Output() readonly portfolioChange =
+    new EventEmitter<'all' | 'held' | 'not-held'>();
 
   symbolValue = '';
 

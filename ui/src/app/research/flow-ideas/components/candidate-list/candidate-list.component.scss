@@ -151,6 +151,31 @@
   white-space: nowrap;
 }
 
+.candidate-brokerage {
+  display: grid;
+  width: 145px;
+  flex: 0 0 auto;
+  gap: 3px;
+  font-size: 0.76rem;
+}
+
+.candidate-brokerage small {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.candidate-context-tags {
+  display: flex;
+  gap: 4px;
+}
+
+.candidate-context-tags span {
+  border-radius: 999px;
+  padding: 1px 6px;
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  font-size: 0.65rem;
+}
+
 @media (max-width: 780px) {
   .flow-candidate {
     align-items: flex-start;
@@ -163,7 +188,8 @@
   }
 
   .candidate-change,
-  .candidate-percentiles {
+  .candidate-percentiles,
+  .candidate-brokerage {
     width: auto;
     flex: 1 1 auto;
   }

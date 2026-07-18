@@ -80,6 +80,12 @@ describe('FlowIdeasPageComponent', () => {
           useValue: {
             dates: () => of(datesFixture),
             candidates: () => of(candidatesFixture),
+            watchlists: () => of({
+              schema_version: 'research-watchlists.v1',
+              flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1',
+              writes_enabled: true,
+              watchlists: [],
+            }),
           },
         },
       ],
@@ -113,6 +119,12 @@ describe('FlowIdeasPageComponent', () => {
           useValue: {
             dates: () => of(datesFixture),
             candidates: () => of(candidatesFixture),
+            watchlists: () => of({
+              schema_version: 'research-watchlists.v1',
+              flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1',
+              writes_enabled: true,
+              watchlists: [],
+            }),
           },
         },
       ],

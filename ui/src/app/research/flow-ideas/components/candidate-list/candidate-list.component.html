@@ -55,6 +55,18 @@
             {{ formatPercentile(candidate.gamma_percentile) }} / V
             {{ formatPercentile(candidate.vega_percentile) }}
           </span>
+          <span class="candidate-brokerage">
+            @if (candidate.brokerage_context; as context) {
+              <strong>{{ formatMoney(context.price.mark) }} / IVR {{ formatNumber(context.volatility.iv_rank_percent) }}</strong>
+              <small>5d {{ formatSigned(context.price.five_session_change_percent, '%') }} / IVR {{ formatSigned(context.volatility.iv_rank_5_day_change_percent, ' pts') }}</small>
+              <span class="candidate-context-tags">
+                @if (context.watchlists.length) { <span>watchlist</span> }
+                @if (context.exposure.is_held) { <span>held</span> }
+              </span>
+            } @else {
+              <small>Context unavailable</small>
+            }
+          </span>
         </button>
       }
     </div>

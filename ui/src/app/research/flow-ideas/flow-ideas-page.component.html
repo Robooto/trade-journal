@@ -34,6 +34,10 @@
   <app-flow-filters
     [serverFilters]="facade.serverFilters()"
     [includeIndexEtfs]="facade.displayFilters().includeIndexEtfs"
+    [watchlistFilter]="facade.displayFilters().watchlist"
+    [portfolioFilter]="facade.displayFilters().portfolio"
+    [watchlists]="facade.watchlists()?.watchlists ?? []"
+    [watchlistsLoading]="facade.watchlistsLoading()"
     [dates]="facade.dates()"
     [datesLoading]="facade.datesLoading()"
     [eventOptions]="eventOptions"
@@ -42,6 +46,8 @@
     (eventChange)="onEventChange($event)"
     (activeOnlyChange)="onActiveOnlyChange($event)"
     (universeChange)="onUniverseChange($event)"
+    (watchlistChange)="onWatchlistChange($event)"
+    (portfolioChange)="onPortfolioChange($event)"
   ></app-flow-filters>
 
   @if (facade.datesError(); as error) {
