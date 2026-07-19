@@ -5,7 +5,7 @@
 .research-page {
   display: grid;
   gap: 18px;
-  max-width: 1320px;
+  max-width: 1760px;
   margin: 0 auto;
   padding: 28px;
 }
@@ -23,14 +23,12 @@
   gap: 18px;
 }
 
-.research-header h1,
-.flow-selection-panel h2 {
+.research-header h1 {
   margin: 0;
 }
 
 .research-intro,
-.flow-state p,
-.flow-selection-panel p {
+.flow-state p {
   margin: 7px 0 0;
   color: var(--mat-sys-on-surface-variant);
 }
@@ -50,7 +48,6 @@
 }
 
 .flow-enrichment-status,
-.flow-selection-panel,
 .flow-state {
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 14px;
@@ -137,21 +134,18 @@
 }
 
 .flow-workspace {
-  align-items: stretch;
+  display: grid;
+  grid-template-columns: minmax(640px, 1.45fr) minmax(460px, 1fr);
+  align-items: start;
   gap: 16px;
 }
 
-.flow-selection-panel {
-  width: min(100%, 300px);
-  flex: 0 0 300px;
-  padding: 18px;
-}
-
-.selection-note {
-  margin-top: 16px !important;
-  padding-top: 14px;
-  border-top: 1px solid var(--mat-sys-outline-variant);
-  font-size: 0.88rem;
+.flow-workspace > app-flow-idea-inspector {
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 120px);
+  overflow: auto;
+  scrollbar-gutter: stable;
 }
 
 .sr-only {
@@ -163,15 +157,16 @@
   white-space: nowrap;
 }
 
-@media (max-width: 1040px) {
+@media (max-width: 1250px) {
   .flow-workspace {
     display: grid;
     grid-template-columns: 1fr;
   }
 
-  .flow-selection-panel {
-    width: auto;
-    flex-basis: auto;
+  .flow-workspace > app-flow-idea-inspector {
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 }
 

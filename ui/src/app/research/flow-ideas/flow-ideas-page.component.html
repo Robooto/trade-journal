@@ -130,22 +130,12 @@
       (candidateSelected)="selectCandidate($event)"
     ></app-flow-candidate-list>
 
-    <aside class="flow-selection-panel" aria-live="polite">
-      <p class="eyebrow">Selection</p>
-      @if (facade.selectedCandidate(); as candidate) {
-        <h2>{{ candidate.symbol }}</h2>
-        <p>{{ candidate.reason_text || 'FlowPatrol evidence selected.' }}</p>
-        <p class="selection-note">
-          Report history, contract evidence, and brokerage context are the next
-          research step.
-        </p>
-      } @else {
-        <h2>Choose an idea</h2>
-        <p>
-          Select a queue item to keep your investigation focused. No trade
-          action is created here.
-        </p>
-      }
-    </aside>
+    <app-flow-idea-inspector
+      [candidate]="facade.selectedCandidate()"
+      [watchlists]="facade.watchlists()"
+      [watchlistsLoading]="facade.watchlistsLoading()"
+      [watchlistsError]="facade.watchlistsError()"
+      (watchlistChanged)="onWatchlistChanged()"
+    ></app-flow-idea-inspector>
   </section>
 </main>

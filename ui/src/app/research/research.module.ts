@@ -7,6 +7,7 @@ import { BrokerageContextComponent } from './flow-ideas/components/brokerage-con
 import { CandidateListComponent } from './flow-ideas/components/candidate-list/candidate-list.component';
 import { ContractEvidenceComponent } from './flow-ideas/components/contract-evidence/contract-evidence.component';
 import { FlowFiltersComponent } from './flow-ideas/components/flow-filters/flow-filters.component';
+import { FlowIdeaInspectorComponent } from './flow-ideas/components/flow-idea-inspector/flow-idea-inspector.component';
 import { FlowMetricsComponent } from './flow-ideas/components/flow-metrics/flow-metrics.component';
 import { ReportHistoryComponent } from './flow-ideas/components/report-history/report-history.component';
 import { ReportUploadComponent } from './flow-ideas/components/report-upload/report-upload.component';
@@ -22,6 +23,7 @@ import { ResearchShellComponent } from './research-shell/research-shell.componen
     FlowIdeasPageComponent,
     FlowIdeaDetailPageComponent,
     FlowFiltersComponent,
+    FlowIdeaInspectorComponent,
     FlowMetricsComponent,
     CandidateListComponent,
     ReportHistoryComponent,

@@ -112,10 +112,10 @@ export class FlowIdeasPageComponent implements OnDestroy {
 
   selectCandidate(candidate: FlowCandidate): void {
     this.facade.selectCandidate(candidate.symbol);
-    void this.router.navigate(
-      ['/research/flow-ideas', candidate.trading_date, candidate.symbol],
-      { queryParams: this.route.snapshot.queryParams },
-    );
+  }
+
+  onWatchlistChanged(): void {
+    this.facade.reload();
   }
 
   refresh(): void {

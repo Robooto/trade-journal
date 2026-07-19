@@ -1,0 +1,86 @@
+:host { display: block; min-width: 0; }
+
+.idea-inspector {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  background: var(--mat-sys-surface-container-lowest);
+  box-shadow: var(--mat-sys-level-1);
+}
+
+.inspector-header {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.symbol-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+h2, p { margin: 0; }
+h2 { font-size: 1.8rem; }
+
+.eyebrow {
+  margin-bottom: 4px;
+  color: var(--mat-sys-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.inspector-reason { line-height: 1.4; }
+
+.priority-summary {
+  display: grid;
+  min-width: 72px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.priority-summary strong { font-size: 1.15rem; }
+.priority-summary small { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; }
+.priority-high { background: #1f9d62; color: #fff; }
+.priority-medium { background: #f5b82e; color: #241900; }
+.priority-low { background: #aeb8c4; color: #111820; }
+.priority-unscored { background: var(--mat-sys-surface-container-high); color: var(--mat-sys-on-surface-variant); }
+
+.inspector-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.inspector-tags span {
+  padding: 3px 7px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.7rem;
+}
+.inspector-tags .change-tag {
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 55%, var(--mat-sys-outline-variant));
+  color: var(--mat-sys-primary);
+}
+.inspector-tags .unusual-tag {
+  border-color: color-mix(in srgb, var(--mat-sys-tertiary) 60%, var(--mat-sys-outline-variant));
+  color: var(--mat-sys-tertiary);
+}
+.inspector-header a { justify-self: start; }
+.inspector-loading { display: grid; gap: 7px; color: var(--mat-sys-on-surface-variant); font-size: 0.8rem; }
+
+.inspector-empty {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  padding: 32px;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+.inspector-empty mat-icon {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px;
+  color: var(--mat-sys-primary);
+  font-size: 40px;
+}
+.inspector-empty h2 { color: var(--mat-sys-on-surface); }
+.inspector-empty p:last-child { max-width: 360px; margin-top: 8px; line-height: 1.45; }

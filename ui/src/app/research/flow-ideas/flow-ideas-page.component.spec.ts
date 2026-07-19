@@ -80,6 +80,18 @@ describe('FlowIdeasPageComponent', () => {
           useValue: {
             dates: () => of(datesFixture),
             candidates: () => of(candidatesFixture),
+            history: (symbol: string) => of({
+              schema_version: 'flowpatrol-symbol-history.v1',
+              symbol,
+              rows: [],
+            }),
+            contracts: (tradingDate: string, symbol: string) => of({
+              schema_version: 'flowpatrol-contracts.v1',
+              trading_date: tradingDate,
+              symbol,
+              status: 'ready',
+              rows: [],
+            }),
             watchlists: () => of({
               schema_version: 'research-watchlists.v1',
               flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1',
@@ -100,6 +112,14 @@ describe('FlowIdeasPageComponent', () => {
     expect(page.textContent).toContain('Partial FlowPatrol report');
     expect(page.textContent).toContain('Brokerage context was not requested');
 
+    const rows = page.querySelectorAll<HTMLButtonElement>('.flow-candidate');
+    rows[1].click();
+    fixture.detectChanges();
+
+    expect(page.querySelectorAll('.flow-candidate').length).toBe(2);
+    expect(page.querySelector('.idea-inspector h2')?.textContent).toContain('SPX');
+    expect(rows[1].getAttribute('aria-pressed')).toBe('true');
+
     const component = fixture.componentInstance;
     component.onUniverseChange(false);
     fixture.detectChanges();
@@ -119,6 +139,18 @@ describe('FlowIdeasPageComponent', () => {
           useValue: {
             dates: () => of(datesFixture),
             candidates: () => of(candidatesFixture),
+            history: (symbol: string) => of({
+              schema_version: 'flowpatrol-symbol-history.v1',
+              symbol,
+              rows: [],
+            }),
+            contracts: (tradingDate: string, symbol: string) => of({
+              schema_version: 'flowpatrol-contracts.v1',
+              trading_date: tradingDate,
+              symbol,
+              status: 'ready',
+              rows: [],
+            }),
             watchlists: () => of({
               schema_version: 'research-watchlists.v1',
               flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1',

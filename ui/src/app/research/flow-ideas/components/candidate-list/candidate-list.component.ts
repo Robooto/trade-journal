@@ -33,6 +33,44 @@ export class CandidateListComponent {
     return value == null ? '-' : String(Math.round(value));
   }
 
+  priorityTone(value: number | null): string {
+    if (value == null) return 'priority-unscored';
+    if (value >= 70) return 'priority-high';
+    if (value >= 50) return 'priority-medium';
+    return 'priority-low';
+  }
+
+  priorityLabel(value: number | null): string {
+    if (value == null) return 'unscored';
+    if (value >= 70) return 'high';
+    if (value >= 50) return 'notable';
+    return 'monitor';
+  }
+
+  percentileTone(value: number | null | undefined): string {
+    if (value == null) return 'percentile-muted';
+    if (value >= 90) return 'percentile-upper';
+    if (value <= 10) return 'percentile-lower';
+    return 'percentile-mid';
+  }
+
+  reasonTone(reason: string): string {
+    if (reason.includes('unusual')) return 'tag-unusual';
+    if (reason.includes('spread')) return 'tag-spread';
+    if (reason.includes('premium')) return 'tag-premium';
+    if (reason.includes('warning') || reason.includes('noise')) return 'tag-warning';
+    return '';
+  }
+
+  eventTone(event: string | null): string {
+    return event ? 'event-' + event.toLowerCase().replaceAll('_', '-') : 'event-watching';
+  }
+
+  signedTone(value: number | null | undefined): string {
+    if (value == null || value === 0) return '';
+    return value > 0 ? 'positive' : 'negative';
+  }
+
   formatPercentile(value: number | null | undefined): string {
     return value == null ? '-' : String(Math.round(value));
   }

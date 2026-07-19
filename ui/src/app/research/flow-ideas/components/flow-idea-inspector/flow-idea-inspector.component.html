@@ -1,0 +1,70 @@
+<aside class="idea-inspector" aria-live="polite">
+  @if (candidate; as idea) {
+    <header class="inspector-header">
+      <div class="symbol-heading">
+        <div>
+          <p class="eyebrow">Selected idea</p>
+          <h2>{{ idea.symbol }}</h2>
+        </div>
+        <span class="priority-summary" [ngClass]="priorityTone(idea.research_priority)">
+          <strong>{{ idea.research_priority == null ? '-' : (idea.research_priority | number:'1.0-0') }}</strong>
+          <small>{{ priorityLabel(idea.research_priority) }}</small>
+        </span>
+      </div>
+      <p class="inspector-reason">{{ idea.reason_text || 'FlowPatrol evidence selected.' }}</p>
+      <div class="inspector-tags">
+        <span class="change-tag">{{ idea.change_event || 'watching' }}</span>
+        <span>day {{ idea.watch_day ?? '-' }}</span>
+        <span>streak {{ idea.appearance_streak ?? '-' }}</span>
+        @if (idea.in_unusual) { <span class="unusual-tag">unusual activity</span> }
+      </div>
+      <a mat-flat-button color="primary" [href]="equityHubUrl()" target="_blank" rel="noopener">
+        Research in EquityHub
+        <mat-icon>open_in_new</mat-icon>
+      </a>
+    </header>
+
+    @if (loading()) {
+      <div class="inspector-loading" role="status">
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        <span>Loading {{ idea.symbol }} evidence...</span>
+      </div>
+    }
+
+    <app-brokerage-context
+      [context]="idea.brokerage_context"
+      unavailableMessage="Brokerage context is unavailable for this symbol."
+    ></app-brokerage-context>
+
+    <app-flow-watchlist-control
+      [watchlists]="watchlists"
+      [symbol]="idea.symbol"
+      [context]="idea.brokerage_context"
+      [loading]="watchlistsLoading"
+      [error]="watchlistsError"
+      [adding]="watchlistAdding()"
+      [result]="watchlistResult()"
+      [resultError]="watchlistResultError()"
+      (addRequested)="addToWatchlist($event)"
+    ></app-flow-watchlist-control>
+
+    <app-report-history
+      [history]="history()"
+      [loading]="loading()"
+      [error]="historyError()"
+    ></app-report-history>
+
+    <app-contract-evidence
+      [contracts]="contracts()"
+      [loading]="loading()"
+      [error]="contractsError()"
+    ></app-contract-evidence>
+  } @else {
+    <div class="inspector-empty">
+      <mat-icon>ads_click</mat-icon>
+      <p class="eyebrow">Investigation panel</p>
+      <h2>Choose an idea</h2>
+      <p>Select a queue row to inspect its history, contract evidence, and brokerage context without leaving the list.</p>
+    </div>
+  }
+</aside>
