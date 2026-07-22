@@ -12,18 +12,46 @@ html {
     density: 0,
   ));
 }
-html, body { height: 100%; }
+
+html,
 body {
-  background: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  margin: 0; 
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  height: 100%;
 }
 
-// Sidebar layout fix for production builds
-// Using !important to override component styles that get inlined in production
+body {
+  margin: 0;
+  background: #0d0f13;
+  color: var(--mat-sys-on-surface);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.app-toolbar {
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(16, 18, 23, 0.96) !important;
+  color: var(--mat-sys-on-surface) !important;
+  backdrop-filter: blur(18px);
+}
+
+.toolbar-menu {
+  border: 1px solid transparent;
+}
+
+.toolbar-menu:hover {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.contract-badge {
+  align-items: center;
+  border-left: 1px solid rgba(148, 163, 184, 0.2);
+  padding-left: 12px;
+  color: #d9e5ff;
+}
+
 mat-sidenav-container.full-height {
-  height: 91vh !important;
+  height: calc(100dvh - 64px) !important;
 }
 
 mat-sidenav-content {
@@ -32,10 +60,17 @@ mat-sidenav-content {
   transition: margin-left 0.3s ease !important;
 }
 
+.app-frame,
+.app-content {
+  background: #0d0f13 !important;
+}
+
 .app-sidenav {
-  width: 200px !important;
-  min-width: 200px !important;
-  max-width: 200px !important;
+  width: 216px !important;
+  min-width: 216px !important;
+  max-width: 216px !important;
+  border-right: 1px solid rgba(148, 163, 184, 0.12) !important;
+  background: #101217 !important;
   transition: width 0.3s ease !important;
 }
 
@@ -53,7 +88,38 @@ mat-sidenav-content {
   display: none !important;
 }
 
-/* Highlight active sidebar link */
+.app-nav .mat-mdc-list-item {
+  position: relative;
+  margin-bottom: 5px;
+  border-radius: 10px;
+}
+
+.app-nav .mat-mdc-list-item:hover {
+  background: rgba(148, 163, 184, 0.07) !important;
+}
+
 a.active-link {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background: linear-gradient(90deg, rgba(112, 156, 255, 0.2), rgba(112, 156, 255, 0.08)) !important;
+  color: #dbe7ff !important;
+}
+
+a.active-link::before {
+  position: absolute;
+  inset: 9px auto 9px 0;
+  width: 3px;
+  border-radius: 999px;
+  background: #8bb1ff;
+  content: "";
+}
+
+@media (max-width: 760px) {
+  .app-sidenav {
+    width: 64px !important;
+    min-width: 64px !important;
+    max-width: 64px !important;
+  }
+
+  .app-sidenav .mat-mdc-list-item-text {
+    display: none !important;
+  }
 }

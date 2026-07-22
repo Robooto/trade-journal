@@ -1,6 +1,13 @@
 :host { display: block; }
-.upload-control { display: grid; gap: 5px; min-width: 240px; }
-label { display: grid; gap: 3px; color: var(--mat-sys-on-surface-variant); font-size: .75rem; }
-input { max-width: 270px; color: var(--mat-sys-on-surface); }
-.status { margin: 0; color: var(--mat-sys-primary); font-size: .78rem; }
+.upload-control { display: grid; gap: 9px; min-width: 0; }
+label { display: grid; gap: 5px; color: var(--mat-sys-on-surface-variant); font-size: 0.7rem; }
+label > span { font-weight: 750; text-transform: uppercase; letter-spacing: 0.06em; }
+input {
+  width: 100%;
+  min-width: 0;
+  color: var(--mat-sys-on-surface);
+  font-size: 0.75rem;
+}
+button { width: 100%; }
+.status { margin: 0; color: #8bb1ff; font-size: 0.74rem; line-height: 1.35; }
 .status.error { color: var(--mat-sys-error); }

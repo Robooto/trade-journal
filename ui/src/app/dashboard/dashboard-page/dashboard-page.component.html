@@ -1,14 +1,20 @@
-<div class="morning-page">
+<main class="morning-page mx-auto grid w-full max-w-[1800px] gap-6 px-5 py-6 lg:px-8 lg:py-8">
   <header class="morning-header">
-    <div>
+    <div class="max-w-3xl">
       <p class="eyebrow">Morning workflow</p>
-      <h1>Start with context. Capture the plan.</h1>
-      <p>Open the research you use every morning, then move directly into your journal.</p>
+      <h1 class="text-3xl font-semibold tracking-[-0.03em] lg:text-4xl">Start with context. Capture the plan.</h1>
+      <p>Move through research, write the morning thesis, then check portfolio risk.</p>
     </div>
-    <a mat-flat-button color="primary" routerLink="/journal">
-      <mat-icon>edit_note</mat-icon>
-      Open journal
-    </a>
+    <div class="quick-actions">
+      <a mat-stroked-button routerLink="/research/flow-ideas">
+        <mat-icon>travel_explore</mat-icon>
+        Review Flow Ideas
+      </a>
+      <a mat-flat-button color="primary" routerLink="/journal">
+        <mat-icon>edit_note</mat-icon>
+        Open journal
+      </a>
+    </div>
   </header>
 
   <section class="workflow-grid">
@@ -19,42 +25,54 @@
           <p class="eyebrow">Get oriented</p>
           <h2>Morning research</h2>
         </div>
+        <a mat-button routerLink="/research/flow-ideas" class="ml-auto">
+          Flow Ideas
+          <mat-icon>arrow_forward</mat-icon>
+        </a>
       </div>
 
-      <div class="resource-group">
-        <div class="resource-heading">
-          <h3>Daily overview</h3>
-          <button mat-stroked-button type="button" (click)="openAll(dailyOverview)">
-            <mat-icon>open_in_new</mat-icon>
-            Open all
-          </button>
-        </div>
-        <div class="resource-links">
-          @for (resource of dailyOverview; track resource) {
-            <a [href]="resource.url" target="_blank" rel="noopener">
-              <span>{{ resource.name }}</span>
-              <mat-icon>north_east</mat-icon>
-            </a>
-          }
-        </div>
-      </div>
+      <div class="resource-columns">
+        <section class="resource-group">
+          <div class="resource-heading">
+            <div>
+              <span class="resource-kicker">Market context</span>
+              <h3>Daily overview</h3>
+            </div>
+            <button mat-stroked-button type="button" (click)="openAll(dailyOverview)">
+              <mat-icon>open_in_new</mat-icon>
+              Open all
+            </button>
+          </div>
+          <div class="resource-links">
+            @for (resource of dailyOverview; track resource) {
+              <a [href]="resource.url" target="_blank" rel="noopener">
+                <span>{{ resource.name }}</span>
+                <mat-icon>north_east</mat-icon>
+              </a>
+            }
+          </div>
+        </section>
 
-      <div class="resource-group">
-        <div class="resource-heading">
-          <h3>SpotGamma tools</h3>
-          <button mat-stroked-button type="button" (click)="openAll(spotGammaTools)">
-            <mat-icon>open_in_new</mat-icon>
-            Open all
-          </button>
-        </div>
-        <div class="resource-links">
-          @for (resource of spotGammaTools; track resource) {
-            <a [href]="resource.url" target="_blank" rel="noopener">
-              <span>{{ resource.name }}</span>
-              <mat-icon>north_east</mat-icon>
-            </a>
-          }
-        </div>
+        <section class="resource-group">
+          <div class="resource-heading">
+            <div>
+              <span class="resource-kicker">Options research</span>
+              <h3>SpotGamma tools</h3>
+            </div>
+            <button mat-stroked-button type="button" (click)="openAll(spotGammaTools)">
+              <mat-icon>open_in_new</mat-icon>
+              Open all
+            </button>
+          </div>
+          <div class="resource-links">
+            @for (resource of spotGammaTools; track resource) {
+              <a [href]="resource.url" target="_blank" rel="noopener">
+                <span>{{ resource.name }}</span>
+                <mat-icon>north_east</mat-icon>
+              </a>
+            }
+          </div>
+        </section>
       </div>
     </article>
 
@@ -67,8 +85,8 @@
             <h2>Write the journal</h2>
           </div>
         </div>
-        <p>Capture what you see, your directional lean, important levels and what would change your mind.</p>
-        <a mat-flat-button color="primary" routerLink="/journal" [queryParams]="{ new: 1 }">Start today's entry</a>
+        <p>Record the directional lean, important levels, and what would change your mind.</p>
+        <a mat-flat-button color="primary" routerLink="/journal" [queryParams]="{ new: 1 }">Start today’s entry</a>
         @if (recentEntries.length) {
           <div class="recent-journal">
             <span class="recent-label">Recent entries</span>
@@ -76,9 +94,7 @@
               <a routerLink="/journal" class="recent-entry">
                 <span>
                   <strong>{{ entry.date | date:'mediumDate' }}</strong>
-                  @if (entry.tickers?.length) {
-                    <small>{{ entry.tickers?.join(', ') }}</small>
-                  }
+                  @if (entry.tickers?.length) { <small>{{ entry.tickers?.join(', ') }}</small> }
                 </span>
                 <mat-icon>chevron_right</mat-icon>
               </a>
@@ -95,7 +111,7 @@
             <h2>Review positions</h2>
           </div>
         </div>
-        <p>Check buying power, portfolio Greeks and any positions crossing a management threshold.</p>
+        <p>Check buying power, portfolio Greeks, and positions crossing a management threshold.</p>
         <a mat-stroked-button routerLink="/positions">Review positions</a>
       </article>
     </div>
@@ -103,6 +119,7 @@
 
   <section class="guideline-grid">
     <article class="guideline-card">
+      <p class="eyebrow">Before the open</p>
       <h2>Daily checklist</h2>
       <ul>
         @for (rule of dailyGuidelines; track rule) {
@@ -111,6 +128,7 @@
       </ul>
     </article>
     <article class="guideline-card">
+      <p class="eyebrow">Always</p>
       <h2>Trading guardrails</h2>
       <ul>
         @for (rule of tradeGuidelines; track rule) {
@@ -119,4 +137,4 @@
       </ul>
     </article>
   </section>
-</div>
+</main>

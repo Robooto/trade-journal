@@ -1,22 +1,18 @@
 <section class="flow-metrics" aria-label="Visible Flow Ideas metrics">
   <article class="flow-metric">
-    <span>Active ideas</span>
-    <strong>{{ metrics.active }}</strong>
-    <small>visible research queue</small>
+    <span class="metric-icon"><mat-icon>radar</mat-icon></span>
+    <div><span>Active ideas</span><strong>{{ metrics.active }}</strong><small>visible research queue</small></div>
   </article>
   <article class="flow-metric">
-    <span>Persistent</span>
-    <strong>{{ metrics.persistent }}</strong>
-    <small>2+ consecutive reports</small>
+    <span class="metric-icon persistent"><mat-icon>repeat</mat-icon></span>
+    <div><span>Persistent</span><strong>{{ metrics.persistent }}</strong><small>2+ consecutive reports</small></div>
   </article>
   <article class="flow-metric">
-    <span>Unusual overlap</span>
-    <strong>{{ metrics.unusual }}</strong>
-    <small>unusual-position evidence</small>
+    <span class="metric-icon unusual"><mat-icon>bolt</mat-icon></span>
+    <div><span>Unusual overlap</span><strong>{{ metrics.unusual }}</strong><small>unusual-position evidence</small></div>
   </article>
   <article class="flow-metric">
-    <span>Changed today</span>
-    <strong>{{ metrics.changed }}</strong>
-    <small>return, reversal, or strength</small>
+    <span class="metric-icon changed"><mat-icon>change_circle</mat-icon></span>
+    <div><span>Changed today</span><strong>{{ metrics.changed }}</strong><small>return, reversal, or strength</small></div>
   </article>
 </section>

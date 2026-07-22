@@ -1,88 +1,70 @@
 <section class="flow-filter-panel" aria-label="Flow Ideas filters">
-  <label class="flow-field">
-    <span>Report</span>
-    <select
-      [value]="serverFilters.tradingDate"
-      (change)="dateChange.emit($any($event.target).value)"
-      [disabled]="datesLoading"
-    >
-      @if (!dates.length && !datesLoading) {
-        <option value="">No reports loaded</option>
-      }
-      @for (date of dates; track trackDate($index, date)) {
-        <option [value]="date.trading_date">
-          {{ date.trading_date }} - {{ date.status }}
-        </option>
-      }
-    </select>
-  </label>
+  <div class="filter-group primary-filter-group">
+    <div class="filter-group-heading">
+      <mat-icon>tune</mat-icon>
+      <div><strong>Find ideas</strong><span>Report, symbol, and change state</span></div>
+    </div>
+    <div class="filter-grid primary-filter-grid">
+      <label class="flow-field">
+        <span>Report</span>
+        <select [value]="serverFilters.tradingDate" (change)="dateChange.emit($any($event.target).value)" [disabled]="datesLoading">
+          @if (!dates.length && !datesLoading) { <option value="">No reports loaded</option> }
+          @for (date of dates; track trackDate($index, date)) {
+            <option [value]="date.trading_date">{{ date.trading_date }} - {{ date.status }}</option>
+          }
+        </select>
+      </label>
 
-  <label class="flow-field flow-symbol-field">
-    <span>Symbol</span>
-    <input
-      type="search"
-      [value]="symbolValue"
-      (input)="onSymbolInput($event)"
-      placeholder="AAPL"
-      autocomplete="off"
-    />
-  </label>
+      <label class="flow-field flow-symbol-field">
+        <span>Symbol</span>
+        <input type="search" [value]="symbolValue" (input)="onSymbolInput($event)" placeholder="Search ticker" autocomplete="off" />
+      </label>
 
-  <label class="flow-field">
-    <span>Change</span>
-    <select
-      [value]="serverFilters.event"
-      (change)="eventChange.emit($any($event.target).value)"
-    >
-      @for (option of eventOptions; track option.value) {
-        <option [value]="option.value">{{ option.label }}</option>
-      }
-    </select>
-  </label>
+      <label class="flow-field">
+        <span>Change</span>
+        <select [value]="serverFilters.event" (change)="eventChange.emit($any($event.target).value)">
+          @for (option of eventOptions; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
+        </select>
+      </label>
+    </div>
+  </div>
 
-  <label class="flow-check">
-    <input
-      type="checkbox"
-      [checked]="serverFilters.activeOnly"
-      (change)="activeOnlyChange.emit($any($event.target).checked)"
-    />
-    <span>Active watch only</span>
-  </label>
+  <div class="filter-group scope-filter-group">
+    <div class="filter-group-heading">
+      <mat-icon>filter_alt</mat-icon>
+      <div><strong>Research scope</strong><span>Universe and brokerage context</span></div>
+    </div>
+    <div class="filter-grid scope-filter-grid">
+      <label class="flow-check">
+        <input type="checkbox" [checked]="serverFilters.activeOnly" (change)="activeOnlyChange.emit($any($event.target).checked)" />
+        <span><strong>Active watch</strong><small>Current 5-day window</small></span>
+      </label>
 
-  <label class="flow-check">
-    <input
-      type="checkbox"
-      [checked]="includeIndexEtfs"
-      (change)="universeChange.emit($any($event.target).checked)"
-    />
-    <span>Show broad indexes/ETFs</span>
-  </label>
+      <label class="flow-check">
+        <input type="checkbox" [checked]="includeIndexEtfs" (change)="universeChange.emit($any($event.target).checked)" />
+        <span><strong>Indexes and ETFs</strong><small>Include broad products</small></span>
+      </label>
 
-  <label class="flow-field">
-    <span>Research list</span>
-    <select
-      [value]="watchlistFilter"
-      [disabled]="watchlistsLoading"
-      (change)="watchlistChange.emit($any($event.target).value)"
-    >
-      <option value="all">All ideas</option>
-      <option value="any">On any watchlist</option>
-      <option value="none">Not on a watchlist</option>
-      @for (watchlist of watchlists; track watchlist.name) {
-        <option [value]="'list:' + watchlist.name">{{ watchlist.name }}</option>
-      }
-    </select>
-  </label>
+      <label class="flow-field">
+        <span>Watchlist</span>
+        <select [value]="watchlistFilter" [disabled]="watchlistsLoading" (change)="watchlistChange.emit($any($event.target).value)">
+          <option value="all">All ideas</option>
+          <option value="any">On any watchlist</option>
+          <option value="none">Not on a watchlist</option>
+          @for (watchlist of watchlists; track watchlist.name) {
+            <option [value]="'list:' + watchlist.name">{{ watchlist.name }}</option>
+          }
+        </select>
+      </label>
 
-  <label class="flow-field">
-    <span>Portfolio</span>
-    <select
-      [value]="portfolioFilter"
-      (change)="portfolioChange.emit($any($event.target).value)"
-    >
-      <option value="all">All exposure</option>
-      <option value="held">Currently held</option>
-      <option value="not-held">Not currently held</option>
-    </select>
-  </label>
+      <label class="flow-field">
+        <span>Portfolio</span>
+        <select [value]="portfolioFilter" (change)="portfolioChange.emit($any($event.target).value)">
+          <option value="all">All exposure</option>
+          <option value="held">Currently held</option>
+          <option value="not-held">Not currently held</option>
+        </select>
+      </label>
+    </div>
+  </div>
 </section>

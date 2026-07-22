@@ -1,6 +1,4 @@
-:host {
-  display: block;
-}
+:host { display: block; }
 
 .flow-metrics {
   display: grid;
@@ -9,33 +7,58 @@
 }
 
 .flow-metric {
-  display: grid;
-  gap: 4px;
-  padding: 15px;
-  border: 1px solid var(--mat-sys-outline-variant);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-width: 0;
+  padding: 15px 17px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 14px;
-  background: var(--mat-sys-surface-container-low);
-  box-shadow: var(--mat-sys-level-1);
+  background: rgba(27, 30, 37, 0.82);
+}
+
+.flow-metric > div {
+  display: grid;
+  min-width: 0;
+  gap: 1px;
 }
 
 .flow-metric span,
 .flow-metric small {
   color: var(--mat-sys-on-surface-variant);
-  font-size: 0.76rem;
+  font-size: 0.72rem;
 }
 
 .flow-metric strong {
-  font-size: 1.75rem;
+  font-size: 1.65rem;
+  line-height: 1.15;
 }
 
-@media (max-width: 780px) {
-  .flow-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.metric-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 11px;
+  background: rgba(139, 177, 255, 0.13);
+  color: #8bb1ff;
 }
 
-@media (max-width: 620px) {
-  .flow-metrics {
-    grid-template-columns: 1fr;
-  }
+.metric-icon mat-icon {
+  width: 20px;
+  height: 20px;
+  font-size: 20px;
+}
+
+.metric-icon.persistent { background: rgba(85, 214, 147, 0.12); color: #55d693; }
+.metric-icon.unusual { background: rgba(210, 155, 236, 0.12); color: #d29bec; }
+.metric-icon.changed { background: rgba(245, 184, 46, 0.12); color: #f5b82e; }
+
+@media (max-width: 980px) {
+  .flow-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .flow-metrics { grid-template-columns: 1fr; }
 }

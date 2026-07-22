@@ -1,76 +1,158 @@
-:host {
-  display: block;
-}
+:host { display: block; min-width: 0; }
 
 .flow-filter-panel {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: minmax(360px, 0.9fr) minmax(560px, 1.35fr);
+  gap: 14px;
+  height: 100%;
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(31, 35, 43, 0.96), rgba(21, 24, 30, 0.96));
+  box-sizing: border-box;
+}
+
+.filter-group {
+  display: grid;
+  align-content: start;
   gap: 12px;
-  padding: 14px;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: 14px;
-  background: var(--mat-sys-surface-container-low);
-  box-shadow: var(--mat-sys-level-1);
+  min-width: 0;
+}
+
+.filter-group + .filter-group {
+  border-left: 1px solid rgba(148, 163, 184, 0.14);
+  padding-left: 16px;
+}
+
+.filter-group-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.filter-group-heading mat-icon {
+  width: 19px;
+  height: 19px;
+  color: #8bb1ff;
+  font-size: 19px;
+}
+
+.filter-group-heading div {
+  display: grid;
+  gap: 2px;
+}
+
+.filter-group-heading strong {
+  font-size: 0.84rem;
+}
+
+.filter-group-heading span {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.68rem;
+}
+
+.filter-grid {
+  display: grid;
+  gap: 10px;
+  align-items: end;
+}
+
+.primary-filter-grid {
+  grid-template-columns: minmax(170px, 1fr) minmax(130px, 0.8fr) minmax(140px, 0.85fr);
+}
+
+.scope-filter-grid {
+  grid-template-columns: minmax(150px, 0.9fr) minmax(170px, 1fr) minmax(155px, 0.9fr) minmax(145px, 0.85fr);
 }
 
 .flow-field {
   display: grid;
-  min-width: 150px;
+  min-width: 0;
   gap: 5px;
 }
 
-.flow-field span,
-.flow-check {
+.flow-field > span {
   color: var(--mat-sys-on-surface-variant);
-  font-size: 0.76rem;
-}
-
-.flow-field span {
-  font-weight: 700;
-  letter-spacing: 0.04em;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .flow-field input,
 .flow-field select {
-  min-height: 40px;
-  border: 1px solid var(--mat-sys-outline);
-  border-radius: 8px;
-  padding: 0 10px;
-  background: var(--mat-sys-surface);
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 9px;
+  padding: 0 11px;
+  background: rgba(10, 12, 16, 0.38);
   color: var(--mat-sys-on-surface);
+  box-sizing: border-box;
   font: inherit;
 }
 
-.flow-symbol-field {
-  min-width: 190px;
+.flow-field input:focus,
+.flow-field select:focus {
+  border-color: #8bb1ff;
+  outline: 2px solid rgba(139, 177, 255, 0.12);
 }
 
 .flow-check {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 7px;
-  min-height: 40px;
-  padding: 0 4px;
+  gap: 9px;
+  min-height: 43px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--mat-sys-on-surface-variant);
   cursor: pointer;
 }
 
-.flow-check input {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--mat-sys-primary);
+.flow-check:hover {
+  border-color: rgba(148, 163, 184, 0.18);
+  background: rgba(148, 163, 184, 0.05);
 }
 
-@media (max-width: 620px) {
+.flow-check input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: #8bb1ff;
+}
+
+.flow-check span {
+  display: grid;
+  gap: 1px;
+}
+
+.flow-check strong {
+  color: var(--mat-sys-on-surface);
+  font-size: 0.76rem;
+}
+
+.flow-check small {
+  font-size: 0.65rem;
+}
+
+@media (max-width: 1500px) {
   .flow-filter-panel {
-    align-items: stretch;
-    display: grid;
     grid-template-columns: 1fr;
   }
 
-  .flow-field,
-  .flow-symbol-field {
-    width: 100%;
-    min-width: 0;
+  .filter-group + .filter-group {
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    border-left: 0;
+    padding-top: 14px;
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 800px) {
+  .primary-filter-grid,
+  .scope-filter-grid {
+    grid-template-columns: 1fr;
   }
 }

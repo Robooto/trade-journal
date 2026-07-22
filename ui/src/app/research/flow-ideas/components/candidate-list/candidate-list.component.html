@@ -3,14 +3,15 @@
     <div>
       <p class="eyebrow">Ranked candidates</p>
       <h2>Research queue</h2>
+      <span class="queue-helper">Select a row to keep the queue visible while you inspect the evidence.</span>
     </div>
-    <div class="queue-key" aria-label="Priority color key">
-      <span class="key-high">70+ high</span>
-      <span class="key-medium">50â€“69 notable</span>
-      <span class="key-low">&lt;50 monitor</span>
-      @if (total !== null) {
-        <strong class="flow-count">{{ candidates.length }} of {{ total }}</strong>
-      }
+    <div class="queue-summary">
+      <div class="queue-key" aria-label="Priority color key">
+        <span class="key-high">70+ high</span>
+        <span class="key-medium">50-69 notable</span>
+        <span class="key-low">Below 50 monitor</span>
+      </div>
+      @if (total !== null) { <strong class="flow-count">{{ candidates.length }} of {{ total }}</strong> }
     </div>
   </div>
 
@@ -24,11 +25,9 @@
   } @else {
     <div class="flow-column-headings" aria-hidden="true">
       <span>Symbol</span>
-      <span>Priority</span>
-      <span>Why it surfaced</span>
-      <span>Change</span>
-      <span>Flow extremes</span>
-      <span>Market context</span>
+      <span>Rank</span>
+      <span>Signal and flow evidence</span>
+      <span>Brokerage context</span>
     </div>
     <div class="flow-candidate-list">
       @for (candidate of candidates; track trackCandidate($index, candidate)) {
@@ -46,33 +45,38 @@
             <strong>{{ candidate.symbol }}</strong>
             <small>{{ candidate.sector || candidate.asset_type.replaceAll('_', ' ') }}</small>
           </span>
+
           <span class="candidate-priority" [ngClass]="priorityTone(candidate.research_priority)">
             <strong>{{ formatPriority(candidate.research_priority) }}</strong>
             <small>{{ priorityLabel(candidate.research_priority) }}</small>
           </span>
-          <span class="candidate-reason">
-            <strong>{{ candidate.reason_text || 'Active watch' }}</strong>
+
+          <span class="candidate-signal">
+            <strong class="signal-headline">{{ candidate.reason_text || 'Active watch' }}</strong>
+            <span class="signal-evidence">
+              <span class="candidate-change" [ngClass]="eventTone(candidate.change_event)">
+                {{ candidate.change_event || 'watching' }}
+              </span>
+              <small>day {{ candidate.watch_day ?? '-' }} / streak {{ candidate.appearance_streak ?? '-' }}</small>
+              <span class="candidate-percentiles" aria-label="Delta, gamma, and vega percentiles">
+                <span [ngClass]="percentileTone(candidate.delta_percentile)"><small>Delta</small><strong>{{ formatPercentile(candidate.delta_percentile) }}</strong></span>
+                <span [ngClass]="percentileTone(candidate.gamma_percentile)"><small>Gamma</small><strong>{{ formatPercentile(candidate.gamma_percentile) }}</strong></span>
+                <span [ngClass]="percentileTone(candidate.vega_percentile)"><small>Vega</small><strong>{{ formatPercentile(candidate.vega_percentile) }}</strong></span>
+              </span>
+            </span>
             <span class="candidate-tags">
-              @for (reason of candidate.reason_codes.slice(0, 3); track reason) {
+              @for (reason of candidate.reason_codes.slice(0, 4); track reason) {
                 <span [ngClass]="reasonTone(reason)">{{ reason.replaceAll('_', ' ') }}</span>
               }
             </span>
           </span>
-          <span class="candidate-change" [ngClass]="eventTone(candidate.change_event)">
-            <strong>{{ candidate.change_event || 'watching' }}</strong>
-            <small>day {{ candidate.watch_day ?? '-' }} Â· streak {{ candidate.appearance_streak ?? '-' }}</small>
-          </span>
-          <span class="candidate-percentiles" aria-label="Delta, gamma, and vega percentiles">
-            <span [ngClass]="percentileTone(candidate.delta_percentile)"><small>Î”</small><strong>{{ formatPercentile(candidate.delta_percentile) }}</strong></span>
-            <span [ngClass]="percentileTone(candidate.gamma_percentile)"><small>Î“</small><strong>{{ formatPercentile(candidate.gamma_percentile) }}</strong></span>
-            <span [ngClass]="percentileTone(candidate.vega_percentile)"><small>V</small><strong>{{ formatPercentile(candidate.vega_percentile) }}</strong></span>
-          </span>
+
           <span class="candidate-brokerage">
             @if (candidate.brokerage_context; as context) {
-              <strong>{{ formatMoney(context.price.mark) }} Â· IVR {{ formatNumber(context.volatility.iv_rank_percent) }}</strong>
+              <strong>{{ formatMoney(context.price.mark) }} <span>/ IVR {{ formatNumber(context.volatility.iv_rank_percent) }}</span></strong>
               <small>
-                5d <span [ngClass]="signedTone(context.price.five_session_change_percent)">{{ formatSigned(context.price.five_session_change_percent, '%') }}</span>
-                Â· IVR <span [ngClass]="signedTone(context.volatility.iv_rank_5_day_change_percent)">{{ formatSigned(context.volatility.iv_rank_5_day_change_percent, ' pts') }}</span>
+                Price 5d <span [ngClass]="signedTone(context.price.five_session_change_percent)">{{ formatSigned(context.price.five_session_change_percent, '%') }}</span>
+                / IVR <span [ngClass]="signedTone(context.volatility.iv_rank_5_day_change_percent)">{{ formatSigned(context.volatility.iv_rank_5_day_change_percent, ' pts') }}</span>
               </small>
               <span class="candidate-context-tags">
                 @if (context.watchlists.length) { <span>watchlist</span> }
@@ -80,9 +84,10 @@
                 @if (context.earnings.earnings_date) { <span>earnings {{ context.earnings.earnings_date | date:'MMM d' }}</span> }
               </span>
             } @else {
-              <small>Context unavailable</small>
+              <small>Brokerage context unavailable</small>
             }
           </span>
+
           <mat-icon class="row-arrow" aria-hidden="true">chevron_right</mat-icon>
         </button>
       }

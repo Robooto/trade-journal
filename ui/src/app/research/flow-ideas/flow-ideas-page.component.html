@@ -1,74 +1,76 @@
-<main class="research-page" aria-labelledby="flow-ideas-title">
+<main class="research-page mx-auto grid w-full max-w-[1920px] gap-5 px-5 py-6 lg:px-8 lg:py-8" aria-labelledby="flow-ideas-title">
   <header class="research-header">
-    <div>
+    <div class="max-w-3xl">
       <p class="eyebrow">Research workspace</p>
-      <h1 id="flow-ideas-title">Flow Ideas</h1>
+      <h1 id="flow-ideas-title" class="text-3xl font-semibold tracking-[-0.03em] lg:text-4xl">Flow Ideas</h1>
       <p class="research-intro">
-        Interesting options-flow evidence for research, not a trade probability
-        or recommendation.
+        Find options-flow worth investigating, understand why it surfaced, and follow the evidence without losing the queue.
       </p>
     </div>
 
     <div class="research-actions">
-      <app-flow-report-upload
-        [state]="uploadState"
-        [message]="uploadMessage"
-        (reportUpload)="onReportUpload($event)"
-      ></app-flow-report-upload>
-      <a mat-stroked-button [href]="traceUrl" target="_blank" rel="noopener"
-        aria-describedby="trace-on-mini-description">
+      <a mat-stroked-button [href]="traceUrl" target="_blank" rel="noopener" aria-describedby="trace-on-mini-description">
         <mat-icon>open_in_new</mat-icon>
         Trace on mini
       </a>
       <button mat-flat-button color="primary" type="button" (click)="refresh()">
         <mat-icon>refresh</mat-icon>
-        Refresh
+        Refresh data
       </button>
     </div>
   </header>
 
-  <p class="sr-only" id="trace-on-mini-description">
-    Opens the existing Trace dashboard on the mini in a new tab.
-  </p>
+  <p class="sr-only" id="trace-on-mini-description">Opens the existing Trace dashboard on the mini in a new tab.</p>
 
-  <app-flow-filters
-    [serverFilters]="facade.serverFilters()"
-    [includeIndexEtfs]="facade.displayFilters().includeIndexEtfs"
-    [watchlistFilter]="facade.displayFilters().watchlist"
-    [portfolioFilter]="facade.displayFilters().portfolio"
-    [watchlists]="facade.watchlists()?.watchlists ?? []"
-    [watchlistsLoading]="facade.watchlistsLoading()"
-    [dates]="facade.dates()"
-    [datesLoading]="facade.datesLoading()"
-    [eventOptions]="eventOptions"
-    (dateChange)="onDateChange($event)"
-    (symbolInput)="onSymbolInput($event)"
-    (eventChange)="onEventChange($event)"
-    (activeOnlyChange)="onActiveOnlyChange($event)"
-    (universeChange)="onUniverseChange($event)"
-    (watchlistChange)="onWatchlistChange($event)"
-    (portfolioChange)="onPortfolioChange($event)"
-  ></app-flow-filters>
+  <section class="research-control-deck" aria-label="Flow Ideas controls">
+    <app-flow-filters
+      [serverFilters]="facade.serverFilters()"
+      [includeIndexEtfs]="facade.displayFilters().includeIndexEtfs"
+      [watchlistFilter]="facade.displayFilters().watchlist"
+      [portfolioFilter]="facade.displayFilters().portfolio"
+      [watchlists]="facade.watchlists()?.watchlists ?? []"
+      [watchlistsLoading]="facade.watchlistsLoading()"
+      [dates]="facade.dates()"
+      [datesLoading]="facade.datesLoading()"
+      [eventOptions]="eventOptions"
+      (dateChange)="onDateChange($event)"
+      (symbolInput)="onSymbolInput($event)"
+      (eventChange)="onEventChange($event)"
+      (activeOnlyChange)="onActiveOnlyChange($event)"
+      (universeChange)="onUniverseChange($event)"
+      (watchlistChange)="onWatchlistChange($event)"
+      (portfolioChange)="onPortfolioChange($event)"
+    ></app-flow-filters>
+
+    <div class="report-command">
+      <div class="report-command-heading">
+        <mat-icon>upload_file</mat-icon>
+        <div>
+          <strong>Add FlowPatrol report</strong>
+          <span>PDF is processed on the research mini.</span>
+        </div>
+      </div>
+      <app-flow-report-upload
+        [state]="uploadState"
+        [message]="uploadMessage"
+        (reportUpload)="onReportUpload($event)"
+      ></app-flow-report-upload>
+    </div>
+  </section>
 
   @if (facade.datesError(); as error) {
     <section class="flow-state flow-state-error" role="alert">
       <mat-icon aria-hidden="true">cloud_off</mat-icon>
-      <div>
-        <strong>Research service unavailable</strong>
-        <p>{{ error }} Journal and positions remain available.</p>
-      </div>
+      <div><strong>Research service unavailable</strong><p>{{ error }} Journal and positions remain available.</p></div>
     </section>
   }
 
   @if (facade.candidateResponse()?.status === 'partial') {
     <section class="flow-state flow-state-warning" role="status">
-      <mat-icon aria-hidden="true">warning</mat-icon>
+      <mat-icon aria-hidden="true">warning_amber</mat-icon>
       <div>
         <strong>Partial FlowPatrol report</strong>
-        <p>
-          Some source quality checks blocked scoring. Evidence remains useful
-          for research, but it should be reviewed with that context.
-        </p>
+        <p>Some source quality checks blocked scoring. The accepted evidence remains available for research.</p>
       </div>
     </section>
   }
@@ -76,32 +78,17 @@
   @if (facade.candidatesError(); as error) {
     <section class="flow-state flow-state-error" role="alert">
       <mat-icon aria-hidden="true">cloud_off</mat-icon>
-      <div>
-        <strong>Flow Ideas are unavailable</strong>
-        <p>{{ error }} This does not affect journal or position data.</p>
-      </div>
+      <div><strong>Flow Ideas are unavailable</strong><p>{{ error }} This does not affect journal or position data.</p></div>
     </section>
   }
 
   @if (facade.brokerageEnrichment(); as context) {
     @if (context.status !== 'ready') {
-      <section
-        class="flow-enrichment-status"
-        [class.flow-enrichment-warning]="context.status === 'partial'"
-        [class.flow-enrichment-muted]="context.status !== 'partial'"
-        role="status"
-      >
-        <mat-icon aria-hidden="true">
-          {{ context.status === 'partial' ? 'info' : 'cloud_off' }}
-        </mat-icon>
+      <section class="flow-enrichment-status" [class.flow-enrichment-warning]="context.status === 'partial'" [class.flow-enrichment-muted]="context.status !== 'partial'" role="status">
+        <mat-icon aria-hidden="true">{{ context.status === 'partial' ? 'info' : 'cloud_off' }}</mat-icon>
         <div>
           <strong>{{ brokerageStatusTitle(context.status) }}</strong>
-          <p>
-            {{ brokerageStatusMessage(context) }}
-            @if (context.warnings.length) {
-              {{ context.warnings.join(' ') }}
-            }
-          </p>
+          <p>{{ brokerageStatusMessage(context) }} @if (context.warnings.length) { {{ context.warnings.join(' ') }} }</p>
         </div>
       </section>
     }
@@ -110,10 +97,7 @@
   @if (facade.candidateResponse()?.status === 'missing') {
     <section class="flow-state flow-state-muted" role="status">
       <mat-icon aria-hidden="true">event_busy</mat-icon>
-      <div>
-        <strong>No report for this date</strong>
-        <p>Choose another report date or add this report when uploads are enabled.</p>
-      </div>
+      <div><strong>No report for this date</strong><p>Choose another report date or upload the missing report.</p></div>
     </section>
   }
 

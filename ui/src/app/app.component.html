@@ -1,26 +1,23 @@
-<mat-toolbar color="primary">
-  <button mat-icon-button (click)="toggleSidebar()">
+<mat-toolbar class="app-toolbar sticky top-0 z-50 !h-16 !px-3 sm:!px-5">
+  <button mat-icon-button (click)="toggleSidebar()" class="toolbar-menu" aria-label="Toggle navigation">
     <mat-icon>menu</mat-icon>
   </button>
-  <span>Robin's Roost</span>
-  <span class="ml-4 font-bold" matTooltip="Current ES contract">{{ currentContract }}</span>
-  <div class="ml-6 inline-flex items-center gap-2">
+  <div class="ml-1 flex min-w-0 items-center gap-2 sm:gap-3">
+    <span class="truncate text-base font-semibold tracking-[-0.01em] sm:text-lg">Robin's Roost</span>
+    <span class="contract-badge hidden font-bold sm:inline-flex" matTooltip="Current ES contract">{{ currentContract }}</span>
+  </div>
+  <div class="ml-3 inline-flex items-center gap-1.5 sm:ml-5 sm:gap-2">
     @if (pivot$ | async; as pivot) {
       <div
-        class="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,152,0,0.45)] bg-[rgba(255,152,0,0.2)] px-3 py-1 font-semibold text-[#ffb74d]"
+        class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-300 sm:px-3"
         matTooltip="Latest SpotGamma pivot"
-        >
+      >
         <mat-icon class="h-[18px] w-[18px] text-[18px]">warning</mat-icon>
-        <span class="text-xs uppercase tracking-[0.05em]">{{ pivot.index }}</span>
-        <span class="text-[1.1rem]">{{ pivot.price | number:'1.2-2' }}</span>
-        <span class="text-[0.85rem] opacity-90">{{ pivot.date | date:'MMM d' }}</span>
+        <span class="text-[0.65rem] uppercase tracking-[0.08em]">{{ pivot.index }}</span>
+        <span class="text-sm sm:text-base">{{ pivot.price | number:'1.2-2' }}</span>
+        <span class="hidden text-xs opacity-80 md:inline">{{ pivot.date | date:'MMM d' }}</span>
       </div>
-      <button
-        mat-icon-button
-        color="warn"
-        [routerLink]="['/pivot-tracker']"
-        matTooltip="Update pivot level"
-        >
+      <button mat-icon-button color="warn" [routerLink]="['/pivot-tracker']" matTooltip="Update pivot level">
         <mat-icon>edit</mat-icon>
       </button>
     } @else {
@@ -31,56 +28,44 @@
     }
   </div>
   <span class="flex-1"></span>
-  <img src="assets/robin.png" alt="Robin icon" class="ml-2 h-8 w-8" />
+  <img src="assets/robin.png" alt="Robin icon" class="ml-3 h-8 w-8 rounded-lg ring-1 ring-white/10" />
 </mat-toolbar>
 @if (loading$ | async) {
   <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 }
 
-<mat-sidenav-container class="full-height">
+<mat-sidenav-container class="full-height app-frame">
   <mat-sidenav #sidenav mode="side" opened [class.collapsed]="isCollapsed" class="app-sidenav">
-    <mat-nav-list>
+    <mat-nav-list class="app-nav !px-2 !py-4">
       <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" matTooltip="Dashboard" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>dashboard</mat-icon>
-        @if (!isCollapsed) {
-          <span>Dashboard</span>
-        }
+        @if (!isCollapsed) { <span>Dashboard</span> }
       </a>
       <a mat-list-item routerLink="/research/flow-ideas" routerLinkActive="active-link" matTooltip="Research" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>travel_explore</mat-icon>
-        @if (!isCollapsed) {
-          <span>Research</span>
-        }
+        @if (!isCollapsed) { <span>Research</span> }
       </a>
       <a mat-list-item routerLink="/journal" routerLinkActive="active-link" matTooltip="Journal" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>book</mat-icon>
-        @if (!isCollapsed) {
-          <span>Journal</span>
-        }
+        @if (!isCollapsed) { <span>Journal</span> }
       </a>
       <a mat-list-item routerLink="/positions" routerLinkActive="active-link" matTooltip="Positions" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>account_balance</mat-icon>
-        @if (!isCollapsed) {
-          <span>Positions</span>
-        }
+        @if (!isCollapsed) { <span>Positions</span> }
       </a>
       <a mat-list-item routerLink="/charts" routerLinkActive="active-link" matTooltip="Charts" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>show_chart</mat-icon>
-        @if (!isCollapsed) {
-          <span>Charts</span>
-        }
+        @if (!isCollapsed) { <span>Charts</span> }
       </a>
       <a mat-list-item routerLink="/pivot-tracker" routerLinkActive="active-link" matTooltip="Pivot Tracker" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>bolt</mat-icon>
-        @if (!isCollapsed) {
-          <span>Pivot Tracker</span>
-        }
+        @if (!isCollapsed) { <span>Pivot Tracker</span> }
       </a>
     </mat-nav-list>
   </mat-sidenav>
 
-  <mat-sidenav-content>
-    <div class="flex flex-1 flex-col p-4">
+  <mat-sidenav-content class="app-content">
+    <div class="flex min-h-full w-full flex-1 flex-col">
       <router-outlet></router-outlet>
     </div>
   </mat-sidenav-content>

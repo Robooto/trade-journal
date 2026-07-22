@@ -3,25 +3,43 @@
     <header class="inspector-header">
       <div class="symbol-heading">
         <div>
-          <p class="eyebrow">Selected idea</p>
-          <h2>{{ idea.symbol }}</h2>
+          <p class="eyebrow">Investigation</p>
+          <div class="symbol-title">
+            <h2>{{ idea.symbol }}</h2>
+            @if (idea.sector) { <span>{{ idea.sector }}</span> }
+          </div>
         </div>
         <span class="priority-summary" [ngClass]="priorityTone(idea.research_priority)">
           <strong>{{ idea.research_priority == null ? '-' : (idea.research_priority | number:'1.0-0') }}</strong>
           <small>{{ priorityLabel(idea.research_priority) }}</small>
         </span>
       </div>
+
       <p class="inspector-reason">{{ idea.reason_text || 'FlowPatrol evidence selected.' }}</p>
-      <div class="inspector-tags">
-        <span class="change-tag">{{ idea.change_event || 'watching' }}</span>
-        <span>day {{ idea.watch_day ?? '-' }}</span>
-        <span>streak {{ idea.appearance_streak ?? '-' }}</span>
-        @if (idea.in_unusual) { <span class="unusual-tag">unusual activity</span> }
+
+      <div class="inspector-flow-strip" aria-label="Selected idea flow percentiles">
+        <div><span>Delta</span><strong>{{ idea.delta_percentile == null ? '-' : (idea.delta_percentile | number:'1.0-0') }}</strong></div>
+        <div><span>Gamma</span><strong>{{ idea.gamma_percentile == null ? '-' : (idea.gamma_percentile | number:'1.0-0') }}</strong></div>
+        <div><span>Vega</span><strong>{{ idea.vega_percentile == null ? '-' : (idea.vega_percentile | number:'1.0-0') }}</strong></div>
+        <div class="watch-state">
+          <span>Watch state</span>
+          <strong>{{ idea.change_event || 'watching' }}</strong>
+          <small>day {{ idea.watch_day ?? '-' }} / streak {{ idea.appearance_streak ?? '-' }}</small>
+        </div>
       </div>
-      <a mat-flat-button color="primary" [href]="equityHubUrl()" target="_blank" rel="noopener">
-        Research in EquityHub
-        <mat-icon>open_in_new</mat-icon>
-      </a>
+
+      <div class="inspector-actions">
+        <div class="inspector-tags">
+          @if (idea.in_unusual) { <span class="unusual-tag">unusual activity</span> }
+          @for (reason of idea.reason_codes.slice(0, 3); track reason) {
+            <span>{{ reason.replaceAll('_', ' ') }}</span>
+          }
+        </div>
+        <a mat-flat-button color="primary" [href]="equityHubUrl()" target="_blank" rel="noopener">
+          Open EquityHub
+          <mat-icon>open_in_new</mat-icon>
+        </a>
+      </div>
     </header>
 
     @if (loading()) {
@@ -31,40 +49,33 @@
       </div>
     }
 
-    <app-brokerage-context
-      [context]="idea.brokerage_context"
-      unavailableMessage="Brokerage context is unavailable for this symbol."
-    ></app-brokerage-context>
+    <div class="inspector-context-grid">
+      <app-brokerage-context
+        [context]="idea.brokerage_context"
+        unavailableMessage="Brokerage context is unavailable for this symbol."
+      ></app-brokerage-context>
 
-    <app-flow-watchlist-control
-      [watchlists]="watchlists"
-      [symbol]="idea.symbol"
-      [context]="idea.brokerage_context"
-      [loading]="watchlistsLoading"
-      [error]="watchlistsError"
-      [adding]="watchlistAdding()"
-      [result]="watchlistResult()"
-      [resultError]="watchlistResultError()"
-      (addRequested)="addToWatchlist($event)"
-    ></app-flow-watchlist-control>
+      <app-flow-watchlist-control
+        [watchlists]="watchlists"
+        [symbol]="idea.symbol"
+        [context]="idea.brokerage_context"
+        [loading]="watchlistsLoading"
+        [error]="watchlistsError"
+        [adding]="watchlistAdding()"
+        [result]="watchlistResult()"
+        [resultError]="watchlistResultError()"
+        (addRequested)="addToWatchlist($event)"
+      ></app-flow-watchlist-control>
+    </div>
 
-    <app-report-history
-      [history]="history()"
-      [loading]="loading()"
-      [error]="historyError()"
-    ></app-report-history>
-
-    <app-contract-evidence
-      [contracts]="contracts()"
-      [loading]="loading()"
-      [error]="contractsError()"
-    ></app-contract-evidence>
+    <app-report-history [history]="history()" [loading]="loading()" [error]="historyError()"></app-report-history>
+    <app-contract-evidence [contracts]="contracts()" [loading]="loading()" [error]="contractsError()"></app-contract-evidence>
   } @else {
     <div class="inspector-empty">
       <mat-icon>ads_click</mat-icon>
       <p class="eyebrow">Investigation panel</p>
       <h2>Choose an idea</h2>
-      <p>Select a queue row to inspect its history, contract evidence, and brokerage context without leaving the list.</p>
+      <p>Select a queue row to inspect history, contract evidence, and brokerage context without leaving the list.</p>
     </div>
   }
 </aside>
