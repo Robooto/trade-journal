@@ -1,63 +1,140 @@
-<div class="flex flex-col gap-8">
-  <div class="flex flex-wrap items-center justify-between gap-4">
+<main class="pivot-page" aria-labelledby="pivot-title">
+  <header class="page-header">
     <div>
-      <h1>Pivot Tracker</h1>
-      <p class="text-[color:var(--mat-sys-secondary)]">
-        Monitor the latest SpotGamma pivot and keep its history up to date.
-      </p>
+      <p class="eyebrow">Market reference</p>
+      <h1 id="pivot-title">Pivot Tracker</h1>
+      <p>Keep the latest SpotGamma pivot visible and review how the reference level has moved.</p>
     </div>
     <button mat-flat-button color="primary" (click)="openEditor()">
-      <mat-icon>edit</mat-icon>
-      <span>Update Pivot</span>
+      <mat-icon>edit_location_alt</mat-icon>
+      <span>Update pivot</span>
     </button>
-  </div>
+  </header>
 
-  <mat-card class="p-6">
-    @if (latest$ | async; as latest) {
-      <div class="flex items-center justify-between gap-4">
-        <div class="pivot-pill">
-          <span class="label">{{ latest.index }} Pivot</span>
-          <span class="value">{{ latest.price | number:'1.2-2' }}</span>
-          <span class="date">{{ latest.date | date:'mediumDate' }}</span>
+  <section class="pivot-overview" aria-label="Current pivot overview">
+    <mat-card class="current-pivot-card">
+      <mat-card-content>
+        <div class="card-heading">
+          <div>
+            <p class="section-eyebrow">Current recorded level</p>
+            <h2>Primary market pivot</h2>
+          </div>
+          <div class="status-chip">
+            <span class="status-dot"></span>
+            Saved reference
+          </div>
         </div>
-        <button mat-icon-button color="accent" (click)="openEditor()" matTooltip="Update pivot level">
-          <mat-icon>edit</mat-icon>
-        </button>
-      </div>
-    } @else {
-      <div class="flex flex-col gap-4 text-center">
-        <p>{{ latestError || 'No pivot level recorded yet.' }}</p>
-        <button mat-stroked-button color="primary" (click)="openEditor()">Add Pivot</button>
-      </div>
-    }
-  </mat-card>
 
-  <section class="flex flex-col gap-4">
-    <div class="flex items-center justify-between">
-      <h2>Recent changes</h2>
-      <button mat-icon-button (click)="refreshHistory()" matTooltip="Refresh history">
+        @if (latestLoading) {
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        }
+
+        @if (latest$ | async; as latest) {
+          <div class="pivot-hero">
+            <div class="index-mark">
+              <mat-icon>track_changes</mat-icon>
+              {{ latest.index }}
+            </div>
+            <div class="pivot-value">{{ latest.price | number:'1.2-2' }}</div>
+            <div class="pivot-date">
+              <mat-icon>calendar_today</mat-icon>
+              Recorded {{ latest.date | date:'mediumDate' }}
+            </div>
+          </div>
+
+          <div class="pivot-card-actions">
+            <span>Use this as a reference level alongside the current market structure.</span>
+            <button mat-stroked-button color="primary" (click)="openEditor()">
+              <mat-icon>edit</mat-icon>
+              Edit level
+            </button>
+          </div>
+        } @else if (!latestLoading) {
+          <div class="empty-current">
+            <mat-icon>add_location_alt</mat-icon>
+            <div>
+              <h3>No pivot recorded</h3>
+              <p>{{ latestError || 'Add the latest SpotGamma level to begin tracking changes.' }}</p>
+            </div>
+            <button mat-flat-button color="primary" (click)="openEditor()">Add pivot</button>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <aside class="pivot-context-card">
+      <div class="context-icon"><mat-icon>radar</mat-icon></div>
+      <p class="section-eyebrow">Tracking context</p>
+      <h2>A quick market anchor</h2>
+      <p>
+        This is a manually maintained reference—not a live signal. Update it when the
+        SpotGamma level changes, then use the history to see whether the market anchor is migrating.
+      </p>
+      <dl>
+        <div>
+          <dt>Source</dt>
+          <dd>SpotGamma</dd>
+        </div>
+        <div>
+          <dt>History</dt>
+          <dd>{{ history.length }} records</dd>
+        </div>
+        <div>
+          <dt>Usage</dt>
+          <dd>Context, not a trade trigger</dd>
+        </div>
+      </dl>
+    </aside>
+  </section>
+
+  <section class="history-section" aria-labelledby="pivot-history-title">
+    <div class="section-header">
+      <div>
+        <p class="section-eyebrow">Recorded changes</p>
+        <h2 id="pivot-history-title">Pivot history</h2>
+        <p>Newest entries appear first so changes are easy to scan.</p>
+      </div>
+      <button mat-stroked-button type="button" (click)="refreshHistory()" [disabled]="historyLoading">
         <mat-icon>refresh</mat-icon>
+        Refresh
       </button>
     </div>
+
     @if (historyLoading) {
       <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     }
+
     @if (!historyLoading && history.length) {
-      <mat-list>
-        @for (pivot of history; track pivot) {
-          <mat-list-item>
-            <div matListItemTitle>{{ pivot.price | number:'1.2-2' }}</div>
-            <div matListItemLine>{{ pivot.index }} — {{ pivot.date | date:'mediumDate' }}</div>
-          </mat-list-item>
+      <div class="history-list" role="list">
+        @for (pivot of history; track pivot; let first = $first) {
+          <article class="history-row" [class.latest]="first" role="listitem">
+            <div class="history-marker">
+              <span></span>
+            </div>
+            <div class="history-level">
+              <span class="history-index">{{ pivot.index }}</span>
+              <strong>{{ pivot.price | number:'1.2-2' }}</strong>
+            </div>
+            <div class="history-date">
+              <mat-icon>event</mat-icon>
+              {{ pivot.date | date:'mediumDate' }}
+            </div>
+            @if (first) {
+              <span class="latest-chip">Current</span>
+            }
+          </article>
         }
-      </mat-list>
+      </div>
     }
+
     @if (!historyLoading && !history.length) {
-      <div
-        class="italic text-[color:var(--mat-sys-on-surface-variant,rgba(255,255,255,0.6))]"
-        >
-        {{ historyError || 'No history captured yet.' }}
+      <div class="history-empty">
+        <mat-icon>history</mat-icon>
+        <div>
+          <h3>No history yet</h3>
+          <p>{{ historyError || 'Saved pivot updates will appear here.' }}</p>
+        </div>
       </div>
     }
   </section>
-</div>
+</main>

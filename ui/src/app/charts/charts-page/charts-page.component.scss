@@ -1,555 +1,251 @@
+:host { display: block; }
+
 .charts-page {
-  padding: 20px;
-  max-width: 1200px;
+  display: grid;
+  gap: 20px;
+  width: 100%;
+  max-width: 1920px;
   margin: 0 auto;
+  padding: 28px 32px 44px;
+  box-sizing: border-box;
 }
 
-.page-header {
-  margin-bottom: 24px;
+.page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
+.page-header h1, .page-header p { margin: 0; }
+.page-header h1 { font-size: clamp(2rem, 2.8vw, 2.75rem); line-height: 1.02; letter-spacing: -0.04em; }
+.page-header > div > p:not(.eyebrow) { max-width: 720px; margin-top: 8px; color: var(--mat-sys-on-surface-variant); font-size: .95rem; }
 
-  h1 {
-    margin: 0 0 8px 0;
-    font-size: 2rem;
-    font-weight: 400;
-  }
-
-  p {
-    margin: 0;
-    opacity: 0.6;
-  }
+.eyebrow, .section-eyebrow {
+  color: var(--mat-sys-primary);
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
 }
 
-.controls-card {
-  margin-bottom: 24px;
+.equity-hub-quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 42%, transparent);
+  border-radius: 999px;
+  padding: 0 16px;
+  color: var(--mat-sys-primary);
+  font-size: .86rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+.equity-hub-quick-link:hover { border-color: var(--mat-sys-primary); background: color-mix(in srgb, var(--mat-sys-primary) 11%, transparent); }
+.equity-hub-quick-link mat-icon { width: 18px; height: 18px; font-size: 18px; }
 
-  mat-card-header {
-    margin-bottom: 16px;
-  }
+.workspace-card, .price-lines-card, .equity-hub-card {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--mat-sys-surface-container-low) 92%, transparent);
+  box-shadow: none;
 }
 
-.chart-form {
-  .form-row {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .symbol-field {
-    min-width: 120px;
-    flex: 0 0 120px;
-  }
-
-  .resolution-field {
-    min-width: 180px;
-    flex: 0 0 180px;
-  }
-
-  .date-field {
-    min-width: 160px;
-    flex: 1 1 160px;
-  }
-
-  .load-button {
-    height: 56px;
-    min-width: 120px;
-    align-self: flex-start;
-    margin-top: 0;
-
-    mat-icon {
-      animation: spin 1s linear infinite;
-    }
-  }
+.controls-card mat-card-header { display: flex; align-items: center; gap: 12px; padding: 18px 20px 4px; }
+.controls-card mat-card-content { padding: 14px 20px 4px; }
+.section-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 14%, transparent);
+  color: var(--mat-sys-primary);
+  font-size: 20px;
 }
+.section-eyebrow { margin: 0 0 3px; }
+.controls-card mat-card-title { font-size: 1.05rem; font-weight: 700; }
+
+.chart-control-grid {
+  display: grid;
+  grid-template-columns: minmax(130px, .7fr) minmax(170px, .85fr) minmax(190px, 1fr) minmax(190px, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+.chart-form mat-form-field { width: 100%; min-width: 0; }
+.chart-form .load-button, .price-line-form .add-line-button { min-width: 150px; height: 56px; }
+.chart-form .load-button mat-icon { margin-right: 6px; }
+.chart-form .load-button mat-icon:first-child:last-child { animation: spin 1s linear infinite; }
 
 .error-card {
-  margin-bottom: 24px;
-  border-left: 4px solid #f44336;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-error) 55%, transparent);
+  border-left-width: 4px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mat-sys-error) 10%, var(--mat-sys-surface-container-low));
+  box-shadow: none;
+}
+.error-message, .volatility-error { display: flex; align-items: center; gap: 10px; color: light-dark(#b91c1c, #fca5a5); }
 
-  .error-message {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #f44336;
-  }
+.chart-workspace {
+  display: grid;
+  grid-template-areas: "chart levels";
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 16px;
+  align-items: stretch;
+}
+.chart-card { position: relative; grid-area: chart; min-width: 0; }
+.chart-card mat-card-header { min-height: 54px; padding: 18px 20px 0; }
+.chart-card mat-card-title { display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 760; }
+.chart-card mat-card-content { padding: 10px 14px 14px; }
+.resolution-badge {
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary) 35%, transparent);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, transparent);
+  color: var(--mat-sys-primary);
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
 }
 
-.chart-card {
-  .resolution-badge {
-    font-size: 0.75rem;
-    background: #e3f2fd;
-    color: #1976d2;
-    padding: 2px 8px;
-    border-radius: 12px;
-    margin-left: 8px;
-    font-weight: 500;
-  }
-}
-
-.volatility-section {
-  margin-top: 24px;
-
-  .mat-expansion-panel-header {
-    padding: 0 24px;
-  }
-
-  .volatility-content {
-    padding: 16px 24px 24px;
-  }
-
-  .volatility-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    .volatility-header-status {
-      flex: 1;
-    }
-  }
-
-  .volatility-loading {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 0;
-  }
-
-  .prompt-content {
-    padding: 16px 24px 24px;
-  }
-
-  .prompt-hint {
-    margin-bottom: 12px;
-    font-size: 0.9rem;
-    opacity: 0.7;
-  }
-
-  .prompt-output {
-    margin: 0;
-    padding: 16px;
-    background: rgba(0, 0, 0, 0.04);
-    border-radius: 8px;
-    white-space: pre-wrap;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-size: 0.85rem;
-    line-height: 1.4;
-  }
-
-  .volatility-error {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #f44336;
-    padding: 16px 0;
-  }
-
-  .volatility-metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 16px;
-  }
-
-  .volatility-metric {
-    background: rgba(25, 118, 210, 0.08);
-    border-radius: 8px;
-    padding: 12px 16px;
-
-    .metric-label {
-      font-size: 0.85rem;
-      opacity: 0.75;
-      margin-bottom: 4px;
-    }
-
-    .metric-value {
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-  }
-
-  .option-expirations {
-    margin-top: 24px;
-
-    .option-expirations-header {
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .no-option-expirations {
-      opacity: 0.7;
-      font-style: italic;
-    }
-  }
-
-  .option-expirations-list {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 12px;
-  }
-
-  .option-expiration-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 12px 14px;
-    background: rgba(0, 0, 0, 0.04);
-    border-radius: 4px;
-    font-size: 0.95rem;
-
-    .expiration-date {
-      font-weight: 600;
-    }
-
-    .expiration-iv {
-      font-weight: 500;
-      opacity: 0.85;
-    }
-  }
-
-  .market-content {
-    padding: 16px 24px 24px;
-  }
-
-  .market-metrics {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
-  }
-
-  .market-metric {
-    background: rgba(0, 0, 0, 0.04);
-    border-radius: 8px;
-    padding: 12px 16px;
-
-    .metric-label {
-      font-size: 0.85rem;
-      opacity: 0.7;
-      margin-bottom: 4px;
-    }
-
-    .metric-value {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-  }
-
-  .market-details {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
-  }
-
-  .market-detail {
-    background: rgba(25, 118, 210, 0.06);
-    border-radius: 6px;
-    padding: 10px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    .detail-label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      opacity: 0.65;
-    }
-
-    .detail-value {
-      font-size: 0.95rem;
-      font-weight: 500;
-    }
-  }
-
-  .market-empty {
-    padding: 16px;
-    text-align: center;
-    opacity: 0.7;
-    font-style: italic;
-  }
-}
-
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-  text-align: center;
-
-  p {
-    margin-top: 16px;
-    opacity: 0.6;
-  }
-}
 .chart-container {
-  width: 100%;
-  height: 400px;
   position: relative;
-
-  &.loading {
-    opacity: 0.5;
-  }
+  width: 100%;
+  height: clamp(470px, 55vh, 680px);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 72%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #0b0e13;
 }
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.chart-container.loading { opacity: .46; }
+.loading-container {
+  position: absolute;
+  z-index: 2;
+  inset: 80px 20px auto;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  color: var(--mat-sys-on-surface-variant);
 }
-.price-lines-card {
-  margin-bottom: 24px;
+.loading-container p { margin: 0; }
 
-  mat-card-header {
-    margin-bottom: 16px;
-
-    .spacer {
-      flex: 1 1 auto;
-    }
-  }
-}
-
-.price-line-form {
-  margin-bottom: 16px;
-
-  .price-line-form-row {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
-    flex-wrap: wrap;
-
-    .price-field {
-      min-width: 120px;
-      flex: 0 0 120px;
-    }
-
-    .color-field {
-      min-width: 140px;
-      flex: 0 0 140px;
-    }
-
-    .style-field {
-      min-width: 120px;
-      flex: 0 0 120px;
-    }
-
-    .label-field {
-      min-width: 160px;
-      flex: 1 1 160px;
-    }
-
-    .add-line-button {
-      height: 56px;
-      align-self: flex-start;
-      margin-top: 0;
-      min-width: 120px;
-    }
-  }
-}
-
-.color-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.color-swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 2px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-}
-.price-lines-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.price-lines-card { grid-area: levels; }
+.price-lines-card mat-card-header { display: flex; align-items: center; min-height: 58px; padding: 12px 12px 4px 18px; }
+.price-lines-card mat-card-title { font-size: 1rem; font-weight: 740; }
+.price-lines-card mat-card-content { padding: 12px 16px 16px; }
+.spacer { flex: 1; }
+.price-line-form { display: grid; gap: 12px; margin-bottom: 14px; }
+.price-line-form-row { display: grid; gap: 8px; }
+.price-line-form-row mat-form-field, .price-line-form-row .add-line-button { width: 100%; }
+.color-swatch { width: 16px; height: 16px; border: 1px solid rgba(255,255,255,.24); border-radius: 4px; }
+.price-lines-list { display: grid; gap: 8px; }
 .price-line-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 4px;
-
-  .price-line-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .price-line-swatch {
-    width: 20px;
-    height: 3px;
-    border-radius: 1px;
-  }
-
-  .price-line-price {
-    font-weight: 500;
-    min-width: 80px;
-  }
-
-  .price-line-style {
-    font-size: 0.875rem;
-    opacity: 0.7;
-    min-width: 60px;
-  }
-
-  .price-line-label {
-    font-size: 0.875rem;
-    font-style: italic;
-    opacity: 0.8;
-  }
+  gap: 10px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 10px;
+  padding: 8px 8px 8px 11px;
+  background: var(--mat-sys-surface-container);
 }
+.price-line-info { min-width: 0; flex-wrap: wrap; gap: 7px; }
+.price-line-swatch { width: 22px; height: 3px; border-radius: 999px; }
+.price-line-price { font-weight: 750; }
+.price-line-style, .price-line-label { color: var(--mat-sys-on-surface-variant); font-size: .75rem; }
 .no-price-lines {
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  border: 1px dashed var(--mat-sys-outline-variant);
+  border-radius: 10px;
+  padding: 22px;
+  color: var(--mat-sys-on-surface-variant);
   text-align: center;
-  padding: 24px;
-  opacity: 0.6;
-
-  p {
-    margin: 0;
-  }
 }
-.equity-hub-card {
-  margin-top: 24px;
+.no-price-lines p { margin: 0; font-size: .84rem; line-height: 1.5; }
 
-  .equity-hub-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .equity-hub-text {
-    flex: 1 1 240px;
-  }
-
-  .equity-hub-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .equity-hub-description {
-    opacity: 0.7;
-  }
-
-  .equity-hub-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-weight: 600;
-    color: #1976d2;
-    text-decoration: none;
-
-    mat-icon {
-      font-size: 16px;
-      width: 18px;
-      height: 18px;
-    }
-  }
+.volatility-section { display: grid; gap: 10px; }
+.volatility-section mat-expansion-panel {
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px !important;
+  background: var(--mat-sys-surface-container-low);
+  box-shadow: none;
 }
-@media (max-width: 768px) {
-  .chart-form {
-    .form-row {
-      flex-direction: column;
-      gap: 8px;
-    }
+.volatility-section .mat-expansion-panel-header { min-height: 58px; padding: 0 20px; }
+.volatility-header-actions { display: flex; align-items: center; gap: 8px; }
+.volatility-header-status { color: var(--mat-sys-on-surface-variant); font-size: .76rem; }
+.prompt-content, .volatility-content, .market-content { padding: 8px 20px 20px; }
+.prompt-hint { max-width: 920px; margin-bottom: 12px; color: var(--mat-sys-on-surface-variant); font-size: .86rem; line-height: 1.5; }
+.prompt-output {
+  max-height: 420px;
+  margin: 0;
+  overflow: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 10px;
+  padding: 16px;
+  background: #090c11;
+  color: #d7e1f2;
+  white-space: pre-wrap;
+  font: .8rem/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.volatility-loading { display: flex; align-items: center; gap: 12px; padding: 16px 0; }
+.volatility-error { padding: 10px 0; }
 
-    .symbol-field,
-    .resolution-field,
-    .date-field {
-      width: 100%;
-      flex: 1 1 auto;
-    }
+.volatility-metrics, .market-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 10px;
+}
+.volatility-metric, .market-metric, .market-detail, .option-expiration-item {
+  display: grid;
+  gap: 4px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 9px;
+  padding: 11px 13px;
+  background: var(--mat-sys-surface-container);
+}
+.metric-label, .detail-label {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.metric-value { font-size: 1.08rem; font-weight: 760; }
+.option-expirations { margin-top: 20px; }
+.option-expirations-header { margin-bottom: 10px; font-size: .82rem; font-weight: 750; }
+.option-expirations-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 8px; }
+.expiration-date { font-size: .8rem; font-weight: 700; }
+.expiration-iv { color: var(--mat-sys-primary); font-size: .95rem; font-weight: 750; }
+.no-option-expirations, .market-empty { padding: 16px; color: var(--mat-sys-on-surface-variant); text-align: center; }
+.market-metrics { margin-bottom: 12px; }
+.market-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 8px; }
+.detail-value { font-size: .9rem; font-weight: 650; }
 
-    .load-button {
-      width: 100%;
-      align-self: stretch;
-    }
-  }
+.equity-hub-card mat-card-content { display: grid; gap: 16px; padding: 18px 20px 4px; }
+.equity-hub-content { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.equity-hub-title { font-size: 1rem; font-weight: 750; }
+.equity-hub-description { margin-top: 3px; color: var(--mat-sys-on-surface-variant); font-size: .84rem; }
+.equity-hub-link { display: inline-flex; align-items: center; gap: 6px; color: var(--mat-sys-primary); font-size: .84rem; font-weight: 750; text-decoration: none; }
+.equity-hub-card .price-line-form .form-row { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 10px; }
+.form-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 
-  .price-line-form {
-    .price-line-form-row {
-      flex-direction: column;
-      gap: 8px;
+@keyframes spin { to { transform: rotate(360deg); } }
 
-      .price-field,
-      .color-field,
-      .style-field,
-      .label-field {
-        width: 100%;
-        flex: 1 1 auto;
-      }
-
-      .add-line-button {
-        width: 100%;
-        align-self: stretch;
-      }
-    }
-  }
-
-  .chart-container {
-    height: 300px;
-  }
-
-  .volatility-section {
-    .volatility-metrics {
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    }
-
-    .volatility-content {
-      padding: 16px;
-    }
-
-    .option-expirations-list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .market-content {
-      padding: 16px;
-    }
-
-    .market-details {
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    }
-  }
+@media (max-width: 1280px) {
+  .chart-control-grid { grid-template-columns: repeat(4, minmax(150px, 1fr)); }
+  .chart-form .load-button { width: 100%; grid-column: 1 / -1; }
+  .chart-workspace { grid-template-areas: "chart" "levels"; grid-template-columns: 1fr; }
+  .price-line-form-row { grid-template-columns: repeat(4, minmax(130px, 1fr)) auto; }
+  .price-line-form-row .add-line-button { min-width: 130px; }
+  .equity-hub-card .price-line-form .form-row { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
 }
 
-@media (max-width: 1200px) {
-  .volatility-section {
-    .option-expirations-list {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .market-details {
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-  }
-}
-
-@media (max-width: 900px) {
-  .volatility-section {
-    .option-expirations-list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .market-details {
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    }
-  }
-}
-
-@media (max-width: 600px) {
-  .volatility-section {
-    .option-expirations-list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-    .market-details {
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    }
-  }
+@media (max-width: 760px) {
+  .charts-page { gap: 14px; padding: 18px 14px 32px; }
+  .page-header { align-items: flex-start; flex-direction: column; }
+  .equity-hub-quick-link { width: 100%; justify-content: center; box-sizing: border-box; }
+  .chart-control-grid, .price-line-form-row, .equity-hub-card .price-line-form .form-row { grid-template-columns: 1fr; }
+  .chart-form .load-button { grid-column: auto; }
+  .chart-container { height: 390px; }
+  .volatility-header-status { display: none; }
+  .prompt-content, .volatility-content, .market-content { padding: 6px 14px 16px; }
+  .equity-hub-content { align-items: flex-start; flex-direction: column; }
 }

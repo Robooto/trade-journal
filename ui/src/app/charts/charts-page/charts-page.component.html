@@ -1,17 +1,28 @@
-<div class="charts-page">
-  <div class="page-header">
-    <h1>Stock Charts</h1>
-    <p>Interactive charts - SPY shown by default - Select symbol, resolution, and date range (max 60 days)</p>
-  </div>
+<main class="charts-page" aria-labelledby="charts-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Market workbench</p>
+      <h1 id="charts-title">Charts</h1>
+      <p>Review price action, mark decision levels, and package the context for deeper research.</p>
+    </div>
+    <a class="equity-hub-quick-link" [href]="equityHubUrl" target="_blank" rel="noopener noreferrer">
+      <mat-icon>open_in_new</mat-icon>
+      Open Equity Hub
+    </a>
+  </header>
 
   <!-- Chart Controls Form -->
-  <mat-card class="controls-card">
+  <mat-card class="controls-card workspace-card">
     <mat-card-header>
-      <mat-card-title>Chart Settings</mat-card-title>
+      <mat-icon class="section-icon">tune</mat-icon>
+      <div>
+        <p class="section-eyebrow">Chart controls</p>
+        <mat-card-title>Choose the market view</mat-card-title>
+      </div>
     </mat-card-header>
     <mat-card-content>
       <form [formGroup]="chartForm" (ngSubmit)="onSubmit()" class="chart-form">
-        <div class="form-row">
+        <div class="form-row chart-control-grid">
           <!-- Symbol Input -->
           <mat-form-field appearance="outline" class="symbol-field">
             <mat-label>Symbol</mat-label>
@@ -44,9 +55,6 @@
             </mat-select>
             <mat-hint>Chart resolution</mat-hint>
           </mat-form-field>
-        </div>
-
-        <div class="form-row">
           <!-- From Date -->
           <mat-form-field appearance="outline" class="date-field">
             <mat-label>From Date</mat-label>
@@ -75,7 +83,10 @@
             [disabled]="chartForm.invalid || isLoading"
             class="load-button">
             @if (isLoading) {
-              <mat-icon>refresh</mat-icon>
+              <mat-icon>progress_activity</mat-icon>
+            }
+            @if (!isLoading) {
+              <mat-icon>candlestick_chart</mat-icon>
             }
             @if (!isLoading) {
               <span>Load Chart</span>
@@ -101,6 +112,7 @@
     </mat-card>
   }
 
+  <section class="chart-workspace" aria-label="Chart and price-level workspace">
   <!-- Price Lines Management -->
   <mat-card class="price-lines-card">
     <mat-card-header>
@@ -205,7 +217,7 @@
   </mat-card>
 
   <!-- Chart Container -->
-  <mat-card class="chart-card">
+  <mat-card class="chart-card workspace-card">
     <mat-card-header>
       <mat-card-title>
         {{ chartForm.get('symbol')?.value?.toUpperCase() || 'Chart' }}
@@ -229,6 +241,7 @@
       </div>
     </mat-card-content>
   </mat-card>
+  </section>
 
   <mat-accordion class="volatility-section">
     <mat-expansion-panel>
@@ -508,4 +521,4 @@
       </form>
     </mat-card-content>
   </mat-card>
-</div>
+</main>

@@ -90,7 +90,8 @@ export class PivotTrackerPageComponent implements OnInit, OnDestroy {
 
   openEditor(): void {
     const dialogRef = this.dialog.open(PivotLevelDialogComponent, {
-      width: '360px',
+      width: '460px',
+      maxWidth: 'calc(100vw - 32px)',
       data: {
         price: this.latestPivot?.price ?? null,
         date: this.latestPivot?.date ?? null,

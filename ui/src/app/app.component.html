@@ -12,17 +12,17 @@
         class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-300 sm:px-3"
         matTooltip="Latest SpotGamma pivot"
       >
-        <mat-icon class="h-[18px] w-[18px] text-[18px]">warning</mat-icon>
+        <mat-icon class="h-[18px] w-[18px] text-[18px]">track_changes</mat-icon>
         <span class="text-[0.65rem] uppercase tracking-[0.08em]">{{ pivot.index }}</span>
         <span class="text-sm sm:text-base">{{ pivot.price | number:'1.2-2' }}</span>
         <span class="hidden text-xs opacity-80 md:inline">{{ pivot.date | date:'MMM d' }}</span>
       </div>
       <button mat-icon-button color="warn" [routerLink]="['/pivot-tracker']" matTooltip="Update pivot level">
-        <mat-icon>edit</mat-icon>
+        <mat-icon>tune</mat-icon>
       </button>
     } @else {
       <button mat-stroked-button color="warn" [routerLink]="['/pivot-tracker']">
-        <mat-icon>warning</mat-icon>
+        <mat-icon>add_location_alt</mat-icon>
         <span>Add pivot</span>
       </button>
     }
@@ -38,27 +38,27 @@
   <mat-sidenav #sidenav mode="side" opened [class.collapsed]="isCollapsed" class="app-sidenav">
     <mat-nav-list class="app-nav !px-2 !py-4">
       <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" matTooltip="Dashboard" [matTooltipDisabled]="!isCollapsed">
-        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <mat-icon matListItemIcon>space_dashboard</mat-icon>
         @if (!isCollapsed) { <span>Dashboard</span> }
       </a>
       <a mat-list-item routerLink="/research/flow-ideas" routerLinkActive="active-link" matTooltip="Research" [matTooltipDisabled]="!isCollapsed">
-        <mat-icon matListItemIcon>travel_explore</mat-icon>
+        <mat-icon matListItemIcon>manage_search</mat-icon>
         @if (!isCollapsed) { <span>Research</span> }
       </a>
       <a mat-list-item routerLink="/journal" routerLinkActive="active-link" matTooltip="Journal" [matTooltipDisabled]="!isCollapsed">
-        <mat-icon matListItemIcon>book</mat-icon>
+        <mat-icon matListItemIcon>edit_note</mat-icon>
         @if (!isCollapsed) { <span>Journal</span> }
       </a>
       <a mat-list-item routerLink="/positions" routerLinkActive="active-link" matTooltip="Positions" [matTooltipDisabled]="!isCollapsed">
-        <mat-icon matListItemIcon>account_balance</mat-icon>
+        <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
         @if (!isCollapsed) { <span>Positions</span> }
       </a>
       <a mat-list-item routerLink="/charts" routerLinkActive="active-link" matTooltip="Charts" [matTooltipDisabled]="!isCollapsed">
-        <mat-icon matListItemIcon>show_chart</mat-icon>
+        <mat-icon matListItemIcon>insights</mat-icon>
         @if (!isCollapsed) { <span>Charts</span> }
       </a>
       <a mat-list-item routerLink="/pivot-tracker" routerLinkActive="active-link" matTooltip="Pivot Tracker" [matTooltipDisabled]="!isCollapsed">
-        <mat-icon matListItemIcon>bolt</mat-icon>
+        <mat-icon matListItemIcon>track_changes</mat-icon>
         @if (!isCollapsed) { <span>Pivot Tracker</span> }
       </a>
     </mat-nav-list>
