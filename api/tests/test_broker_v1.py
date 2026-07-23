@@ -269,6 +269,72 @@ async def test_get_watchlists_returns_private_lists_and_write_state(
 
 
 @pytest.mark.asyncio
+async def test_get_watchlist_research_returns_unique_enriched_symbols(
+    client, monkeypatch
+):
+    watchlists = [
+        TastyWatchlist.model_validate(
+            {
+                "name": "Core Options",
+                "group-name": "Personal",
+                "order-index": 1,
+                "watchlist-entries": [
+                    {"symbol": "AAPL", "instrument-type": "Equity"},
+                    {"symbol": "NVDA", "instrument-type": "Equity"},
+                ],
+            }
+        ),
+        TastyWatchlist.model_validate(
+            {
+                "name": "Earnings",
+                "group-name": "Personal",
+                "order-index": 2,
+                "watchlist-entries": [
+                    {"symbol": "AAPL", "instrument-type": "Equity"},
+                ],
+            }
+        ),
+    ]
+    monkeypatch.setattr(
+        broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE"
+    )
+    monkeypatch.setattr(
+        broker.tastytrade, "fetch_watchlists", lambda token: watchlists
+    )
+    monkeypatch.setattr(
+        broker,
+        "settings",
+        SimpleNamespace(brokerage_watchlist_writes_enabled=True),
+    )
+
+    def fake_context(db, token, symbols, **kwargs):
+        assert symbols == ["AAPL", "NVDA"]
+        assert kwargs["watchlists_override"] is watchlists
+        return ResearchSymbolContextV1(
+            generated_at=GENERATED_AT,
+            requested_symbols=symbols,
+            items=[],
+            missing_symbols=[],
+            source_status=[],
+        )
+
+    monkeypatch.setattr(broker, "fetch_research_symbol_context", fake_context)
+
+    response = await client.get("/v1/broker/watchlist-research")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["schema_version"] == "broker-watchlist-research.v1"
+    assert payload["writes_enabled"] is True
+    assert [item["name"] for item in payload["watchlists"]] == [
+        "Core Options",
+        "Earnings",
+    ]
+    assert payload["watchlists"][0]["symbols"] == ["AAPL", "NVDA"]
+    assert payload["items"] == []
+
+
+@pytest.mark.asyncio
 async def test_add_watchlist_symbol_requires_explicit_write_setting(
     client, monkeypatch
 ):

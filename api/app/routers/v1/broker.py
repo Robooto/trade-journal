@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, datetime, timezone
 
 import requests
 
@@ -15,6 +15,7 @@ from app.schemas.brokerage import (
     BrokerActivityDispositionV1,
     BrokerActivityInboxV1,
     BrokerWatchlistListV1,
+    BrokerWatchlistResearchV1,
     BrokerWatchlistSummaryV1,
     HoldingSnapshotV1,
     ResearchSymbolContextRequestV1,
@@ -101,6 +102,62 @@ def list_watchlists(db: Session = Depends(get_db)):
     return BrokerWatchlistListV1(
         writes_enabled=settings.brokerage_watchlist_writes_enabled,
         watchlists=[_watchlist_summary(item) for item in watchlists],
+    )
+
+
+@router.get(
+    "/watchlist-research",
+    summary="Get enriched private brokerage watchlists for research",
+    response_model=BrokerWatchlistResearchV1,
+    response_model_exclude_none=True,
+)
+def get_watchlist_research(db: Session = Depends(get_db)):
+    """
+    Return every private brokerage watchlist with one enriched row per unique
+    symbol. Price, volatility, persisted five-session trends, earnings
+    availability, and all-account exposure retain explicit source status.
+    """
+    token = _token_or_403(db)
+    try:
+        watchlists = tastytrade.fetch_watchlists(token)
+    except requests.RequestException as exc:
+        logging.exception("Fetching Tastytrade watchlists failed.")
+        raise HTTPException(
+            status_code=502,
+            detail="Brokerage watchlists are unavailable.",
+        ) from exc
+
+    summaries = [_watchlist_summary(item) for item in watchlists]
+    symbols = list(
+        dict.fromkeys(
+            symbol
+            for summary in summaries
+            for symbol in summary.symbols
+        )
+    )
+    generated_at = datetime.now(timezone.utc)
+    if not symbols:
+        return BrokerWatchlistResearchV1(
+            generated_at=generated_at,
+            writes_enabled=settings.brokerage_watchlist_writes_enabled,
+            watchlists=summaries,
+            items=[],
+        )
+
+    context = fetch_research_symbol_context(
+        db,
+        token,
+        symbols,
+        fetched_at=generated_at,
+        watchlists_override=watchlists,
+    )
+    return BrokerWatchlistResearchV1(
+        generated_at=context.generated_at,
+        writes_enabled=settings.brokerage_watchlist_writes_enabled,
+        watchlists=summaries,
+        items=context.items,
+        missing_symbols=context.missing_symbols,
+        source_status=context.source_status,
     )
 
 

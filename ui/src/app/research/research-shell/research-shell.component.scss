@@ -6,3 +6,41 @@
 .research-route-shell {
   min-height: 100%;
 }
+
+.research-subnav {
+  display: flex;
+  gap: 6px;
+  width: calc(100% - 64px);
+  max-width: 1856px;
+  margin: 0 auto;
+  padding-top: 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--mat-sys-outline-variant) 70%, transparent);
+  box-sizing: border-box;
+}
+
+.research-subnav a {
+  min-height: 42px;
+  border-radius: 9px 9px 0 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.research-subnav a mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.research-subnav a.active-research-link {
+  background: color-mix(in srgb, var(--mat-sys-primary) 11%, transparent);
+  color: var(--mat-sys-primary);
+}
+
+@media (max-width: 680px) {
+  .research-subnav {
+    width: calc(100% - 28px);
+  }
+
+  .research-subnav a {
+    flex: 1;
+  }
+}

@@ -30,6 +30,7 @@ _SOURCE_WARNINGS = {
     "/brokerage/holding-snapshot": "Current brokerage exposure is unavailable.",
 }
 _STORAGE_ENDPOINT = "/research-metric-snapshots"
+_BROKER_BATCH_SIZE = 100
 
 
 def _symbols(values: list[str]) -> list[str]:
@@ -38,6 +39,11 @@ def _symbols(values: list[str]) -> list[str]:
             value.strip().upper() for value in values if value.strip()
         )
     )
+
+
+def _batches(values: list[str], size: int = _BROKER_BATCH_SIZE):
+    for start in range(0, len(values), size):
+        yield values[start : start + size]
 
 
 def _empty_holding_snapshot(fetched_at: datetime) -> HoldingSnapshotV1:
@@ -141,6 +147,7 @@ def fetch_research_symbol_context(
     symbols: list[str],
     *,
     fetched_at: datetime | None = None,
+    watchlists_override: list | None = None,
 ) -> ResearchSymbolContextV1:
     fetched_at = fetched_at or datetime.now(timezone.utc)
     requested = _symbols(symbols)
@@ -148,31 +155,39 @@ def fetch_research_symbol_context(
         raise ValueError("At least one non-empty symbol is required.")
 
     source_failures: set[str] = set()
-    try:
-        watchlists = tastytrade.fetch_watchlists(token)
-    except Exception:
-        logging.exception("Failed to fetch brokerage watchlists.")
-        watchlists = []
-        source_failures.add("/watchlists")
+    if watchlists_override is not None:
+        watchlists = watchlists_override
+    else:
+        try:
+            watchlists = tastytrade.fetch_watchlists(token)
+        except Exception:
+            logging.exception("Failed to fetch brokerage watchlists.")
+            watchlists = []
+            source_failures.add("/watchlists")
 
     try:
-        market_data = tastytrade.fetch_market_data(
-            token,
-            requested,
-            [],
-            [],
-            [],
-        )
+        market_data = []
+        for batch in _batches(requested):
+            market_data.extend(
+                tastytrade.fetch_market_data(
+                    token,
+                    batch,
+                    [],
+                    [],
+                    [],
+                )
+            )
     except Exception:
         logging.exception("Failed to fetch brokerage market data.")
         market_data = []
         source_failures.add("/market-data/by-type")
 
     try:
-        volatility_metrics = tastytrade.fetch_volatility_data(
-            token,
-            requested,
-        )
+        volatility_metrics = []
+        for batch in _batches(requested):
+            volatility_metrics.extend(
+                tastytrade.fetch_volatility_data(token, batch)
+            )
     except Exception:
         logging.exception("Failed to fetch brokerage volatility metrics.")
         volatility_metrics = []

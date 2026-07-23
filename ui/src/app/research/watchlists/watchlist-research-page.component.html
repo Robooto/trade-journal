@@ -1,0 +1,244 @@
+<main class="watchlist-page" aria-labelledby="watchlist-title">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Brokerage research</p>
+      <h1 id="watchlist-title">Watchlists</h1>
+      <p>
+        Scan the symbols you already care about, see how price and volatility are moving,
+        then continue the investigation in Equity Hub.
+      </p>
+    </div>
+    <button mat-flat-button color="primary" type="button" (click)="reload()" [disabled]="loading">
+      <mat-icon>refresh</mat-icon>
+      Refresh data
+    </button>
+  </header>
+
+  @if (loading && !response) {
+    <section class="state-card" role="status">
+      <mat-spinner diameter="34"></mat-spinner>
+      <div>
+        <strong>Loading private watchlists</strong>
+        <p>Joining current market, volatility, and portfolio context.</p>
+      </div>
+    </section>
+  }
+
+  @if (error) {
+    <section class="state-card error-state" role="alert">
+      <mat-icon>cloud_off</mat-icon>
+      <div>
+        <strong>Watchlist research is unavailable</strong>
+        <p>{{ error }}</p>
+      </div>
+      <button mat-stroked-button type="button" (click)="reload()">Try again</button>
+    </section>
+  }
+
+  @if (response) {
+    <section class="summary-grid" aria-label="Watchlist research summary">
+      <article class="summary-card">
+        <mat-icon>format_list_bulleted</mat-icon>
+        <div>
+          <span>Symbols</span>
+          <strong>{{ metrics.total }}</strong>
+          <small>across {{ watchlists.length }} private lists</small>
+        </div>
+      </article>
+      <article class="summary-card">
+        <mat-icon>speed</mat-icon>
+        <div>
+          <span>IV rank coverage</span>
+          <strong>{{ metrics.withIvRank }}</strong>
+          <small>symbols with current IVR</small>
+        </div>
+      </article>
+      <article class="summary-card">
+        <mat-icon>swap_vert</mat-icon>
+        <div>
+          <span>IVR moving</span>
+          <strong>{{ metrics.movingIvRank }}</strong>
+          <small>absolute 5-day move of 5+ points</small>
+        </div>
+      </article>
+      <article class="summary-card">
+        <mat-icon>account_balance_wallet</mat-icon>
+        <div>
+          <span>Currently held</span>
+          <strong>{{ metrics.held }}</strong>
+          <small>symbols with portfolio exposure</small>
+        </div>
+      </article>
+    </section>
+
+    <section class="filter-card" aria-label="Watchlist filters">
+      <div class="filter-heading">
+        <div>
+          <p class="section-eyebrow">Research universe</p>
+          <strong>{{ visibleItems.length }} of {{ metrics.total }} symbols</strong>
+        </div>
+        <span>Updated {{ response.generated_at | date:'MMM d, h:mm a' }}</span>
+      </div>
+
+      <div class="filter-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Watchlist</mat-label>
+          <mat-select [(ngModel)]="selectedWatchlist">
+            <mat-option value="all">All private lists</mat-option>
+            @for (watchlist of watchlists; track watchlist.name) {
+              <mat-option [value]="watchlist.name">
+                {{ watchlist.name }} ({{ watchlist.symbol_count }})
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Find symbol</mat-label>
+          <mat-icon matPrefix>search</mat-icon>
+          <input matInput [(ngModel)]="query" placeholder="AAPL" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Sort by</mat-label>
+          <mat-select [(ngModel)]="sort">
+            @for (option of sortOptions; track option.value) {
+              <mat-option [value]="option.value">{{ option.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-checkbox [(ngModel)]="heldOnly">Held symbols only</mat-checkbox>
+      </div>
+    </section>
+
+    @if (response.missing_symbols.length) {
+      <section class="coverage-warning" role="status">
+        <mat-icon>info</mat-icon>
+        <span>
+          Supporting market context is incomplete for
+          {{ response.missing_symbols.join(', ') }}.
+        </span>
+      </section>
+    }
+
+    @if (visibleItems.length) {
+      <section class="watchlist-table" aria-label="Watchlist symbol research">
+        <div class="table-header" aria-hidden="true">
+          <span>Symbol</span>
+          <span>Market</span>
+          <span>Volatility</span>
+          <span>Research context</span>
+          <span></span>
+        </div>
+
+        @for (item of visibleItems; track item.symbol) {
+          <article class="watchlist-row">
+            <div class="symbol-cell">
+              <strong>{{ item.symbol }}</strong>
+              <div class="list-chips">
+                @for (watchlist of item.watchlists; track watchlist.name) {
+                  <span>{{ watchlist.name }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="market-cell">
+              <strong>{{ formatPrice(item.price.mark) }}</strong>
+              <span [class]="changeTone(item.price.five_session_change_percent)">
+                5d {{ formatChange(item.price.five_session_change_percent) }}
+              </span>
+              <small [class]="changeTone(item.price.day_change_percent)">
+                Today {{ formatChange(item.price.day_change_percent) }}
+              </small>
+            </div>
+
+            <div class="volatility-cell">
+              <div class="ivr-block" [attr.data-tone]="ivRankTone(item.volatility.iv_rank_percent)">
+                <span>IV rank</span>
+                <strong>{{ formatPercent(item.volatility.iv_rank_percent) }}</strong>
+              </div>
+              <dl>
+                <div>
+                  <dt>5d IVR</dt>
+                  <dd [class]="changeTone(item.volatility.iv_rank_5_day_change_percent)">
+                    {{ formatChange(item.volatility.iv_rank_5_day_change_percent, true) }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>IV index</dt>
+                  <dd>{{ formatPercent(item.volatility.iv_index_percent) }}</dd>
+                </div>
+                <div>
+                  <dt>5d IV</dt>
+                  <dd [class]="changeTone(item.volatility.iv_index_5_day_change_percent)">
+                    {{ formatChange(item.volatility.iv_index_5_day_change_percent, true) }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>IV percentile</dt>
+                  <dd>{{ formatPercent(item.volatility.iv_percentile_percent) }}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="context-cell">
+              <div class="context-chips">
+                @if (item.exposure.is_held) {
+                  <span class="held-chip">Held</span>
+                }
+                @if (item.exposure.option_position_count) {
+                  <span>{{ item.exposure.option_position_count }} option positions</span>
+                }
+                @if (warningCount(item)) {
+                  <span
+                    class="warning-chip"
+                    [matTooltip]="item.warnings.join(' ')"
+                  >
+                    {{ warningCount(item) }} data notes
+                  </span>
+                }
+              </div>
+              <dl>
+                <div>
+                  <dt>Earnings</dt>
+                  <dd>{{ earningsLabel(item) }}</dd>
+                </div>
+                <div>
+                  <dt>Liquidity</dt>
+                  <dd>{{ item.volatility.liquidity_rating ?? 'Unavailable' }}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="action-cell">
+              <a
+                mat-flat-button
+                color="primary"
+                [href]="equityHubUrl(item.symbol)"
+                target="_blank"
+                rel="noopener"
+              >
+                Equity Hub
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+            </div>
+          </article>
+        }
+      </section>
+    } @else {
+      <section class="empty-state">
+        <mat-icon>filter_alt_off</mat-icon>
+        <div>
+          <strong>No symbols match these filters</strong>
+          <p>Clear the symbol search, select another list, or include unheld names.</p>
+        </div>
+      </section>
+    }
+
+    <p class="research-note">
+      IV rank and movement are research context, not trade probability or a recommendation.
+      Upcoming earnings remain unavailable unless a verified forward-looking source supplies them.
+    </p>
+  }
+</main>

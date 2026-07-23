@@ -95,6 +95,51 @@ def test_batch_context_persists_and_calculates_five_session_trends(
     assert context.source_status[-1].status == DataStatus.OK
 
 
+def test_batch_context_chunks_large_symbol_sets(monkeypatch):
+    market_batches = []
+    volatility_batches = []
+    monkeypatch.setattr(tastytrade, "fetch_watchlists", lambda token: [])
+
+    def fetch_market_data(
+        token,
+        equity,
+        equity_option,
+        future,
+        future_option,
+    ):
+        market_batches.append(equity)
+        return []
+
+    def fetch_volatility_data(token, symbols):
+        volatility_batches.append(symbols)
+        return []
+
+    monkeypatch.setattr(tastytrade, "fetch_market_data", fetch_market_data)
+    monkeypatch.setattr(
+        tastytrade,
+        "fetch_volatility_data",
+        fetch_volatility_data,
+    )
+    monkeypatch.setattr(
+        orchestration,
+        "fetch_holding_snapshot",
+        lambda token, fetched_at: empty_holdings(),
+    )
+
+    symbols = [f"SYM{index}" for index in range(101)]
+    with session() as db:
+        context = orchestration.fetch_research_symbol_context(
+            db,
+            "Bearer FAKE",
+            symbols,
+            fetched_at=FETCHED_AT,
+        )
+
+    assert [len(batch) for batch in market_batches] == [100, 1]
+    assert [len(batch) for batch in volatility_batches] == [100, 1]
+    assert context.requested_symbols == symbols
+
+
 def test_batch_context_preserves_partial_source_failures(monkeypatch):
     def fail(*args, **kwargs):
         raise RuntimeError("private upstream detail")

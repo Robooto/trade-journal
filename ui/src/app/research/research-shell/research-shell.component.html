@@ -1,3 +1,13 @@
 <div class="research-route-shell">
+  <nav class="research-subnav" aria-label="Research views">
+    <a mat-button routerLink="/research/flow-ideas" routerLinkActive="active-research-link">
+      <mat-icon>manage_search</mat-icon>
+      Flow Ideas
+    </a>
+    <a mat-button routerLink="/research/watchlists" routerLinkActive="active-research-link">
+      <mat-icon>format_list_bulleted</mat-icon>
+      Watchlists
+    </a>
+  </nav>
   <router-outlet></router-outlet>
 </div>

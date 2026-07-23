@@ -402,6 +402,20 @@ class BrokerWatchlistListV1(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+class BrokerWatchlistResearchV1(BaseModel):
+    schema_version: Literal["broker-watchlist-research.v1"] = (
+        "broker-watchlist-research.v1"
+    )
+    generated_at: datetime
+    writes_enabled: bool
+    watchlists: list[BrokerWatchlistSummaryV1]
+    items: list[ResearchSymbolItemV1]
+    missing_symbols: list[str] = Field(default_factory=list)
+    source_status: list[SourceMetadataV1] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
 class AddWatchlistSymbolRequestV1(BaseModel):
     symbol: str = Field(
         min_length=1,

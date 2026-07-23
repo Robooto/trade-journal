@@ -76,6 +76,7 @@ GET /v1/broker/activity-inbox[?session_date=YYYY-MM-DD]
 PUT /v1/broker/activity-disposition
 POST /v1/broker/research-symbol-context
 GET /v1/broker/watchlists
+GET /v1/broker/watchlist-research
 POST /v1/broker/watchlists/{watchlist_name}/symbols
 GET /v1/broker/accounts
 GET /v1/broker/summary
@@ -134,6 +135,10 @@ Implemented backend foundations:
 
 - `GET /v1/broker/watchlists` returns every private list with its current
   symbols and whether explicit watchlist writes are enabled.
+- `GET /v1/broker/watchlist-research` de-duplicates those symbols and returns
+  their current price, IV index/rank/percentile, five-session price and IV-rank
+  movement, broker five-day IV-index movement, exposure, earnings availability,
+  and source quality in one read-only UI contract.
 - `POST /v1/broker/watchlists/{watchlist_name}/symbols` performs an idempotent
   add only when `BROKERAGE_WATCHLIST_WRITES_ENABLED=true`. Because Tastytrade's
   update route replaces the complete watchlist, the client fetches the latest

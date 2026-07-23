@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { FlowIdeaDetailPageComponent } from './flow-ideas/flow-idea-detail-page.component';
 import { FlowIdeasPageComponent } from './flow-ideas/flow-ideas-page.component';
 import { ResearchShellComponent } from './research-shell/research-shell.component';
+import { WatchlistResearchPageComponent } from './watchlists/watchlist-research-page.component';
 
 export const researchRoutes: Routes = [
   {
@@ -19,6 +20,11 @@ export const researchRoutes: Routes = [
         path: 'flow-ideas',
         component: FlowIdeasPageComponent,
         title: "Flow Ideas | Robin's Roost",
+      },
+      {
+        path: 'watchlists',
+        component: WatchlistResearchPageComponent,
+        title: "Watchlists | Robin's Roost",
       },
       {
         path: '',

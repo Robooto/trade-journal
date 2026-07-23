@@ -16,6 +16,7 @@ import { FlowIdeaDetailPageComponent } from './flow-ideas/flow-idea-detail-page.
 import { FlowIdeasPageComponent } from './flow-ideas/flow-ideas-page.component';
 import { ResearchRoutingModule } from './research-routing.module';
 import { ResearchShellComponent } from './research-shell/research-shell.component';
+import { WatchlistResearchPageComponent } from './watchlists/watchlist-research-page.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { ResearchShellComponent } from './research-shell/research-shell.componen
     BrokerageContextComponent,
     ReportUploadComponent,
     WatchlistControlComponent,
+    WatchlistResearchPageComponent,
   ],
   imports: [CommonModule, FormsModule, SharedMaterialModule, ResearchRoutingModule],
 })
