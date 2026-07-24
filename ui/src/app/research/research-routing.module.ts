@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { CharmPageComponent } from './charm/charm-page.component';
 import { FlowIdeaDetailPageComponent } from './flow-ideas/flow-idea-detail-page.component';
 import { FlowIdeasPageComponent } from './flow-ideas/flow-ideas-page.component';
 import { ResearchShellComponent } from './research-shell/research-shell.component';
@@ -20,6 +21,11 @@ export const researchRoutes: Routes = [
         path: 'flow-ideas',
         component: FlowIdeasPageComponent,
         title: "Flow Ideas | Robin's Roost",
+      },
+      {
+        path: 'charm',
+        component: CharmPageComponent,
+        title: "Charm Pressure | Robin's Roost",
       },
       {
         path: 'watchlists',

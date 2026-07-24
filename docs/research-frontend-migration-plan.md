@@ -206,3 +206,12 @@ queue, longer-window ticker comparison, and a saved research inbox that hands
 off to the journal. Trace gets its own future parity plan. Do not build a dynamic
 plugin framework yet; a small route/navigation registry and source-quality
 components are enough until multiple modules prove a broader abstraction.
+
+### Experimental Charm slice
+
+The Research shell now includes `/research/charm`. Angular owns only session and
+capture selection, chart rendering, formatting, and explicit quality labels.
+The mini owns TRACE Delta ingestion, Charm calculation, source selection,
+zero-crossing interpolation, robust scale metadata, freshness, and quality.
+The page is deliberately excluded from Flow Ideas scoring and keeps visual
+parity marked pending. The full Trace dashboard remains on the mini.

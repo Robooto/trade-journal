@@ -13,6 +13,10 @@ describe('researchRoutes', () => {
           title: "Flow Ideas | Robin's Roost",
         }),
         expect.objectContaining({
+          path: 'charm',
+          title: "Charm Pressure | Robin's Roost",
+        }),
+        expect.objectContaining({
           path: 'watchlists',
           title: "Watchlists | Robin's Roost",
         }),

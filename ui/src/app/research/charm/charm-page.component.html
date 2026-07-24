@@ -1,0 +1,92 @@
+<main class="charm-page" aria-labelledby="charm-title">
+  <header class="page-header">
+    <div>
+      <div class="title-line">
+        <p class="eyebrow">Trace research · experimental</p>
+        <span>Not used in scoring</span>
+      </div>
+      <h1 id="charm-title">Charm Pressure</h1>
+      <p>Explore how TRACE-derived Charm changed around SPX and where the nearest surface zero-crossing sat relative to spot.</p>
+    </div>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Session</mat-label>
+        <mat-select [(ngModel)]="selectedDate" (selectionChange)="loadSession()">
+          @for (date of dates; track date) { <mat-option [value]="date">{{ date | date:'EEE, MMM d' }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="button" (click)="loadSession()" [disabled]="loading || !selectedDate">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+    </div>
+  </header>
+
+  @if (loading && !overview) {
+    <section class="state-card" role="status"><mat-spinner diameter="34"></mat-spinner><div><strong>Loading Charm research</strong><p>Building at-market history and the latest surface.</p></div></section>
+  }
+  @if (error) {
+    <section class="state-card error-state" role="alert"><mat-icon>cloud_off</mat-icon><div><strong>Charm research is unavailable</strong><p>{{ error }}</p></div><button mat-stroked-button type="button" (click)="loadSession()">Try again</button></section>
+  }
+
+  @if (overview && selectedPoint) {
+    <section class="context-banner" role="note">
+      <mat-icon>science</mat-icon>
+      <div><strong>Research context, not direction</strong><span>Signs and zero-crossings are shown descriptively. SpotGamma visual parity is still pending, and Charm does not affect Flow Ideas.</span></div>
+      <span class="quality-pill" [attr.data-status]="overview.quality.status">{{ overview.quality.usable_percent | number:'1.1-1' }}% usable</span>
+    </section>
+
+    <section class="metric-grid" aria-label="Charm session summary">
+      <article><span>Selected Charm at market</span><strong [class.positive]="selectedPoint.charm_at_market > 0" [class.negative]="selectedPoint.charm_at_market < 0">{{ formatPressure(selectedPoint.charm_at_market) }}</strong><small>{{ selectedPoint.ts | date:'h:mm a' }} · SPX {{ selectedPoint.spot | number:'1.0-1' }}</small></article>
+      <article><span>Nearest Charm flip</span><strong>{{ selectedPoint.nearest_flip | number:'1.1-1' }}</strong><small>Spot {{ formatPoints(selectedPoint.spot_minus_flip) }} from flip</small></article>
+      <article><span>Session captures</span><strong>{{ overview.quality.usable_capture_count }} / {{ overview.quality.capture_count }}</strong><small>{{ overview.distribution.sign_transitions }} at-market sign transitions</small></article>
+      <article><span>Source context</span><strong>{{ selectedPoint.source_age_seconds / 60 | number:'1.1-1' }} min old</strong><small>{{ selectedPoint.interval_minutes | number:'1.0-1' }}-minute model interval</small></article>
+    </section>
+
+    @if (surface?.source?.close_window) {
+      <section class="close-warning" role="status"><mat-icon>schedule</mat-icon><div><strong>Close-window scaling is active</strong><span>Final-interval values can expand sharply into expiration and settlement. Charts use robust symmetric-log scaling so the rest of the session remains readable.</span></div></section>
+    }
+
+    <section class="workspace-grid">
+      <article class="chart-card history-card">
+        <header><div><p class="section-eyebrow">Session movement</p><h2>Charm at market</h2><span>Nearest surface value to live SPX for every capture</span></div><div class="legend"><span class="positive-key">Above zero</span><span class="negative-key">Below zero</span></div></header>
+        <div class="chart-wrap">
+          <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" role="img" aria-label="Intraday Charm at-market history">
+            <line x1="28" [attr.y1]="chartHeight / 2" [attr.x2]="chartWidth - 28" [attr.y2]="chartHeight / 2" class="zero-line" />
+            <path [attr.d]="historyPath" class="history-line" />
+            @for (point of overview.series; track point.capture_id; let index = $index) {
+              <circle [attr.cx]="historyX(index)" [attr.cy]="historyY(point.charm_at_market)" r="5" tabindex="0" [class.selected]="point.ts === selectedTs" [class.close-point]="point.close_window" (click)="selectPoint(point)" (keydown.enter)="selectPoint(point)" (keydown.space)="selectPoint(point)"><title>{{ point.ts | date:'h:mm a' }} · {{ formatPressure(point.charm_at_market) }}</title></circle>
+            }
+          </svg>
+          <div class="axis-labels"><span>{{ overview.series[0].ts | date:'h:mm a' }}</span><span>Zero</span><span>{{ overview.series[overview.series.length - 1].ts | date:'h:mm a' }}</span></div>
+        </div>
+        <footer><span>Robust symmetric-log scale</span><span>Session range {{ formatPressure(overview.distribution.min) }} to {{ formatPressure(overview.distribution.max) }}</span></footer>
+      </article>
+
+      <article class="chart-card surface-card">
+        <header><div><p class="section-eyebrow">Selected capture</p><h2>Charm surface near SPX</h2><span>{{ surface?.ts | date:'MMM d, h:mm a' }}</span></div><mat-spinner *ngIf="surfaceLoading" diameter="24"></mat-spinner></header>
+        <div class="surface-controls">
+          <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Capture</mat-label><mat-select [(ngModel)]="selectedTs" (selectionChange)="loadSurface()">@for (point of overview.series; track point.capture_id) {<mat-option [value]="point.ts">{{ point.ts | date:'h:mm a' }} · {{ formatPressure(point.charm_at_market) }}</mat-option>}</mat-select></mat-form-field>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic"><mat-label>Spot window</mat-label><mat-select [(ngModel)]="windowPoints" (selectionChange)="loadSurface()"><mat-option [value]="30">±30</mat-option><mat-option [value]="60">±60</mat-option><mat-option [value]="100">±100</mat-option></mat-select></mat-form-field>
+        </div>
+        @if (surface?.rows?.length) {
+          <div class="chart-wrap surface-chart">
+            <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" role="img" aria-label="Charm pressure by hypothetical SPX spot">
+              <line x1="28" [attr.y1]="chartHeight / 2" [attr.x2]="chartWidth - 28" [attr.y2]="chartHeight / 2" class="zero-line" />
+              @if (spotX !== null) { <line [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="chartHeight - 18" class="spot-line"><title>SPX spot {{ surface?.spot }}</title></line> }
+              @if (flipX !== null) { <line [attr.x1]="flipX" y1="18" [attr.x2]="flipX" [attr.y2]="chartHeight - 18" class="flip-line"><title>Nearest flip {{ surface?.nearest_flip }}</title></line> }
+              <path [attr.d]="surfacePath" class="surface-line" />
+            </svg>
+            <div class="axis-labels"><span>{{ surface!.rows[0].spot | number:'1.0-0' }}</span><span>SPX {{ surface!.spot | number:'1.0-0' }} · Flip {{ surface!.nearest_flip | number:'1.1-1' }}</span><span>{{ surface!.rows[surface!.rows.length - 1].spot | number:'1.0-0' }}</span></div>
+          </div>
+        }
+        <footer><span>Model {{ surface?.source?.model_ts | date:'h:mm a' }} → {{ surface?.source?.next_model_ts | date:'h:mm a' }}</span><span>Snapshot {{ surface?.source?.snapshot_ts | date:'h:mm a' }}</span></footer>
+      </article>
+    </section>
+
+    <section class="detail-grid">
+      <article><p class="section-eyebrow">Quality</p><h3>Source trust</h3><dl><div><dt>Usable rows</dt><dd>{{ overview.quality.usable_rows | number }} / {{ overview.quality.total_rows | number }}</dd></div><div><dt>Expected boundaries</dt><dd>{{ overview.quality.boundary_rows | number }}</dd></div><div><dt>Unexpected after-target rows</dt><dd>{{ overview.quality.snapshot_after_target_rows | number }}</dd></div><div><dt>Observed intervals</dt><dd>{{ overview.quality.min_interval_minutes }}–{{ overview.quality.max_interval_minutes }} min</dd></div></dl></article>
+      <article><p class="section-eyebrow">How to read it</p><h3>Descriptive signals</h3><ul><li><strong>At market</strong> follows the surface cell nearest current SPX.</li><li><strong>Charm flip</strong> interpolates the nearest zero-crossing around spot.</li><li><strong>Close window</strong> warns when expiry mechanics can dominate the scale.</li></ul></article>
+      <article><p class="section-eyebrow">Remaining gate</p><h3>Visual parity</h3><p>Compare morning, midday, and close snapshots with the SpotGamma Charm heatmap before assigning directional meaning or connecting this data to idea generation.</p></article>
+    </section>
+  }
+</main>
