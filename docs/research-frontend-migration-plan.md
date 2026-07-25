@@ -215,3 +215,20 @@ The mini owns TRACE Delta ingestion, Charm calculation, source selection,
 zero-crossing interpolation, robust scale metadata, freshness, and quality.
 The page is deliberately excluded from Flow Ideas scoring and keeps visual
 parity marked pending. The full Trace dashboard remains on the mini.
+## TRACE migration readiness — 2026-07-25
+
+The first TRACE preparation wave is complete in `market-data-pipeline`:
+
+- **TR-01:** the dashboard read models have additive schema versions and a
+  documented contract inventory;
+- **TR-02:** `GET /api/trace/sessions` supplies newest-first session discovery,
+  and TRACE responses expose `ready`, `partial`, or `missing` status with
+  generated time, freshness, explicit quality fields, and warning codes; and
+- **TR-03:** TRACE presentation joins use `(date, capture_id)`, with fixtures
+  that reuse a capture ID on a second date plus deterministic ready, partial,
+  missing, current-session, and historical-session tests.
+
+The next Angular wave may add `/research/trace`, typed models, an API service,
+and a facade against the existing `/research-api/` proxy. Keep the standalone
+mini TRACE page available as the parity baseline. No TRACE calculations,
+classification, freshness decisions, or quality rules belong in Angular.
