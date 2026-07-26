@@ -1,0 +1,45 @@
+<section class="gamma-panel" aria-labelledby="gamma-profile-title">
+  <header>
+    <div>
+      <p class="gamma-eyebrow">Selected capture</p>
+      <h2 id="gamma-profile-title">Gamma Profile</h2>
+      <p>Signed gamma around spot for the active TRACE capture.</p>
+    </div>
+    @if (gammaProfile) {
+      <div class="profile-facts">
+        <span>Spot <strong>{{ gammaProfile.spot | number:'1.0-1' }}</strong></span>
+        <span>Slope <strong>{{ formatCompact(gammaProfile.cross_spot_slope) }}/pt</strong></span>
+      </div>
+    }
+  </header>
+  @if (loading) {
+    <div class="profile-state"><mat-spinner diameter="22"></mat-spinner><span>Loading capture profile</span></div>
+  } @else if (error) {
+    <div class="profile-state profile-state--error"><mat-icon>warning</mat-icon><span>{{ error }}</span></div>
+  } @else if (hasData) {
+    <svg
+      class="profile-chart"
+      [attr.viewBox]="'0 0 ' + width + ' ' + height"
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Gamma profile around the selected TRACE spot"
+    >
+      @for (tick of yTicks; track tick.label) {
+        <line class="profile-grid" x1="50" [attr.y1]="tick.position" [attr.x2]="width - 26" [attr.y2]="tick.position" />
+        <text class="profile-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
+      }
+      <line class="profile-zero" x1="50" [attr.y1]="zeroY" [attr.x2]="width - 26" [attr.y2]="zeroY" />
+      @for (bar of bars; track bar.key) {
+        <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
+      }
+      <line class="profile-spot" [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="height - 36" />
+      <polyline class="profile-line" [attr.points]="points" />
+      <circle class="profile-marker" [attr.cx]="markerX" [attr.cy]="markerY" r="4.5" />
+      @for (tick of xTicks; track tick.position) {
+        <text class="profile-axis-label" [attr.x]="tick.position" [attr.y]="height - 12" text-anchor="middle">{{ tick.label }}</text>
+      }
+    </svg>
+  } @else {
+    <div class="profile-state"><span>Select a capture with an available gamma profile.</span></div>
+  }
+</section>

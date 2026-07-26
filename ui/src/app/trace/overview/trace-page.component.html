@@ -156,6 +156,14 @@
       </div>
     </section>
   }
+  @if (facade.bundle()?.histogram; as histogram) {
+    <app-signed-gex-map
+      [rows]="facade.captureRows()"
+      [nodes]="histogram.rows"
+      [activeIndex]="facade.selectedCaptureIndex()"
+    />
+  }
+
   @if (facade.captureRows().length) {
     <app-trace-session-trends
       [rows]="facade.captureRows()"
@@ -163,14 +171,11 @@
     />
   }
 
-  @if (facade.bundle()?.histogram; as histogram) {
-    <app-signed-gex-map
-      [rows]="facade.captureRows()"
-      [nodes]="histogram.rows"
-      [activeIndex]="facade.selectedCaptureIndex()"
+  @if (facade.selectedCapture()) {
+    <app-trace-gamma-profile
       [gammaProfile]="facade.gammaProfile()"
-      [gammaProfileLoading]="facade.gammaProfileLoading()"
-      [gammaProfileError]="facade.gammaProfileError()"
+      [loading]="facade.gammaProfileLoading()"
+      [error]="facade.gammaProfileError()"
     />
   }
 
@@ -181,7 +186,6 @@
       (captureSelected)="facade.selectCapture($event)"
     />
   }
-
   <section class="trace-readiness-panel" aria-labelledby="trace-readiness-title">
     <div class="trace-section-heading">
       <div>

@@ -71,48 +71,4 @@
     <span><i class="legend-dot stable"></i>Stable</span>
   </div>
 
-  <section class="gamma-profile" aria-labelledby="gamma-profile-title">
-    <header>
-      <div>
-        <p class="gex-eyebrow">Selected capture</p>
-        <h3 id="gamma-profile-title">Gamma around spot</h3>
-      </div>
-      @if (gammaProfile) {
-        <div class="profile-facts">
-          <span>Spot <strong>{{ gammaProfile.spot | number:'1.0-1' }}</strong></span>
-          <span>Slope <strong>{{ formatCompact(gammaProfile.cross_spot_slope) }}/pt</strong></span>
-        </div>
-      }
-    </header>
-    @if (gammaProfileLoading) {
-      <div class="profile-state"><mat-spinner diameter="22"></mat-spinner><span>Loading capture profile</span></div>
-    } @else if (gammaProfileError) {
-      <div class="profile-state profile-state--error"><mat-icon>warning</mat-icon><span>{{ gammaProfileError }}</span></div>
-    } @else if (profileHasData) {
-      <svg
-        class="profile-chart"
-        [attr.viewBox]="'0 0 ' + profileWidth + ' ' + profileHeight"
-        preserveAspectRatio="none"
-        role="img"
-        aria-label="Gamma profile around the selected TRACE spot"
-      >
-        @for (tick of profileYTicks; track tick.label) {
-          <line class="gex-grid" x1="50" [attr.y1]="tick.position" [attr.x2]="profileWidth - 26" [attr.y2]="tick.position" />
-          <text class="gex-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
-        }
-        <line class="profile-zero" x1="50" [attr.y1]="profileZeroY" [attr.x2]="profileWidth - 26" [attr.y2]="profileZeroY" />
-        @for (bar of profileBars; track bar.key) {
-          <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
-        }
-        <line class="profile-spot" [attr.x1]="profileSpotX" y1="18" [attr.x2]="profileSpotX" [attr.y2]="profileHeight - 36" />
-        <polyline class="profile-line" [attr.points]="profilePoints" />
-        <circle class="profile-marker" [attr.cx]="profileMarkerX" [attr.cy]="profileMarkerY" r="4.5" />
-        @for (tick of profileXTicks; track tick.position) {
-          <text class="gex-axis-label" [attr.x]="tick.position" [attr.y]="profileHeight - 12" text-anchor="middle">{{ tick.label }}</text>
-        }
-      </svg>
-    } @else {
-      <div class="profile-state"><span>Select a capture with an available gamma profile.</span></div>
-    }
-  </section>
 </section>

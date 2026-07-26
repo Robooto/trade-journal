@@ -6,7 +6,9 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SharedMaterialModule } from '../../shared/material.module';
 import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
+import { GammaProfileComponent } from './components/gamma-profile/gamma-profile.component';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
+import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
 import { TracePageComponent } from './trace-page.component';
 
@@ -42,7 +44,7 @@ describe('TracePageComponent', () => {
   beforeEach(async () => {
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, CaptureHistoryComponent, SessionTrendsComponent],
+      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, SessionTrendsComponent, SignedGexMapComponent],
       imports: [
         CommonModule,
         FormsModule,
@@ -146,5 +148,34 @@ describe('TracePageComponent', () => {
 
     expect(facade.selectDate).toHaveBeenCalledWith('2026-07-24');
     expect(facade.selectCapture).toHaveBeenCalledWith(4);
+  });
+
+  it('keeps charts in the same sequence as the legacy TRACE dashboard', () => {
+    const capture = {
+      ts: '2026-07-24T13:00:05-07:00',
+      capture_id: 'capture-2',
+      spot: 7412,
+      spx_hiro: 1,
+      equities_hiro: -1,
+      put_wall: 7300,
+      hedge_wall: 7410,
+      call_wall: 7500,
+      global_shelf_center: 7405,
+    };
+    facade.captureRows.set([capture]);
+    facade.selectedCapture.set(capture);
+    (facade.bundle as any).set({ histogram: { rows: [] } });
+
+    fixture.detectChanges();
+
+    const order = Array.from(fixture.nativeElement.querySelectorAll(
+      'app-signed-gex-map, app-trace-session-trends, app-trace-gamma-profile, app-trace-capture-history',
+    )).map((element: any) => element.tagName.toLowerCase());
+    expect(order).toEqual([
+      'app-signed-gex-map',
+      'app-trace-session-trends',
+      'app-trace-gamma-profile',
+      'app-trace-capture-history',
+    ]);
   });
 });

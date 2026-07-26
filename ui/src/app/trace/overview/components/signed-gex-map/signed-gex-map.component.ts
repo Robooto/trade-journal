@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/c
 
 import {
   TraceDashboardRow,
-  TraceGammaProfileResponse,
   TraceHistogramRow,
 } from '../../trace.models';
 
@@ -25,16 +24,6 @@ interface AxisTick {
   readonly position: number;
   readonly label: string;
 }
-
-interface ProfileBar {
-  readonly key: string;
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-  readonly cssClass: string;
-  readonly title: string;
-}
 @Component({
   selector: 'app-signed-gex-map',
   templateUrl: './signed-gex-map.component.html',
@@ -46,14 +35,9 @@ export class SignedGexMapComponent implements OnChanges {
   @Input() rows: readonly TraceDashboardRow[] = [];
   @Input() nodes: readonly TraceHistogramRow[] = [];
   @Input() activeIndex = 0;
-  @Input() gammaProfile: TraceGammaProfileResponse | null = null;
-  @Input() gammaProfileLoading = false;
-  @Input() gammaProfileError: string | null = null;
 
   readonly mapWidth = 1200;
   readonly mapHeight = 440;
-  readonly profileWidth = 600;
-  readonly profileHeight = 240;
 
   windowMode: WindowMode = 'near';
   detailMode: DetailMode = 'key';
@@ -64,19 +48,9 @@ export class SignedGexMapComponent implements OnChanges {
   activeX = 0;
   activeY = 0;
   activeNodes: readonly TraceHistogramRow[] = [];
-  profilePoints = '';
-  profileBars: readonly ProfileBar[] = [];
-  profileXTicks: readonly AxisTick[] = [];
-  profileYTicks: readonly AxisTick[] = [];
-  profileZeroY = 0;
-  profileSpotX = 0;
-  profileMarkerX = 0;
-  profileMarkerY = 0;
-  profileHasData = false;
 
   ngOnChanges(): void {
     this.rebuildMap();
-    this.rebuildProfile();
   }
 
   setWindowMode(mode: WindowMode): void {
@@ -167,55 +141,6 @@ export class SignedGexMapComponent implements OnChanges {
     this.activeNodes = selectKeyNodes(selectedCaptureNodes, [activeRow])
       .sort((left, right) => (right.cluster_share ?? 0) - (left.cluster_share ?? 0))
       .slice(0, 6);
-  }
-
-  private rebuildProfile(): void {
-    const rows = this.gammaProfile?.rows ?? [];
-    if (!rows.length) {
-      this.profilePoints = '';
-      this.profileBars = [];
-      this.profileXTicks = [];
-      this.profileYTicks = [];
-      this.profileHasData = false;
-      return;
-    }
-    const xMinimum = Math.min(...rows.map(row => row.spot));
-    const xMaximum = Math.max(...rows.map(row => row.spot));
-    const gammaLimit = Math.max(1, ...rows.map(row => Math.abs(row.gamma)));
-    const x = (spot: number) => 50 + (spot - xMinimum) / Math.max(1, xMaximum - xMinimum) * (this.profileWidth - 76);
-    const y = (gamma: number) => 18 + (gammaLimit - gamma) / (gammaLimit * 2) * (this.profileHeight - 54);
-    this.profilePoints = rows.map(row => `${x(row.spot).toFixed(2)},${y(row.gamma).toFixed(2)}`).join(' ');
-    const zeroY = y(0);
-    const barWidth = Math.max(3, (this.profileWidth - 76) / Math.max(1, rows.length) * 0.66);
-    this.profileBars = rows.map((row, index) => {
-      const rowY = y(row.gamma);
-      return {
-        key: `${row.spot}:${index}`,
-        x: x(row.spot) - barWidth / 2,
-        y: Math.min(zeroY, rowY),
-        width: barWidth,
-        height: Math.max(1, Math.abs(zeroY - rowY)),
-        cssClass: row.gamma >= 0 ? 'profile-bar--positive' : 'profile-bar--negative',
-        title: `${row.spot.toFixed(1)} | ${this.formatCompact(row.gamma)}`,
-      };
-    });
-    this.profileXTicks = makeTicks(xMinimum, xMaximum, 5).map(value => ({
-      position: x(value),
-      label: `${Math.round(value)}`,
-    }));
-    this.profileYTicks = [-gammaLimit, 0, gammaLimit].map(value => ({
-      position: y(value),
-      label: this.formatCompact(value),
-    }));
-    this.profileZeroY = y(0);
-    this.profileSpotX = x(this.gammaProfile?.spot ?? xMinimum);
-    const nearest = [...rows].sort((left, right) =>
-      Math.abs(left.spot - (this.gammaProfile?.spot ?? 0)) -
-      Math.abs(right.spot - (this.gammaProfile?.spot ?? 0)),
-    )[0];
-    this.profileMarkerX = x(nearest.spot);
-    this.profileMarkerY = y(nearest.gamma);
-    this.profileHasData = true;
   }
 
   private visibleDomain(activeIndex: number, activeRow: TraceDashboardRow): [number, number] {
