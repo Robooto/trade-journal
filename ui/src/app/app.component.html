@@ -34,7 +34,7 @@
   <mat-progress-bar mode="indeterminate"></mat-progress-bar>
 }
 
-<mat-sidenav-container class="full-height app-frame">
+<mat-sidenav-container class="full-height app-frame" autosize>
   <mat-sidenav #sidenav mode="side" opened [class.collapsed]="isCollapsed" class="app-sidenav">
     <mat-nav-list class="app-nav !px-2 !py-4">
       <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" matTooltip="Dashboard" [matTooltipDisabled]="!isCollapsed">
