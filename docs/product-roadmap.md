@@ -280,8 +280,11 @@ remain on the mini, while its first read-only Angular foundation is now availabl
   stale-request cancellation.
 - Price structure and zero-centered HIRO trend panels now share the timeline's
   selected-capture cursor. They render versioned backend values with responsive
-  SVGs, patterned series, and no frontend market-direction classification. Exact
-  capture-history inspection and the visual parity/cutover audit are next.
+  SVGs, patterned series, and no frontend market-direction classification.
+- Exact capture history and signed gamma bars are now present. Contract and
+  interaction parity are ready; retiring the standalone TRACE presentation is
+  blocked on the deployed side-by-side visual checklist and user sign-off in
+  `docs/trace-tr08-parity-audit.md`.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus

@@ -101,6 +101,9 @@
           <text class="gex-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
         }
         <line class="profile-zero" x1="50" [attr.y1]="profileZeroY" [attr.x2]="profileWidth - 26" [attr.y2]="profileZeroY" />
+        @for (bar of profileBars; track bar.key) {
+          <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
+        }
         <line class="profile-spot" [attr.x1]="profileSpotX" y1="18" [attr.x2]="profileSpotX" [attr.y2]="profileHeight - 36" />
         <polyline class="profile-line" [attr.points]="profilePoints" />
         <circle class="profile-marker" [attr.cx]="profileMarkerX" [attr.cy]="profileMarkerY" r="4.5" />

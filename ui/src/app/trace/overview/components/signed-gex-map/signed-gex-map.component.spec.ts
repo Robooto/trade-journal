@@ -116,6 +116,8 @@ describe('SignedGexMapComponent', () => {
     expect(fixture.nativeElement.querySelector('circle.gex-node--positive')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('path.gex-node--negative')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('polyline.profile-line')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('rect.profile-bar--positive')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('rect.profile-bar--negative')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('47.0M/pt');
   });
 

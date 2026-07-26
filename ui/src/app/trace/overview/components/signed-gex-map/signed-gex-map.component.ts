@@ -26,6 +26,15 @@ interface AxisTick {
   readonly label: string;
 }
 
+interface ProfileBar {
+  readonly key: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly cssClass: string;
+  readonly title: string;
+}
 @Component({
   selector: 'app-signed-gex-map',
   templateUrl: './signed-gex-map.component.html',
@@ -56,6 +65,7 @@ export class SignedGexMapComponent implements OnChanges {
   activeY = 0;
   activeNodes: readonly TraceHistogramRow[] = [];
   profilePoints = '';
+  profileBars: readonly ProfileBar[] = [];
   profileXTicks: readonly AxisTick[] = [];
   profileYTicks: readonly AxisTick[] = [];
   profileZeroY = 0;
@@ -163,6 +173,7 @@ export class SignedGexMapComponent implements OnChanges {
     const rows = this.gammaProfile?.rows ?? [];
     if (!rows.length) {
       this.profilePoints = '';
+      this.profileBars = [];
       this.profileXTicks = [];
       this.profileYTicks = [];
       this.profileHasData = false;
@@ -174,6 +185,20 @@ export class SignedGexMapComponent implements OnChanges {
     const x = (spot: number) => 50 + (spot - xMinimum) / Math.max(1, xMaximum - xMinimum) * (this.profileWidth - 76);
     const y = (gamma: number) => 18 + (gammaLimit - gamma) / (gammaLimit * 2) * (this.profileHeight - 54);
     this.profilePoints = rows.map(row => `${x(row.spot).toFixed(2)},${y(row.gamma).toFixed(2)}`).join(' ');
+    const zeroY = y(0);
+    const barWidth = Math.max(3, (this.profileWidth - 76) / Math.max(1, rows.length) * 0.66);
+    this.profileBars = rows.map((row, index) => {
+      const rowY = y(row.gamma);
+      return {
+        key: `${row.spot}:${index}`,
+        x: x(row.spot) - barWidth / 2,
+        y: Math.min(zeroY, rowY),
+        width: barWidth,
+        height: Math.max(1, Math.abs(zeroY - rowY)),
+        cssClass: row.gamma >= 0 ? 'profile-bar--positive' : 'profile-bar--negative',
+        title: `${row.spot.toFixed(1)} | ${this.formatCompact(row.gamma)}`,
+      };
+    });
     this.profileXTicks = makeTicks(xMinimum, xMaximum, 5).map(value => ({
       position: x(value),
       label: `${Math.round(value)}`,

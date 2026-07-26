@@ -283,7 +283,17 @@ from the backend. Angular performs only chart scaling and formatting; it does
 not recreate the mini's recent-window direction classification or add trading
 interpretation.
 
-Keep the standalone mini TRACE page as the visual parity baseline. The next
-slice is **TR-08: exact capture-history inspection and parity audit**, followed
-by a decision on retiring the standalone TRACE presentation while retaining its
-APIs and a rollback path.
+### TR-08 — Exact capture inspection and parity audit — in progress
+
+A collapsed capture-history table now exposes every versioned timeline row and
+synchronizes timestamp selection through the shared facade. Gamma around spot
+now restores signed bars beneath the curve, closing a semantic difference found
+against the legacy implementation. Contract, interaction, responsive
+containment, and intentional differences are recorded in
+`docs/trace-tr08-parity-audit.md`.
+
+Keep the standalone mini TRACE page and Legacy TRACE link as the visual parity
+baseline and rollback path. Cutover remains blocked until the deployed
+side-by-side checklist passes and the user confirms that the Angular charts
+preserve the research meaning they rely on. The mini APIs remain in place after
+any presentation cutover.

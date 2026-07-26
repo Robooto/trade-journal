@@ -5,6 +5,7 @@ import { signal } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SharedMaterialModule } from '../../shared/material.module';
+import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { TraceFacade } from './data-access/trace.facade';
 import { TracePageComponent } from './trace-page.component';
@@ -41,7 +42,7 @@ describe('TracePageComponent', () => {
   beforeEach(async () => {
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, SessionTrendsComponent],
+      declarations: [TracePageComponent, CaptureHistoryComponent, SessionTrendsComponent],
       imports: [
         CommonModule,
         FormsModule,

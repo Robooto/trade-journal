@@ -1,0 +1,63 @@
+<details class="history-panel">
+  <summary>
+    <span>
+      <small>Exact session data</small>
+      <strong>Capture history</strong>
+    </span>
+    <span>{{ rows.length }} captures</span>
+  </summary>
+
+  <div class="history-note">Select a timestamp to synchronize the timeline, snapshot, charts, and structure map.</div>
+  <div class="history-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Time</th>
+          <th scope="col">Spot</th>
+          <th scope="col">SPX HIRO</th>
+          <th scope="col">Equities HIRO</th>
+          <th scope="col">Walls</th>
+          <th scope="col">Shelf</th>
+          <th scope="col">Gamma</th>
+          <th scope="col">Flow</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows; track row.capture_id; let index = $index) {
+          <tr [class.active]="index === activeIndex" [attr.aria-current]="index === activeIndex ? 'true' : null">
+            <td>
+              <button type="button" (click)="selectCapture(index)" [attr.aria-label]="'Select TRACE capture at ' + formatTime(row.ts)">
+                {{ formatTime(row.ts) }}
+              </button>
+            </td>
+            <td>{{ formatNumber(row.spot) }}</td>
+            <td>
+              <strong [attr.data-tone]="valueTone(row.spx_hiro)">{{ formatCompact(row.spx_hiro) }}</strong>
+              <small>{{ formatCompact(row.spx_hiro_rate_per_minute) }}/min</small>
+            </td>
+            <td>
+              <strong [attr.data-tone]="valueTone(row.equities_hiro)">{{ formatCompact(row.equities_hiro) }}</strong>
+              <small>{{ formatCompact(row.equities_hiro_rate_per_minute) }}/min</small>
+            </td>
+            <td>
+              <strong>{{ formatNumber(row.put_wall, 0) }} / {{ formatNumber(row.hedge_wall, 0) }} / {{ formatNumber(row.call_wall, 0) }}</strong>
+              <small>put / hedge / call</small>
+            </td>
+            <td>
+              <strong>{{ formatNumber(row.global_shelf_center) }}</strong>
+              <small>{{ formatLabel(row.shelf_direction) }} · {{ formatNumber(row.shelf_center_d) }} pts</small>
+            </td>
+            <td>
+              <strong>{{ formatLabel(row.local_gamma_setup) }}</strong>
+              <small>{{ formatLabel(row.pocket_sign) }} pocket</small>
+            </td>
+            <td>
+              <strong>{{ formatLabel(row.flow_relationship) }}</strong>
+              <small>{{ formatLabel(row.flow_state) }}</small>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</details>
