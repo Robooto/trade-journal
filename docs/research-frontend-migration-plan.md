@@ -209,7 +209,7 @@ components are enough until multiple modules prove a broader abstraction.
 
 ### Experimental Charm slice
 
-The Research shell now includes `/research/charm`. Angular owns only session and
+The first-class TRACE workspace includes Charm at `/trace/charm`. Angular owns only session and
 capture selection, chart rendering, formatting, and explicit quality labels.
 The mini owns TRACE Delta ingestion, Charm calculation, source selection,
 zero-crossing interpolation, robust scale metadata, freshness, and quality.
@@ -230,7 +230,7 @@ The first TRACE preparation wave is complete in `market-data-pipeline`:
 
 ### TR-04 — Angular TRACE foundation — completed 2026-07-26
 
-The Research shell now exposes `/research/trace` with typed versioned models, a
+The first-class TRACE workspace now exposes `/trace/overview` with typed versioned models, a
 same-origin API service, and a cancellation-safe facade. Session discovery picks
 the newest available date, independent source loads preserve useful partial data,
 and the readiness page shows backend status, quality, freshness, capture counts,
@@ -242,4 +242,6 @@ Angular presentation is built out. The next slice is **TR-05: Snapshot vertical
 slice**—render the selected session timeline and glanceable snapshot using the
 existing facade, then compare it against the mini UI. TRACE calculations,
 classification, freshness decisions, and quality rules remain exclusively in
-`market-data-pipeline`.
+`market-data-pipeline`. The sidebar places TRACE directly below Journal, while
+Flow Ideas and Watchlists remain grouped under Research; legacy `/research/trace`
+and `/research/charm` URLs redirect to the new workspace.

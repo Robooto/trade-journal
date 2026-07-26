@@ -8,6 +8,11 @@ export const appRoutes: Routes = [
       import('./journal/journal.module').then(m => m.JournalModule)
   },
   {
+    path: 'trace',
+    loadChildren: () =>
+      import('./trace/trace.module').then(m => m.TraceModule)
+  },
+  {
     path: 'positions',
     loadChildren: () =>
       import('./positions/positions.module').then(m => m.PositionsModule)

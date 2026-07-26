@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
 
 import { SharedMaterialModule } from '../shared/material.module';
-import { CharmPageComponent } from './charm/charm-page.component';
 import { BrokerageContextComponent } from './flow-ideas/components/brokerage-context/brokerage-context.component';
 import { CandidateListComponent } from './flow-ideas/components/candidate-list/candidate-list.component';
 import { ContractEvidenceComponent } from './flow-ideas/components/contract-evidence/contract-evidence.component';
@@ -17,14 +16,11 @@ import { FlowIdeaDetailPageComponent } from './flow-ideas/flow-idea-detail-page.
 import { FlowIdeasPageComponent } from './flow-ideas/flow-ideas-page.component';
 import { ResearchRoutingModule } from './research-routing.module';
 import { ResearchShellComponent } from './research-shell/research-shell.component';
-import { TracePageComponent } from './trace/trace-page.component';
 import { WatchlistResearchPageComponent } from './watchlists/watchlist-research-page.component';
 
 @NgModule({
   declarations: [
     ResearchShellComponent,
-    TracePageComponent,
-    CharmPageComponent,
     FlowIdeasPageComponent,
     FlowIdeaDetailPageComponent,
     FlowFiltersComponent,

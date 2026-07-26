@@ -49,6 +49,10 @@
         <mat-icon matListItemIcon>edit_note</mat-icon>
         @if (!isCollapsed) { <span>Journal</span> }
       </a>
+      <a mat-list-item routerLink="/trace" routerLinkActive="active-link" matTooltip="TRACE" [matTooltipDisabled]="!isCollapsed">
+        <mat-icon matListItemIcon>monitoring</mat-icon>
+        @if (!isCollapsed) { <span>TRACE</span> }
+      </a>
       <a mat-list-item routerLink="/positions" routerLinkActive="active-link" matTooltip="Positions" [matTooltipDisabled]="!isCollapsed">
         <mat-icon matListItemIcon>account_balance_wallet</mat-icon>
         @if (!isCollapsed) { <span>Positions</span> }

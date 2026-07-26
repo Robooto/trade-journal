@@ -256,8 +256,8 @@ remain on the mini, while its first read-only Angular foundation is now availabl
 
 - Use the `trade-journal` Angular application as the shared operator shell for
   journal, positions, FlowPatrol ideas, research handoffs, and later review
-  workflows. Keep an external Trace link until a separate Trace migration
-  reaches parity.
+  workflows. Keep the legacy mini TRACE link inside the new TRACE workspace
+  until the Angular presentation reaches parity.
 - Keep `trade-journal`, `market-data-pipeline`, and assistant services as
   separate backend ownership boundaries. UI consolidation must not become
   backend consolidation.
@@ -265,10 +265,12 @@ remain on the mini, while its first read-only Angular foundation is now availabl
   freshness, and safety policy in the owning backend. The frontend should
   request documented read models, render them, collect user input, and invoke
   explicit commands; it should not reproduce business logic.
-- TRACE migration foundation now includes `/research/trace`, versioned typed models,
+- TRACE is now a first-class sidebar workspace directly below Journal. Its
+  `/trace/overview` route includes versioned typed models,
   same-origin API access, cancellation-safe session state, partial-source isolation,
   and explicit backend readiness/quality status. The mini dashboard remains the
-  presentation parity baseline until later TRACE slices are complete.
+  presentation parity baseline until later TRACE slices are complete. Charm now lives
+  alongside the overview at `/trace/charm`; old Research URLs redirect safely.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus

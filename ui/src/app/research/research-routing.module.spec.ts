@@ -14,11 +14,11 @@ describe('researchRoutes', () => {
         }),
         expect.objectContaining({
           path: 'trace',
-          title: "TRACE | Robin's Roost",
+          redirectTo: '/trace/overview',
         }),
         expect.objectContaining({
           path: 'charm',
-          title: "Charm Pressure | Robin's Roost",
+          redirectTo: '/trace/charm',
         }),
         expect.objectContaining({
           path: 'watchlists',
