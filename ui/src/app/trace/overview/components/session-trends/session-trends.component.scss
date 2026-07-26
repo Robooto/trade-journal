@@ -29,7 +29,7 @@
 .trend-marker { stroke:#0b1017; stroke-width:1.5; vector-effect:non-scaling-stroke; }
 .trend-marker.trend-line--spot{fill:#f8f2d6}.trend-marker.trend-line--put{fill:#f2a900}.trend-marker.trend-line--hedge{fill:#f07b72}.trend-marker.trend-line--call{fill:#70c69b}.trend-marker.trend-line--shelf{fill:#36c5c7}.trend-marker.trend-line--spx-hiro{fill:#6ea8fe}.trend-marker.trend-line--equities-hiro{fill:#c084fc}
 .structure-node{stroke-width:1.2;vector-effect:non-scaling-stroke}.structure-node--positive{fill:#58c3f2;stroke:#9addfb}.structure-node--negative{fill:#8e78c8;stroke:#c5b5f4}
-.structure-node--strengthening{filter:drop-shadow(0 0 2px currentColor)}.structure-node--forming{stroke-dasharray:2 1}
+.structure-node--strengthening{stroke-width:1.4}.structure-node--forming{stroke-dasharray:2 1}
 .hiro-direction-marker{stroke:#0b1017;stroke-width:.8;vector-effect:non-scaling-stroke}.hiro-direction-marker--up{fill:#4ade80}.hiro-direction-marker--down{fill:#fb7185}
 .hiro-zero-line { stroke:rgba(223,233,251,.38); stroke-width:1.2; vector-effect:non-scaling-stroke; }
 .hiro-facts { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; }

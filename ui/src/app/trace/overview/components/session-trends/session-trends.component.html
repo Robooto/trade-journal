@@ -36,15 +36,15 @@
             <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
             <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
           }
-          @for (series of priceSeries; track series.key) {
-            <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
-          }
           @for (marker of priceNodeMarkers; track marker.key) {
             @if (marker.negative) {
               <path class="structure-node structure-node--negative" [ngClass]="marker.cssClass" [attr.d]="marker.path" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></path>
             } @else {
               <circle class="structure-node structure-node--positive" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" [attr.r]="marker.radius" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></circle>
             }
+          }
+          @for (series of priceSeries; track series.key) {
+            <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
           }
           <line class="trend-active-line" [attr.x1]="priceActiveX" y1="20" [attr.x2]="priceActiveX" [attr.y2]="priceHeight - 46" />
           @for (marker of priceMarkers; track marker.key) {

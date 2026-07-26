@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 
 import { TraceDashboardRow, TraceHistogramRow } from '../../trace.models';
+import { selectKeyGexNodes } from '../../signed-gex-node-selection';
 
 type PriceWindowMode = 'near' | 'full';
 type NumericRowKey = keyof Pick<
@@ -180,12 +181,13 @@ export class SessionTrendsComponent implements OnChanges {
       }];
     });
     const rowIndexByCapture = new Map(this.rows.map((row, index) => [row.capture_id, index]));
-    this.priceNodeMarkers = this.nodes.flatMap((node, nodeIndex) => {
+    const keyNodes = selectKeyGexNodes(this.nodes, this.rows);
+    this.priceNodeMarkers = keyNodes.flatMap((node, nodeIndex) => {
       const rowIndex = rowIndexByCapture.get(node.capture_id);
       const strike = numericValue(node.center_strike);
       if (rowIndex == null || strike == null || strike < minimum || strike > maximum) return [];
       const share = Math.max(0, numericValue(node.cluster_share) ?? 0);
-      const radius = 3.5 + Math.min(6.5, Math.sqrt(share) * 8);
+      const radius = 2.8 + Math.min(4.2, Math.sqrt(share) * 6);
       const negative = node.gamma_sign.toLowerCase() === 'negative';
       const markerX = x(rowIndex);
       const markerY = y(strike);
@@ -198,7 +200,7 @@ export class SessionTrendsComponent implements OnChanges {
         negative,
         path: diamondPath(markerX, markerY, radius),
         cssClass: `structure-node--${state}`,
-        opacity: state === 'faded' || state === 'collapsed' ? 0.45 : 0.82,
+        opacity: state === 'forming' ? 0.58 : 0.72,
         title: `${negative ? 'Expansion (negative GEX)' : 'Containment (positive GEX)'} at ${Math.round(strike)} · ${this.labelize(node.state)} · ${Math.round(share * 1000) / 10}% share`,
       }];
     });
