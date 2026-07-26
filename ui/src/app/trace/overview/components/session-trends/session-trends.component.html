@@ -1,0 +1,101 @@
+<section class="trend-panel" aria-labelledby="session-trends-title">
+  <header class="trend-panel__header">
+    <div>
+      <p class="trend-eyebrow">Session movement</p>
+      <h2 id="session-trends-title">Price structure and flow pressure</h2>
+      <p>All series use the versioned TRACE timeline. The vertical cursor follows the selected capture.</p>
+    </div>
+  </header>
+
+  <section class="trend-chart" aria-labelledby="price-structure-title">
+    <header class="trend-chart__header">
+      <div>
+        <h3 id="price-structure-title">Price, walls, and shelf</h3>
+        <p>Spot and backend-provided structural levels across the session.</p>
+      </div>
+      <div class="trend-segment" aria-label="Price structure scale">
+        <button type="button" [class.active]="priceWindowMode === 'near'" (click)="setPriceWindowMode('near')">Near price</button>
+        <button type="button" [class.active]="priceWindowMode === 'full'" (click)="setPriceWindowMode('full')">Full range</button>
+      </div>
+    </header>
+
+    <div class="trend-legend" aria-label="Price structure legend">
+      <span class="legend--spot"><i></i>Spot</span>
+      <span class="legend--put"><i></i>Put wall</span>
+      <span class="legend--hedge"><i></i>Hedge wall</span>
+      <span class="legend--call"><i></i>Call wall</span>
+      <span class="legend--shelf"><i></i>Shelf</span>
+    </div>
+
+    @if (priceHasData) {
+      <div class="trend-svg-frame">
+        <svg class="trend-svg trend-svg--price" [attr.viewBox]="'0 0 ' + width + ' ' + priceHeight" preserveAspectRatio="none" role="img" aria-label="TRACE price, wall, and shelf trends">
+          @for (tick of priceYTicks; track tick.position) {
+            <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
+            <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
+          }
+          @for (series of priceSeries; track series.key) {
+            <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
+          }
+          <line class="trend-active-line" [attr.x1]="priceActiveX" y1="20" [attr.x2]="priceActiveX" [attr.y2]="priceHeight - 46" />
+          @for (marker of priceMarkers; track marker.key) {
+            <circle class="trend-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="4.5" />
+          }
+          @for (tick of priceXTicks; track tick.position) {
+            <text class="trend-axis-label" [attr.x]="tick.position" [attr.y]="priceHeight - 13" text-anchor="middle">{{ tick.label }}</text>
+          }
+        </svg>
+      </div>
+    } @else {
+      <div class="trend-empty">Price structure needs at least two captures.</div>
+    }
+  </section>
+
+  <section class="trend-chart" aria-labelledby="hiro-pressure-title">
+    <header class="trend-chart__header">
+      <div>
+        <h3 id="hiro-pressure-title">HIRO pressure</h3>
+        <p>SPX and equities HIRO share a symmetric zero-centered scale; spot uses the right axis.</p>
+      </div>
+      @if (activeRow(); as active) {
+        <div class="hiro-facts" aria-label="Selected capture HIRO values">
+          <span>SPX <strong [attr.data-tone]="valueTone(active.spx_hiro)">{{ formatCompact(active.spx_hiro) }}</strong><small>{{ formatCompact(active.spx_hiro_rate_per_minute) }}/min</small></span>
+          <span>Equities <strong [attr.data-tone]="valueTone(active.equities_hiro)">{{ formatCompact(active.equities_hiro) }}</strong><small>{{ formatCompact(active.equities_hiro_rate_per_minute) }}/min</small></span>
+        </div>
+      }
+    </header>
+
+    <div class="trend-legend" aria-label="HIRO pressure legend">
+      <span class="legend--spx-hiro"><i></i>SPX HIRO</span>
+      <span class="legend--equities-hiro"><i></i>Equities HIRO</span>
+      <span class="legend--spot"><i></i>Spot</span>
+    </div>
+
+    @if (hiroHasData) {
+      <div class="trend-svg-frame">
+        <svg class="trend-svg trend-svg--hiro" [attr.viewBox]="'0 0 ' + width + ' ' + hiroHeight" preserveAspectRatio="none" role="img" aria-label="TRACE SPX and equities HIRO pressure with spot">
+          @for (tick of hiroYTicks; track tick.position) {
+            <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
+            <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
+          }
+          @for (tick of spotYTicks; track tick.position) {
+            <text class="trend-axis-label" [attr.x]="width - 64" [attr.y]="tick.position + 4">{{ tick.label }}</text>
+          }
+          <line class="hiro-zero-line" x1="76" [attr.y1]="hiroZeroY" [attr.x2]="width - 72" [attr.y2]="hiroZeroY" />
+          @for (series of hiroSeries; track series.key) {
+            <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
+          }
+          <line class="trend-active-line" [attr.x1]="hiroActiveX" y1="20" [attr.x2]="hiroActiveX" [attr.y2]="hiroHeight - 46" />
+          @for (marker of hiroMarkers; track marker.key) {
+            <circle class="trend-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="4.5" />
+          }
+          @for (tick of hiroXTicks; track tick.position) {
+            <text class="trend-axis-label" [attr.x]="tick.position" [attr.y]="hiroHeight - 13" text-anchor="middle">{{ tick.label }}</text>
+          }
+        </svg>
+      </div>
+    } @else {
+      <div class="trend-empty">HIRO pressure needs at least two captures with spot and flow data.</div>
+    }
+  </section>
+</section>

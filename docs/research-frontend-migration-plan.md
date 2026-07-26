@@ -268,6 +268,22 @@ unavailable, and error states remain explicit. Angular displays the backend
 spot and cross-spot slope but does not calculate gamma, node state, or source
 quality.
 
+### TR-07 — Price structure and HIRO trends — completed 2026-07-26
+
+The overview now renders two responsive session trends from the existing
+versioned timeseries contract. Price, put wall, hedge wall, call wall, and shelf
+share a focused near-price or full-range chart; SPX HIRO and equities HIRO share
+a symmetric zero-centered scale with spot on a separate right axis. Line pattern
+and tone distinguish series without relying on color alone.
+
+Both charts use the same capture grain and plot margins, so their vertical
+selection cursors stay aligned with the timeline, keyboard navigation, snapshot,
+and Signed GEX map. Selected HIRO values and per-minute rates are read directly
+from the backend. Angular performs only chart scaling and formatting; it does
+not recreate the mini's recent-window direction classification or add trading
+interpretation.
+
 Keep the standalone mini TRACE page as the visual parity baseline. The next
-slice is **TR-07: price, walls, shelf, and HIRO trend panels**, keyed to the same
-selected capture and using existing versioned read models wherever possible.
+slice is **TR-08: exact capture-history inspection and parity audit**, followed
+by a decision on retiring the standalone TRACE presentation while retaining its
+APIs and a rollback path.

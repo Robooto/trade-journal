@@ -277,8 +277,11 @@ remain on the mini, while its first read-only Angular foundation is now availabl
 - Its responsive Signed GEX structure map shows backend-classified positive and
   negative nodes across the session, supports near-price/full-day and key/all
   presentation modes, and loads gamma around spot for the selected capture with
-  stale-request cancellation. Price/walls/shelf and HIRO trend panels are the
-  next parity slice.
+  stale-request cancellation.
+- Price structure and zero-centered HIRO trend panels now share the timeline's
+  selected-capture cursor. They render versioned backend values with responsive
+  SVGs, patterned series, and no frontend market-direction classification. Exact
+  capture-history inspection and the visual parity/cutover audit are next.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus

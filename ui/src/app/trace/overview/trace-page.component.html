@@ -156,6 +156,13 @@
       </div>
     </section>
   }
+  @if (facade.captureRows().length) {
+    <app-trace-session-trends
+      [rows]="facade.captureRows()"
+      [activeIndex]="facade.selectedCaptureIndex()"
+    />
+  }
+
   @if (facade.bundle()?.histogram; as histogram) {
     <app-signed-gex-map
       [rows]="facade.captureRows()"

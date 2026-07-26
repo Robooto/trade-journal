@@ -1,0 +1,33 @@
+:host { display: block; min-width: 0; }
+.trend-panel { min-width:0; padding:1rem; overflow:hidden; border:1px solid rgba(148,163,184,.2); border-radius:1rem; background:rgba(22,27,34,.92); box-sizing:border-box; }
+.trend-panel__header,.trend-chart__header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.trend-panel h2,.trend-chart h3 { margin:0; letter-spacing:-.025em; }
+.trend-panel__header>div>p:not(.trend-eyebrow),.trend-chart__header p { max-width:54rem; margin:.3rem 0 0; color:#8fa1ba; font-size:.76rem; }
+.trend-eyebrow { margin:0 0 .25rem; color:#8db5ff; font-size:.68rem; font-weight:750; letter-spacing:.09em; text-transform:uppercase; }
+.trend-chart { min-width:0; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(148,163,184,.16); }
+.trend-chart h3 { font-size:1rem; }
+.trend-segment { display:flex; flex:0 0 auto; padding:3px; border:1px solid rgba(148,163,184,.22); border-radius:.65rem; background:#10151c; }
+.trend-segment button { min-height:2rem; padding:0 .7rem; color:#8fa1ba; border:0; border-radius:.45rem; background:transparent; font:inherit; font-size:.72rem; font-weight:700; cursor:pointer; }
+.trend-segment button.active { color:#dfe9fb; background:rgba(112,156,255,.18); }
+.trend-legend { display:flex; flex-wrap:wrap; gap:.55rem 1rem; margin-top:.65rem; color:#8fa1ba; font-size:.68rem; }
+.trend-legend span { display:inline-flex; align-items:center; gap:.35rem; }
+.trend-legend i { display:inline-block; width:1rem; height:0; border-top:2px solid currentColor; }
+.legend--spot{color:#f8f2d6}.legend--put{color:#f2a900}.legend--hedge{color:#f07b72}.legend--call{color:#70c69b}.legend--shelf{color:#36c5c7}.legend--spx-hiro{color:#6ea8fe}.legend--equities-hiro{color:#c084fc}
+.legend--put i,.legend--call i{border-top-style:dashed}.legend--hedge i,.legend--shelf i{border-top-style:dotted}
+.trend-svg-frame { width:100%; min-width:0; margin-top:.55rem; overflow:hidden; border-radius:.7rem; background:rgba(9,13,19,.55); }
+.trend-svg { display:block; width:100%; min-width:0; }
+.trend-svg--price { height:clamp(15rem,24vw,21rem); }
+.trend-svg--hiro { height:clamp(16rem,25vw,22rem); }
+.trend-grid { stroke:rgba(148,163,184,.12); stroke-width:1; vector-effect:non-scaling-stroke; }
+.trend-axis-label { fill:#8394ab; font-size:11px; }
+.trend-line { fill:none; stroke-width:2; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.trend-line--spot{stroke:#f8f2d6;stroke-width:2.8}.trend-line--put{stroke:#f2a900;stroke-dasharray:8 5}.trend-line--hedge{stroke:#f07b72;stroke-dasharray:2 5}.trend-line--call{stroke:#70c69b;stroke-dasharray:8 5}.trend-line--shelf{stroke:#36c5c7;stroke-dasharray:2 5}.trend-line--spx-hiro{stroke:#6ea8fe;stroke-width:2.4}.trend-line--equities-hiro{stroke:#c084fc;stroke-width:2.4}
+.trend-active-line { stroke:#f8f2d6; stroke-width:1; stroke-dasharray:4 5; opacity:.72; vector-effect:non-scaling-stroke; }
+.trend-marker { stroke:#0b1017; stroke-width:1.5; vector-effect:non-scaling-stroke; }
+.trend-marker.trend-line--spot{fill:#f8f2d6}.trend-marker.trend-line--put{fill:#f2a900}.trend-marker.trend-line--hedge{fill:#f07b72}.trend-marker.trend-line--call{fill:#70c69b}.trend-marker.trend-line--shelf{fill:#36c5c7}.trend-marker.trend-line--spx-hiro{fill:#6ea8fe}.trend-marker.trend-line--equities-hiro{fill:#c084fc}
+.hiro-zero-line { stroke:rgba(223,233,251,.38); stroke-width:1.2; vector-effect:non-scaling-stroke; }
+.hiro-facts { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; }
+.hiro-facts span { display:grid; grid-template-columns:auto auto; gap:.1rem .45rem; min-width:9rem; padding:.4rem .55rem; border:1px solid rgba(148,163,184,.16); border-radius:.55rem; background:rgba(255,255,255,.025); color:#8fa1ba; font-size:.66rem; }
+.hiro-facts strong { color:#dfe9fb; font-size:.78rem; }.hiro-facts strong[data-tone='positive']{color:#8db5ff}.hiro-facts strong[data-tone='negative']{color:#d4b3ff}.hiro-facts small{grid-column:1/-1;color:#8fa1ba}
+.trend-empty { display:flex; min-height:10rem; align-items:center; justify-content:center; color:#8fa1ba; font-size:.78rem; }
+@media(max-width:760px){.trend-chart__header{flex-direction:column}.hiro-facts{justify-content:flex-start}.trend-svg--price{height:17rem}.trend-svg--hiro{height:18rem}}
