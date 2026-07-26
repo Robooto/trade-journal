@@ -12,7 +12,7 @@ the same versioned TRACE APIs through the Pi's same-origin proxy.
 | --- | --- | --- |
 | Session and capture grain | Pass | Both presentations use the versioned session catalog and `(date, capture_id)` timeline rows. |
 | Timeline selection | Pass | Slider, buttons, keyboard arrows, charts, snapshot, gamma profile, GEX map, and capture history share `selectedCaptureIndex`. |
-| Snapshot values | Pass | Spot, HIRO, walls, shelf, gamma setup, flow relationship, and realized volatility render backend fields without frontend scoring. |
+| Snapshot values and evidence | Pass | The Angular snapshot now restores prominent spot/last-move context, detailed HIRO rates/acceleration/age, pressure evidence, gamma-at-spot/slope, volatility thresholds, nearest price structure, matched Charm context, and key signed-GEX nodes without frontend scoring. |
 | Price structure | Pass | Near-price and full-range domains mirror the legacy focus rules; spot, walls, and shelf use the same timeline rows. |
 | HIRO pressure | Pass with intentional redesign | SPX/equities HIRO use a symmetric zero-centered domain and spot uses a separate axis. Selected backend values and rates remain visible. |
 | Signed GEX map | Pass | Positive circles, negative diamonds, backend node states, key/all nodes, near/full modes, and selected cursor are present. |
@@ -29,8 +29,9 @@ the same versioned TRACE APIs through the Pi's same-origin proxy.
   classification or its rate-sign triangles. Exact backend HIRO values and
   per-minute rates remain visible; directional interpretation stays out of the
   frontend.
-- Charm remains a first-class TRACE sub-route rather than another panel in the
-  overview.
+- Charm remains a first-class TRACE sub-route for full analysis and is also shown as
+  optional experimental context in the overview snapshot. A missing Charm response does
+  not block the core TRACE session.
 - Source readiness and quality are more explicit in Angular.
 
 ## Required visual sign-off

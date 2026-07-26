@@ -7,6 +7,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SharedMaterialModule } from '../../shared/material.module';
 import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './components/gamma-profile/gamma-profile.component';
+import { MarketSnapshotComponent } from './components/market-snapshot/market-snapshot.component';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
@@ -28,6 +29,9 @@ class TraceFacadeStub {
   readonly gammaProfile = signal<any>(null);
   readonly gammaProfileLoading = signal(false);
   readonly gammaProfileError = signal<string | null>(null);
+  readonly charmOverview = signal<any>(null);
+  readonly charmLoading = signal(false);
+  readonly charmError = signal<string | null>(null);
   readonly resourceStatuses = signal([]);
   readonly availableResourceCount = signal(0);
   readonly loadSessions = vi.fn();
@@ -44,7 +48,7 @@ describe('TracePageComponent', () => {
   beforeEach(async () => {
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, SessionTrendsComponent, SignedGexMapComponent],
+      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, SessionTrendsComponent, SignedGexMapComponent],
       imports: [
         CommonModule,
         FormsModule,
@@ -90,6 +94,21 @@ describe('TracePageComponent', () => {
       realized_vol_regime: 'mid_realized',
       realized_vol_bps: 6.4,
       return_observations: 6,
+    });    (facade.bundle as any).set({
+      histogram: { rows: [] },
+      gammaContext: { rows: [] },
+      realizedVolatility: {
+        thresholds: { low_max_bps: 5.1, mid_max_bps: 8.3 },
+        rows: [{
+          capture_id: 'capture-2',
+          as_of: capture.ts,
+          realized_vol_regime: 'mid_realized',
+          classification_status: 'ready',
+          realized_vol_bps: 6.4,
+          return_observations: 6,
+          lookback_returns: 6,
+        }],
+      },
     });
 
     fixture.detectChanges();
@@ -97,7 +116,7 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Session timeline');
     expect(fixture.nativeElement.textContent).toContain('Market snapshot');
     expect(fixture.nativeElement.textContent).toContain('−1.28B');
-    expect(fixture.nativeElement.textContent).toContain('Mid Realized');
+    expect(fixture.nativeElement.textContent).toContain('Medium movement');
   });
 
   it('moves through captures with unmodified left and right arrow keys', () => {

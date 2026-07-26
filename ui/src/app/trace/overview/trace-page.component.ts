@@ -46,25 +46,6 @@ export class TracePageComponent implements OnInit {
     this.facade.stepCapture(event.key === 'ArrowLeft' ? -1 : 1);
   }
 
-  formatCompactNumber(value: number | null | undefined): string {
-    if (value == null || !Number.isFinite(value)) return 'Unavailable';
-    const absolute = Math.abs(value);
-    const sign = value < 0 ? '−' : '';
-    if (absolute >= 1_000_000_000) return `${sign}${(absolute / 1_000_000_000).toFixed(2)}B`;
-    if (absolute >= 1_000_000) return `${sign}${(absolute / 1_000_000).toFixed(1)}M`;
-    if (absolute >= 1_000) return `${sign}${(absolute / 1_000).toFixed(1)}K`;
-    return `${value.toFixed(1).replace(/\.0$/, '')}`;
-  }
-
-  formatLabel(value: string | null | undefined): string {
-    if (!value) return 'Unavailable';
-    return value.replaceAll('_', ' ').replace(/\b\w/g, character => character.toUpperCase());
-  }
-
-  valueTone(value: number | null | undefined): 'positive' | 'negative' | 'neutral' {
-    if (value == null || value === 0) return 'neutral';
-    return value > 0 ? 'positive' : 'negative';
-  }
   statusClass(status: TraceContractStatus | 'unavailable'): string {
     return `trace-status--${status.replace('_', '-')}`;
   }

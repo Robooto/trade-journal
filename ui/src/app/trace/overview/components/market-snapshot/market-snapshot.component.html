@@ -1,0 +1,112 @@
+@if (activeRow; as row) {
+  <section class="snapshot-panel" aria-labelledby="market-snapshot-title">
+    <header class="snapshot-header">
+      <div>
+        <p class="snapshot-eyebrow">At a glance</p>
+        <h2 id="market-snapshot-title">Market snapshot</h2>
+      </div>
+      <strong>{{ formatTime(row.ts) }}</strong>
+    </header>
+
+    <div class="snapshot-grid">
+      <article class="snapshot-card snapshot-card--spot">
+        <span class="snapshot-label">Spot</span>
+        <strong class="snapshot-spot">{{ formatSpot(row.spot) }}</strong>
+        <small>Last move <b [attr.data-tone]="valueTone(spotMove)">{{ formatCompact(spotMove, true) }}</b></small>
+      </article>
+
+      <article class="snapshot-card snapshot-card--hiro">
+        <span class="snapshot-label">HIRO Flow</span>
+        <div class="snapshot-split">
+          <div>
+            <span>SPX</span>
+            <strong [attr.data-tone]="valueTone(row.spx_hiro)">{{ formatCompact(row.spx_hiro) }}</strong>
+            <small>rate <b [attr.data-tone]="valueTone(row.spx_hiro_rate_per_minute)">{{ formatCompact(row.spx_hiro_rate_per_minute, true) }}/min</b> · {{ labelize(row.flow_spx_acceleration) }} · age {{ formatDuration(row.spx_hiro_source_age_seconds) }}</small>
+          </div>
+          <div>
+            <span>Equities</span>
+            <strong [attr.data-tone]="valueTone(row.equities_hiro)">{{ formatCompact(row.equities_hiro) }}</strong>
+            <small>rate <b [attr.data-tone]="valueTone(row.equities_hiro_rate_per_minute)">{{ formatCompact(row.equities_hiro_rate_per_minute, true) }}/min</b> · {{ labelize(row.flow_equities_acceleration) }} · age {{ formatDuration(row.equities_hiro_source_age_seconds) }}</small>
+          </div>
+        </div>
+      </article>
+
+      <article class="snapshot-card snapshot-card--pressure" [attr.data-card-tone]="flowTone()">
+        <span class="snapshot-label">HIRO Pressure</span>
+        <strong>{{ labelize(row.flow_state) }}</strong>
+        <small>{{ labelize(row.flow_relationship) }} · SPX {{ formatCompact(row.flow_spx_score, true) }} · equities {{ formatCompact(row.flow_equities_score, true) }} · {{ labelize(row.flow_readiness_status) }}</small>
+      </article>
+
+      <article class="snapshot-card snapshot-card--gamma" [attr.data-card-tone]="gammaTone()">
+        <span class="snapshot-label">Gamma Structure</span>
+        <strong>{{ gammaLabel() }}</strong>
+        <small>{{ labelize(row.local_gamma_setup) }} · at spot {{ formatCompact(gammaContext?.nearest_total_gamma, true) }} · slope {{ formatCompact(gammaContext?.cross_spot_slope, true) }}/pt</small>
+      </article>
+
+      <article class="snapshot-card snapshot-card--volatility" [attr.data-card-tone]="volatilityTone()">
+        <span class="snapshot-label">Realized Volatility</span>
+        <strong>{{ volatilityLabel() }}</strong>
+        @if (volatility; as vol) {
+          <small>{{ formatBps(vol.realized_vol_bps) }} RMS · {{ vol.return_observations }}/{{ vol.lookback_returns }} returns · Low ≤ {{ formatBps(threshold('low_max_bps')) }} · Mid ≤ {{ formatBps(threshold('mid_max_bps')) }}</small>
+          <small>As of {{ formatTime(vol.as_of) }} · prior sessions only</small>
+        } @else {
+          <small>No volatility context for this capture.</small>
+        }
+        <em>Research context · not scored</em>
+      </article>
+
+      <article class="snapshot-card snapshot-card--structure">
+        <span class="snapshot-label">Price Structure</span>
+        <div class="snapshot-split snapshot-split--structure">
+          <div>
+            <span>Walls</span>
+            <strong>{{ formatSpot(row.put_wall) }} / {{ formatSpot(row.hedge_wall) }} / {{ formatSpot(row.call_wall) }}</strong>
+            <small>{{ wallNote() }}</small>
+          </div>
+          <div>
+            <span>Shelf</span>
+            <strong [attr.data-tone]="shelfTone()">{{ formatSpot(row.global_shelf_center) }}</strong>
+            <small>{{ labelize(row.shelf_direction) }} {{ formatSignedPoints(row.shelf_center_d) }}</small>
+          </div>
+        </div>
+      </article>
+
+      <article class="snapshot-card snapshot-card--charm" [class.snapshot-card--close-window]="charm?.close_window">
+        <span class="snapshot-label">Charm at Market</span>
+        @if (charm; as point) {
+          <strong [attr.data-tone]="valueTone(point.charm_at_market)">{{ formatCompact(point.charm_at_market, true) }}</strong>
+          <small><b>Flip</b> {{ formatSpot(point.nearest_flip) }} · spot {{ formatSignedPoints(point.spot_minus_flip) }} pts from flip</small>
+          <small><b>Interval</b> {{ formatDuration(point.interval_minutes * 60) }} · source age {{ formatDuration(point.source_age_seconds) }}</small>
+          @if (point.close_window) { <small class="snapshot-warning">Close window · expiry effects can dominate</small> }
+          <em>Experimental · {{ charmOverview?.quality?.usable_percent | number:'1.1-1' }}% usable · not scored</em>
+        } @else if (charmLoading) {
+          <strong>Loading</strong><small>Matching the Charm capture.</small>
+        } @else {
+          <strong>Unavailable</strong><small>{{ charmError || 'No matched Charm capture for this session.' }}</small><em>Experimental · not scored</em>
+        }
+      </article>
+
+      <article class="snapshot-card snapshot-card--nodes">
+        <span class="snapshot-label">Signed GEX Nodes</span>
+        <strong>{{ nodeCount('positive') }} positive · {{ nodeCount('negative') }} negative</strong>
+        <div class="snapshot-node-groups">
+          @for (sign of ['positive', 'negative']; track sign) {
+            <div>
+              <span>{{ sign | titlecase }} GEX</span>
+              @for (node of topNodes($any(sign)); track node.gamma_sign + ':' + node.center_strike) {
+                <div class="snapshot-node" [ngClass]="nodeStateClass(node.state)" [class.snapshot-node--negative]="sign === 'negative'">
+                  <b>{{ sign === 'negative' ? '−' : '+' }}</b>
+                  <strong>{{ formatSpot(node.center_strike) }}</strong>
+                  <span>{{ labelize(node.state) }}</span>
+                  <small>{{ formatPercent(node.cluster_share) }}</small>
+                </div>
+              } @empty {
+                <small>No active nodes</small>
+              }
+            </div>
+          }
+        </div>
+      </article>
+    </div>
+  </section>
+}

@@ -104,57 +104,16 @@
       </div>
     </section>
 
-    <section class="trace-snapshot-panel" aria-labelledby="trace-snapshot-title">
-      <div class="trace-section-heading">
-        <div>
-          <p class="trace-eyebrow">At a glance</p>
-          <h2 id="trace-snapshot-title">Market snapshot</h2>
-        </div>
-        <span>Spot {{ formatCompactNumber(capture.spot) }}</span>
-      </div>
-      <div class="trace-snapshot-grid">
-        <article class="trace-snapshot-card">
-          <span>SPX HIRO</span>
-          <strong [attr.data-tone]="valueTone(capture.spx_hiro)">{{ formatCompactNumber(capture.spx_hiro) }}</strong>
-          <small>{{ formatCompactNumber(capture.spx_hiro_rate_per_minute) }}/min</small>
-        </article>
-        <article class="trace-snapshot-card">
-          <span>Equities HIRO</span>
-          <strong [attr.data-tone]="valueTone(capture.equities_hiro)">{{ formatCompactNumber(capture.equities_hiro) }}</strong>
-          <small>{{ formatCompactNumber(capture.equities_hiro_rate_per_minute) }}/min</small>
-        </article>
-        <article class="trace-snapshot-card">
-          <span>Flow relationship</span>
-          <strong>{{ formatLabel(capture.flow_relationship) }}</strong>
-          <small>{{ formatLabel(capture.flow_state) }}</small>
-        </article>
-        <article class="trace-snapshot-card">
-          <span>Walls</span>
-          <strong>{{ formatCompactNumber(capture.put_wall) }} / {{ formatCompactNumber(capture.hedge_wall) }} / {{ formatCompactNumber(capture.call_wall) }}</strong>
-          <small>Put / hedge / call</small>
-        </article>
-        <article class="trace-snapshot-card">
-          <span>Shelf</span>
-          <strong>{{ formatCompactNumber(capture.global_shelf_center) }}</strong>
-          <small>{{ formatLabel(capture.shelf_direction) }} · {{ formatCompactNumber(capture.shelf_center_d) }} pts</small>
-        </article>
-        <article class="trace-snapshot-card">
-          <span>Gamma structure</span>
-          <strong>{{ formatLabel(capture.local_gamma_setup) }}</strong>
-          <small>{{ formatLabel(capture.pocket_sign) }} pocket</small>
-        </article>
-        <article class="trace-snapshot-card">
-          <span>Realized volatility</span>
-          @if (facade.selectedRealizedVolatility(); as volatility) {
-            <strong>{{ formatLabel(volatility.realized_vol_regime) }}</strong>
-            <small>{{ formatCompactNumber(volatility.realized_vol_bps) }} bps · {{ volatility.return_observations }} returns</small>
-          } @else {
-            <strong>Unavailable</strong>
-            <small>No matching capture</small>
-          }
-        </article>
-      </div>
-    </section>
+    <app-trace-market-snapshot
+      [rows]="facade.captureRows()"
+      [activeIndex]="facade.selectedCaptureIndex()"
+      [histogramNodes]="facade.bundle()?.histogram?.rows ?? []"
+      [gammaContextRows]="facade.bundle()?.gammaContext?.rows ?? []"
+      [realizedVolatility]="facade.bundle()?.realizedVolatility ?? null"
+      [charmOverview]="facade.charmOverview()"
+      [charmLoading]="facade.charmLoading()"
+      [charmError]="facade.charmError()"
+    />
   }
   @if (facade.bundle()?.histogram; as histogram) {
     <app-signed-gex-map

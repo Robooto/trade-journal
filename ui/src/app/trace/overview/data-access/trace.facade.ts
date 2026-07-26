@@ -18,6 +18,8 @@ import {
   tap,
 } from 'rxjs';
 
+import { CharmOverview, CharmSeriesPoint } from '../../charm/charm.models';
+import { CharmApiService } from '../../charm/charm-api.service';
 import {
   TraceContractBase,
   TraceDashboardRow,
@@ -54,6 +56,9 @@ export class TraceFacade implements OnDestroy {
   readonly gammaProfile = signal<TraceGammaProfileResponse | null>(null);
   readonly gammaProfileLoading = signal(false);
   readonly gammaProfileError = signal<string | null>(null);
+  readonly charmOverview = signal<CharmOverview | null>(null);
+  readonly charmLoading = signal(false);
+  readonly charmError = signal<string | null>(null);
 
   readonly selectedSession = computed<TraceSessionDescriptor | null>(() =>
     this.sessions().find(session => session.date === this.selectedDate()) ?? null,
@@ -72,6 +77,11 @@ export class TraceFacade implements OnDestroy {
     const captureId = this.selectedCapture()?.capture_id;
     if (!captureId) return null;
     return this.bundle()?.realizedVolatility?.rows.find(row => row.capture_id === captureId) ?? null;
+  });
+  readonly selectedCharm = computed<CharmSeriesPoint | null>(() => {
+    const captureId = this.selectedCapture()?.capture_id;
+    if (!captureId) return null;
+    return this.charmOverview()?.series.find(row => row.capture_id === captureId) ?? null;
   });
 
   readonly resourceStatuses = computed<readonly TraceResourceStatus[]>(() => {
@@ -95,7 +105,7 @@ export class TraceFacade implements OnDestroy {
     this.resourceStatuses().filter(resource => resource.status !== 'unavailable').length,
   );
 
-  constructor(private readonly api: TraceApiService) {
+  constructor(private readonly api: TraceApiService, private readonly charmApi: CharmApiService) {
     this.subscriptions.add(
       merge(
         this.selectedDateSubject.pipe(distinctUntilChanged()),
@@ -207,6 +217,9 @@ export class TraceFacade implements OnDestroy {
     this.bundle.set(null);
     this.selectedCaptureIndex.set(0);
     this.resetGammaProfile();
+    this.charmOverview.set(null);
+    this.charmError.set(null);
+    this.charmLoading.set(true);
 
     return forkJoin({
       summary: capture(this.api.summary(date)),
@@ -214,9 +227,13 @@ export class TraceFacade implements OnDestroy {
       histogram: capture(this.api.histogram(date)),
       gammaContext: capture(this.api.gammaContext(date)),
       realizedVolatility: capture(this.api.realizedVolatility(date)),
+      charm: capture(this.charmApi.overview(date)),
     }).pipe(
-      map(resources => toBundle(date, resources)),
-      tap(bundle => {
+      map(resources => ({ bundle: toBundle(date, resources), charm: resources.charm })),
+      tap(({ bundle, charm }) => {
+        this.charmOverview.set(charm.value);
+        this.charmError.set(charm.error);
+        this.charmLoading.set(false);
         this.bundle.set(bundle);
         this.selectedCaptureIndex.set(Math.max(0, (bundle.timeseries?.rows.length ?? 1) - 1));
         this.requestGammaProfile();
@@ -224,7 +241,11 @@ export class TraceFacade implements OnDestroy {
           this.sessionError.set('The selected TRACE session could not be loaded.');
         }
       }),
-      finalize(() => this.sessionLoading.set(false)),
+      map(({ bundle }) => bundle),
+      finalize(() => {
+        this.sessionLoading.set(false);
+        this.charmLoading.set(false);
+      }),
     );
   }
 

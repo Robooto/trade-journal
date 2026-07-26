@@ -6,6 +6,7 @@ import { SharedMaterialModule } from '../shared/material.module';
 import { CharmPageComponent } from './charm/charm-page.component';
 import { CaptureHistoryComponent } from './overview/components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './overview/components/gamma-profile/gamma-profile.component';
+import { MarketSnapshotComponent } from './overview/components/market-snapshot/market-snapshot.component';
 import { SessionTrendsComponent } from './overview/components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './overview/components/signed-gex-map/signed-gex-map.component';
 import { TracePageComponent } from './overview/trace-page.component';
@@ -18,6 +19,7 @@ import { TraceShellComponent } from './trace-shell/trace-shell.component';
     TracePageComponent,
     CaptureHistoryComponent,
     GammaProfileComponent,
+    MarketSnapshotComponent,
     SessionTrendsComponent,
     SignedGexMapComponent,
     CharmPageComponent,

@@ -1,6 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, Subject, of, throwError } from 'rxjs';
 
+import { CharmApiService } from '../../charm/charm-api.service';
+import { CharmOverview } from '../../charm/charm.models';
+
 import {
   TraceContractBase,
   TraceGammaContextResponse,
@@ -124,6 +127,25 @@ const volatilityFixture: TraceRealizedVolatilityResponse = {
   }],
 };
 
+const charmFixture: CharmOverview = {
+  schema_version: 'trace-charm-overview.v1',
+  date,
+  status: 'experimental',
+  interpretation: { scoring_enabled: false, directional_labels_enabled: false, visual_parity: 'ready', note: 'Research context only.' },
+  quality: { total_rows: 1, usable_rows: 1, capture_count: 1, usable_capture_count: 1, boundary_rows: 0, missing_pair_rows: 0, snapshot_after_target_rows: 0, min_interval_minutes: 5, max_interval_minutes: 5, usable_percent: 100, status: 'ready' },
+  distribution: { count: 1, positive_count: 1, negative_count: 0, sign_transitions: 0, median: 1, p05: 1, p95: 1, min: 1, max: 1 },
+  latest: null,
+  series: [{ ts: '2026-07-24T20:00:05Z', capture_id: 'capture-2', spot: 7412, surface_spot: 7410, charm_at_market: 327_000_000, nearest_flip: 7416.4, spot_minus_flip: -4.4, snapshot_ts: '2026-07-24T19:55:00Z', model_ts: '2026-07-24T19:55:00Z', next_model_ts: '2026-07-24T20:00:00Z', interval_minutes: 5, source_age_seconds: 305, close_window: true }],
+};
+
+class CharmApiStub {
+  fails = false;
+  overview(): Observable<CharmOverview> {
+    return this.fails
+      ? throwError(() => new HttpErrorResponse({ status: 404, error: { detail: 'Charm is unavailable.' } }))
+      : of(charmFixture);
+  }
+}
 class TraceApiStub {
   readonly summaryStreams: Observable<TraceSummaryResponse>[] = [];
   readonly summaryDates: string[] = [];
@@ -159,7 +181,7 @@ class TraceApiStub {
 describe('TraceFacade', () => {
   it('selects the newest session and loads the independent source bundle', () => {
     const api = new TraceApiStub();
-    const facade = new TraceFacade(api as unknown as TraceApiService);
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
 
     facade.loadSessions();
 
@@ -168,6 +190,7 @@ describe('TraceFacade', () => {
     expect(facade.bundle()?.summary?.spot_change).toBe(-3);
     expect(facade.selectedCapture()?.capture_id).toBe('capture-2');
     expect(facade.selectedRealizedVolatility()?.realized_vol_bps).toBe(6.4);
+    expect(facade.selectedCharm()?.charm_at_market).toBe(327_000_000);
     expect(facade.gammaProfile()?.capture_id).toBe('capture-2');
     expect(api.gammaProfileRequests).toEqual([{
       date,
@@ -179,7 +202,7 @@ describe('TraceFacade', () => {
 
   it('clamps timeline navigation and reloads gamma for the selected capture', () => {
     const api = new TraceApiStub();
-    const facade = new TraceFacade(api as unknown as TraceApiService);
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
 
     facade.selectDate(date);
     expect(facade.selectedCaptureIndex()).toBe(1);
@@ -198,7 +221,7 @@ describe('TraceFacade', () => {
     const first = new Subject<TraceSummaryResponse>();
     const second = new Subject<TraceSummaryResponse>();
     api.summaryStreams.push(first, second);
-    const facade = new TraceFacade(api as unknown as TraceApiService);
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
 
     facade.selectDate('2026-07-23');
     facade.selectDate(date);
@@ -219,7 +242,7 @@ describe('TraceFacade', () => {
     const older = new Subject<TraceGammaProfileResponse>();
     const newer = new Subject<TraceGammaProfileResponse>();
     api.gammaProfileStreams.push(older, newer);
-    const facade = new TraceFacade(api as unknown as TraceApiService);
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
 
     facade.selectDate(date);
     facade.stepCapture(-1);
@@ -240,7 +263,7 @@ describe('TraceFacade', () => {
   it('retains successful sources when one optional source fails', () => {
     const api = new TraceApiStub();
     api.realizedVolatilityFails = true;
-    const facade = new TraceFacade(api as unknown as TraceApiService);
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
 
     facade.selectDate(date);
 
@@ -250,6 +273,20 @@ describe('TraceFacade', () => {
       'Realized volatility is unavailable.',
     );
     expect(facade.availableResourceCount()).toBe(4);
+    expect(facade.sessionError()).toBeNull();
+    facade.ngOnDestroy();
+  });
+  it('keeps the core session available when optional Charm context fails', () => {
+    const api = new TraceApiStub();
+    const charmApi = new CharmApiStub();
+    charmApi.fails = true;
+    const facade = new TraceFacade(api as unknown as TraceApiService, charmApi as unknown as CharmApiService);
+
+    facade.selectDate(date);
+
+    expect(facade.bundle()?.summary).toEqual(summaryFixture);
+    expect(facade.charmOverview()).toBeNull();
+    expect(facade.charmError()).toBe('Charm is unavailable.');
     expect(facade.sessionError()).toBeNull();
     facade.ngOnDestroy();
   });
