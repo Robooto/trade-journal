@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
 
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus, TraceResourceStatus } from './trace.models';
@@ -25,6 +25,25 @@ export class TracePageComponent implements OnInit {
 
   selectCapture(value: string | number): void {
     this.facade.selectCapture(Number(value));
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  handleTimelineKeydown(event: KeyboardEvent): void {
+    if (
+      event.defaultPrevented ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') ||
+      isInteractiveTarget(event.target) ||
+      !this.facade.captureRows().length
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    this.facade.stepCapture(event.key === 'ArrowLeft' ? -1 : 1);
   }
 
   formatCompactNumber(value: number | null | undefined): string {
@@ -69,4 +88,9 @@ export class TracePageComponent implements OnInit {
       minute: '2-digit',
     }).format(parsed);
   }
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  return Boolean(target.closest('input, select, textarea, button, a, [contenteditable="true"]'));
 }

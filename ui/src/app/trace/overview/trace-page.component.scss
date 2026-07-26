@@ -156,6 +156,25 @@
   color: #dfe9fb;
 }
 
+.trace-keyboard-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.trace-keyboard-hint kbd {
+  min-width: 1.35rem;
+  padding: 0.1rem 0.28rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 0.3rem;
+  color: #c7d7ee;
+  background: rgba(8, 12, 18, 0.7);
+  font: inherit;
+  font-weight: 750;
+  line-height: 1.15;
+  text-align: center;
+}
+
 .trace-timeline-control {
   min-width: 0;
   gap: 0.55rem;

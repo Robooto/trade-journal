@@ -95,6 +95,49 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('−1.28B');
     expect(fixture.nativeElement.textContent).toContain('Mid Realized');
   });
+
+  it('moves through captures with unmodified left and right arrow keys', () => {
+    facade.captureRows.set([{ capture_id: 'capture-1' }, { capture_id: 'capture-2' }]);
+
+    const left = new KeyboardEvent('keydown', {
+      key: 'ArrowLeft',
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(left);
+    const right = new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true,
+    });
+    document.dispatchEvent(right);
+
+    expect(facade.stepCapture).toHaveBeenNthCalledWith(1, -1);
+    expect(facade.stepCapture).toHaveBeenNthCalledWith(2, 1);
+    expect(left.defaultPrevented).toBe(true);
+    expect(right.defaultPrevented).toBe(true);
+  });
+
+  it('preserves arrow-key behavior inside controls and for modified shortcuts', () => {
+    facade.captureRows.set([{ capture_id: 'capture-1' }]);
+    const input = document.createElement('input');
+    fixture.nativeElement.appendChild(input);
+
+    input.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'ArrowRight',
+      bubbles: true,
+      cancelable: true,
+    }));
+    document.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'ArrowLeft',
+      altKey: true,
+      bubbles: true,
+      cancelable: true,
+    }));
+
+    expect(facade.stepCapture).not.toHaveBeenCalled();
+  });
+
   it('delegates session and timeline changes to the facade', () => {
     fixture.componentInstance.selectDate('2026-07-24');
     fixture.componentInstance.selectCapture('4');

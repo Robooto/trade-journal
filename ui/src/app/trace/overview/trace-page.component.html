@@ -61,7 +61,7 @@
   }
 
   @if (facade.selectedCapture(); as capture) {
-    <section class="trace-timeline-panel" aria-labelledby="trace-timeline-title">
+    <section class="trace-timeline-panel" aria-labelledby="trace-timeline-title" aria-keyshortcuts="ArrowLeft ArrowRight">
       <div class="trace-timeline-heading">
         <div>
           <p class="trace-eyebrow">Selected capture</p>
@@ -70,6 +70,7 @@
         <div class="trace-timeline-meta">
           <strong>{{ formatTimestamp(capture.ts) }}</strong>
           <span>{{ facade.selectedCaptureIndex() + 1 }} of {{ facade.captureRows().length }}</span>
+          <span class="trace-keyboard-hint"><kbd>&larr;</kbd><kbd>&rarr;</kbd> move</span>
         </div>
       </div>
       <div class="trace-timeline-control">
