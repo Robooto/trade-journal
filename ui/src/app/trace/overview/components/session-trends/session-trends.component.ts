@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 
-import { TraceDashboardRow } from '../../trace.models';
+import { TraceDashboardRow, TraceHistogramRow } from '../../trace.models';
 
 type PriceWindowMode = 'near' | 'full';
 type NumericRowKey = keyof Pick<
@@ -33,6 +33,25 @@ interface ActiveMarker {
   readonly y: number;
 }
 
+interface StructureNodeMarker {
+  readonly key: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly negative: boolean;
+  readonly path: string;
+  readonly cssClass: string;
+  readonly opacity: number;
+  readonly title: string;
+}
+
+interface HiroDirectionMarker {
+  readonly key: string;
+  readonly path: string;
+  readonly cssClass: string;
+  readonly title: string;
+}
+
 const PRICE_SERIES: readonly {
   key: NumericRowKey;
   label: string;
@@ -54,6 +73,7 @@ const PRICE_SERIES: readonly {
 })
 export class SessionTrendsComponent implements OnChanges {
   @Input() rows: readonly TraceDashboardRow[] = [];
+  @Input() nodes: readonly TraceHistogramRow[] = [];
   @Input() activeIndex = 0;
 
   readonly width = 1200;
@@ -65,6 +85,7 @@ export class SessionTrendsComponent implements OnChanges {
   priceYTicks: readonly AxisTick[] = [];
   priceXTicks: readonly AxisTick[] = [];
   priceMarkers: readonly ActiveMarker[] = [];
+  priceNodeMarkers: readonly StructureNodeMarker[] = [];
   priceActiveX = 0;
   priceHasData = false;
 
@@ -73,6 +94,7 @@ export class SessionTrendsComponent implements OnChanges {
   spotYTicks: readonly AxisTick[] = [];
   hiroXTicks: readonly AxisTick[] = [];
   hiroMarkers: readonly ActiveMarker[] = [];
+  hiroDirectionMarkers: readonly HiroDirectionMarker[] = [];
   hiroZeroY = 0;
   hiroActiveX = 0;
   hiroHasData = false;
@@ -103,6 +125,22 @@ export class SessionTrendsComponent implements OnChanges {
     return `${Math.round(value * 10) / 10}`;
   }
 
+  formatSignedCompact(value: number | null | undefined): string {
+    const formatted = this.formatCompact(value);
+    if (formatted === '\u2014' || value == null || value <= 0) return formatted;
+    return `+${formatted}`;
+  }
+
+  directionArrow(value: number | null | undefined): string {
+    if (value == null || !Number.isFinite(value) || value === 0) return '\u2192';
+    return value > 0 ? '\u2191' : '\u2193';
+  }
+
+  labelize(value: string | null | undefined): string {
+    if (!value) return 'No acceleration label';
+    return value.replaceAll('_', ' ').replace(/\b\w/g, character => character.toUpperCase());
+  }
+
   valueTone(value: number | null | undefined): 'positive' | 'negative' | 'neutral' {
     if (value == null || value === 0) return 'neutral';
     return value > 0 ? 'positive' : 'negative';
@@ -112,6 +150,7 @@ export class SessionTrendsComponent implements OnChanges {
     if (this.rows.length < 2) {
       this.priceSeries = [];
       this.priceMarkers = [];
+      this.priceNodeMarkers = [];
       this.priceHasData = false;
       return;
     }
@@ -140,6 +179,29 @@ export class SessionTrendsComponent implements OnChanges {
         y: y(value),
       }];
     });
+    const rowIndexByCapture = new Map(this.rows.map((row, index) => [row.capture_id, index]));
+    this.priceNodeMarkers = this.nodes.flatMap((node, nodeIndex) => {
+      const rowIndex = rowIndexByCapture.get(node.capture_id);
+      const strike = numericValue(node.center_strike);
+      if (rowIndex == null || strike == null || strike < minimum || strike > maximum) return [];
+      const share = Math.max(0, numericValue(node.cluster_share) ?? 0);
+      const radius = 3.5 + Math.min(6.5, Math.sqrt(share) * 8);
+      const negative = node.gamma_sign.toLowerCase() === 'negative';
+      const markerX = x(rowIndex);
+      const markerY = y(strike);
+      const state = node.state?.toLowerCase() || 'unknown';
+      return [{
+        key: `${node.capture_id}-${node.gamma_sign}-${node.center_strike}-${nodeIndex}`,
+        x: markerX,
+        y: markerY,
+        radius,
+        negative,
+        path: diamondPath(markerX, markerY, radius),
+        cssClass: `structure-node--${state}`,
+        opacity: state === 'faded' || state === 'collapsed' ? 0.45 : 0.82,
+        title: `${negative ? 'Expansion (negative GEX)' : 'Containment (positive GEX)'} at ${Math.round(strike)} · ${this.labelize(node.state)} · ${Math.round(share * 1000) / 10}% share`,
+      }];
+    });
     this.priceHasData = this.priceSeries.length > 0;
   }
 
@@ -147,6 +209,7 @@ export class SessionTrendsComponent implements OnChanges {
     if (this.rows.length < 2) {
       this.hiroSeries = [];
       this.hiroMarkers = [];
+      this.hiroDirectionMarkers = [];
       this.hiroHasData = false;
       return;
     }
@@ -160,6 +223,7 @@ export class SessionTrendsComponent implements OnChanges {
     if (!hiroValues.length || !spotValues.length) {
       this.hiroSeries = [];
       this.hiroMarkers = [];
+      this.hiroDirectionMarkers = [];
       this.hiroHasData = false;
       return;
     }
@@ -206,6 +270,22 @@ export class SessionTrendsComponent implements OnChanges {
         y: series.scale(value),
       }];
     });
+    this.hiroDirectionMarkers = this.rows.flatMap((row, index) => {
+      const definitions = [
+        { key: 'spx', value: numericValue(row.spx_hiro), rate: numericValue(row.spx_hiro_rate_per_minute), label: 'SPX' },
+        { key: 'equities', value: numericValue(row.equities_hiro), rate: numericValue(row.equities_hiro_rate_per_minute), label: 'Equities' },
+      ] as const;
+      return definitions.flatMap(definition => {
+        if (definition.value == null || definition.rate == null || definition.rate === 0) return [];
+        const upward = definition.rate > 0;
+        return [{
+          key: `${row.capture_id}-${definition.key}`,
+          path: trianglePath(x(index), yHiro(definition.value), upward, 4.5),
+          cssClass: upward ? 'hiro-direction-marker--up' : 'hiro-direction-marker--down',
+          title: `${definition.label} ${upward ? 'rising' : 'falling'} at ${this.formatSignedCompact(definition.rate)}/min`,
+        }];
+      });
+    });
     this.hiroHasData = this.hiroSeries.length > 0;
   }
 
@@ -236,6 +316,15 @@ export class SessionTrendsComponent implements OnChanges {
     });
     return paddedDomain(values, 14);
   }
+}
+
+function diamondPath(x: number, y: number, radius: number): string {
+  return `M ${x} ${y - radius} L ${x + radius} ${y} L ${x} ${y + radius} L ${x - radius} ${y} Z`;
+}
+
+function trianglePath(x: number, y: number, upward: boolean, radius: number): string {
+  if (upward) return `M ${x} ${y - radius} L ${x + radius} ${y + radius} L ${x - radius} ${y + radius} Z`;
+  return `M ${x} ${y + radius} L ${x + radius} ${y - radius} L ${x - radius} ${y - radius} Z`;
 }
 
 function seriesPoints(

@@ -25,6 +25,8 @@
       <span class="legend--hedge"><i></i>Hedge wall</span>
       <span class="legend--call"><i></i>Call wall</span>
       <span class="legend--shelf"><i></i>Shelf</span>
+      <span class="legend--containment"><i></i>Containment +</span>
+      <span class="legend--expansion"><i></i>Expansion &minus;</span>
     </div>
 
     @if (priceHasData) {
@@ -36,6 +38,13 @@
           }
           @for (series of priceSeries; track series.key) {
             <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
+          }
+          @for (marker of priceNodeMarkers; track marker.key) {
+            @if (marker.negative) {
+              <path class="structure-node structure-node--negative" [ngClass]="marker.cssClass" [attr.d]="marker.path" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></path>
+            } @else {
+              <circle class="structure-node structure-node--positive" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" [attr.r]="marker.radius" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></circle>
+            }
           }
           <line class="trend-active-line" [attr.x1]="priceActiveX" y1="20" [attr.x2]="priceActiveX" [attr.y2]="priceHeight - 46" />
           @for (marker of priceMarkers; track marker.key) {
@@ -59,8 +68,8 @@
       </div>
       @if (activeRow(); as active) {
         <div class="hiro-facts" aria-label="Selected capture HIRO values">
-          <span>SPX <strong [attr.data-tone]="valueTone(active.spx_hiro)">{{ formatCompact(active.spx_hiro) }}</strong><small>{{ formatCompact(active.spx_hiro_rate_per_minute) }}/min</small></span>
-          <span>Equities <strong [attr.data-tone]="valueTone(active.equities_hiro)">{{ formatCompact(active.equities_hiro) }}</strong><small>{{ formatCompact(active.equities_hiro_rate_per_minute) }}/min</small></span>
+          <span>SPX <strong [attr.data-tone]="valueTone(active.spx_hiro)">{{ formatCompact(active.spx_hiro) }}</strong><small [attr.data-tone]="valueTone(active.spx_hiro_rate_per_minute)">{{ directionArrow(active.spx_hiro_rate_per_minute) }} {{ formatSignedCompact(active.spx_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_spx_acceleration) }}</small></span>
+          <span>Equities <strong [attr.data-tone]="valueTone(active.equities_hiro)">{{ formatCompact(active.equities_hiro) }}</strong><small [attr.data-tone]="valueTone(active.equities_hiro_rate_per_minute)">{{ directionArrow(active.equities_hiro_rate_per_minute) }} {{ formatSignedCompact(active.equities_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_equities_acceleration) }}</small></span>
         </div>
       }
     </header>
@@ -84,6 +93,9 @@
           <line class="hiro-zero-line" x1="76" [attr.y1]="hiroZeroY" [attr.x2]="width - 72" [attr.y2]="hiroZeroY" />
           @for (series of hiroSeries; track series.key) {
             <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
+          }
+          @for (marker of hiroDirectionMarkers; track marker.key) {
+            <path class="hiro-direction-marker" [ngClass]="marker.cssClass" [attr.d]="marker.path"><title>{{ marker.title }}</title></path>
           }
           <line class="trend-active-line" [attr.x1]="hiroActiveX" y1="20" [attr.x2]="hiroActiveX" [attr.y2]="hiroHeight - 46" />
           @for (marker of hiroMarkers; track marker.key) {

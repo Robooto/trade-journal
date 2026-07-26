@@ -126,6 +126,7 @@
   @if (facade.captureRows().length) {
     <app-trace-session-trends
       [rows]="facade.captureRows()"
+      [nodes]="facade.bundle()?.histogram?.rows ?? []"
       [activeIndex]="facade.selectedCaptureIndex()"
     />
   }
