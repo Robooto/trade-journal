@@ -1,0 +1,100 @@
+<section class="trace-page" aria-labelledby="trace-page-title">
+  <header class="trace-header">
+    <div>
+      <p class="trace-eyebrow">Research workspace</p>
+      <h1 id="trace-page-title">TRACE</h1>
+      <p>Versioned market structure, flow, and volatility context from the mini.</p>
+    </div>
+    <div class="trace-actions">
+      <a mat-stroked-button [href]="legacyTraceUrl" target="_blank" rel="noopener">
+        <mat-icon>open_in_new</mat-icon>
+        Legacy TRACE
+      </a>
+      <button mat-flat-button color="primary" type="button" (click)="facade.reload()">
+        <mat-icon>refresh</mat-icon>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <section class="trace-control-panel" aria-label="TRACE session controls">
+    <label>
+      <span>Session</span>
+      <select
+        [ngModel]="facade.selectedDate()"
+        (ngModelChange)="selectDate($event)"
+        [disabled]="facade.sessionsLoading() || !facade.sessions().length"
+      >
+        @for (session of facade.sessions(); track session.date) {
+          <option [value]="session.date">{{ session.date }} · {{ session.status }}</option>
+        }
+      </select>
+    </label>
+
+    @if (facade.selectedSession(); as session) {
+      <dl class="trace-session-facts">
+        <div><dt>Captures</dt><dd>{{ session.capture_count }}</dd></div>
+        <div><dt>Coverage</dt><dd>{{ formatTimestamp(session.start_ts) }}–{{ formatTimestamp(session.end_ts) }}</dd></div>
+        <div>
+          <dt>Session quality</dt>
+          <dd><span class="trace-status" [ngClass]="statusClass(session.status)">{{ session.status }}</span></dd>
+        </div>
+      </dl>
+    }
+  </section>
+
+  @if (facade.sessionsLoading() && !facade.sessions().length) {
+    <section class="trace-state" aria-live="polite">
+      <mat-spinner diameter="28"></mat-spinner>
+      <div><strong>Loading TRACE sessions</strong><span>Reading the mini contract catalog.</span></div>
+    </section>
+  } @else if (facade.sessionsError()) {
+    <section class="trace-state trace-state--error" role="alert">
+      <mat-icon>cloud_off</mat-icon>
+      <div><strong>TRACE sessions are unavailable</strong><span>{{ facade.sessionsError() }} Journal and positions are unaffected.</span></div>
+    </section>
+  } @else if (facade.sessionError()) {
+    <section class="trace-state trace-state--error" role="alert">
+      <mat-icon>warning</mat-icon>
+      <div><strong>Selected session needs attention</strong><span>{{ facade.sessionError() }}</span></div>
+    </section>
+  }
+
+  <section class="trace-readiness-panel" aria-labelledby="trace-readiness-title">
+    <div class="trace-section-heading">
+      <div>
+        <p class="trace-eyebrow">Migration foundation</p>
+        <h2 id="trace-readiness-title">Source readiness</h2>
+      </div>
+      @if (facade.sessionLoading()) {
+        <span class="trace-loading"><mat-spinner diameter="18"></mat-spinner> Loading session</span>
+      } @else if (facade.bundle()) {
+        <span>{{ facade.availableResourceCount() }} of 5 sources available</span>
+      }
+    </div>
+
+    @if (facade.resourceStatuses().length) {
+      <div class="trace-source-grid">
+        @for (resource of facade.resourceStatuses(); track resource.key) {
+          <article class="trace-source-card">
+            <div class="trace-source-card__top">
+              <strong>{{ resource.label }}</strong>
+              <span class="trace-status" [ngClass]="statusClass(resource.status)">{{ resource.status }}</span>
+            </div>
+            <p>{{ resourceMessage(resource) }}</p>
+          </article>
+        }
+      </div>
+    } @else if (!facade.sessionLoading()) {
+      <div class="trace-empty">Choose an available session to validate its TRACE sources.</div>
+    }
+  </section>
+
+  <aside class="trace-boundary-note">
+    <mat-icon>verified_user</mat-icon>
+    <div>
+      <strong>Thin frontend boundary</strong>
+      <span>Angular displays versioned read models. TRACE classifications, freshness, quality, and research logic remain on the mini.</span>
+    </div>
+  </aside>
+</section>

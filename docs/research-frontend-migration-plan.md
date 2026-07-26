@@ -228,7 +228,18 @@ The first TRACE preparation wave is complete in `market-data-pipeline`:
   that reuse a capture ID on a second date plus deterministic ready, partial,
   missing, current-session, and historical-session tests.
 
-The next Angular wave may add `/research/trace`, typed models, an API service,
-and a facade against the existing `/research-api/` proxy. Keep the standalone
-mini TRACE page available as the parity baseline. No TRACE calculations,
-classification, freshness decisions, or quality rules belong in Angular.
+### TR-04 — Angular TRACE foundation — completed 2026-07-26
+
+The Research shell now exposes `/research/trace` with typed versioned models, a
+same-origin API service, and a cancellation-safe facade. Session discovery picks
+the newest available date, independent source loads preserve useful partial data,
+and the readiness page shows backend status, quality, freshness, capture counts,
+and per-resource warnings without recreating analytical rules in Angular. API,
+facade, routing, and component tests cover the boundary.
+
+Keep the standalone mini TRACE page available as the parity baseline while the
+Angular presentation is built out. The next slice is **TR-05: Snapshot vertical
+slice**—render the selected session timeline and glanceable snapshot using the
+existing facade, then compare it against the mini UI. TRACE calculations,
+classification, freshness decisions, and quality rules remain exclusively in
+`market-data-pipeline`.

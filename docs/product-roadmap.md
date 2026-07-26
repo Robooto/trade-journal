@@ -249,7 +249,8 @@ Next:
 ## Unified operator UI and research workspace
 
 Angular Flow Ideas is code-complete; live cutover remains pending. Its backend
-stays in `market-data-pipeline` on the mini, and Trace remains on the mini. See
+stays in `market-data-pipeline` on the mini. TRACE ingestion and analysis also
+remain on the mini, while its first read-only Angular foundation is now available. See
 [research-frontend-migration-plan.md](research-frontend-migration-plan.md) and
 [flow-ideas-rf07-parity-audit.md](flow-ideas-rf07-parity-audit.md).
 
@@ -264,6 +265,10 @@ stays in `market-data-pipeline` on the mini, and Trace remains on the mini. See
   freshness, and safety policy in the owning backend. The frontend should
   request documented read models, render them, collect user input, and invoke
   explicit commands; it should not reproduce business logic.
+- TRACE migration foundation now includes `/research/trace`, versioned typed models,
+  same-origin API access, cancellation-safe session state, partial-source isolation,
+  and explicit backend readiness/quality status. The mini dashboard remains the
+  presentation parity baseline until later TRACE slices are complete.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus

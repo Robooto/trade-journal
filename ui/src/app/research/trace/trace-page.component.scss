@@ -1,0 +1,242 @@
+:host {
+  display: block;
+}
+
+.trace-page {
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 118rem);
+  margin: 0 auto;
+  padding: clamp(1rem, 2vw, 2rem);
+  color: #eef4ff;
+}
+
+.trace-header,
+.trace-section-heading,
+.trace-source-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.trace-header h1,
+.trace-section-heading h2 {
+  margin: 0;
+  letter-spacing: -0.035em;
+}
+
+.trace-header h1 {
+  font-size: clamp(2rem, 4vw, 3.25rem);
+}
+
+.trace-header p:not(.trace-eyebrow) {
+  max-width: 48rem;
+  margin: 0.35rem 0 0;
+  color: #93a4bd;
+}
+
+.trace-eyebrow {
+  margin: 0 0 0.25rem;
+  color: #8db5ff;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.trace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.trace-control-panel,
+.trace-readiness-panel,
+.trace-boundary-note,
+.trace-state {
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  background: rgba(22, 27, 34, 0.92);
+}
+
+.trace-control-panel {
+  display: grid;
+  grid-template-columns: minmax(13rem, 18rem) 1fr;
+  align-items: end;
+  gap: 1.25rem;
+  padding: 1rem;
+}
+
+.trace-control-panel label {
+  display: grid;
+  gap: 0.4rem;
+  color: #9fb0c7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.trace-control-panel select {
+  min-height: 2.75rem;
+  padding: 0 0.8rem;
+  color: #eef4ff;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.65rem;
+  background: #10151c;
+}
+
+.trace-session-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.trace-session-facts div {
+  min-width: 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: 0.65rem;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.trace-session-facts dt {
+  color: #8091a9;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.trace-session-facts dd {
+  margin: 0.25rem 0 0;
+  font-weight: 680;
+}
+
+.trace-readiness-panel {
+  padding: 1rem;
+}
+
+.trace-section-heading > span,
+.trace-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #93a4bd;
+  font-size: 0.78rem;
+}
+
+.trace-source-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.trace-source-card {
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.trace-source-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trace-source-card p {
+  margin: 0.65rem 0 0;
+  color: #8fa1ba;
+  font-size: 0.78rem;
+}
+
+.trace-status {
+  display: inline-flex;
+  padding: 0.2rem 0.48rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.trace-status--ready {
+  color: #75e8a7;
+  background: rgba(34, 197, 94, 0.14);
+}
+
+.trace-status--partial {
+  color: #f7c766;
+  background: rgba(245, 158, 11, 0.14);
+}
+
+.trace-status--missing,
+.trace-status--unavailable {
+  color: #f39aab;
+  background: rgba(244, 63, 94, 0.13);
+}
+
+.trace-state,
+.trace-boundary-note {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+}
+
+.trace-state div,
+.trace-boundary-note div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.trace-state span,
+.trace-boundary-note span,
+.trace-empty {
+  color: #91a3ba;
+  font-size: 0.82rem;
+}
+
+.trace-state--error {
+  color: #ffd2da;
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.trace-empty {
+  padding: 1.5rem 0.25rem 0.5rem;
+  text-align: center;
+}
+
+.trace-boundary-note {
+  border-color: rgba(96, 165, 250, 0.25);
+  background: rgba(30, 64, 175, 0.08);
+}
+
+.trace-boundary-note mat-icon {
+  color: #8db5ff;
+}
+
+@media (max-width: 980px) {
+  .trace-control-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .trace-source-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .trace-header,
+  .trace-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .trace-session-facts,
+  .trace-source-grid {
+    grid-template-columns: 1fr;
+  }
+}
