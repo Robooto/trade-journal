@@ -60,6 +60,101 @@
     </section>
   }
 
+  @if (facade.selectedCapture(); as capture) {
+    <section class="trace-timeline-panel" aria-labelledby="trace-timeline-title">
+      <div class="trace-timeline-heading">
+        <div>
+          <p class="trace-eyebrow">Selected capture</p>
+          <h2 id="trace-timeline-title">Session timeline</h2>
+        </div>
+        <div class="trace-timeline-meta">
+          <strong>{{ formatTimestamp(capture.ts) }}</strong>
+          <span>{{ facade.selectedCaptureIndex() + 1 }} of {{ facade.captureRows().length }}</span>
+        </div>
+      </div>
+      <div class="trace-timeline-control">
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Previous TRACE capture"
+          [disabled]="facade.selectedCaptureIndex() === 0"
+          (click)="facade.stepCapture(-1)"
+        >
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <input
+          type="range"
+          min="0"
+          [max]="facade.captureRows().length - 1"
+          step="1"
+          [value]="facade.selectedCaptureIndex()"
+          (input)="selectCapture($any($event.target).value)"
+          aria-label="TRACE capture timeline"
+        />
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Next TRACE capture"
+          [disabled]="facade.selectedCaptureIndex() === facade.captureRows().length - 1"
+          (click)="facade.stepCapture(1)"
+        >
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+    </section>
+
+    <section class="trace-snapshot-panel" aria-labelledby="trace-snapshot-title">
+      <div class="trace-section-heading">
+        <div>
+          <p class="trace-eyebrow">At a glance</p>
+          <h2 id="trace-snapshot-title">Market snapshot</h2>
+        </div>
+        <span>Spot {{ formatCompactNumber(capture.spot) }}</span>
+      </div>
+      <div class="trace-snapshot-grid">
+        <article class="trace-snapshot-card">
+          <span>SPX HIRO</span>
+          <strong [attr.data-tone]="valueTone(capture.spx_hiro)">{{ formatCompactNumber(capture.spx_hiro) }}</strong>
+          <small>{{ formatCompactNumber(capture.spx_hiro_rate_per_minute) }}/min</small>
+        </article>
+        <article class="trace-snapshot-card">
+          <span>Equities HIRO</span>
+          <strong [attr.data-tone]="valueTone(capture.equities_hiro)">{{ formatCompactNumber(capture.equities_hiro) }}</strong>
+          <small>{{ formatCompactNumber(capture.equities_hiro_rate_per_minute) }}/min</small>
+        </article>
+        <article class="trace-snapshot-card">
+          <span>Flow relationship</span>
+          <strong>{{ formatLabel(capture.flow_relationship) }}</strong>
+          <small>{{ formatLabel(capture.flow_state) }}</small>
+        </article>
+        <article class="trace-snapshot-card">
+          <span>Walls</span>
+          <strong>{{ formatCompactNumber(capture.put_wall) }} / {{ formatCompactNumber(capture.hedge_wall) }} / {{ formatCompactNumber(capture.call_wall) }}</strong>
+          <small>Put / hedge / call</small>
+        </article>
+        <article class="trace-snapshot-card">
+          <span>Shelf</span>
+          <strong>{{ formatCompactNumber(capture.global_shelf_center) }}</strong>
+          <small>{{ formatLabel(capture.shelf_direction) }} · {{ formatCompactNumber(capture.shelf_center_d) }} pts</small>
+        </article>
+        <article class="trace-snapshot-card">
+          <span>Gamma structure</span>
+          <strong>{{ formatLabel(capture.local_gamma_setup) }}</strong>
+          <small>{{ formatLabel(capture.pocket_sign) }} pocket</small>
+        </article>
+        <article class="trace-snapshot-card">
+          <span>Realized volatility</span>
+          @if (facade.selectedRealizedVolatility(); as volatility) {
+            <strong>{{ formatLabel(volatility.realized_vol_regime) }}</strong>
+            <small>{{ formatCompactNumber(volatility.realized_vol_bps) }} bps · {{ volatility.return_observations }} returns</small>
+          } @else {
+            <strong>Unavailable</strong>
+            <small>No matching capture</small>
+          }
+        </article>
+      </div>
+    </section>
+  }
   <section class="trace-readiness-panel" aria-labelledby="trace-readiness-title">
     <div class="trace-section-heading">
       <div>

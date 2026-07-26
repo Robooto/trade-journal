@@ -230,18 +230,27 @@ The first TRACE preparation wave is complete in `market-data-pipeline`:
 
 ### TR-04 — Angular TRACE foundation — completed 2026-07-26
 
-The first-class TRACE workspace now exposes `/trace/overview` with typed versioned models, a
-same-origin API service, and a cancellation-safe facade. Session discovery picks
+The first-class TRACE workspace now exposes `/trace/overview` with typed
+versioned models, a same-origin API service, and a cancellation-safe facade. Session discovery picks
 the newest available date, independent source loads preserve useful partial data,
 and the readiness page shows backend status, quality, freshness, capture counts,
 and per-resource warnings without recreating analytical rules in Angular. API,
 facade, routing, and component tests cover the boundary.
 
-Keep the standalone mini TRACE page available as the parity baseline while the
-Angular presentation is built out. The next slice is **TR-05: Snapshot vertical
-slice**—render the selected session timeline and glanceable snapshot using the
-existing facade, then compare it against the mini UI. TRACE calculations,
-classification, freshness decisions, and quality rules remain exclusively in
-`market-data-pipeline`. The sidebar places TRACE directly below Journal, while
-Flow Ideas and Watchlists remain grouped under Research; legacy `/research/trace`
-and `/research/charm` URLs redirect to the new workspace.
+The sidebar places TRACE directly below Journal, while Flow Ideas and Watchlists
+remain grouped under Research; legacy `/research/trace` and `/research/charm`
+URLs redirect to the new workspace.
+
+### TR-05 — Timeline and glanceable snapshot — completed 2026-07-26
+
+The overview opens at the latest capture and provides bounded previous/next and
+range navigation across the session. Its snapshot renders backend-provided spot,
+SPX and equities HIRO, flow relationship, walls, shelf, gamma structure, and
+capture-matched realized volatility. Responsive content-box and flex boundaries
+prevent the TRACE route from widening the application viewport. No TRACE
+calculations, classifications, freshness decisions, or quality rules moved into
+Angular.
+
+Keep the standalone mini TRACE page as the visual parity baseline. The next
+slice is **TR-06: Signed GEX structure map** using the existing histogram and
+gamma-profile contracts, with the selected timeline capture as the shared key.

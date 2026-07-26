@@ -20,6 +20,8 @@ import {
 
 import {
   TraceContractBase,
+  TraceDashboardRow,
+  TraceRealizedVolatilityRow,
   TraceResourceStatus,
   TraceSessionBundle,
   TraceSessionDescriptor,
@@ -46,10 +48,26 @@ export class TraceFacade implements OnDestroy {
   readonly sessionLoading = signal(false);
   readonly sessionError = signal<string | null>(null);
   readonly bundle = signal<TraceSessionBundle | null>(null);
+  readonly selectedCaptureIndex = signal(0);
 
   readonly selectedSession = computed<TraceSessionDescriptor | null>(() =>
     this.sessions().find(session => session.date === this.selectedDate()) ?? null,
   );
+
+  readonly captureRows = computed<readonly TraceDashboardRow[]>(() =>
+    this.bundle()?.timeseries?.rows ?? [],
+  );
+
+  readonly selectedCapture = computed<TraceDashboardRow | null>(() => {
+    const rows = this.captureRows();
+    return rows[this.selectedCaptureIndex()] ?? null;
+  });
+
+  readonly selectedRealizedVolatility = computed<TraceRealizedVolatilityRow | null>(() => {
+    const captureId = this.selectedCapture()?.capture_id;
+    if (!captureId) return null;
+    return this.bundle()?.realizedVolatility?.rows.find(row => row.capture_id === captureId) ?? null;
+  });
 
   readonly resourceStatuses = computed<readonly TraceResourceStatus[]>(() => {
     const bundle = this.bundle();
@@ -108,6 +126,20 @@ export class TraceFacade implements OnDestroy {
     this.selectedDateSubject.next(normalized);
   }
 
+  selectCapture(index: number): void {
+    const lastIndex = this.captureRows().length - 1;
+    if (lastIndex < 0) {
+      this.selectedCaptureIndex.set(0);
+      return;
+    }
+    const normalized = Math.max(0, Math.min(lastIndex, Math.round(index)));
+    this.selectedCaptureIndex.set(normalized);
+  }
+
+  stepCapture(offset: number): void {
+    this.selectCapture(this.selectedCaptureIndex() + offset);
+  }
+
   reload(): void {
     this.loadSessions();
     if (this.selectedDate()) this.reloadSubject.next();
@@ -122,6 +154,7 @@ export class TraceFacade implements OnDestroy {
     if (!response.sessions.length) {
       this.selectedDate.set('');
       this.bundle.set(null);
+      this.selectedCaptureIndex.set(0);
       this.sessionError.set('No TRACE sessions are available.');
       return;
     }
@@ -138,6 +171,7 @@ export class TraceFacade implements OnDestroy {
     this.sessionLoading.set(true);
     this.sessionError.set(null);
     this.bundle.set(null);
+    this.selectedCaptureIndex.set(0);
 
     return forkJoin({
       summary: capture(this.api.summary(date)),
@@ -149,6 +183,7 @@ export class TraceFacade implements OnDestroy {
       map(resources => toBundle(date, resources)),
       tap(bundle => {
         this.bundle.set(bundle);
+        this.selectedCaptureIndex.set(Math.max(0, (bundle.timeseries?.rows.length ?? 1) - 1));
         if (!hasAnyResource(bundle)) {
           this.sessionError.set('The selected TRACE session could not be loaded.');
         }

@@ -1,7 +1,12 @@
 :host,
 .trace-route-shell {
   display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .trace-subnav {

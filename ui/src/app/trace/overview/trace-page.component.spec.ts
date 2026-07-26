@@ -17,10 +17,16 @@ class TraceFacadeStub {
   readonly sessionLoading = signal(false);
   readonly sessionError = signal<string | null>(null);
   readonly bundle = signal(null);
+  readonly captureRows = signal<any[]>([]);
+  readonly selectedCaptureIndex = signal(0);
+  readonly selectedCapture = signal<any>(null);
+  readonly selectedRealizedVolatility = signal<any>(null);
   readonly resourceStatuses = signal([]);
   readonly availableResourceCount = signal(0);
   readonly loadSessions = vi.fn();
   readonly selectDate = vi.fn();
+  readonly selectCapture = vi.fn();
+  readonly stepCapture = vi.fn();
   readonly reload = vi.fn();
 }
 
@@ -51,8 +57,46 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Thin frontend boundary');
   });
 
-  it('delegates session changes to the facade', () => {
+  it('renders the selected capture as a glanceable market snapshot', () => {
+    const capture = {
+      ts: '2026-07-24T13:00:05-07:00',
+      capture_id: 'capture-2',
+      spot: 7412,
+      spx_hiro: -1_280_000_000,
+      spx_hiro_rate_per_minute: 119_000_000,
+      equities_hiro: -1_280_000_000,
+      equities_hiro_rate_per_minute: -18_000_000,
+      flow_relationship: 'divergent',
+      flow_state: 'spx_up_equities_down',
+      put_wall: 7300,
+      hedge_wall: 7510,
+      call_wall: 7600,
+      global_shelf_center: 7404.8,
+      shelf_direction: 'up',
+      shelf_center_d: 3.5,
+      local_gamma_setup: 'neg_with_above',
+      pocket_sign: 'negative',
+    };
+    facade.captureRows.set([capture]);
+    facade.selectedCapture.set(capture);
+    facade.selectedRealizedVolatility.set({
+      realized_vol_regime: 'mid_realized',
+      realized_vol_bps: 6.4,
+      return_observations: 6,
+    });
+
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Session timeline');
+    expect(fixture.nativeElement.textContent).toContain('Market snapshot');
+    expect(fixture.nativeElement.textContent).toContain('−1.28B');
+    expect(fixture.nativeElement.textContent).toContain('Mid Realized');
+  });
+  it('delegates session and timeline changes to the facade', () => {
     fixture.componentInstance.selectDate('2026-07-24');
+    fixture.componentInstance.selectCapture('4');
+
     expect(facade.selectDate).toHaveBeenCalledWith('2026-07-24');
+    expect(facade.selectCapture).toHaveBeenCalledWith(4);
   });
 });

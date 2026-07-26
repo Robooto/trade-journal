@@ -271,6 +271,9 @@ remain on the mini, while its first read-only Angular foundation is now availabl
   and explicit backend readiness/quality status. The mini dashboard remains the
   presentation parity baseline until later TRACE slices are complete. Charm now lives
   alongside the overview at `/trace/charm`; old Research URLs redirect safely.
+- The TRACE overview now provides bounded capture timeline navigation and a
+  glanceable snapshot of backend-provided HIRO, flow, walls, shelf, gamma
+  structure, and capture-matched realized volatility without frontend scoring.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus

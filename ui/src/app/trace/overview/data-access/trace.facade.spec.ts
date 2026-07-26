@@ -65,7 +65,18 @@ const summaryFixture: TraceSummaryResponse = {
 };
 const timeseriesFixture: TraceTimeseriesResponse = {
   ...contractBase('trace-timeseries.v1'),
-  rows: [],
+  rows: [
+    {
+      ts: '2026-07-24T12:50:04-07:00',
+      capture_id: 'capture-1',
+      spot: 7410,
+    } as TraceTimeseriesResponse['rows'][number],
+    {
+      ts: '2026-07-24T13:00:05-07:00',
+      capture_id: 'capture-2',
+      spot: 7412,
+    } as TraceTimeseriesResponse['rows'][number],
+  ],
 };
 const histogramFixture: TraceHistogramResponse = {
   ...contractBase('trace-histogram-map.v1'),
@@ -83,7 +94,19 @@ const volatilityFixture: TraceRealizedVolatilityResponse = {
   history: {},
   thresholds: {},
   provenance: {},
-  rows: [],
+  rows: [{
+    date,
+    ts: '2026-07-24T13:00:05-07:00',
+    as_of: '2026-07-24T13:00:05-07:00',
+    capture_id: 'capture-2',
+    realized_vol_bps: 6.4,
+    return_observations: 6,
+    lookback_returns: 6,
+    classification_status: 'ready',
+    realized_vol_regime: 'mid_realized',
+    history_sufficient: true,
+    current_window_sufficient: true,
+  }],
 };
 
 class TraceApiStub {
@@ -119,10 +142,25 @@ describe('TraceFacade', () => {
     expect(facade.selectedDate()).toBe(date);
     expect(facade.selectedSession()?.capture_count).toBe(41);
     expect(facade.bundle()?.summary?.spot_change).toBe(-3);
+    expect(facade.selectedCapture()?.capture_id).toBe('capture-2');
+    expect(facade.selectedRealizedVolatility()?.realized_vol_bps).toBe(6.4);
     expect(facade.availableResourceCount()).toBe(5);
     facade.ngOnDestroy();
   });
 
+  it('clamps timeline navigation to the available captures', () => {
+    const facade = new TraceFacade(new TraceApiStub() as unknown as TraceApiService);
+
+    facade.selectDate(date);
+    expect(facade.selectedCaptureIndex()).toBe(1);
+
+    facade.stepCapture(-1);
+    expect(facade.selectedCapture()?.capture_id).toBe('capture-1');
+
+    facade.selectCapture(99);
+    expect(facade.selectedCaptureIndex()).toBe(1);
+    facade.ngOnDestroy();
+  });
   it('cancels an older session bundle when the selected date changes', () => {
     const api = new TraceApiStub();
     const first = new Subject<TraceSummaryResponse>();

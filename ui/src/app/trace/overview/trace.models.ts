@@ -167,12 +167,16 @@ export type TraceGammaContextResponse = TraceCollectionResponse<
 
 export interface TraceRealizedVolatilityRow {
   readonly date: string;
+  readonly ts: string;
   readonly as_of: string;
   readonly capture_id: string;
   readonly realized_vol_bps: number | null;
   readonly return_observations: number;
+  readonly lookback_returns: number;
   readonly classification_status: string;
   readonly realized_vol_regime: string | null;
+  readonly history_sufficient: boolean;
+  readonly current_window_sufficient: boolean;
 }
 
 export interface TraceRealizedVolatilityResponse
