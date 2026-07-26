@@ -21,6 +21,7 @@ import {
 import {
   TraceContractBase,
   TraceDashboardRow,
+  TraceGammaProfileResponse,
   TraceRealizedVolatilityRow,
   TraceResourceStatus,
   TraceSessionBundle,
@@ -39,6 +40,7 @@ interface CapturedResource<T> {
 export class TraceFacade implements OnDestroy {
   private readonly subscriptions = new Subscription();
   private readonly selectedDateSubject = new BehaviorSubject<string>('');
+  private readonly gammaProfileSubject = new Subject<{ date: string; ts: string } | null>();
   private readonly reloadSubject = new Subject<void>();
 
   readonly sessions = signal<readonly TraceSessionDescriptor[]>([]);
@@ -49,6 +51,9 @@ export class TraceFacade implements OnDestroy {
   readonly sessionError = signal<string | null>(null);
   readonly bundle = signal<TraceSessionBundle | null>(null);
   readonly selectedCaptureIndex = signal(0);
+  readonly gammaProfile = signal<TraceGammaProfileResponse | null>(null);
+  readonly gammaProfileLoading = signal(false);
+  readonly gammaProfileError = signal<string | null>(null);
 
   readonly selectedSession = computed<TraceSessionDescriptor | null>(() =>
     this.sessions().find(session => session.date === this.selectedDate()) ?? null,
@@ -102,6 +107,32 @@ export class TraceFacade implements OnDestroy {
         )
         .subscribe(),
     );
+    this.subscriptions.add(
+      this.gammaProfileSubject.pipe(
+        switchMap(selection => {
+          if (!selection) {
+            this.gammaProfileLoading.set(false);
+            this.gammaProfileError.set(null);
+            this.gammaProfile.set(null);
+            return EMPTY;
+          }
+          this.gammaProfileLoading.set(true);
+          this.gammaProfileError.set(null);
+          this.gammaProfile.set(null);
+          return this.api.gammaProfile(selection.date, selection.ts).pipe(
+            map(profile => ({ profile, error: null as string | null })),
+            catchError(error => of({
+              profile: null,
+              error: toSafeMessage(error, 'Gamma profile is unavailable for this capture.'),
+            })),
+          );
+        }),
+      ).subscribe(result => {
+        this.gammaProfile.set(result.profile);
+        this.gammaProfileError.set(result.error);
+        this.gammaProfileLoading.set(false);
+      }),
+    );
   }
 
   loadSessions(): void {
@@ -133,7 +164,9 @@ export class TraceFacade implements OnDestroy {
       return;
     }
     const normalized = Math.max(0, Math.min(lastIndex, Math.round(index)));
+    if (normalized === this.selectedCaptureIndex()) return;
     this.selectedCaptureIndex.set(normalized);
+    this.requestGammaProfile();
   }
 
   stepCapture(offset: number): void {
@@ -155,6 +188,7 @@ export class TraceFacade implements OnDestroy {
       this.selectedDate.set('');
       this.bundle.set(null);
       this.selectedCaptureIndex.set(0);
+      this.resetGammaProfile();
       this.sessionError.set('No TRACE sessions are available.');
       return;
     }
@@ -172,6 +206,7 @@ export class TraceFacade implements OnDestroy {
     this.sessionError.set(null);
     this.bundle.set(null);
     this.selectedCaptureIndex.set(0);
+    this.resetGammaProfile();
 
     return forkJoin({
       summary: capture(this.api.summary(date)),
@@ -184,12 +219,27 @@ export class TraceFacade implements OnDestroy {
       tap(bundle => {
         this.bundle.set(bundle);
         this.selectedCaptureIndex.set(Math.max(0, (bundle.timeseries?.rows.length ?? 1) - 1));
+        this.requestGammaProfile();
         if (!hasAnyResource(bundle)) {
           this.sessionError.set('The selected TRACE session could not be loaded.');
         }
       }),
       finalize(() => this.sessionLoading.set(false)),
     );
+  }
+
+  private requestGammaProfile(): void {
+    const capture = this.selectedCapture();
+    const date = this.selectedDate();
+    if (!capture || !date) {
+      this.resetGammaProfile();
+      return;
+    }
+    this.gammaProfileSubject.next({ date, ts: capture.ts });
+  }
+
+  private resetGammaProfile(): void {
+    this.gammaProfileSubject.next(null);
   }
 }
 

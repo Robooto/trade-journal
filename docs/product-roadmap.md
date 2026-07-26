@@ -274,6 +274,11 @@ remain on the mini, while its first read-only Angular foundation is now availabl
 - The TRACE overview now provides bounded capture timeline navigation and a
   glanceable snapshot of backend-provided HIRO, flow, walls, shelf, gamma
   structure, and capture-matched realized volatility without frontend scoring.
+- Its responsive Signed GEX structure map shows backend-classified positive and
+  negative nodes across the session, supports near-price/full-day and key/all
+  presentation modes, and loads gamma around spot for the selected capture with
+  stale-request cancellation. Price/walls/shelf and HIRO trend panels are the
+  next parity slice.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus

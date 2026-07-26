@@ -214,7 +214,8 @@ capture selection, chart rendering, formatting, and explicit quality labels.
 The mini owns TRACE Delta ingestion, Charm calculation, source selection,
 zero-crossing interpolation, robust scale metadata, freshness, and quality.
 The page is deliberately excluded from Flow Ideas scoring and keeps visual
-parity marked pending. The full Trace dashboard remains on the mini.
+parity marked pending. The standalone mini dashboard remains the parity baseline while its views
+migrate incrementally.
 ## TRACE migration readiness — 2026-07-25
 
 The first TRACE preparation wave is complete in `market-data-pipeline`:
@@ -251,6 +252,22 @@ prevent the TRACE route from widening the application viewport. No TRACE
 calculations, classifications, freshness decisions, or quality rules moved into
 Angular.
 
+### TR-06 — Signed GEX structure map — completed 2026-07-26
+
+The overview now renders the session's signed GEX structure from the versioned
+histogram contract: positive nodes are circles, negative nodes are diamonds,
+and color comes directly from the backend node state. Near-price/full-day and
+key-node/all-node controls change presentation only; they do not reclassify or
+score the source data. The responsive SVG has no fixed minimum canvas width, so
+it uses the additional workspace released by the collapsed sidebar without
+reintroducing horizontal page scroll.
+
+The selected timeline capture also requests its versioned gamma-around-spot
+profile. Capture and session changes cancel stale requests, and loading,
+unavailable, and error states remain explicit. Angular displays the backend
+spot and cross-spot slope but does not calculate gamma, node state, or source
+quality.
+
 Keep the standalone mini TRACE page as the visual parity baseline. The next
-slice is **TR-06: Signed GEX structure map** using the existing histogram and
-gamma-profile contracts, with the selected timeline capture as the shared key.
+slice is **TR-07: price, walls, shelf, and HIRO trend panels**, keyed to the same
+selected capture and using existing versioned read models wherever possible.

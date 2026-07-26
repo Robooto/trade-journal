@@ -1,0 +1,115 @@
+<section class="gex-panel" aria-labelledby="signed-gex-title">
+  <header class="gex-header">
+    <div>
+      <p class="gex-eyebrow">Capture-linked structure</p>
+      <h2 id="signed-gex-title">Signed GEX structure map</h2>
+      <p>Circles are positive GEX; diamonds are negative GEX. Color is the backend node state.</p>
+    </div>
+    <div class="gex-controls">
+      <div class="gex-segment" aria-label="Signed GEX price window">
+        <button type="button" [class.active]="windowMode === 'near'" (click)="setWindowMode('near')">Near price</button>
+        <button type="button" [class.active]="windowMode === 'full'" (click)="setWindowMode('full')">Full day</button>
+      </div>
+      <div class="gex-segment" aria-label="Signed GEX node detail">
+        <button type="button" [class.active]="detailMode === 'key'" (click)="setDetailMode('key')">Key nodes</button>
+        <button type="button" [class.active]="detailMode === 'all'" (click)="setDetailMode('all')">All nodes</button>
+      </div>
+    </div>
+  </header>
+
+  @if (activeNodes.length) {
+    <div class="active-node-strip" aria-label="Selected capture key GEX nodes">
+      @for (node of activeNodes; track node.capture_id + node.gamma_sign + node.timestamp + node.center_strike) {
+        <div class="active-node" [class.active-node--negative]="node.gamma_sign === 'negative'">
+          <span>{{ node.gamma_sign === 'negative' ? '&minus;' : '+' }}</span>
+          <strong>{{ node.center_strike | number:'1.0-1' }}</strong>
+          <small>{{ labelize(node.state) }} &middot; {{ formatPercent(node.cluster_share) }}</small>
+        </div>
+      }
+    </div>
+  }
+
+  @if (rows.length && renderNodes.length) {
+    <div class="gex-chart-frame">
+      <svg
+        class="gex-map"
+        [attr.viewBox]="'0 0 ' + mapWidth + ' ' + mapHeight"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label="Signed GEX nodes over the selected TRACE session"
+      >
+        @for (tick of yTicks; track tick.label) {
+          <line class="gex-grid" x1="58" [attr.y1]="tick.position" [attr.x2]="mapWidth - 36" [attr.y2]="tick.position" />
+          <text class="gex-axis-label" x="50" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
+        }
+        @for (node of renderNodes; track node.key) {
+          @if (node.negative) {
+            <path [attr.class]="node.cssClass" [attr.d]="node.path" [attr.opacity]="node.opacity"><title>{{ node.title }}</title></path>
+          } @else {
+            <circle [attr.class]="node.cssClass" [attr.cx]="node.x" [attr.cy]="node.y" [attr.r]="node.radius" [attr.opacity]="node.opacity"><title>{{ node.title }}</title></circle>
+          }
+        }
+        <polyline class="gex-spot-line" [attr.points]="spotPoints" />
+        <line class="gex-active-line" [attr.x1]="activeX" y1="18" [attr.x2]="activeX" [attr.y2]="mapHeight - 44" />
+        <circle class="gex-active-spot" [attr.cx]="activeX" [attr.cy]="activeY" r="5" />
+        @for (tick of xTicks; track tick.position) {
+          <text class="gex-axis-label" [attr.x]="tick.position" [attr.y]="mapHeight - 14" text-anchor="middle">{{ tick.label }}</text>
+        }
+      </svg>
+    </div>
+  } @else {
+    <div class="gex-empty">Signed GEX nodes are unavailable for this session and view.</div>
+  }
+
+  <div class="gex-legend" aria-label="Signed GEX legend">
+    <span><i class="legend-circle"></i>Positive</span>
+    <span><i class="legend-diamond"></i>Negative</span>
+    <span><i class="legend-dot strengthening"></i>Strengthening</span>
+    <span><i class="legend-dot weakening"></i>Weakening</span>
+    <span><i class="legend-dot forming"></i>Forming</span>
+    <span><i class="legend-dot migrating"></i>Migrating</span>
+    <span><i class="legend-dot stable"></i>Stable</span>
+  </div>
+
+  <section class="gamma-profile" aria-labelledby="gamma-profile-title">
+    <header>
+      <div>
+        <p class="gex-eyebrow">Selected capture</p>
+        <h3 id="gamma-profile-title">Gamma around spot</h3>
+      </div>
+      @if (gammaProfile) {
+        <div class="profile-facts">
+          <span>Spot <strong>{{ gammaProfile.spot | number:'1.0-1' }}</strong></span>
+          <span>Slope <strong>{{ formatCompact(gammaProfile.cross_spot_slope) }}/pt</strong></span>
+        </div>
+      }
+    </header>
+    @if (gammaProfileLoading) {
+      <div class="profile-state"><mat-spinner diameter="22"></mat-spinner><span>Loading capture profile</span></div>
+    } @else if (gammaProfileError) {
+      <div class="profile-state profile-state--error"><mat-icon>warning</mat-icon><span>{{ gammaProfileError }}</span></div>
+    } @else if (profileHasData) {
+      <svg
+        class="profile-chart"
+        [attr.viewBox]="'0 0 ' + profileWidth + ' ' + profileHeight"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label="Gamma profile around the selected TRACE spot"
+      >
+        @for (tick of profileYTicks; track tick.label) {
+          <line class="gex-grid" x1="50" [attr.y1]="tick.position" [attr.x2]="profileWidth - 26" [attr.y2]="tick.position" />
+          <text class="gex-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
+        }
+        <line class="profile-zero" x1="50" [attr.y1]="profileZeroY" [attr.x2]="profileWidth - 26" [attr.y2]="profileZeroY" />
+        <line class="profile-spot" [attr.x1]="profileSpotX" y1="18" [attr.x2]="profileSpotX" [attr.y2]="profileHeight - 36" />
+        <polyline class="profile-line" [attr.points]="profilePoints" />
+        <circle class="profile-marker" [attr.cx]="profileMarkerX" [attr.cy]="profileMarkerY" r="4.5" />
+        @for (tick of profileXTicks; track tick.position) {
+          <text class="gex-axis-label" [attr.x]="tick.position" [attr.y]="profileHeight - 12" text-anchor="middle">{{ tick.label }}</text>
+        }
+      </svg>
+    } @else {
+      <div class="profile-state"><span>Select a capture with an available gamma profile.</span></div>
+    }
+  </section>
+</section>

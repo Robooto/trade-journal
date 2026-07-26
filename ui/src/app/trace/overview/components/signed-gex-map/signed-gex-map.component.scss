@@ -1,0 +1,29 @@
+:host { display:block; min-width:0; }
+.gex-panel { min-width:0; padding:1rem; overflow:hidden; border:1px solid rgba(148,163,184,.2); border-radius:1rem; background:rgba(22,27,34,.92); box-sizing:border-box; }
+.gex-header,.gamma-profile header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
+.gex-header h2,.gamma-profile h3 { margin:0; letter-spacing:-.025em; }
+.gex-header p:not(.gex-eyebrow) { max-width:48rem; margin:.35rem 0 0; color:#8fa1ba; font-size:.78rem; }
+.gex-eyebrow { margin:0 0 .25rem; color:#8db5ff; font-size:.68rem; font-weight:750; letter-spacing:.09em; text-transform:uppercase; }
+.gex-controls { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.55rem; }
+.gex-segment { display:flex; padding:3px; border:1px solid rgba(148,163,184,.22); border-radius:.65rem; background:#10151c; }
+.gex-segment button { min-height:2rem; padding:0 .7rem; color:#8fa1ba; border:0; border-radius:.45rem; background:transparent; font:inherit; font-size:.72rem; font-weight:700; cursor:pointer; }
+.gex-segment button.active { color:#dfe9fb; background:rgba(112,156,255,.18); }
+.active-node-strip { display:flex; min-width:0; gap:.45rem; margin-top:.85rem; overflow-x:auto; scrollbar-width:thin; }
+.active-node { display:grid; grid-template-columns:auto auto; flex:0 0 auto; gap:.05rem .4rem; min-width:9rem; padding:.5rem .65rem; border:1px solid rgba(56,189,248,.22); border-radius:.6rem; background:rgba(14,165,233,.07); }
+.active-node>span { color:#56ccf2; font-weight:900; }.active-node--negative>span{color:#c4a1ff}.active-node strong{color:#e8f1ff}.active-node small{grid-column:1/-1;color:#8fa1ba;font-size:.65rem}
+.gex-chart-frame { width:100%; min-width:0; margin-top:.8rem; overflow:hidden; border-radius:.7rem; background:rgba(9,13,19,.55); }
+.gex-map { display:block; width:100%; height:clamp(20rem,31vw,31rem); min-width:0; }
+.gex-grid { stroke:rgba(148,163,184,.12); stroke-width:1; vector-effect:non-scaling-stroke; }
+.gex-axis-label { fill:#8394ab; font-size:11px; }
+.gex-node { vector-effect:non-scaling-stroke; }.gex-node--positive{stroke:#4dc3f2;stroke-width:1.4}.gex-node--negative{stroke:#b69cff;stroke-width:2}
+.gex-state--strengthening{fill:#34d399}.gex-state--weakening{fill:#fbbf24}.gex-state--forming{fill:#d8b4fe}.gex-state--migrating{fill:#22d3ee}.gex-state--collapsing{fill:#f59e0b}.gex-state--collapsed{fill:#a16207}.gex-state--faded{fill:#94a3b8}.gex-state--stable{fill:#3b82a0}
+.gex-spot-line { fill:none; stroke:#f8f2d6; stroke-width:2.25; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.gex-active-line { stroke:#f8f2d6; stroke-width:1; stroke-dasharray:4 5; opacity:.7; vector-effect:non-scaling-stroke; }.gex-active-spot{fill:#f8f2d6}
+.gex-legend { display:flex; flex-wrap:wrap; gap:.65rem 1rem; margin-top:.65rem; color:#8fa1ba; font-size:.67rem; }
+.gex-legend span{display:inline-flex;align-items:center;gap:.3rem}.legend-circle,.legend-dot{width:.52rem;height:.52rem;border-radius:50%;background:#4dc3f2}.legend-diamond{width:.5rem;height:.5rem;transform:rotate(45deg);background:#b69cff}.legend-dot.strengthening{background:#34d399}.legend-dot.weakening{background:#fbbf24}.legend-dot.forming{background:#d8b4fe}.legend-dot.migrating{background:#22d3ee}.legend-dot.stable{background:#3b82a0}
+.gex-empty,.profile-state { display:flex; align-items:center; justify-content:center; gap:.55rem; min-height:9rem; color:#8fa1ba; font-size:.78rem; }
+.gamma-profile { margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(148,163,184,.16); }
+.gamma-profile h3{font-size:1rem}.profile-facts{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.75rem;color:#8fa1ba;font-size:.72rem}.profile-facts strong{color:#dfe9fb}
+.profile-chart{display:block;width:100%;height:clamp(12rem,20vw,16rem);margin-top:.65rem;border-radius:.7rem;background:rgba(9,13,19,.55)}
+.profile-zero{stroke:rgba(148,163,184,.3);stroke-width:1;vector-effect:non-scaling-stroke}.profile-spot{stroke:#f8f2d6;stroke-width:1;stroke-dasharray:4 5;vector-effect:non-scaling-stroke}.profile-line{fill:none;stroke:#74a8ff;stroke-width:2.25;stroke-linejoin:round;stroke-linecap:round;vector-effect:non-scaling-stroke}.profile-marker{fill:#f8f2d6;stroke:#74a8ff;stroke-width:1.5;vector-effect:non-scaling-stroke}.profile-state--error{color:#ff9bad}
+@media(max-width:760px){.gex-header,.gamma-profile header{flex-direction:column}.gex-controls,.profile-facts{justify-content:flex-start}.gex-map{height:22rem}.profile-chart{height:13rem}}

@@ -21,6 +21,9 @@ class TraceFacadeStub {
   readonly selectedCaptureIndex = signal(0);
   readonly selectedCapture = signal<any>(null);
   readonly selectedRealizedVolatility = signal<any>(null);
+  readonly gammaProfile = signal<any>(null);
+  readonly gammaProfileLoading = signal(false);
+  readonly gammaProfileError = signal<string | null>(null);
   readonly resourceStatuses = signal([]);
   readonly availableResourceCount = signal(0);
   readonly loadSessions = vi.fn();

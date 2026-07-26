@@ -4,6 +4,7 @@ import { Observable, Subject, of, throwError } from 'rxjs';
 import {
   TraceContractBase,
   TraceGammaContextResponse,
+  TraceGammaProfileResponse,
   TraceHistogramResponse,
   TraceRealizedVolatilityResponse,
   TraceSessionsResponse,
@@ -86,6 +87,20 @@ const gammaFixture: TraceGammaContextResponse = {
   ...contractBase('trace-gamma-context.v1'),
   rows: [],
 };
+const gammaProfileFixture: TraceGammaProfileResponse = {
+  ...contractBase('trace-gamma-profile.v1'),
+  ts: '2026-07-24T13:00:05-07:00',
+  capture_id: 'capture-2',
+  spot: 7412,
+  window_points: 60,
+  cross_spot_slope: 47_042_808,
+  source: { mode: 'fixture', timestamp: null, time: null },
+  rows: [
+    { spot: 7410, gamma: -120_000_000 },
+    { spot: 7412, gamma: 25_000_000 },
+    { spot: 7415, gamma: 140_000_000 },
+  ],
+};
 const volatilityFixture: TraceRealizedVolatilityResponse = {
   ...contractBase('trace-realized-volatility.v1'),
   contract_version: 'trace-realized-volatility.v1',
@@ -112,6 +127,8 @@ const volatilityFixture: TraceRealizedVolatilityResponse = {
 class TraceApiStub {
   readonly summaryStreams: Observable<TraceSummaryResponse>[] = [];
   readonly summaryDates: string[] = [];
+  readonly gammaProfileStreams: Observable<TraceGammaProfileResponse>[] = [];
+  readonly gammaProfileRequests: { date: string; ts: string }[] = [];
   realizedVolatilityFails = false;
 
   sessions(): Observable<TraceSessionsResponse> { return of(sessionsFixture); }
@@ -122,7 +139,14 @@ class TraceApiStub {
   timeseries(): Observable<TraceTimeseriesResponse> { return of(timeseriesFixture); }
   histogram(): Observable<TraceHistogramResponse> { return of(histogramFixture); }
   gammaContext(): Observable<TraceGammaContextResponse> { return of(gammaFixture); }
-  realizedVolatility(): Observable<TraceRealizedVolatilityResponse> {
+  gammaProfile(selectedDate: string, ts: string): Observable<TraceGammaProfileResponse> {
+    this.gammaProfileRequests.push({ date: selectedDate, ts });
+    return this.gammaProfileStreams.shift() ?? of({
+      ...gammaProfileFixture,
+      ts,
+      capture_id: ts.includes('12:50') ? 'capture-1' : 'capture-2',
+    });
+  }  realizedVolatility(): Observable<TraceRealizedVolatilityResponse> {
     return this.realizedVolatilityFails
       ? throwError(() => new HttpErrorResponse({
           status: 404,
@@ -144,18 +168,26 @@ describe('TraceFacade', () => {
     expect(facade.bundle()?.summary?.spot_change).toBe(-3);
     expect(facade.selectedCapture()?.capture_id).toBe('capture-2');
     expect(facade.selectedRealizedVolatility()?.realized_vol_bps).toBe(6.4);
+    expect(facade.gammaProfile()?.capture_id).toBe('capture-2');
+    expect(api.gammaProfileRequests).toEqual([{
+      date,
+      ts: '2026-07-24T13:00:05-07:00',
+    }]);
     expect(facade.availableResourceCount()).toBe(5);
     facade.ngOnDestroy();
   });
 
-  it('clamps timeline navigation to the available captures', () => {
-    const facade = new TraceFacade(new TraceApiStub() as unknown as TraceApiService);
+  it('clamps timeline navigation and reloads gamma for the selected capture', () => {
+    const api = new TraceApiStub();
+    const facade = new TraceFacade(api as unknown as TraceApiService);
 
     facade.selectDate(date);
     expect(facade.selectedCaptureIndex()).toBe(1);
 
     facade.stepCapture(-1);
     expect(facade.selectedCapture()?.capture_id).toBe('capture-1');
+    expect(facade.gammaProfile()?.capture_id).toBe('capture-1');
+    expect(api.gammaProfileRequests.at(-1)?.ts).toBe('2026-07-24T12:50:04-07:00');
 
     facade.selectCapture(99);
     expect(facade.selectedCaptureIndex()).toBe(1);
@@ -182,6 +214,29 @@ describe('TraceFacade', () => {
     facade.ngOnDestroy();
   });
 
+  it('cancels an older gamma profile request when the selected capture changes', () => {
+    const api = new TraceApiStub();
+    const older = new Subject<TraceGammaProfileResponse>();
+    const newer = new Subject<TraceGammaProfileResponse>();
+    api.gammaProfileStreams.push(older, newer);
+    const facade = new TraceFacade(api as unknown as TraceApiService);
+
+    facade.selectDate(date);
+    facade.stepCapture(-1);
+
+    older.next(gammaProfileFixture);
+    older.complete();
+    expect(facade.gammaProfile()).toBeNull();
+
+    newer.next({
+      ...gammaProfileFixture,
+      ts: '2026-07-24T12:50:04-07:00',
+      capture_id: 'capture-1',
+    });
+    newer.complete();
+    expect(facade.gammaProfile()?.capture_id).toBe('capture-1');
+    facade.ngOnDestroy();
+  });
   it('retains successful sources when one optional source fails', () => {
     const api = new TraceApiStub();
     api.realizedVolatilityFails = true;
