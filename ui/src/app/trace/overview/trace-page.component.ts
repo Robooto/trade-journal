@@ -19,8 +19,20 @@ export class TracePageComponent implements OnInit {
     this.facade.loadSessions();
   }
 
-  selectDate(date: string): void {
-    this.facade.selectDate(date);
+  readonly sessionDateFilter = (date: Date | null): boolean => {
+    const sessionDate = formatSessionDate(date);
+    return Boolean(sessionDate && this.facade.sessions().some(session => session.date === sessionDate));
+  };
+
+  selectedSessionDate(): Date | null {
+    return parseSessionDate(this.facade.selectedDate());
+  }
+
+  selectSessionDate(date: Date | null): void {
+    const sessionDate = formatSessionDate(date);
+    if (sessionDate && this.facade.sessions().some(session => session.date === sessionDate)) {
+      this.facade.selectDate(sessionDate);
+    }
   }
 
   selectCapture(value: string | number): void {
@@ -72,4 +84,18 @@ export class TracePageComponent implements OnInit {
 function isInteractiveTarget(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return Boolean(target.closest('input, select, textarea, button, a, [contenteditable="true"]'));
+}
+
+function parseSessionDate(value: string): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+  return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+}
+
+function formatSessionDate(value: Date | null): string | null {
+  if (!value || Number.isNaN(value.getTime())) return null;
+  const year = value.getFullYear();
+  const month = `${value.getMonth() + 1}`.padStart(2, '0');
+  const day = `${value.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }

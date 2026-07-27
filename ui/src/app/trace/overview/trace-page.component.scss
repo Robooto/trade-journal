@@ -72,23 +72,8 @@
   padding: 1rem;
 }
 
-.trace-control-panel label {
-  display: grid;
-  gap: 0.4rem;
-  color: #9fb0c7;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.trace-control-panel select {
-  min-height: 2.75rem;
-  padding: 0 0.8rem;
-  color: #eef4ff;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 0.65rem;
-  background: #10151c;
+.trace-date-field {
+  width: 100%;
 }
 
 .trace-session-facts {

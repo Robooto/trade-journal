@@ -18,18 +18,21 @@
   </header>
 
   <section class="trace-control-panel" aria-label="TRACE session controls">
-    <label>
-      <span>Session</span>
-      <select
-        [ngModel]="facade.selectedDate()"
-        (ngModelChange)="selectDate($event)"
+    <mat-form-field appearance="outline" class="trace-date-field" subscriptSizing="dynamic">
+      <mat-label>Session date</mat-label>
+      <input
+        matInput
+        readonly
+        [matDatepicker]="sessionPicker"
+        [matDatepickerFilter]="sessionDateFilter"
+        [ngModel]="selectedSessionDate()"
+        (dateChange)="selectSessionDate($event.value)"
         [disabled]="facade.sessionsLoading() || !facade.sessions().length"
-      >
-        @for (session of facade.sessions(); track session.date) {
-          <option [value]="session.date">{{ session.date }} · {{ session.status }}</option>
-        }
-      </select>
-    </label>
+      />
+      <mat-datepicker-toggle matIconSuffix [for]="sessionPicker"></mat-datepicker-toggle>
+      <mat-datepicker #sessionPicker></mat-datepicker>
+      <mat-hint>{{ facade.sessions().length }} available sessions</mat-hint>
+    </mat-form-field>
 
     @if (facade.selectedSession(); as session) {
       <dl class="trace-session-facts">

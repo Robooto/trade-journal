@@ -83,6 +83,23 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
   });
 
+  it('selects only dates present in the TRACE session catalog', () => {
+    (facade.sessions as any).set([
+      { date: '2026-07-23', status: 'ready' },
+      { date: '2026-07-24', status: 'ready' },
+    ]);
+    facade.selectedDate.set('2026-07-24');
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('mat-datepicker-toggle')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.trace-control-panel select')).toBeNull();
+    expect(fixture.componentInstance.sessionDateFilter(new Date(2026, 6, 24))).toBe(true);
+    expect(fixture.componentInstance.sessionDateFilter(new Date(2026, 6, 22))).toBe(false);
+
+    fixture.componentInstance.selectSessionDate(new Date(2026, 6, 23));
+    expect(facade.selectDate).toHaveBeenCalledWith('2026-07-23');
+  });
+
   it('renders the selected capture as a glanceable market snapshot', () => {
     const capture = {
       ts: '2026-07-24T13:00:05-07:00',
@@ -178,7 +195,8 @@ describe('TracePageComponent', () => {
 
   it('delegates session, timeline, and Charm capture changes to the facade', () => {
     facade.captureRows.set([{ ts: 'first' }, { ts: 'selected' }]);
-    fixture.componentInstance.selectDate('2026-07-24');
+    (facade.sessions as any).set([{ date: '2026-07-24', status: 'ready' }]);
+    fixture.componentInstance.selectSessionDate(new Date(2026, 6, 24));
     fixture.componentInstance.selectCapture('4');
     fixture.componentInstance.selectCaptureTimestamp('selected');
 
