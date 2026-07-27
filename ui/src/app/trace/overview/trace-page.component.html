@@ -131,6 +131,16 @@
     />
   }
 
+  <app-charm-widget
+    [date]="facade.selectedDate()"
+    [captureTs]="facade.selectedCapture()?.ts ?? null"
+    [overview]="facade.charmOverview()"
+    [loading]="facade.charmLoading()"
+    [error]="facade.charmError()"
+    (captureSelected)="selectCaptureTimestamp($event)"
+    (refreshRequested)="facade.reload()"
+  />
+
   @if (facade.selectedCapture()) {
     <app-trace-gamma-profile
       [gammaProfile]="facade.gammaProfile()"
@@ -146,41 +156,6 @@
       (captureSelected)="facade.selectCapture($event)"
     />
   }
-  <section class="trace-readiness-panel" aria-labelledby="trace-readiness-title">
-    <div class="trace-section-heading">
-      <div>
-        <p class="trace-eyebrow">Migration foundation</p>
-        <h2 id="trace-readiness-title">Source readiness</h2>
-      </div>
-      @if (facade.sessionLoading()) {
-        <span class="trace-loading"><mat-spinner diameter="18"></mat-spinner> Loading session</span>
-      } @else if (facade.bundle()) {
-        <span>{{ facade.availableResourceCount() }} of 5 sources available</span>
-      }
-    </div>
 
-    @if (facade.resourceStatuses().length) {
-      <div class="trace-source-grid">
-        @for (resource of facade.resourceStatuses(); track resource.key) {
-          <article class="trace-source-card">
-            <div class="trace-source-card__top">
-              <strong>{{ resource.label }}</strong>
-              <span class="trace-status" [ngClass]="statusClass(resource.status)">{{ resource.status }}</span>
-            </div>
-            <p>{{ resourceMessage(resource) }}</p>
-          </article>
-        }
-      </div>
-    } @else if (!facade.sessionLoading()) {
-      <div class="trace-empty">Choose an available session to validate its TRACE sources.</div>
-    }
-  </section>
 
-  <aside class="trace-boundary-note">
-    <mat-icon>verified_user</mat-icon>
-    <div>
-      <strong>Thin frontend boundary</strong>
-      <span>Angular displays versioned read models. TRACE classifications, freshness, quality, and research logic remain on the mini.</span>
-    </div>
-  </aside>
 </section>

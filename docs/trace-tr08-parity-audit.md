@@ -28,9 +28,9 @@ the same versioned TRACE APIs through the Pi's same-origin proxy.
 - Angular preserves HIRO rate direction with per-capture up/down markers and shows
   backend acceleration labels for the selected capture. It does not recreate the
   legacy browser's separate six-capture classification in frontend code.
-- Charm remains a first-class TRACE sub-route for full analysis and is also shown as
-  optional experimental context in the overview snapshot. A missing Charm response does
-  not block the core TRACE session.
+- Charm is embedded as an experimental widget in the TRACE overview and stays synchronized
+  with the selected capture. A missing Charm response does not block the core TRACE session;
+  the former /trace/charm URL redirects to the overview.
 - Source readiness and quality are more explicit in Angular.
 
 ## Required visual sign-off

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
 
 import { TraceFacade } from './data-access/trace.facade';
-import { TraceContractStatus, TraceResourceStatus } from './trace.models';
+import { TraceContractStatus } from './trace.models';
 
 @Component({
   selector: 'app-trace-page',
@@ -27,6 +27,11 @@ export class TracePageComponent implements OnInit {
     this.facade.selectCapture(Number(value));
   }
 
+  selectCaptureTimestamp(timestamp: string): void {
+    const index = this.facade.captureRows().findIndex(row => row.ts === timestamp);
+    if (index >= 0) this.facade.selectCapture(index);
+  }
+
   @HostListener('document:keydown', ['$event'])
   handleTimelineKeydown(event: KeyboardEvent): void {
     if (
@@ -50,13 +55,6 @@ export class TracePageComponent implements OnInit {
     return `trace-status--${status.replace('_', '-')}`;
   }
 
-  resourceMessage(resource: TraceResourceStatus): string {
-    if (resource.status === 'unavailable') return 'Unavailable';
-    if (resource.warningCount) {
-      return `${resource.warningCount} warning${resource.warningCount === 1 ? '' : 's'}`;
-    }
-    return resource.status === 'ready' ? 'Ready' : resource.status;
-  }
 
   formatTimestamp(value: string | null | undefined): string {
     if (!value) return 'Unavailable';

@@ -208,12 +208,11 @@ plugin framework yet; a small route/navigation registry and source-quality
 components are enough until multiple modules prove a broader abstraction.
 
 ### Experimental Charm slice
-
-The first-class TRACE workspace includes Charm at `/trace/charm`. Angular owns only session and
+The first-class TRACE workspace includes Charm as an inline overview widget; the former /trace/charm route redirects to /trace/overview. Angular owns only session and
 capture selection, chart rendering, formatting, and explicit quality labels.
 The mini owns TRACE Delta ingestion, Charm calculation, source selection,
 zero-crossing interpolation, robust scale metadata, freshness, and quality.
-The page is deliberately excluded from Flow Ideas scoring and keeps visual
+The widget is deliberately excluded from Flow Ideas scoring and keeps visual
 parity marked pending. The standalone mini dashboard remains the parity baseline while its views
 migrate incrementally.
 ## TRACE migration readiness — 2026-07-25

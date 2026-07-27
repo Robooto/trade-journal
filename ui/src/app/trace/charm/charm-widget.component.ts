@@ -1,73 +1,68 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { forkJoin, Subscription } from 'rxjs';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  OnDestroy,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
+import { Subscription } from 'rxjs';
 
 import { CharmApiService } from './charm-api.service';
 import { CharmOverview, CharmSeriesPoint, CharmSurface } from './charm.models';
 
 @Component({
-  selector: 'app-charm-page',
-  templateUrl: './charm-page.component.html',
-  styleUrls: ['./charm-page.component.scss'],
+  selector: 'app-charm-widget',
+  templateUrl: './charm-widget.component.html',
+  styleUrls: ['./charm-widget.component.scss'],
   standalone: false,
 })
-export class CharmPageComponent implements OnInit, OnDestroy {
-  dates: string[] = [];
-  selectedDate = '';
+export class CharmWidgetComponent implements OnChanges, OnDestroy {
+  @Input() date = '';
+  @Input() captureTs: string | null = null;
+  @Input() overview: CharmOverview | null = null;
+  @Input() loading = false;
+  @Input() error: string | null = null;
+  @Output() captureSelected = new EventEmitter<string>();
+  @Output() refreshRequested = new EventEmitter<void>();
+
   selectedTs: string | null = null;
   windowPoints = 60;
-  overview: CharmOverview | null = null;
   surface: CharmSurface | null = null;
-  loading = false;
   surfaceLoading = false;
-  error: string | null = null;
+  surfaceError: string | null = null;
 
   readonly chartWidth = 960;
-  readonly chartHeight = 260;
-  private readonly subscriptions = new Subscription();
+  readonly chartHeight = 250;
+  private surfaceSubscription: Subscription | null = null;
 
   constructor(private readonly api: CharmApiService) {}
 
-  ngOnInit(): void {
-    this.loading = true;
-    this.subscriptions.add(this.api.dates().subscribe({
-      next: response => {
-        this.dates = response.dates;
-        if (!this.dates.length) {
-          this.error = 'No validated Charm sessions are available yet.';
-          this.loading = false;
-          return;
-        }
-        this.selectedDate = this.dates[0];
-        this.loadSession();
-      },
-      error: error => this.fail(error),
-    }));
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['date'] && !changes['captureTs'] && !changes['overview']) return;
+    const nextTs = this.captureTs ?? this.overview?.latest?.ts ?? null;
+    if (!this.date || !nextTs) {
+      this.selectedTs = nextTs;
+      this.surface = null;
+      return;
+    }
+    if (nextTs !== this.selectedTs || changes['date']) {
+      this.selectedTs = nextTs;
+      this.loadSurface();
+    }
   }
 
-  ngOnDestroy(): void { this.subscriptions.unsubscribe(); }
-
-  loadSession(): void {
-    if (!this.selectedDate) return;
-    this.loading = true;
-    this.error = null;
-    this.subscriptions.add(forkJoin({
-      overview: this.api.overview(this.selectedDate),
-      surface: this.api.surface(this.selectedDate, null, this.windowPoints),
-    }).subscribe({
-      next: result => {
-        this.overview = result.overview;
-        this.surface = result.surface;
-        this.selectedTs = result.surface.ts;
-        this.loading = false;
-      },
-      error: error => this.fail(error),
-    }));
+  ngOnDestroy(): void {
+    this.surfaceSubscription?.unsubscribe();
   }
 
   loadSurface(): void {
-    if (!this.selectedDate) return;
+    if (!this.date || !this.selectedTs) return;
+    this.surfaceSubscription?.unsubscribe();
     this.surfaceLoading = true;
-    this.subscriptions.add(this.api.surface(this.selectedDate, this.selectedTs, this.windowPoints).subscribe({
+    this.surfaceError = null;
+    this.surfaceSubscription = this.api.surface(this.date, this.selectedTs, this.windowPoints).subscribe({
       next: surface => {
         this.surface = surface;
         this.selectedTs = surface.ts;
@@ -75,18 +70,27 @@ export class CharmPageComponent implements OnInit, OnDestroy {
       },
       error: error => {
         this.surfaceLoading = false;
-        this.error = error?.error?.detail || 'The selected Charm surface is unavailable.';
+        this.surfaceError = error?.error?.detail || 'The selected Charm surface is unavailable.';
       },
-    }));
+    });
+  }
+
+  refresh(): void {
+    this.refreshRequested.emit();
+    this.loadSurface();
   }
 
   selectPoint(point: CharmSeriesPoint): void {
     this.selectedTs = point.ts;
+    this.captureSelected.emit(point.ts);
     this.loadSurface();
   }
 
   get selectedPoint(): CharmSeriesPoint | null {
-    return this.overview?.series.find(point => point.ts === this.selectedTs) ?? this.overview?.latest ?? null;
+    const rows = this.overview?.series ?? [];
+    if (!rows.length) return null;
+    if (!this.selectedTs) return this.overview?.latest ?? rows[rows.length - 1];
+    return rows.find(point => point.ts === this.selectedTs) ?? nearestPoint(rows, this.selectedTs);
   }
 
   get historyPath(): string {
@@ -109,11 +113,11 @@ export class CharmPageComponent implements OnInit, OnDestroy {
   get surfacePath(): string {
     const rows = this.surface?.rows ?? [];
     if (!rows.length) return '';
-    const min = rows[0].spot;
-    const max = rows[rows.length - 1].spot;
+    const minimum = rows[0].spot;
+    const maximum = rows[rows.length - 1].spot;
     const scale = this.surface?.robust_abs_p95 || robustScale(rows.map(row => row.charm_per_minute));
     return pathFor(rows.map(row => ({
-      x: rangeX(row.spot, min, max, this.chartWidth),
+      x: rangeX(row.spot, minimum, maximum, this.chartWidth),
       y: chartY(row.charm_per_minute, scale, this.chartHeight),
     })));
   }
@@ -124,7 +128,7 @@ export class CharmPageComponent implements OnInit, OnDestroy {
   formatPressure(value: number | null | undefined): string {
     if (value == null) return 'Unavailable';
     const absolute = Math.abs(value);
-    const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+    const sign = value > 0 ? '+' : value < 0 ? '\u2212' : '';
     if (absolute >= 1_000_000_000) return `${sign}${(absolute / 1_000_000_000).toFixed(2)}B`;
     if (absolute >= 1_000_000) return `${sign}${(absolute / 1_000_000).toFixed(2)}M`;
     if (absolute >= 1_000) return `${sign}${(absolute / 1_000).toFixed(1)}K`;
@@ -141,11 +145,14 @@ export class CharmPageComponent implements OnInit, OnDestroy {
     if (value == null || !rows.length) return null;
     return rangeX(value, rows[0].spot, rows[rows.length - 1].spot, this.chartWidth);
   }
+}
 
-  private fail(error: any): void {
-    this.error = error?.error?.detail || 'Charm research is unavailable right now.';
-    this.loading = false;
-  }
+function nearestPoint(rows: readonly CharmSeriesPoint[], target: string): CharmSeriesPoint {
+  const targetMs = new Date(target).getTime();
+  if (!Number.isFinite(targetMs)) return rows[rows.length - 1];
+  return [...rows].sort((left, right) =>
+    Math.abs(new Date(left.ts).getTime() - targetMs) - Math.abs(new Date(right.ts).getTime() - targetMs),
+  )[0];
 }
 
 function robustScale(values: number[]): number {
@@ -158,8 +165,8 @@ function chartX(index: number, count: number, width: number): number {
   return 28 + (count <= 1 ? 0 : index / (count - 1) * (width - 56));
 }
 
-function rangeX(value: number, min: number, max: number, width: number): number {
-  return 28 + (max === min ? 0 : (value - min) / (max - min) * (width - 56));
+function rangeX(value: number, minimum: number, maximum: number, width: number): number {
+  return 28 + (maximum === minimum ? 0 : (value - minimum) / (maximum - minimum) * (width - 56));
 }
 
 function chartY(value: number, scale: number, height: number): number {

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
 
 import { SharedMaterialModule } from '../shared/material.module';
-import { CharmPageComponent } from './charm/charm-page.component';
+import { CharmWidgetComponent } from './charm/charm-widget.component';
 import { CaptureHistoryComponent } from './overview/components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './overview/components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './overview/components/market-snapshot/market-snapshot.component';
@@ -11,18 +11,16 @@ import { SessionTrendsComponent } from './overview/components/session-trends/ses
 import { SignedGexMapComponent } from './overview/components/signed-gex-map/signed-gex-map.component';
 import { TracePageComponent } from './overview/trace-page.component';
 import { TraceRoutingModule } from './trace-routing.module';
-import { TraceShellComponent } from './trace-shell/trace-shell.component';
 
 @NgModule({
   declarations: [
-    TraceShellComponent,
     TracePageComponent,
     CaptureHistoryComponent,
     GammaProfileComponent,
     MarketSnapshotComponent,
     SessionTrendsComponent,
     SignedGexMapComponent,
-    CharmPageComponent,
+    CharmWidgetComponent,
   ],
   imports: [CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule],
 })

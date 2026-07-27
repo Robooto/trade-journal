@@ -2,9 +2,12 @@ import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
+import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SharedMaterialModule } from '../../shared/material.module';
+import { CharmApiService } from '../charm/charm-api.service';
+import { CharmWidgetComponent } from '../charm/charm-widget.component';
 import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './components/market-snapshot/market-snapshot.component';
@@ -13,6 +16,16 @@ import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-ma
 import { TraceFacade } from './data-access/trace.facade';
 import { TracePageComponent } from './trace-page.component';
 
+class CharmApiStub {
+  readonly surface = vi.fn(() => of({
+    ts: '2026-07-24T13:00:05-07:00',
+    spot: 7412,
+    nearest_flip: 7410,
+    robust_abs_p95: 100,
+    source: { close_window: false },
+    rows: [{ spot: 7400, charm_per_minute: -10 }, { spot: 7420, charm_per_minute: 10 }],
+  }));
+}
 class TraceFacadeStub {
   readonly sessions = signal([]);
   readonly sessionsLoading = signal(false);
@@ -48,24 +61,26 @@ describe('TracePageComponent', () => {
   beforeEach(async () => {
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, SessionTrendsComponent, SignedGexMapComponent],
+      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
       imports: [
         CommonModule,
         FormsModule,
         SharedMaterialModule,
         NoopAnimationsModule,
       ],
-      providers: [{ provide: TraceFacade, useValue: facade }],
+      providers: [{ provide: TraceFacade, useValue: facade }, { provide: CharmApiService, useClass: CharmApiStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TracePageComponent);
     fixture.detectChanges();
   });
 
-  it('loads the session catalog and explains the thin frontend boundary', () => {
+  it('loads one operational dashboard without migration scaffolding', () => {
     expect(facade.loadSessions).toHaveBeenCalledOnce();
-    expect(fixture.nativeElement.textContent).toContain('Source readiness');
-    expect(fixture.nativeElement.textContent).toContain('Thin frontend boundary');
+    expect(fixture.nativeElement.textContent).toContain('Charm pressure');
+    expect(fixture.nativeElement.textContent).not.toContain('Source readiness');
+    expect(fixture.nativeElement.textContent).not.toContain('Thin frontend boundary');
+    expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
   });
 
   it('renders the selected capture as a glanceable market snapshot', () => {
@@ -161,12 +176,15 @@ describe('TracePageComponent', () => {
     expect(facade.stepCapture).not.toHaveBeenCalled();
   });
 
-  it('delegates session and timeline changes to the facade', () => {
+  it('delegates session, timeline, and Charm capture changes to the facade', () => {
+    facade.captureRows.set([{ ts: 'first' }, { ts: 'selected' }]);
     fixture.componentInstance.selectDate('2026-07-24');
     fixture.componentInstance.selectCapture('4');
+    fixture.componentInstance.selectCaptureTimestamp('selected');
 
     expect(facade.selectDate).toHaveBeenCalledWith('2026-07-24');
-    expect(facade.selectCapture).toHaveBeenCalledWith(4);
+    expect(facade.selectCapture).toHaveBeenNthCalledWith(1, 4);
+    expect(facade.selectCapture).toHaveBeenNthCalledWith(2, 1);
   });
 
   it('keeps charts in the same sequence as the legacy TRACE dashboard', () => {
@@ -188,11 +206,12 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     const order = Array.from(fixture.nativeElement.querySelectorAll(
-      'app-signed-gex-map, app-trace-session-trends, app-trace-gamma-profile, app-trace-capture-history',
+      'app-signed-gex-map, app-trace-session-trends, app-charm-widget, app-trace-gamma-profile, app-trace-capture-history',
     )).map((element: any) => element.tagName.toLowerCase());
     expect(order).toEqual([
       'app-signed-gex-map',
       'app-trace-session-trends',
+      'app-charm-widget',
       'app-trace-gamma-profile',
       'app-trace-capture-history',
     ]);
