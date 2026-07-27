@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -37,7 +38,10 @@ export class CharmWidgetComponent implements OnChanges, OnDestroy {
   readonly chartHeight = 250;
   private surfaceSubscription: Subscription | null = null;
 
-  constructor(private readonly api: CharmApiService) {}
+  constructor(
+    private readonly api: CharmApiService,
+    private readonly changeDetector: ChangeDetectorRef,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (!changes['date'] && !changes['captureTs'] && !changes['overview']) return;
@@ -67,10 +71,12 @@ export class CharmWidgetComponent implements OnChanges, OnDestroy {
         this.surface = surface;
         this.selectedTs = surface.ts;
         this.surfaceLoading = false;
+        this.changeDetector.markForCheck();
       },
       error: error => {
         this.surfaceLoading = false;
         this.surfaceError = error?.error?.detail || 'The selected Charm surface is unavailable.';
+        this.changeDetector.markForCheck();
       },
     });
   }

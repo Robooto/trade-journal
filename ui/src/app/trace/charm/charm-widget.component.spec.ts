@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
+import { Subject, of } from 'rxjs';
 
 import { SharedMaterialModule } from '../../shared/material.module';
 import { CharmApiService } from './charm-api.service';
@@ -57,6 +57,20 @@ describe('CharmWidgetComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Charm pressure');
     expect(fixture.nativeElement.textContent).toContain('+237.00M');
     expect(fixture.nativeElement.querySelectorAll('.chart-card')).toHaveLength(2);
+  });
+
+  it('notifies Angular when an asynchronous surface request finishes', () => {
+    const response = new Subject<CharmSurface>();
+    api.surface.mockReturnValueOnce(response);
+    const markForCheck = vi.spyOn((component as any).changeDetector, 'markForCheck');
+
+    component.loadSurface();
+    expect(component.surfaceLoading).toBe(true);
+    response.next(surface);
+
+    expect(component.surfaceLoading).toBe(false);
+    expect(component.surface).toBe(surface);
+    expect(markForCheck).toHaveBeenCalledOnce();
   });
 
   it('emits a TRACE capture timestamp when a history point is selected', () => {
