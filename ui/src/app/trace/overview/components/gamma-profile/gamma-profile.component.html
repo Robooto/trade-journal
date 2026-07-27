@@ -7,8 +7,9 @@
     </div>
     @if (gammaProfile) {
       <div class="profile-facts">
+        <span>{{ gammaProfile.ts | date:'h:mm a' }}</span>
         <span>Spot <strong>{{ gammaProfile.spot | number:'1.0-1' }}</strong></span>
-        <span>Slope <strong>{{ formatCompact(gammaProfile.cross_spot_slope) }}/pt</strong></span>
+        <span>Window <strong>±{{ gammaProfile.window_points | number:'1.0-0' }} pts</strong></span>
       </div>
     }
   </header>
@@ -17,6 +18,28 @@
   } @else if (error) {
     <div class="profile-state profile-state--error"><mat-icon>warning</mat-icon><span>{{ error }}</span></div>
   } @else if (hasData) {
+    <div class="profile-summary" aria-label="Gamma profile interpretation">
+      <article>
+        <span>At spot</span>
+        <strong [class.positive]="nearestGamma > 0" [class.negative]="nearestGamma < 0">{{ formatCompact(nearestGamma) }}</strong>
+        <small>{{ gammaDirection }} gamma · nearest {{ nearestSpot | number:'1.0-1' }}</small>
+      </article>
+      <article>
+        <span>Local slope</span>
+        <strong [class.positive]="(gammaProfile?.cross_spot_slope ?? 0) > 0" [class.negative]="(gammaProfile?.cross_spot_slope ?? 0) < 0">{{ formatCompact(gammaProfile?.cross_spot_slope) }}/pt</strong>
+        <small>{{ slopeDirection }}</small>
+      </article>
+      <article>
+        <span>Visible curve</span>
+        <strong>{{ curveDirection }}</strong>
+        <small>Across the ±{{ gammaProfile?.window_points | number:'1.0-0' }} point window</small>
+      </article>
+      <article>
+        <span>Source</span>
+        <strong>{{ sourceLabel }}</strong>
+        <small>{{ gammaProfile?.source?.time || gammaProfile?.source?.timestamp || gammaProfile?.ts | date:'MMM d, h:mm a' }}</small>
+      </article>
+    </div>
     <svg
       class="profile-chart"
       [attr.viewBox]="'0 0 ' + width + ' ' + height"
@@ -29,10 +52,13 @@
         <text class="profile-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
       }
       <line class="profile-zero" x1="50" [attr.y1]="zeroY" [attr.x2]="width - 26" [attr.y2]="zeroY" />
+      <text class="profile-zone-label" x="56" y="32">Positive gamma</text>
+      <text class="profile-zone-label" x="56" [attr.y]="height - 44">Negative gamma</text>
       @for (bar of bars; track bar.key) {
         <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
       }
       <line class="profile-spot" [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="height - 36" />
+      <text class="profile-spot-label" [attr.x]="spotX" y="31" text-anchor="middle">spot {{ gammaProfile?.spot | number:'1.0-1' }}</text>
       <polyline class="profile-line" [attr.points]="points" />
       <circle class="profile-marker" [attr.cx]="markerX" [attr.cy]="markerY" r="4.5" />
       @for (tick of xTicks; track tick.position) {

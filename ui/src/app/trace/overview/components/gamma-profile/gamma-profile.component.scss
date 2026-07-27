@@ -6,9 +6,17 @@
 .gamma-eyebrow { margin:0 0 .25rem; color:#8db5ff; font-size:.68rem; font-weight:750; letter-spacing:.09em; text-transform:uppercase; }
 .profile-facts { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:.75rem; color:#8fa1ba; font-size:.72rem; }
 .profile-facts strong { color:#dfe9fb; }
+.profile-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.55rem; margin-top:.8rem; }
+.profile-summary article { min-width:0; padding:.65rem .75rem; border:1px solid rgba(148,163,184,.14); border-radius:.7rem; background:rgba(9,13,19,.34); }
+.profile-summary span,.profile-summary small { display:block; color:#8fa1ba; font-size:.66rem; }
+.profile-summary strong { display:block; overflow:hidden; margin:.18rem 0; color:#dfe9fb; font-size:.9rem; text-overflow:ellipsis; white-space:nowrap; }
+.profile-summary strong.positive { color:#66dda0; }
+.profile-summary strong.negative { color:#ff7f98; }
 .profile-chart { display:block; width:100%; height:clamp(12rem,20vw,16rem); margin-top:.65rem; border-radius:.7rem; background:rgba(9,13,19,.55); }
 .profile-grid { stroke:rgba(148,163,184,.12); stroke-width:1; vector-effect:non-scaling-stroke; }
 .profile-axis-label { fill:#8394ab; font-size:11px; }
+.profile-zone-label { fill:#8fa1ba; font-size:10px; }
+.profile-spot-label { fill:#f8f2d6; font-size:10px; paint-order:stroke; stroke:#0b1118; stroke-width:3px; stroke-linejoin:round; }
 .profile-zero { stroke:rgba(148,163,184,.3); stroke-width:1; vector-effect:non-scaling-stroke; }
 .profile-bar--positive { fill:#6ea8fe; opacity:.38; }
 .profile-bar--negative { fill:#c084fc; opacity:.38; }
@@ -17,4 +25,5 @@
 .profile-marker { fill:#f8f2d6; stroke:#74a8ff; stroke-width:1.5; vector-effect:non-scaling-stroke; }
 .profile-state { display:flex; align-items:center; justify-content:center; gap:.55rem; min-height:9rem; color:#8fa1ba; font-size:.78rem; }
 .profile-state--error { color:#ff9bad; }
-@media(max-width:760px){.gamma-panel header{flex-direction:column}.profile-facts{justify-content:flex-start}.profile-chart{height:13rem}}
+@media(max-width:980px){.profile-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.gamma-panel header{flex-direction:column}.profile-facts{justify-content:flex-start}.profile-summary{grid-template-columns:1fr}.profile-chart{height:13rem}}

@@ -131,6 +131,14 @@
     />
   }
 
+
+  @if (facade.selectedCapture()) {
+    <app-trace-gamma-profile
+      [gammaProfile]="facade.gammaProfile()"
+      [loading]="facade.gammaProfileLoading()"
+      [error]="facade.gammaProfileError()"
+    />
+  }
   <app-charm-widget
     [date]="facade.selectedDate()"
     [captureTs]="facade.selectedCapture()?.ts ?? null"
@@ -140,14 +148,6 @@
     (captureSelected)="selectCaptureTimestamp($event)"
     (refreshRequested)="facade.reload()"
   />
-
-  @if (facade.selectedCapture()) {
-    <app-trace-gamma-profile
-      [gammaProfile]="facade.gammaProfile()"
-      [loading]="facade.gammaProfileLoading()"
-      [error]="facade.gammaProfileError()"
-    />
-  }
 
   @if (facade.captureRows().length) {
     <app-trace-capture-history

@@ -19,7 +19,7 @@ const gammaProfile: TraceGammaProfileResponse = {
   spot: 7412,
   window_points: 60,
   cross_spot_slope: 47_042_808,
-  source: { mode: 'fixture', timestamp: null, time: null },
+  source: { mode: 'feature_snap', timestamp: null, time: null },
   rows: [
     { spot: 7400, gamma: -120_000_000 },
     { spot: 7412, gamma: 25_000_000 },
@@ -49,5 +49,12 @@ describe('GammaProfileComponent', () => {
     expect(fixture.nativeElement.querySelector('rect.profile-bar--positive')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('rect.profile-bar--negative')).not.toBeNull();
     expect(fixture.nativeElement.textContent).toContain('47.0M/pt');
+    expect(fixture.nativeElement.textContent).toContain('At spot');
+    expect(fixture.nativeElement.textContent).toContain('25.0M');
+    expect(fixture.nativeElement.textContent).toContain('nearest 7,412');
+    expect(fixture.nativeElement.textContent).toContain('Positive');
+    expect(fixture.nativeElement.textContent).toContain('Rising');
+    expect(fixture.nativeElement.textContent).toContain('Feature snapshot');
+    expect(fixture.nativeElement.querySelectorAll('text.profile-zone-label')).toHaveLength(2);
   });
 });

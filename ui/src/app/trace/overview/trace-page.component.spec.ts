@@ -206,13 +206,13 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     const order = Array.from(fixture.nativeElement.querySelectorAll(
-      'app-signed-gex-map, app-trace-session-trends, app-charm-widget, app-trace-gamma-profile, app-trace-capture-history',
+      'app-signed-gex-map, app-trace-session-trends, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
     )).map((element: any) => element.tagName.toLowerCase());
     expect(order).toEqual([
       'app-signed-gex-map',
       'app-trace-session-trends',
-      'app-charm-widget',
       'app-trace-gamma-profile',
+      'app-charm-widget',
       'app-trace-capture-history',
     ]);
   });

@@ -39,6 +39,12 @@ export class GammaProfileComponent implements OnChanges {
   spotX = 0;
   markerX = 0;
   markerY = 0;
+  nearestSpot = 0;
+  nearestGamma = 0;
+  gammaDirection = 'Flat';
+  slopeDirection = 'Unavailable';
+  curveDirection = 'Flat';
+  sourceLabel = 'Latest available snapshot';
   hasData = false;
 
   ngOnChanges(): void {
@@ -48,6 +54,12 @@ export class GammaProfileComponent implements OnChanges {
       this.bars = [];
       this.xTicks = [];
       this.yTicks = [];
+      this.nearestSpot = 0;
+      this.nearestGamma = 0;
+      this.gammaDirection = 'Flat';
+      this.slopeDirection = 'Unavailable';
+      this.curveDirection = 'Flat';
+      this.sourceLabel = 'Latest available snapshot';
       this.hasData = false;
       return;
     }
@@ -82,6 +94,21 @@ export class GammaProfileComponent implements OnChanges {
     )[0];
     this.markerX = x(nearest.spot);
     this.markerY = y(nearest.gamma);
+    this.nearestSpot = nearest.spot;
+    this.nearestGamma = nearest.gamma;
+    this.gammaDirection = directionLabel(nearest.gamma);
+    this.slopeDirection = this.gammaProfile?.cross_spot_slope == null
+      ? 'Unavailable'
+      : directionLabel(this.gammaProfile.cross_spot_slope);
+    const first = rows[0];
+    const last = rows[rows.length - 1];
+    const curveSlope = rows.length < 2 || last.spot === first.spot
+      ? 0
+      : (last.gamma - first.gamma) / (last.spot - first.spot);
+    this.curveDirection = directionLabel(curveSlope, 'Rising', 'Falling');
+    this.sourceLabel = this.gammaProfile?.source.mode === 'feature_snap'
+      ? 'Feature snapshot'
+      : 'Latest available snapshot';
     this.hasData = true;
   }
 
@@ -98,4 +125,12 @@ export class GammaProfileComponent implements OnChanges {
 
 function makeTicks(minimum: number, maximum: number, count: number): number[] {
   return Array.from({ length: count }, (_, index) => minimum + (maximum - minimum) * index / Math.max(1, count - 1));
+}
+
+function directionLabel(
+  value: number,
+  positive = 'Positive',
+  negative = 'Negative',
+): string {
+  return value > 0 ? positive : value < 0 ? negative : 'Flat';
 }
