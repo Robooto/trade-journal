@@ -91,6 +91,11 @@ describe('TracePageComponent', () => {
     facade.selectedDate.set('2026-07-24');
     fixture.detectChanges();
 
+    const selectedDate = fixture.componentInstance.selectedSessionDate();
+    expect(fixture.componentInstance.selectedSessionDate()).toBe(selectedDate);
+    expect(selectedDate?.getFullYear()).toBe(2026);
+    expect(selectedDate?.getMonth()).toBe(6);
+    expect(selectedDate?.getDate()).toBe(24);
     expect(fixture.nativeElement.querySelector('mat-datepicker-toggle')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.trace-control-panel select')).toBeNull();
     expect(fixture.componentInstance.sessionDateFilter(new Date(2026, 6, 24))).toBe(true);

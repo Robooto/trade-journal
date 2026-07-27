@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit, computed } from '@angular/core';
 
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus } from './trace.models';
@@ -19,14 +19,12 @@ export class TracePageComponent implements OnInit {
     this.facade.loadSessions();
   }
 
+  readonly selectedSessionDate = computed(() => parseSessionDate(this.facade.selectedDate()));
+
   readonly sessionDateFilter = (date: Date | null): boolean => {
     const sessionDate = formatSessionDate(date);
     return Boolean(sessionDate && this.facade.sessions().some(session => session.date === sessionDate));
   };
-
-  selectedSessionDate(): Date | null {
-    return parseSessionDate(this.facade.selectedDate());
-  }
 
   selectSessionDate(date: Date | null): void {
     const sessionDate = formatSessionDate(date);
