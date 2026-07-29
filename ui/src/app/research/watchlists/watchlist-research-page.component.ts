@@ -7,6 +7,7 @@ import {
   WatchlistResearchItem,
   WatchlistResearchResponse,
   WatchlistSort,
+  WatchlistSymbolAddResponse,
 } from './watchlist-research.models';
 import { WatchlistResearchApiService } from './watchlist-research-api.service';
 
@@ -31,6 +32,11 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
   selectedWatchlist = 'all';
   sort: WatchlistSort = 'ivr-desc';
   heldOnly = false;
+  symbolToAdd = '';
+  destinationWatchlist = '';
+  addingSymbol = false;
+  addResult: WatchlistSymbolAddResponse | null = null;
+  addError: string | null = null;
 
   readonly sortOptions: readonly { value: WatchlistSort; label: string }[] = [
     { value: 'ivr-desc', label: 'Highest IV rank' },
@@ -41,6 +47,7 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
   ];
 
   private requestSubscription: Subscription | null = null;
+  private addSubscription: Subscription | null = null;
 
   constructor(private readonly api: WatchlistResearchApiService) {}
 
@@ -50,6 +57,7 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.requestSubscription?.unsubscribe();
+    this.addSubscription?.unsubscribe();
   }
 
   reload(): void {
@@ -59,6 +67,14 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
     this.requestSubscription = this.api.load().subscribe({
       next: response => {
         this.response = response;
+        if (
+          this.destinationWatchlist &&
+          !response.watchlists.some(
+            watchlist => watchlist.name === this.destinationWatchlist,
+          )
+        ) {
+          this.destinationWatchlist = '';
+        }
         this.loading = false;
       },
       error: error => {
@@ -72,6 +88,46 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
 
   get watchlists(): readonly ResearchWatchlistSummary[] {
     return this.response?.watchlists ?? [];
+  }
+
+  get normalizedSymbolToAdd(): string {
+    return this.symbolToAdd.trim().toUpperCase();
+  }
+
+  get canAddSymbol(): boolean {
+    return Boolean(
+      this.response?.writes_enabled &&
+      this.destinationWatchlist &&
+      /^[A-Z0-9.^/-]{1,32}$/.test(this.normalizedSymbolToAdd) &&
+      !this.addingSymbol,
+    );
+  }
+
+  addSymbol(): void {
+    if (!this.canAddSymbol) {
+      return;
+    }
+
+    const watchlistName = this.destinationWatchlist;
+    const symbol = this.normalizedSymbolToAdd;
+    this.addSubscription?.unsubscribe();
+    this.addingSymbol = true;
+    this.addResult = null;
+    this.addError = null;
+    this.addSubscription = this.api.addSymbol(watchlistName, symbol).subscribe({
+      next: result => {
+        this.addResult = result;
+        this.symbolToAdd = '';
+        this.addingSymbol = false;
+        this.reload();
+      },
+      error: error => {
+        this.addError =
+          error?.error?.detail ||
+          'The symbol could not be added to the brokerage watchlist.';
+        this.addingSymbol = false;
+      },
+    });
   }
 
   get visibleItems(): readonly WatchlistResearchItem[] {

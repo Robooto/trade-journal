@@ -57,6 +57,7 @@
 }
 
 .state-card,
+.add-symbol-card,
 .filter-card,
 .coverage-warning,
 .empty-state {
@@ -117,6 +118,81 @@
   font-size: 1.4rem;
   line-height: 1.1;
 }
+
+.add-symbol-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+}
+
+.add-symbol-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.add-symbol-heading > div {
+  display: grid;
+  gap: 3px;
+}
+
+.add-symbol-heading > span {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: .72rem;
+}
+
+.add-symbol-form {
+  display: grid;
+  grid-template-columns: minmax(150px, .7fr) minmax(220px, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+
+.add-symbol-form mat-form-field { width: 100%; }
+
+.add-symbol-form button {
+  min-height: 56px;
+}
+
+.add-symbol-form button,
+.add-feedback,
+.add-symbol-disabled {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.add-symbol-form mat-spinner {
+  display: inline-block;
+}
+
+.add-symbol-disabled {
+  min-height: 44px;
+  border-radius: 9px;
+  padding: 0 12px;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: .78rem;
+}
+
+.add-symbol-disabled mat-icon {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.add-feedback {
+  margin: 0;
+  font-size: .78rem;
+}
+
+.add-feedback mat-icon {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+.add-feedback.success { color: #34d399; }
+.add-feedback.error { color: var(--mat-sys-error); }
 
 .filter-card { padding: 16px 18px 2px; }
 
@@ -349,7 +425,9 @@
 
 @media (max-width: 900px) {
   .summary-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
-  .filter-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+  .filter-grid,
+  .add-symbol-form { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+  .add-symbol-form button { grid-column: 1 / -1; }
 
   .watchlist-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -372,13 +450,16 @@
 @media (max-width: 680px) {
   .watchlist-page { gap: 14px; padding: 18px 14px 32px; }
   .page-header,
+  .add-symbol-heading,
   .filter-heading,
   .state-card { align-items: flex-start; flex-direction: column; }
   .page-header button,
   .state-card button { width: 100%; margin-left: 0; }
   .summary-grid,
+  .add-symbol-form,
   .filter-grid,
   .watchlist-row { grid-template-columns: 1fr; }
+  .add-symbol-form button { grid-column: 1; width: 100%; }
   .filter-grid mat-checkbox { padding-bottom: 16px; }
   .volatility-cell { grid-template-columns: 82px 1fr; }
   .market-cell,

@@ -37,4 +37,26 @@ describe('WatchlistResearchApiService', () => {
       source_status: [],
     });
   });
+
+  it('adds a normalized symbol to an encoded private watchlist route', () => {
+    api.addSymbol('Core Options / Swing', ' aapl ').subscribe(response =>
+      expect(response.added).toBe(true),
+    );
+
+    const request = http.expectOne(
+      '/v1/broker/watchlists/Core%20Options%20%2F%20Swing/symbols',
+    );
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ symbol: 'AAPL' });
+    request.flush({
+      schema_version: 'watchlist-symbol-write.v1',
+      watchlist: {
+        name: 'Core Options / Swing',
+        symbols: ['AAPL'],
+        symbol_count: 1,
+      },
+      symbol: 'AAPL',
+      added: true,
+    });
+  });
 });

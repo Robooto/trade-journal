@@ -71,6 +71,89 @@
       </article>
     </section>
 
+    <section class="add-symbol-card" aria-labelledby="add-symbol-title">
+      <div class="add-symbol-heading">
+        <div>
+          <p class="section-eyebrow">Brokerage command</p>
+          <strong id="add-symbol-title">Add a symbol to a private watchlist</strong>
+        </div>
+        <span>Existing entries are preserved. Adding a duplicate is safe.</span>
+      </div>
+
+      @if (!response.writes_enabled) {
+        <div class="add-symbol-disabled" role="status">
+          <mat-icon>lock</mat-icon>
+          <span>Watchlist additions are disabled in this environment.</span>
+        </div>
+      } @else if (!watchlists.length) {
+        <div class="add-symbol-disabled" role="status">
+          <mat-icon>playlist_remove</mat-icon>
+          <span>No private watchlists are available.</span>
+        </div>
+      } @else {
+        <form class="add-symbol-form" (ngSubmit)="addSymbol()">
+          <mat-form-field appearance="outline">
+            <mat-label>Ticker</mat-label>
+            <input
+              matInput
+              name="symbolToAdd"
+              [(ngModel)]="symbolToAdd"
+              placeholder="AAPL"
+              maxlength="32"
+              autocomplete="off"
+              autocapitalize="characters"
+              [disabled]="addingSymbol"
+            />
+            <mat-hint>Equity symbol</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Add to watchlist</mat-label>
+            <mat-select
+              name="destinationWatchlist"
+              [(ngModel)]="destinationWatchlist"
+              [disabled]="addingSymbol"
+            >
+              @for (watchlist of watchlists; track watchlist.name) {
+                <mat-option [value]="watchlist.name">
+                  {{ watchlist.name }} ({{ watchlist.symbol_count }})
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <button
+            mat-flat-button
+            color="primary"
+            type="submit"
+            [disabled]="!canAddSymbol"
+          >
+            @if (addingSymbol) {
+              <mat-spinner diameter="18"></mat-spinner>
+            } @else {
+              <mat-icon>playlist_add</mat-icon>
+            }
+            <span>{{ addingSymbol ? 'Adding...' : 'Add symbol' }}</span>
+          </button>
+        </form>
+      }
+
+      @if (addResult) {
+        <p class="add-feedback success" role="status">
+          <mat-icon>check_circle</mat-icon>
+          {{ addResult.added ? 'Added' : 'Already found' }}
+          {{ addResult.symbol }} {{ addResult.added ? 'to' : 'in' }}
+          {{ addResult.watchlist.name }}.
+        </p>
+      }
+      @if (addError) {
+        <p class="add-feedback error" role="alert">
+          <mat-icon>error</mat-icon>
+          {{ addError }}
+        </p>
+      }
+    </section>
+
     <section class="filter-card" aria-label="Watchlist filters">
       <div class="filter-heading">
         <div>

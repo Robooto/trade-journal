@@ -69,6 +69,13 @@ export interface WatchlistResearchResponse {
   readonly source_status: readonly ResearchSourceMetadata[];
 }
 
+export interface WatchlistSymbolAddResponse {
+  readonly schema_version: 'watchlist-symbol-write.v1';
+  readonly watchlist: ResearchWatchlistSummary;
+  readonly symbol: string;
+  readonly added: boolean;
+}
+
 export type WatchlistSort =
   | 'symbol'
   | 'ivr-desc'

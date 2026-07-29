@@ -2,7 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { WatchlistResearchResponse } from './watchlist-research.models';
+import {
+  WatchlistResearchResponse,
+  WatchlistSymbolAddResponse,
+} from './watchlist-research.models';
 
 @Injectable({ providedIn: 'root' })
 export class WatchlistResearchApiService {
@@ -12,5 +15,17 @@ export class WatchlistResearchApiService {
 
   load(): Observable<WatchlistResearchResponse> {
     return this.http.get<WatchlistResearchResponse>(this.endpoint);
+  }
+
+  addSymbol(
+    watchlistName: string,
+    symbol: string,
+  ): Observable<WatchlistSymbolAddResponse> {
+    return this.http.post<WatchlistSymbolAddResponse>(
+      '/v1/broker/watchlists/' +
+        encodeURIComponent(watchlistName) +
+        '/symbols',
+      { symbol: symbol.trim().toUpperCase() },
+    );
   }
 }

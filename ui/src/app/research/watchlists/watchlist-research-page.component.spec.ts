@@ -107,4 +107,56 @@ describe('WatchlistResearchPageComponent', () => {
     expect(component.visibleItems.map(item => item.symbol)).toEqual(['NVDA']);
     expect(component.equityHubUrl('aapl')).toContain('sym=AAPL');
   });
+
+  it('adds a ticker to the selected watchlist and refreshes research', () => {
+    component.symbolToAdd = ' tsla ';
+    component.destinationWatchlist = 'Core Options';
+
+    expect(component.canAddSymbol).toBe(true);
+    component.addSymbol();
+
+    const addRequest = http.expectOne(
+      '/v1/broker/watchlists/Core%20Options/symbols',
+    );
+    expect(addRequest.request.method).toBe('POST');
+    expect(addRequest.request.body).toEqual({ symbol: 'TSLA' });
+    addRequest.flush({
+      schema_version: 'watchlist-symbol-write.v1',
+      watchlist: {
+        name: 'Core Options',
+        symbols: ['AAPL', 'TSLA'],
+        symbol_count: 2,
+      },
+      symbol: 'TSLA',
+      added: true,
+    });
+
+    const refreshRequest = http.expectOne('/v1/broker/watchlist-research');
+    refreshRequest.flush({
+      ...responseFixture,
+      watchlists: [
+        {
+          name: 'Core Options',
+          symbols: ['AAPL', 'TSLA'],
+          symbol_count: 2,
+        },
+        responseFixture.watchlists[1],
+      ],
+    });
+    fixture.detectChanges();
+
+    expect(component.addResult?.symbol).toBe('TSLA');
+    expect(component.symbolToAdd).toBe('');
+    expect(fixture.nativeElement.textContent).toContain(
+      'Added TSLA to Core Options.',
+    );
+  });
+
+  it('rejects invalid ticker text before making a request', () => {
+    component.symbolToAdd = 'not a ticker';
+    component.destinationWatchlist = 'Core Options';
+
+    expect(component.canAddSymbol).toBe(false);
+    component.addSymbol();
+  });
 });
