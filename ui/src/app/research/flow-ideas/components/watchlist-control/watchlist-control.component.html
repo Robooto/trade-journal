@@ -7,12 +7,12 @@
     <p class="status" role="status">Loading available watchlists...</p>
   } @else if (error) {
     <p class="status error" role="alert">{{ error }}</p>
-  } @else if (!watchlists?.writes_enabled) {
+  } @else if (!writesEnabled()) {
     <p class="status">Watchlist writes are disabled in this environment.</p>
     <button mat-stroked-button type="button" (click)="refreshRequested.emit()">
       Check again
     </button>
-  } @else if ((watchlists?.watchlists?.length ?? 0) === 0) {
+  } @else if (!hasWatchlists()) {
     <p class="status">No private watchlists are available.</p>
   } @else if (!available().length) {
     <p class="status">This symbol is already in every available private watchlist.</p>

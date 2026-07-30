@@ -25,6 +25,13 @@ export class WatchlistControlComponent {
   @Output() readonly addRequested = new EventEmitter<string>();
   @Output() readonly refreshRequested = new EventEmitter<void>();
 
+  readonly writesEnabled = computed(
+    () => this.watchlistsValue()?.writes_enabled === true,
+  );
+  readonly hasWatchlists = computed(
+    () => (this.watchlistsValue()?.watchlists.length ?? 0) > 0,
+  );
+
   readonly available = computed(() => {
     const contextNames = new Set(
       this.contextValue()?.watchlists.map(item => item.name.toUpperCase()) ?? [],

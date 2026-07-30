@@ -1,3 +1,6 @@
+import { TestBed } from '@angular/core/testing';
+
+import { ResearchModule } from '../../../research.module';
 import { WatchlistControlComponent } from './watchlist-control.component';
 
 describe('WatchlistControlComponent', () => {
@@ -47,5 +50,31 @@ describe('WatchlistControlComponent', () => {
     component.refreshRequested.emit();
 
     expect(refreshCount).toBe(1);
+  });
+
+  it('renders the add control when the API enables writes', async () => {
+    await TestBed.configureTestingModule({
+      imports: [ResearchModule],
+    }).compileComponents();
+
+    const fixture = TestBed.createComponent(WatchlistControlComponent);
+    fixture.componentInstance.symbol = 'SMH';
+    fixture.componentInstance.context = null;
+    fixture.componentInstance.watchlists = {
+      schema_version: 'broker-watchlists.v1',
+      flowpatrol_schema_version: 'flowpatrol-brokerage-watchlists.v1',
+      writes_enabled: true,
+      watchlists: [
+        { name: 'Mylist', symbols: [], symbol_count: 0 },
+      ],
+    };
+    fixture.detectChanges();
+
+    const control = fixture.nativeElement as HTMLElement;
+    expect(control.textContent).not.toContain(
+      'Watchlist writes are disabled in this environment.',
+    );
+    expect(control.querySelector('select')).not.toBeNull();
+    expect(control.textContent).toContain('Add SMH');
   });
 });
