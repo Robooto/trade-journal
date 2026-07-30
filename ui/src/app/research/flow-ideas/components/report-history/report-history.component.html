@@ -18,7 +18,7 @@
     <p class="detail-state" role="status">No FlowPatrol history is available.</p>
   } @else {
     <ol class="history-list">
-      @for (row of history.rows; track row.trading_date) {
+      @for (row of visibleRows; track row.trading_date) {
         <li class="history-row">
           <time [attr.datetime]="row.trading_date">{{ row.trading_date }}</time>
           <strong>{{ formatPriority(row.research_priority) }}</strong>
@@ -35,5 +35,19 @@
         </li>
       }
     </ol>
+
+    <div class="history-footer">
+      <span aria-live="polite">
+        Showing {{ visibleRows.length }} of {{ history.rows.length }} trading days.
+        @if (hasMoreHistory) {
+          {{ remainingHistoryCount }} earlier days available.
+        }
+      </span>
+      @if (hasMoreHistory) {
+        <button mat-stroked-button type="button" (click)="loadMore()">
+          Load more
+        </button>
+      }
+    </div>
   }
 </section>

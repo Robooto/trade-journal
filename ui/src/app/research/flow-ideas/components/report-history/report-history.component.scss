@@ -70,8 +70,29 @@
   line-height: 1.35;
 }
 
+.history-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.history-footer span {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.68rem;
+}
+
+.history-footer button {
+  flex: 0 0 auto;
+  min-width: 104px;
+}
+
 @media (max-width: 640px) {
   .history-row { grid-template-columns: 84px 38px 1fr; }
   .history-row a,
   .history-row p { grid-column: 1 / -1; }
+
+  .history-footer { align-items: stretch; flex-direction: column; }
+  .history-footer button { width: 100%; }
 }
