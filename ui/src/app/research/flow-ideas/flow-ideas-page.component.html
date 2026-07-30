@@ -120,6 +120,7 @@
       [watchlistsLoading]="facade.watchlistsLoading()"
       [watchlistsError]="facade.watchlistsError()"
       (watchlistChanged)="onWatchlistChanged()"
+      (watchlistsRefreshRequested)="refreshWatchlists()"
     ></app-flow-idea-inspector>
   </section>
 </main>

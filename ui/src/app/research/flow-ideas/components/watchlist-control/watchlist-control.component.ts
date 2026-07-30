@@ -23,6 +23,7 @@ export class WatchlistControlComponent {
   @Input() result: FlowWatchlistAddResponse | null = null;
   @Input() resultError: string | null = null;
   @Output() readonly addRequested = new EventEmitter<string>();
+  @Output() readonly refreshRequested = new EventEmitter<void>();
 
   readonly available = computed(() => {
     const contextNames = new Set(

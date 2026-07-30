@@ -51,6 +51,7 @@
     [result]="watchlistResult()"
     [resultError]="watchlistResultError()"
     (addRequested)="addToWatchlist($event)"
+    (refreshRequested)="refreshBrokerageReads()"
   ></app-flow-watchlist-control>
 
   <section class="detail-grid">

@@ -112,10 +112,15 @@ export class FlowIdeasPageComponent implements OnDestroy {
 
   selectCandidate(candidate: FlowCandidate): void {
     this.facade.selectCandidate(candidate.symbol);
+    this.facade.loadWatchlists();
   }
 
   onWatchlistChanged(): void {
     this.facade.reload();
+  }
+
+  refreshWatchlists(): void {
+    this.facade.loadWatchlists();
   }
 
   refresh(): void {

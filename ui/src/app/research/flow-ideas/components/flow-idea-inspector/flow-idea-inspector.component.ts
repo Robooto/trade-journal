@@ -37,6 +37,7 @@ export class FlowIdeaInspectorComponent implements OnChanges, OnDestroy {
   @Input() watchlistsError: string | null = null;
 
   @Output() readonly watchlistChanged = new EventEmitter<void>();
+  @Output() readonly watchlistsRefreshRequested = new EventEmitter<void>();
 
   private loadSubscription: Subscription | null = null;
   private readonly subscriptions = new Subscription();

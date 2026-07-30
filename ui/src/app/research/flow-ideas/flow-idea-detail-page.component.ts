@@ -170,7 +170,7 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
     });
   }
 
-  private refreshBrokerageReads(): void {
+  refreshBrokerageReads(): void {
     const detail = { tradingDate: this.tradingDate(), symbol: this.symbol() };
     this.watchlistsLoading.set(true);
     forkJoin({

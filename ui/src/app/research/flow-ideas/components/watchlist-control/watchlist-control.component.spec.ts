@@ -38,4 +38,14 @@ describe('WatchlistControlComponent', () => {
     expect(emitted).toEqual(['Ideas']);
     expect(component.selectedName).toBe('');
   });
+
+  it('emits an explicit refresh request for stale availability', () => {
+    const component = new WatchlistControlComponent();
+    let refreshCount = 0;
+
+    component.refreshRequested.subscribe(() => refreshCount += 1);
+    component.refreshRequested.emit();
+
+    expect(refreshCount).toBe(1);
+  });
 });

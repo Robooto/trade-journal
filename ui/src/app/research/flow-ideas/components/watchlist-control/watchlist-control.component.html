@@ -9,6 +9,9 @@
     <p class="status error" role="alert">{{ error }}</p>
   } @else if (!watchlists?.writes_enabled) {
     <p class="status">Watchlist writes are disabled in this environment.</p>
+    <button mat-stroked-button type="button" (click)="refreshRequested.emit()">
+      Check again
+    </button>
   } @else if ((watchlists?.watchlists?.length ?? 0) === 0) {
     <p class="status">No private watchlists are available.</p>
   } @else if (!available().length) {

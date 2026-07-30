@@ -65,6 +65,7 @@
         [result]="watchlistResult()"
         [resultError]="watchlistResultError()"
         (addRequested)="addToWatchlist($event)"
+        (refreshRequested)="watchlistsRefreshRequested.emit()"
       ></app-flow-watchlist-control>
     </div>
 
