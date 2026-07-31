@@ -22,6 +22,7 @@ import {
 } from '../../flow-ideas.models';
 import { FlowIdeasApiService } from '../../data-access/flow-ideas-api.service';
 import { currentEquityHubUrl } from '../../utilities/equity-hub-url';
+import { openInterestEquityHubUrl } from '../../utilities/equity-hub-url';
 
 @Component({
   selector: 'app-flow-idea-inspector',
@@ -79,6 +80,10 @@ export class FlowIdeaInspectorComponent implements OnChanges, OnDestroy {
 
   equityHubUrl(): string {
     return this.candidate ? currentEquityHubUrl(this.candidate.symbol) : '';
+  }
+
+  oiEquityHubUrl(): string {
+    return this.candidate ? openInterestEquityHubUrl(this.candidate.symbol) : '';
   }
 
   priorityLabel(priority: number | null): string {

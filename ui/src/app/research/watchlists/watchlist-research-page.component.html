@@ -301,9 +301,18 @@
                 [href]="equityHubUrl(item.symbol)"
                 target="_blank"
                 rel="noopener"
+                aria-label="Open the EquityHub synthetic model for {{ item.symbol }}"
               >
-                Equity Hub
-                <mat-icon>open_in_new</mat-icon>
+                Synthetic
+              </a>
+              <a
+                mat-stroked-button
+                [href]="oiEquityHubUrl(item.symbol)"
+                target="_blank"
+                rel="noopener"
+                aria-label="Open the EquityHub open interest model history for {{ item.symbol }}"
+              >
+                OI Model
               </a>
             </div>
           </article>

@@ -236,7 +236,7 @@
 .table-header,
 .watchlist-row {
   display: grid;
-  grid-template-columns: minmax(150px, .7fr) minmax(125px, .65fr) minmax(390px, 1.65fr) minmax(250px, 1fr) 128px;
+  grid-template-columns: minmax(150px, .7fr) minmax(125px, .65fr) minmax(390px, 1.65fr) minmax(250px, 1fr) 174px;
   gap: 14px;
 }
 
@@ -371,11 +371,12 @@
 }
 
 .action-cell {
-  display: grid;
-  justify-items: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
-.action-cell a { align-self: center; }
 .action-cell mat-icon { width: 16px; height: 16px; font-size: 16px; }
 
 .empty-state {
@@ -414,7 +415,7 @@
   }
 
   .watchlist-row {
-    grid-template-columns: minmax(150px, .75fr) minmax(130px, .65fr) minmax(360px, 1.6fr) 128px;
+    grid-template-columns: minmax(150px, .75fr) minmax(130px, .65fr) minmax(360px, 1.6fr) 174px;
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 12px;
   }
@@ -441,10 +442,10 @@
 
   .action-cell {
     grid-row: auto;
-    justify-items: stretch;
+    justify-content: stretch;
   }
 
-  .action-cell a { width: 100%; }
+  .action-cell a { flex: 1 1 0; }
 }
 
 @media (max-width: 680px) {

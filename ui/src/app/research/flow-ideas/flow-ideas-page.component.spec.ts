@@ -111,6 +111,8 @@ describe('FlowIdeasPageComponent', () => {
     expect(page.textContent).toContain('2 of 7');
     expect(page.textContent).toContain('Partial FlowPatrol report');
     expect(page.textContent).toContain('Brokerage context was not requested');
+    expect(page.textContent).toContain('Synthetic');
+    expect(page.textContent).toContain('OI Model');
 
     const rows = page.querySelectorAll<HTMLButtonElement>('.flow-candidate');
     rows[1].click();

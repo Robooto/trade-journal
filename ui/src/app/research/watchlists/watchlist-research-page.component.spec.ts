@@ -101,11 +101,13 @@ describe('WatchlistResearchPageComponent', () => {
     ]);
   });
 
-  it('filters by private list and builds a current Equity Hub link', () => {
+  it('filters by private list and builds both current Equity Hub links', () => {
     component.selectedWatchlist = 'Momentum';
 
     expect(component.visibleItems.map(item => item.symbol)).toEqual(['NVDA']);
     expect(component.equityHubUrl('aapl')).toContain('sym=AAPL');
+    expect(component.oiEquityHubUrl('aapl')).toContain('eh-model=legacy');
+    expect(component.oiEquityHubUrl('aapl')).toContain('tab=history');
   });
 
   it('adds a ticker to the selected watchlist and refreshes research', () => {

@@ -100,6 +100,12 @@ h2 { font-size: 1.9rem; letter-spacing: -0.03em; }
   gap: 12px;
 }
 
+.equity-hub-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
 .inspector-tags {
   flex-wrap: wrap;
   gap: 5px;
@@ -162,6 +168,9 @@ h2 { font-size: 1.9rem; letter-spacing: -0.03em; }
     align-items: stretch;
     flex-direction: column;
   }
+
+  .equity-hub-actions { width: 100%; }
+  .equity-hub-actions a { flex: 1 1 0; }
 
   .inspector-actions a { width: 100%; }
 }

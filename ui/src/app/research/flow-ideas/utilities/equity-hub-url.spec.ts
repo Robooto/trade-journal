@@ -1,4 +1,5 @@
 import { currentEquityHubUrl, newYorkDate } from './equity-hub-url';
+import { openInterestEquityHubUrl } from './equity-hub-url';
 
 describe('equityHubUrl', () => {
   it('uses the current New York date across the UTC date boundary', () => {
@@ -11,6 +12,14 @@ describe('equityHubUrl', () => {
       currentEquityHubUrl('aapl', new Date('2026-07-19T04:30:00Z')),
     ).toBe(
       'https://dashboard.spotgamma.com/equityhub?eh-model=synthoi&sym=AAPL&date=2026-07-19&cv_mode=gamma',
+    );
+  });
+
+  it('builds a current-date legacy OI URL on the history tab', () => {
+    expect(
+      openInterestEquityHubUrl('meta', new Date('2026-07-31T18:00:00Z')),
+    ).toBe(
+      'https://dashboard.spotgamma.com/equityhub?eh-model=legacy&sym=META&date=2026-07-31&cv_mode=gamma&tab=history',
     );
   });
 });

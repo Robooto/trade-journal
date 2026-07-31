@@ -35,10 +35,14 @@
             <span>{{ reason.replaceAll('_', ' ') }}</span>
           }
         </div>
-        <a mat-flat-button color="primary" [href]="equityHubUrl()" target="_blank" rel="noopener">
-          Open EquityHub
-          <mat-icon>open_in_new</mat-icon>
-        </a>
+        <div class="equity-hub-actions" aria-label="EquityHub models">
+          <a mat-flat-button color="primary" [href]="equityHubUrl()" target="_blank" rel="noopener" aria-label="Open the EquityHub synthetic model">
+            Synthetic
+          </a>
+          <a mat-stroked-button [href]="oiEquityHubUrl()" target="_blank" rel="noopener" aria-label="Open the EquityHub open interest model history">
+            OI Model
+          </a>
+        </div>
       </div>
     </header>
 

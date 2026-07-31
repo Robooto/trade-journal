@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 import { currentEquityHubUrl } from '../flow-ideas/utilities/equity-hub-url';
+import { openInterestEquityHubUrl } from '../flow-ideas/utilities/equity-hub-url';
 import {
   ResearchWatchlistSummary,
   WatchlistResearchItem,
@@ -158,6 +159,10 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
 
   equityHubUrl(symbol: string): string {
     return currentEquityHubUrl(symbol);
+  }
+
+  oiEquityHubUrl(symbol: string): string {
+    return openInterestEquityHubUrl(symbol);
   }
 
   formatPrice(value: number | null | undefined): string {

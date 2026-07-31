@@ -25,3 +25,17 @@ export function currentEquityHubUrl(
   });
   return `${EQUITY_HUB_BASE_URL}?${params.toString()}`;
 }
+
+export function openInterestEquityHubUrl(
+  symbol: string,
+  now: Date = new Date(),
+): string {
+  const params = new URLSearchParams({
+    'eh-model': 'legacy',
+    sym: symbol.trim().toUpperCase(),
+    date: newYorkDate(now),
+    cv_mode: 'gamma',
+    tab: 'history',
+  });
+  return `${EQUITY_HUB_BASE_URL}?${params.toString()}`;
+}

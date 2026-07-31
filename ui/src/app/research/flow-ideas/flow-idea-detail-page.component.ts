@@ -32,6 +32,7 @@ import {
 } from './flow-ideas.models';
 import { FlowIdeasApiService } from './data-access/flow-ideas-api.service';
 import { currentEquityHubUrl } from './utilities/equity-hub-url';
+import { openInterestEquityHubUrl } from './utilities/equity-hub-url';
 
 interface DetailRoute {
   readonly tradingDate: string;
@@ -72,6 +73,9 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
   readonly watchlistResultError = signal<string | null>(null);
   readonly currentEquityHubUrl = computed(() =>
     this.symbol() ? currentEquityHubUrl(this.symbol()) : '',
+  );
+  readonly currentOiEquityHubUrl = computed(() =>
+    this.symbol() ? openInterestEquityHubUrl(this.symbol()) : '',
   );
 
   constructor(
