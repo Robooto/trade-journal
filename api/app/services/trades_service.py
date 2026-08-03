@@ -819,11 +819,11 @@ def _buying_power_zone(utilization_percent: Optional[float]) -> str:
     """Return the app's review zone; these thresholds are not brokerage rules."""
     if utilization_percent is None:
         return "unavailable"
-    if utilization_percent < 25:
+    if utilization_percent < 20:
+        return "low"
+    if utilization_percent <= 40:
         return "comfortable"
-    if utilization_percent < 40:
-        return "elevated"
-    return "high"
+    return "elevated"
 
 
 def _underlying_concentrations(groups: List[dict]) -> List[dict]:

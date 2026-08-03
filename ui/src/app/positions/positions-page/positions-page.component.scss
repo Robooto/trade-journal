@@ -136,9 +136,14 @@
   font-weight: 700;
 }
 
-.zone.comfortable {
+.zone.low {
   background: color-mix(in srgb, #22c55e 18%, var(--mat-sys-surface-container));
   color: light-dark(#166534, #86efac);
+}
+
+.zone.comfortable {
+  background: color-mix(in srgb, var(--mat-sys-primary) 16%, var(--mat-sys-surface-container));
+  color: var(--mat-sys-primary);
 }
 
 .zone.elevated {
@@ -146,15 +151,11 @@
   color: light-dark(#92400e, #fcd34d);
 }
 
-.zone.high {
-  background: color-mix(in srgb, var(--mat-sys-error) 18%, var(--mat-sys-surface-container));
-  color: light-dark(#991b1b, #fca5a5);
-}
-
 .zone.unavailable {
   background: var(--mat-sys-surface-container-highest);
   color: var(--mat-sys-on-surface-variant);
 }
+
 
 .balance-quality {
   display: flex;

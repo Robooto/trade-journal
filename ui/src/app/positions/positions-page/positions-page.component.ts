@@ -93,9 +93,9 @@ export class PositionsPageComponent implements OnInit {
 
   buyingPowerZoneLabel(account: AccountPositions): string {
     const labels = {
+      low: 'Low',
       comfortable: 'Comfortable',
       elevated: 'Elevated',
-      high: 'High',
       unavailable: 'Unavailable',
     };
     return labels[account.buying_power_zone ?? 'unavailable'];
@@ -124,7 +124,7 @@ export class PositionsPageComponent implements OnInit {
   buyingPowerTooltip(account: AccountPositions): string {
     const utilization = account.buying_power_utilization_percent;
     const value = utilization == null ? 'unavailable' : `${utilization.toFixed(1)}%`;
-    return `Used derivative buying power ÷ net liquidating value: ${value}. App review zones: comfortable below 25%, elevated 25–39.9%, high 40%+. These are review cues, not brokerage rules.`;
+    return `Used derivative buying power ÷ net liquidating value: ${value}. App review zones: low below 20%, comfortable 20–40%, elevated above 40%. These are review cues, not brokerage rules.`;
   }
 
   concentrationTooltip(account: AccountPositions): string {

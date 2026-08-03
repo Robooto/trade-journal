@@ -7,12 +7,23 @@ from app.schemas.trades import (
 )
 from app.services.trades_service import (
     apply_balance,
+    _buying_power_zone,
     augment_positions_with_market_data,
     build_llm_positions_summary,
     build_market_data_summary,
     build_volatility_data_summary,
     group_positions_and_compute_totals,
 )
+
+
+def test_buying_power_zone_boundaries():
+    assert _buying_power_zone(None) == "unavailable"
+    assert _buying_power_zone(0) == "low"
+    assert _buying_power_zone(19.9) == "low"
+    assert _buying_power_zone(20) == "comfortable"
+    assert _buying_power_zone(40) == "comfortable"
+    assert _buying_power_zone(40.1) == "elevated"
+    assert _buying_power_zone(50) == "elevated"
 
 
 def test_market_data_summary_normalizes_numeric_fields():
@@ -414,7 +425,7 @@ def test_apply_balance_adds_risk_context_and_concentration(monkeypatch):
     assert account["net_liquidating_value_dollars"] == 10000
     assert account["buying_power_utilization_percent"] == 32.0
     assert account["percent_used_bp"] == 32
-    assert account["buying_power_zone"] == "elevated"
+    assert account["buying_power_zone"] == "comfortable"
     assert account["theta_percent_of_net_liq_per_day"] == 0.25
     assert account["vega_plus_one_point_percent_of_net_liq"] == -1.5
     assert account["balance_status"] == "ok"
@@ -451,7 +462,7 @@ def test_positions_summary_carries_portfolio_balance_context():
         "used_derivative_buying_power_dollars": 2500,
         "derivative_buying_power_dollars": 7500,
         "buying_power_utilization_percent": 25.0,
-        "buying_power_zone": "elevated",
+        "buying_power_zone": "comfortable",
         "theta_dollars_per_day": 20,
         "theta_percent_of_net_liq_per_day": 0.2,
         "vega_dollars_per_vol_point": -100,
@@ -469,5 +480,5 @@ def test_positions_summary_carries_portfolio_balance_context():
     assert parsed.portfolio.buying_power_utilization_percent == 25.0
     assert parsed.portfolio.theta_percent_of_net_liq_per_day == 0.2
     assert parsed.portfolio.vega_plus_one_point_percent_of_net_liq == -1.0
-    assert parsed.accounts[0].buying_power_zone == "elevated"
+    assert parsed.accounts[0].buying_power_zone == "comfortable"
     assert parsed.units["absolute_beta_delta_share_percent"].startswith("share of total absolute")

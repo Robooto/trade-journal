@@ -71,7 +71,7 @@ describe('PositionsPageComponent', () => {
       account_number: '1',
       groups: [],
       buying_power_utilization_percent: 32,
-      buying_power_zone: 'elevated',
+      buying_power_zone: 'comfortable',
       largest_underlying_concentration: {
         underlying_symbol: 'SPY',
         delta_shares: 30,
@@ -82,7 +82,10 @@ describe('PositionsPageComponent', () => {
       }
     };
 
-    expect(component.buyingPowerZoneLabel(account)).toBe('Elevated');
+    expect(component.buyingPowerZoneLabel(account)).toBe('Comfortable');
+    expect(component.buyingPowerTooltip(account)).toContain('low below 20%');
+    expect(component.buyingPowerTooltip(account)).toContain('comfortable 20–40%');
+    expect(component.buyingPowerTooltip(account)).toContain('elevated above 40%');
     expect(component.buyingPowerTooltip(account)).toContain('not brokerage rules');
     expect(component.concentrationTooltip(account)).toContain('not capital or notional concentration');
   });

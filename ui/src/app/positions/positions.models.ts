@@ -62,7 +62,7 @@ export interface AccountPositions {
   derivative_buying_power_dollars?: number | null;
   equity_buying_power_dollars?: number | null;
   buying_power_utilization_percent?: number | null;
-  buying_power_zone?: 'comfortable' | 'elevated' | 'high' | 'unavailable';
+  buying_power_zone?: 'low' | 'comfortable' | 'elevated' | 'unavailable';
   theta_percent_of_net_liq_per_day?: number | null;
   vega_plus_one_point_dollars?: number | null;
   vega_plus_one_point_percent_of_net_liq?: number | null;
