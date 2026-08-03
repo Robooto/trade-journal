@@ -94,7 +94,7 @@ export class PivotTrackerPageComponent implements OnInit, OnDestroy {
       maxWidth: 'calc(100vw - 32px)',
       data: {
         price: this.latestPivot?.price ?? null,
-        date: this.latestPivot?.date ?? null,
+        date: new Date(),
         index: this.latestPivot?.index ?? 'SPX',
       },
     });
