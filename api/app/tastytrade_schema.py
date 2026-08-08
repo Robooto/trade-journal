@@ -41,6 +41,12 @@ class TastyPosition(TastyModel):
 class TastyMarketData(TastyModel):
     symbol: str
     mark: Optional[str | int | float] = None
+    bid: Optional[str | int | float] = None
+    ask: Optional[str | int | float] = None
+    bid_size: Optional[str | int | float] = Field(None, alias="bid-size")
+    ask_size: Optional[str | int | float] = Field(None, alias="ask-size")
+    volume: Optional[str | int | float] = None
+    open_interest: Optional[str | int | float] = Field(None, alias="open-interest")
     open: Optional[str | int | float] = None
     close: Optional[str | int | float] = None
     beta: Optional[str | int | float] = None

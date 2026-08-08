@@ -132,6 +132,16 @@ def fetch_positions(token: str, account_number: str) -> List[TastyPosition]:
 
     return [TastyPosition.model_validate(item) for item in _items_from_response(data)]
 
+def fetch_nested_option_chain(token: str, symbol: str) -> list[dict]:
+    """Fetch contract metadata grouped by expiration and strike."""
+    normalized = symbol.strip().upper()
+    if not normalized:
+        raise ValueError("An underlying symbol is required.")
+    data = _request_json(
+        "GET", f"/option-chains/{quote(normalized, safe='')}/nested", headers=_headers(token)
+    )
+    return list(_items_from_response(data))
+
 def fetch_market_data(token: str, equity: List[str], equity_option: List[str], future: List[str], future_option: List[str]) -> List[TastyMarketData]:
     """
     Fetch market data for the given symbols from the Tastytrade API.

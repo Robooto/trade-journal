@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -434,5 +434,52 @@ class AddWatchlistSymbolResultV1(BaseModel):
     watchlist: BrokerWatchlistSummaryV1
     symbol: str
     added: bool
+
+    model_config = {"extra": "forbid"}
+
+
+class OptionChainMetadataV1(BaseModel):
+    schema_version: Literal["option-chain-metadata.v1"] = "option-chain-metadata.v1"
+    generated_at: datetime
+    underlying_symbol: str
+    expirations: list[dict[str, Any]]
+    source: SourceMetadataV1
+
+    model_config = {"extra": "forbid"}
+
+
+class OptionQuoteSnapshotRequestV1(BaseModel):
+    underlying_symbol: str = Field(min_length=1, max_length=32, pattern=r"^[A-Za-z0-9.^/-]+$")
+    option_symbols: list[str] = Field(min_length=1, max_length=100)
+
+    model_config = {"extra": "forbid"}
+
+
+class OptionQuoteObservationV1(BaseModel):
+    symbol: str
+    mark: Optional[float] = None
+    bid: Optional[float] = None
+    ask: Optional[float] = None
+    bid_size: Optional[float] = None
+    ask_size: Optional[float] = None
+    volume: Optional[float] = None
+    open_interest: Optional[float] = None
+    delta: Optional[float] = None
+    gamma: Optional[float] = None
+    theta: Optional[float] = None
+    vega: Optional[float] = None
+
+    model_config = {"extra": "forbid"}
+
+
+class OptionQuoteSnapshotV1(BaseModel):
+    schema_version: Literal["option-quote-snapshot.v1"] = "option-quote-snapshot.v1"
+    generated_at: datetime
+    underlying_symbol: str
+    requested_option_symbols: list[str]
+    observations: list[OptionQuoteObservationV1]
+    missing_option_symbols: list[str] = Field(default_factory=list)
+    source: SourceMetadataV1
+    warnings: list[str] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}

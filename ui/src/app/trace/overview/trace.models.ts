@@ -94,6 +94,7 @@ export interface TraceDashboardRow {
   readonly equities_hiro_repeated_source: boolean | null;
   readonly flow_state: string | null;
   readonly flow_relationship: string | null;
+  readonly flow_acceleration: string | null;
   readonly flow_spx_score: number | null;
   readonly flow_equities_score: number | null;
   readonly flow_spx_impulse: string | null;
@@ -113,6 +114,14 @@ export interface TraceDashboardRow {
   readonly global_shelf_center: number | null;
   readonly shelf_center_d: number | null;
   readonly shelf_direction: string | null;
+  readonly structure_support_type: string | null;
+  readonly structure_support_level: number | null;
+  readonly structure_support_distance: number | null;
+  readonly structure_support_band: string | null;
+  readonly structure_resistance_type: string | null;
+  readonly structure_resistance_level: number | null;
+  readonly structure_resistance_distance: number | null;
+  readonly structure_resistance_band: string | null;
   readonly local_gamma_setup: string | null;
   readonly pocket_sign: string | null;
 }

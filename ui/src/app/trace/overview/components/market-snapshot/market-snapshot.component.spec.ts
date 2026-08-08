@@ -11,7 +11,8 @@ import {
 import { MarketSnapshotComponent } from './market-snapshot.component';
 
 const rows = [
-  { ts: '2026-07-24T12:50:04-07:00', capture_id: 'capture-1', spot: 7405 },
+  { ts: '2026-07-24T12:50:04-07:00', capture_id: 'capture-1', spot: 7405,
+    flow_acceleration: 'selling_increasing' },
   {
     ts: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', spot: 7412,
     spx_hiro: -1_280_000_000, spx_hiro_rate_per_minute: 119_000_000,
@@ -20,7 +21,11 @@ const rows = [
     flow_state: 'spx_up_equities_down', flow_relationship: 'divergent', flow_spx_score: 2,
     flow_equities_score: -3, flow_spx_acceleration: 'strong_buying_increasing',
     flow_equities_acceleration: 'flat', flow_readiness_status: 'ready', put_wall: 7300,
+    flow_acceleration: 'buying_increasing',
     hedge_wall: 7510, call_wall: 7600, global_shelf_center: 7405, shelf_center_d: 3.5,
+    structure_support_type: 'local_support', structure_support_level: 7404, structure_support_distance: 8,
+    structure_support_band: 'intermediate_3_10', structure_resistance_type: 'call_wall',
+    structure_resistance_level: 7427, structure_resistance_distance: 15, structure_resistance_band: 'cleaner_history_10_20',
     shelf_direction: 'up', local_gamma_setup: 'neg_with_above', pocket_sign: 'negative',
   },
 ] as unknown as TraceDashboardRow[];
@@ -68,7 +73,10 @@ describe('MarketSnapshotComponent', () => {
     expect(text).toContain('Spot7412Last move +7');
     expect(text).toContain('rate +119.0M/min');
     expect(text).toContain('Spx Up Equities Down');
-    expect(text).toContain('Expansion (−)');
+    expect(text).toContain('Negative gamma');
+    expect(text).toContain('Bull-put caution');
+    expect(text).toContain('7404 · Local Support8 pts · 3–10 intermediate');
+    expect(text).toContain('7427 · Call Wall15 pts · 10–20 cleaner history');
     expect(text).toContain('at spot −400.6M');
     expect(text).toContain('Medium movement');
     expect(text).toContain('Low ≤ 5.1 bps');

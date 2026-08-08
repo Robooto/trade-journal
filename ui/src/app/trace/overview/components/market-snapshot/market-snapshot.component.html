@@ -35,12 +35,17 @@
         <span class="snapshot-label">HIRO Pressure</span>
         <strong>{{ labelize(row.flow_state) }}</strong>
         <small>{{ labelize(row.flow_relationship) }} · SPX {{ formatCompact(row.flow_spx_score, true) }} · equities {{ formatCompact(row.flow_equities_score, true) }} · {{ labelize(row.flow_readiness_status) }}</small>
+        @if (bullPutFlowTransitionCaution) {
+          <small class="snapshot-warning"><b>Bull-put caution</b> · first Buying Increasing transition</small>
+          <em>Research context · not scored · not a bear-call rule</em>
+        }
       </article>
 
       <article class="snapshot-card snapshot-card--gamma" [attr.data-card-tone]="gammaTone()">
         <span class="snapshot-label">Gamma Structure</span>
         <strong>{{ gammaLabel() }}</strong>
         <small>{{ labelize(row.local_gamma_setup) }} · at spot {{ formatCompact(gammaContext?.nearest_total_gamma, true) }} · slope {{ formatCompact(gammaContext?.cross_spot_slope, true) }}/pt</small>
+        <em>Research context · not a forecast</em>
       </article>
 
       <article class="snapshot-card snapshot-card--volatility" [attr.data-card-tone]="volatilityTone()">
@@ -57,6 +62,18 @@
 
       <article class="snapshot-card snapshot-card--structure">
         <span class="snapshot-label">Price Structure</span>
+        <div class="snapshot-split snapshot-split--study-distance">
+          <div>
+            <span>Support study distance</span>
+            <strong>{{ formatSpot(row.structure_support_level) }} · {{ structureLabel(row.structure_support_type) }}</strong>
+            <small>{{ formatSpot(row.structure_support_distance) }} pts · {{ structureBandLabel(row.structure_support_band) }}</small>
+          </div>
+          <div>
+            <span>Resistance study distance</span>
+            <strong>{{ formatSpot(row.structure_resistance_level) }} · {{ structureLabel(row.structure_resistance_type) }}</strong>
+            <small>{{ formatSpot(row.structure_resistance_distance) }} pts · {{ structureBandLabel(row.structure_resistance_band) }}</small>
+          </div>
+        </div>
         <div class="snapshot-split snapshot-split--structure">
           <div>
             <span>Walls</span>

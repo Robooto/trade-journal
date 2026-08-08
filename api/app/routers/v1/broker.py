@@ -18,6 +18,10 @@ from app.schemas.brokerage import (
     BrokerWatchlistResearchV1,
     BrokerWatchlistSummaryV1,
     HoldingSnapshotV1,
+    OptionChainMetadataV1,
+    OptionQuoteObservationV1,
+    OptionQuoteSnapshotRequestV1,
+    OptionQuoteSnapshotV1,
     ResearchSymbolContextRequestV1,
     ResearchSymbolContextV1,
 )
@@ -199,6 +203,76 @@ def add_watchlist_symbol(
         watchlist=_watchlist_summary(watchlist),
         symbol=symbol,
         added=added,
+    )
+
+
+def _number(value):
+    try:
+        return None if value is None else float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+@router.get(
+    "/option-chains/{symbol}/nested",
+    summary="Get nested option-chain metadata for research capture",
+    response_model=OptionChainMetadataV1,
+)
+def get_nested_option_chain(symbol: str, db: Session = Depends(get_db)):
+    token = _token_or_403(db)
+    normalized = symbol.strip().upper()
+    generated_at = datetime.now(timezone.utc)
+    try:
+        expirations = tastytrade.fetch_nested_option_chain(token, normalized)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except requests.RequestException as exc:
+        logging.exception("Fetching nested option chain failed for %s.", normalized)
+        raise HTTPException(status_code=502, detail="Brokerage option chain is unavailable.") from exc
+    return OptionChainMetadataV1(
+        generated_at=generated_at,
+        underlying_symbol=normalized,
+        expirations=expirations,
+        source={"source": "tastytrade", "endpoint": f"/option-chains/{normalized}/nested",
+                "fetched_at": generated_at, "status": "ok"},
+    )
+
+
+@router.post(
+    "/option-quote-snapshots",
+    summary="Capture current option quotes and Greeks for selected contracts",
+    response_model=OptionQuoteSnapshotV1,
+    response_model_exclude_none=True,
+)
+def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Session = Depends(get_db)):
+    token = _token_or_403(db)
+    underlying = request.underlying_symbol.strip().upper()
+    symbols = list(dict.fromkeys(symbol.strip() for symbol in request.option_symbols if symbol.strip()))
+    if not symbols:
+        raise HTTPException(status_code=422, detail="At least one option symbol is required.")
+    generated_at = datetime.now(timezone.utc)
+    try:
+        market_rows = tastytrade.fetch_market_data(token, [], symbols, [], [])
+    except requests.RequestException as exc:
+        logging.exception("Fetching option quote snapshot failed for %s.", underlying)
+        raise HTTPException(status_code=502, detail="Brokerage option quotes are unavailable.") from exc
+    observations = [OptionQuoteObservationV1(
+        symbol=row.symbol,
+        mark=_number(row.mark), bid=_number(row.bid), ask=_number(row.ask),
+        bid_size=_number(row.bid_size), ask_size=_number(row.ask_size),
+        volume=_number(row.volume), open_interest=_number(row.open_interest),
+        delta=_number(row.delta), gamma=_number(row.gamma), theta=_number(row.theta), vega=_number(row.vega),
+    ) for row in market_rows]
+    returned = {row.symbol for row in observations}
+    missing = [symbol for symbol in symbols if symbol not in returned]
+    warnings = ["Some requested option contracts were unavailable."] if missing else []
+    return OptionQuoteSnapshotV1(
+        generated_at=generated_at, underlying_symbol=underlying,
+        requested_option_symbols=symbols, observations=observations,
+        missing_option_symbols=missing, warnings=warnings,
+        source={"source": "tastytrade", "endpoint": "/market-data/by-type",
+                "fetched_at": generated_at, "status": "partial" if missing else "ok",
+                "missing_fields": missing},
     )
 
 

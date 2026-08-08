@@ -72,6 +72,12 @@ export class MarketSnapshotComponent {
     return unique.slice(0, 2);
   }
 
+  get bullPutFlowTransitionCaution(): boolean {
+    if (this.activeIndex <= 0 || this.activeRow?.flow_acceleration !== 'buying_increasing') return false;
+    const prior = this.rows[this.activeIndex - 1]?.flow_acceleration;
+    return prior != null && prior !== 'missing' && prior !== 'buying_increasing';
+  }
+
   nodeCount(sign: 'positive' | 'negative'): number {
     return this.activeNodes.filter(node =>
       sign === 'negative' ? node.gamma_sign === 'negative' : node.gamma_sign !== 'negative',
@@ -79,6 +85,7 @@ export class MarketSnapshotComponent {
   }
 
   flowTone(): 'positive' | 'negative' | 'warning' | 'neutral' {
+    if (this.bullPutFlowTransitionCaution) return 'warning';
     const relationship = this.activeRow?.flow_relationship;
     if (relationship === 'aligned_up') return 'positive';
     if (relationship === 'aligned_down') return 'negative';
@@ -87,8 +94,7 @@ export class MarketSnapshotComponent {
   }
 
   gammaTone(): 'warning' | 'neutral' {
-    const sign = this.activeRow?.pocket_sign;
-    return sign === 'negative' || sign === 'flat' ? 'warning' : 'neutral';
+    return 'neutral';
   }
 
   volatilityTone(): 'warning' | 'neutral' {
@@ -109,9 +115,23 @@ export class MarketSnapshotComponent {
   }
 
   gammaLabel(): string {
-    if (this.activeRow?.pocket_sign === 'positive') return 'Containment (+)';
-    if (this.activeRow?.pocket_sign === 'negative') return 'Expansion (−)';
-    return 'Transition / weak gamma';
+    if (this.activeRow?.pocket_sign === 'positive') return 'Positive gamma';
+    if (this.activeRow?.pocket_sign === 'negative') return 'Negative gamma';
+    return 'Neutral / transition gamma';
+  }
+
+  structureBandLabel(value: string | null | undefined): string {
+    switch (value) {
+      case 'fragile_0_3': return '0–3 fragile';
+      case 'intermediate_3_10': return '3–10 intermediate';
+      case 'cleaner_history_10_20': return '10–20 cleaner history';
+      case 'wide_20_40': return '20–40 wide';
+      default: return 'No qualifying level';
+    }
+  }
+
+  structureLabel(type: string | null | undefined): string {
+    return type ? this.labelize(type) : 'Unavailable';
   }
 
   volatilityLabel(): string {

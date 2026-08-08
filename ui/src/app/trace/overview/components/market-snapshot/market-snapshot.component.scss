@@ -24,6 +24,8 @@
 .snapshot-split>div { display:flex; min-width:0; flex-direction:column; gap:.28rem; }
 .snapshot-split>div+div { padding-left:.65rem; border-left:1px solid rgba(148,163,184,.16); }
 .snapshot-split strong { margin-top:.1rem; }
+.snapshot-split--study-distance { flex:0 0 auto; margin-bottom:.65rem; padding-bottom:.65rem; border-bottom:1px solid rgba(148,163,184,.16); }
+.snapshot-split--study-distance strong { font-size:.82rem; }
 .snapshot-warning { color:#ffc328!important; font-weight:750; }
 .snapshot-node-groups { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
 .snapshot-node-groups>div { display:grid; min-width:0; gap:.3rem; }
