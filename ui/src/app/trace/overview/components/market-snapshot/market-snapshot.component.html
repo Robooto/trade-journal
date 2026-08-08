@@ -21,7 +21,7 @@
           <div>
             <span>SPX</span>
             <strong [attr.data-tone]="valueTone(row.spx_hiro)">{{ formatCompact(row.spx_hiro) }}</strong>
-            <small>rate <b [attr.data-tone]="valueTone(row.spx_hiro_rate_per_minute)">{{ formatCompact(row.spx_hiro_rate_per_minute, true) }}/min</b> · {{ labelize(row.flow_spx_acceleration) }} · age {{ formatDuration(row.spx_hiro_source_age_seconds) }}</small>
+            <small>rate <b [attr.data-tone]="valueTone(row.spx_hiro_rate_per_minute)" [attr.data-hiro-shock]="hiroShockTone(row.spx_hiro_d)">{{ formatCompact(row.spx_hiro_rate_per_minute, true) }}/min</b> · {{ labelize(row.flow_spx_acceleration) }} · age {{ formatDuration(row.spx_hiro_source_age_seconds) }}</small>
           </div>
           <div>
             <span>Equities</span>

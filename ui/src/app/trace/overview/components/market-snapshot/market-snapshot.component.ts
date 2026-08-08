@@ -108,6 +108,14 @@ export class MarketSnapshotComponent {
     return value > 0 ? 'positive' : 'negative';
   }
 
+  hiroShockTone(delta: number | null | undefined): 'shock-positive' | 'shock-negative' | 'extreme-positive' | 'extreme-negative' | null {
+    if (delta == null || !Number.isFinite(delta) || Math.abs(delta) < 750_000_000) return null;
+    if (Math.abs(delta) >= 1_000_000_000) {
+      return delta > 0 ? 'extreme-positive' : 'extreme-negative';
+    }
+    return delta > 0 ? 'shock-positive' : 'shock-negative';
+  }
+
   shelfTone(): 'positive' | 'negative' | 'neutral' {
     if (this.activeRow?.shelf_direction === 'up') return 'positive';
     if (this.activeRow?.shelf_direction === 'down') return 'negative';

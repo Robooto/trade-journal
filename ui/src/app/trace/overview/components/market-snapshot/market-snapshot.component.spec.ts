@@ -15,7 +15,7 @@ const rows = [
     flow_acceleration: 'selling_increasing' },
   {
     ts: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', spot: 7412,
-    spx_hiro: -1_280_000_000, spx_hiro_rate_per_minute: 119_000_000,
+    spx_hiro: -1_280_000_000, spx_hiro_d: 1_190_000_000, spx_hiro_rate_per_minute: 119_000_000,
     spx_hiro_source_age_seconds: 66, equities_hiro: -1_280_000_000,
     equities_hiro_rate_per_minute: -18_000_000, equities_hiro_source_age_seconds: 66,
     flow_state: 'spx_up_equities_down', flow_relationship: 'divergent', flow_spx_score: 2,
@@ -85,5 +85,12 @@ describe('MarketSnapshotComponent', () => {
     expect(text).toContain('1 positive · 1 negative');
     expect(fixture.nativeElement.querySelector('.snapshot-spot').textContent).toContain('7412');
     expect(fixture.nativeElement.querySelector('[data-card-tone="warning"]')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('[data-hiro-shock="extreme-positive"]')).not.toBeNull();
+  });
+
+  it('uses the study thresholds only for large SPX HIRO changes', () => {
+    expect(component.hiroShockTone(749_999_999)).toBeNull();
+    expect(component.hiroShockTone(-750_000_000)).toBe('shock-negative');
+    expect(component.hiroShockTone(1_000_000_000)).toBe('extreme-positive');
   });
 });
