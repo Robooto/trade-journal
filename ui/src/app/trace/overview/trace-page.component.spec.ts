@@ -81,6 +81,7 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Source readiness');
     expect(fixture.nativeElement.textContent).not.toContain('Thin frontend boundary');
     expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
+    expect(fixture.nativeElement.textContent).not.toContain('Legacy TRACE');
   });
 
   it('selects only dates present in the TRACE session catalog', () => {

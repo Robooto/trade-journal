@@ -1,7 +1,9 @@
 # Flow Ideas Angular Parity Inventory
 
-Last reviewed: 2026-07-18
-Source UI: market-data-pipeline/ui/dashboard/flowpatrol-ui.js
+Last reviewed: 2026-08-08
+Status: **historical parity inventory; standalone source UI retired**
+
+Former source UI: `market-data-pipeline/ui/dashboard/flowpatrol-ui.js`
 Contract baseline:
 market-data-pipeline/tests/fixtures/flowpatrol_api/angular-migration-contract.json
 
@@ -12,8 +14,8 @@ into the Trade Journal Angular application. The mini continues to own
 FlowPatrol ingestion, warehouse reads, scoring, change detection, Spread ID
 grouping, source quality, brokerage enrichment, and all FlowPatrol HTTP routes.
 
-Trace remains on the mini. It is an external Research navigation destination,
-not part of this migration.
+TRACE and Flow Ideas now share the Trade Journal operator shell. The mini owns
+their versioned data APIs and backend behavior, but no user-facing presentation.
 
 ## Queue parity
 
@@ -78,9 +80,8 @@ not held.
 - **RF-05:** history, complete evidence, brokerage detail, current-date
   EquityHub, and accessible deep links.
 - **RF-06:** upload and watchlist commands with mutation feedback.
-- **RF-07:** compare Angular and mini Flow Ideas against the fixture's ready
-  and partial report dates before retiring only the mini Flow Ideas view.
+- **RF-07:** compared Angular and the former mini Flow Ideas presentation against
+  the fixture's ready and partial report dates before the completed cutover.
 
-The legacy mini UI still contains its previous local symbol set during the
-parity period. New Angular work must use the backend-provided is_index_etf
-field instead.
+The backend-provided `is_index_etf` field is authoritative. The retired mini UI's
+local symbol set is historical and must not be recreated in frontend code.

@@ -11,8 +11,6 @@ import { TraceContractStatus } from './trace.models';
   standalone: false,
 })
 export class TracePageComponent implements OnInit {
-  readonly legacyTraceUrl = '/research-api/';
-
   constructor(readonly facade: TraceFacade) {}
 
   ngOnInit(): void {

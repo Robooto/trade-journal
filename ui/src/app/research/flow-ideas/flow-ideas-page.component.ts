@@ -46,11 +46,6 @@ export class FlowIdeasPageComponent implements OnDestroy {
     },
   };
 
-  /**
-   * RF-02 owns the proxy. This relative handoff keeps the mini address out of
-   * the Angular bundle and opens the existing Trace UI in a new tab.
-   */
-  readonly traceUrl = '/research-api/';
   readonly eventOptions: readonly FlowChangeOption[] = [
     { value: '', label: 'All changes' },
     { value: 'new', label: 'New' },

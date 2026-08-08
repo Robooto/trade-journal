@@ -113,6 +113,7 @@ describe('FlowIdeasPageComponent', () => {
     expect(page.textContent).toContain('Brokerage context was not requested');
     expect(page.textContent).toContain('Synthetic');
     expect(page.textContent).toContain('OI Model');
+    expect(page.textContent).not.toContain('Trace on mini');
 
     const rows = page.querySelectorAll<HTMLButtonElement>('.flow-candidate');
     rows[1].click();

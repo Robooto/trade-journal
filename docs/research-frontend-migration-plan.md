@@ -1,13 +1,13 @@
 # Research Frontend Migration Plan
 
-Last reviewed: 2026-07-18
+Last reviewed: 2026-08-08 — migration complete; standalone pages retired
 
 ## Outcome
 
 Move Flow Ideas into the `trade-journal` Angular application so journal,
 positions, and research share one operator UI. Keep FlowPatrol ingestion,
 ranking, history, evidence, brokerage enrichment, and APIs in
-`market-data-pipeline` on the mini. Keep the existing Trace UI on the mini.
+`market-data-pipeline` on the mini. Trade Journal owns all operator presentation.
 
 This is a presentation migration, not a backend consolidation. Reach current
 Flow Ideas parity before adding new features.
@@ -22,9 +22,9 @@ Browser
   -> SpotGamma EquityHub through an explicit external action
 
 Mini market-data-pipeline
-  -> FlowPatrol ingestion, warehouse, ranking, history, evidence, API
+  -> TRACE and FlowPatrol ingestion, warehouse, analysis, history, evidence, APIs
   -> trade-journal APIs for brokerage enrichment and watchlist commands
-  -> existing Trace UI and API (unchanged)
+  -> no standalone product UI
 ```
 
 Angular owns navigation, layout, formatting, URL state, selection, and explicit
@@ -88,9 +88,9 @@ come from the backend.
 ```
 
 Keep useful filters in query parameters so queues are bookmarkable. Persist only
-harmless UI preferences locally. Add **Research** to the journal navigation,
-with Flow Ideas in-app and **Trace on mini** as a labeled external link. Do not
-embed or migrate Trace in this queue.
+harmless UI preferences locally. **Research** contains Flow Ideas in-app, and
+TRACE is a first-class Trade Journal workspace. There is no external mini
+presentation link.
 
 ## Layout and interaction
 
@@ -124,7 +124,7 @@ backend filters rather than reproducing data rules in Angular.
 
 ## Implementation work queue
 
-### Implementation status — 2026-07-18
+### Final implementation status — 2026-08-08
 
 Completed: **RF-01** contract fixtures and parity inventory; **RF-02** proxy
 and failure isolation; **RF-03** Research shell/navigation; **RF-04** typed
@@ -135,11 +135,10 @@ explicit report-upload and private-watchlist commands; and **RF-07 code parity**
 including bookmarkable watchlist/portfolio filters, compact brokerage scan
 context, and a deterministic local parity gate.
 
-Cutover remains pending. The live mini must first receive the frozen/current
-contract, start with brokerage enrichment environment variables, expose a
-classified index row for validation, and pass the Pi-to-mini browser comparison.
-See `docs/flow-ideas-rf07-parity-audit.md`. Keep the mini Flow Ideas view
-during this parity period.
+Cutover is complete. The frozen/current contract, brokerage enrichment,
+classification, watchlist, proxy, and presentation checks were resolved before
+the standalone views were retired. See
+`docs/flow-ideas-rf07-parity-audit.md` for the historical evidence.
 
 ### RF-01 - Contract fixtures and parity inventory
 
@@ -178,13 +177,12 @@ selection, navigation, or page load.
 
 ### RF-07 - Parity, cutover, and cleanup
 
-Run the deterministic local parity gate and a Pi-to-mini smoke test. Compare old
-and new UIs on the same ready and partial dates. The Angular implementation is
-code-complete, but cutover is blocked by the live backend revision, disabled
-brokerage enrichment, and unvalidated live index classification documented in
-`docs/flow-ideas-rf07-parity-audit.md`. Keep mini Flow Ideas during a short
-parity period, then remove only its Flow presentation while retaining Trace and
-every API.
+The deterministic local parity gate and Pi-to-mini smoke tests compared the old
+and new presentations on the same ready and partial dates. After the backend,
+brokerage enrichment, index classification, watchlist, and proxy checks passed,
+the standalone Flow Ideas and TRACE pages were retired. Every versioned mini API
+and backend ownership boundary remains in place; see
+`docs/flow-ideas-rf07-parity-audit.md`.
 
 ## Test and acceptance
 
@@ -194,10 +192,10 @@ warnings, upload, watchlists, accessibility, and narrow layouts; and New York
 date-boundary tests for EquityHub. Run the local production/deployment gate and
 a parity script; CI remains out of scope.
 
-Acceptance requires full current feature parity, no scoring or brokerage client
+Acceptance required full feature parity, no scoring or brokerage client
 in Angular, no mini address in TypeScript, reload-safe detail URLs, explicit
 quality/outage states, successful valid uploads up to 20 MB, complete Spread ID
-evidence, journal/positions working while mini is down, and Trace unchanged.
+evidence, journal/positions working while mini is down, and unchanged mini APIs.
 
 ## Future research modules
 
@@ -212,9 +210,8 @@ The first-class TRACE workspace includes Charm as an inline overview widget; the
 capture selection, chart rendering, formatting, and explicit quality labels.
 The mini owns TRACE Delta ingestion, Charm calculation, source selection,
 zero-crossing interpolation, robust scale metadata, freshness, and quality.
-The widget is deliberately excluded from Flow Ideas scoring and keeps visual
-parity marked pending. The standalone mini dashboard remains the parity baseline while its views
-migrate incrementally.
+The widget is deliberately excluded from Flow Ideas scoring. Presentation
+parity and cutover are complete; the mini remains the data and API owner only.
 ## TRACE migration readiness — 2026-07-25
 
 The first TRACE preparation wave is complete in `market-data-pipeline`:
@@ -282,17 +279,15 @@ from the backend. Angular performs only chart scaling and formatting; it does
 not recreate the mini's recent-window direction classification or add trading
 interpretation.
 
-### TR-08 — Exact capture inspection and parity audit — in progress
+### TR-08 — Exact capture inspection and parity audit — complete
 
 A collapsed capture-history table now exposes every versioned timeline row and
 synchronizes timestamp selection through the shared facade. Gamma around spot
 now restores signed bars beneath the curve, closing a semantic difference found
-against the legacy implementation. Contract, interaction, responsive
+against the historical presentation. Contract, interaction, responsive
 containment, and intentional differences are recorded in
 `docs/trace-tr08-parity-audit.md`.
 
-Keep the standalone mini TRACE page and Legacy TRACE link as the visual parity
-baseline and rollback path. Cutover remains blocked until the deployed
-side-by-side checklist passes and the user confirms that the Angular charts
-preserve the research meaning they rely on. The mini APIs remain in place after
-any presentation cutover.
+Cutover completed on 2026-08-08. Trade Journal is the sole user-facing TRACE
+and Flow Ideas presentation. The mini APIs remain in place, and no standalone
+fallback page or legacy presentation link is maintained.

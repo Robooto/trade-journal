@@ -1,13 +1,11 @@
 # Flow Ideas RF-07 parity and cutover audit
 
-Last reviewed: 2026-07-18
+Last reviewed: 2026-08-08
 
 ## Result
 
-Angular now has code-level parity with the current mini Flow Ideas presentation.
-The mini Flow Ideas UI remains in place. Cutover is **not approved yet** because
-the live mini is behind the frozen contract and its running process does not
-have brokerage enrichment configured.
+Cutover is complete. Trade Journal is the only Flow Ideas presentation, and the
+mini continues to own the versioned FlowPatrol APIs and backend behavior.
 
 Trace, FlowPatrol scoring, evidence grouping policy, ingestion, and brokerage
 logic remain on the mini. Angular only displays backend results and invokes
@@ -24,7 +22,7 @@ explicit upload/watchlist commands.
 | History dates and complete Spread ID evidence | Ready | Ready | Detail components and parity gate |
 | Current New York-date EquityHub action | Ready | Ready | Shared tested URL utility |
 | Upload and watchlist mutations | Ready | Ready | Explicit commands and route tests |
-| Trace | Intentionally external | Unchanged | Trace on mini link |
+| TRACE presentation | Integrated | Ready | Trade Journal TRACE workspace |
 | FlowPatrol scoring/classification | Backend-owned | Unchanged | No Angular scoring or symbol list |
 
 Unknown brokerage context never matches held/not-held filters. When the
@@ -52,7 +50,7 @@ docker run --rm trade-journal-ui-rf07-test
 This also runs the focused API, facade, detail, evidence, upload, watchlist, and
 EquityHub specs.
 
-## Live comparison evidence and blockers
+## Historical live comparison evidence
 
 The 2026-07-18 live mini audit found:
 
@@ -66,12 +64,8 @@ The 2026-07-18 live mini audit found:
 - Brokerage enrichment reported disabled. The running process lacked
   `TRADE_JOURNAL_API_*` variables even though the mini `.env` has the API URL.
 
-Before cutover:
-
-1. Deploy the frozen/current market-data-pipeline contract to the mini.
-2. Launch the API with brokerage environment variables and verify ready/partial
-   enrichment plus watchlist reads.
-3. Smoke a classified index row and bookmark reloads for watchlist/portfolio
-   filters through the Pi proxy.
-4. Compare the same ready and partial dates in both UIs.
-5. Keep the mini UI through the parity period; remove only Flow Ideas later.
+These findings were pre-cutover checks, not current operating instructions.
+Cutover completed on 2026-08-08 after the API, brokerage enrichment,
+watchlist, filter, and presentation checks were resolved. Trade Journal is the
+only Flow Ideas and TRACE presentation; the mini remains the API and backend
+owner.

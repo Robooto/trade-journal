@@ -1,10 +1,10 @@
 # TRACE TR-08 parity audit
 
-Status: **implementation parity ready; visual cutover pending**
+Status: **superseded by completed Trade Journal cutover on 2026-08-08**
 
 Audit anchor: `2026-07-24`, latest capture `2026-07-24T13:00:05-07:00`.
-The standalone mini dashboard remains the reference presentation. Both UIs read
-the same versioned TRACE APIs through the Pi's same-origin proxy.
+The parity evidence below is historical. Trade Journal is now the only TRACE
+presentation; the mini continues to serve the same versioned APIs.
 
 ## Resolved parity items
 
@@ -33,11 +33,10 @@ the same versioned TRACE APIs through the Pi's same-origin proxy.
   the former /trace/charm URL redirects to the overview.
 - Source readiness and quality are more explicit in Angular.
 
-## Required visual sign-off
+## Historical visual sign-off
 
-The browser-controlled side-by-side check could not run because the desktop
-browser connection failed at its sandbox boundary. Do not retire the standalone
-mini presentation until these checks are completed on the deployed pages:
+The following list records the pre-cutover visual QA plan. It is retained as
+historical evidence and is no longer an operating instruction or cutover block:
 
 1. Open the same ready session and latest capture in both UIs.
 2. Compare price near/full shapes, wall/shelf levels, and selected markers.
@@ -50,9 +49,8 @@ mini presentation until these checks are completed on the deployed pages:
    viewport for clipping and page-level horizontal overflow.
 7. Repeat on one partial session to verify warnings and unavailable states.
 
-## Cutover rule
+## Final cutover state
 
-Cutover is safe only after the visual checklist passes and the user confirms the
-Angular overview preserves the research meaning they rely on. Keep the Legacy
-TRACE link and mini UI as the rollback path until that confirmation. Retiring a
-presentation must not remove or relocate the mini APIs.
+Cutover completed on 2026-08-08. Trade Journal is the only user-facing TRACE
+presentation. The mini continues to serve the versioned APIs, studies, and data
+contracts; no legacy presentation page or fallback link is maintained.

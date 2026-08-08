@@ -248,16 +248,15 @@ Next:
 
 ## Unified operator UI and research workspace
 
-Angular Flow Ideas is code-complete; live cutover remains pending. Its backend
-stays in `market-data-pipeline` on the mini. TRACE ingestion and analysis also
-remain on the mini, while its first read-only Angular foundation is now available. See
+Flow Ideas and TRACE presentation are consolidated in Trade Journal. Their
+ingestion, analysis, ranking, and versioned APIs remain in
+`market-data-pipeline` on the mini. See
 [research-frontend-migration-plan.md](research-frontend-migration-plan.md) and
 [flow-ideas-rf07-parity-audit.md](flow-ideas-rf07-parity-audit.md).
 
 - Use the `trade-journal` Angular application as the shared operator shell for
   journal, positions, FlowPatrol ideas, research handoffs, and later review
-  workflows. Keep the legacy mini TRACE link inside the new TRACE workspace
-  until the Angular presentation reaches parity.
+  workflows. Do not add standalone mini presentation links.
 - Keep `trade-journal`, `market-data-pipeline`, and assistant services as
   separate backend ownership boundaries. UI consolidation must not become
   backend consolidation.
@@ -268,9 +267,8 @@ remain on the mini, while its first read-only Angular foundation is now availabl
 - TRACE is now a first-class sidebar workspace directly below Journal. Its
   `/trace/overview` route includes versioned typed models,
   same-origin API access, cancellation-safe session state, partial-source isolation,
-  and explicit backend readiness/quality status. The mini dashboard remains the
-  presentation parity baseline until later TRACE slices are complete. Charm now lives
-  alongside the overview at `/trace/charm`; old Research URLs redirect safely.
+  and explicit backend readiness/quality status. Charm is embedded in the
+  overview; the former `/trace/charm` URL redirects safely.
 - The TRACE overview now provides bounded capture timeline navigation and a
   glanceable snapshot of backend-provided HIRO, flow, walls, shelf, gamma
   structure, and capture-matched realized volatility without frontend scoring.
@@ -282,18 +280,15 @@ remain on the mini, while its first read-only Angular foundation is now availabl
   selected-capture cursor. They render versioned backend values with responsive
   SVGs, patterned series, and no frontend market-direction classification.
 - Exact capture history and signed gamma bars are now present. Contract and
-  interaction parity are ready; retiring the standalone TRACE presentation is
-  blocked on the deployed side-by-side visual checklist and user sign-off in
-  `docs/trace-tr08-parity-audit.md`.
+  interaction parity are complete. The standalone TRACE presentation and its
+  fallback link were retired on 2026-08-08; the versioned mini APIs remain.
 - The Angular slice now includes the lazy-loaded Research shell, same-origin
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus
   complete Spread ID evidence.
-- Cutover is blocked until the mini runs the frozen/current API contract with
-  brokerage enrichment enabled, a classified live index row is validated, and
-  the Pi-to-mini browser comparison passes.
-- Migrate one vertical slice at a time only after its API contract is stable;
-  retain the existing source UI until the replacement reaches parity.
+- Flow Ideas and TRACE presentation cutover is complete. Future research
+  modules must enter the shared Trade Journal shell only after their versioned
+  API contracts are stable; do not create new standalone mini pages.
 
 ## Stack maintenance backlog
 
