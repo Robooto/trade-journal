@@ -1,9 +1,9 @@
 <section class="gamma-panel" aria-labelledby="gamma-profile-title">
-  <header>
+  <header class="gamma-header">
     <div>
-      <p class="gamma-eyebrow">Selected capture</p>
+      <p class="gamma-eyebrow">Gamma context</p>
       <h2 id="gamma-profile-title">Gamma Profile</h2>
-      <p>Signed gamma around spot for the active TRACE capture.</p>
+      <p>Intraday gamma at spot and the signed curve around SPX for the selected TRACE capture.</p>
     </div>
     @if (gammaProfile) {
       <div class="profile-facts">
@@ -13,59 +13,112 @@
       </div>
     }
   </header>
-  @if (loading) {
-    <div class="profile-state"><mat-spinner diameter="22"></mat-spinner><span>Loading capture profile</span></div>
-  } @else if (error) {
+
+  @if (error && !hasData && !historyRows.length) {
     <div class="profile-state profile-state--error"><mat-icon>warning</mat-icon><span>{{ error }}</span></div>
-  } @else if (hasData) {
-    <div class="profile-summary" aria-label="Gamma profile interpretation">
-      <article>
-        <span>At spot</span>
-        <strong [class.positive]="nearestGamma > 0" [class.negative]="nearestGamma < 0">{{ formatCompact(nearestGamma) }}</strong>
-        <small>{{ gammaDirection }} gamma · nearest {{ nearestSpot | number:'1.0-1' }}</small>
+  } @else if (loading && !hasData && !historyRows.length) {
+    <div class="profile-state"><mat-spinner diameter="22"></mat-spinner><span>Loading gamma context</span></div>
+  } @else if (hasData || historyRows.length) {
+    <div class="context-note" role="note"><mat-icon>science</mat-icon><span>Descriptive research context only. Gamma does not select direction or change trade scoring.</span></div>
+
+    @if (hasData) {
+      <div class="profile-summary" aria-label="Selected gamma profile interpretation">
+        <article>
+          <span>At spot</span>
+          <strong [class.positive]="nearestGamma > 0" [class.negative]="nearestGamma < 0">{{ formatCompact(nearestGamma) }}</strong>
+          <small>{{ gammaDirection }} gamma · nearest {{ nearestSpot | number:'1.0-1' }}</small>
+        </article>
+        <article>
+          <span>Local slope</span>
+          <strong [class.positive]="(gammaProfile?.cross_spot_slope ?? 0) > 0" [class.negative]="(gammaProfile?.cross_spot_slope ?? 0) < 0">{{ formatCompact(gammaProfile?.cross_spot_slope) }}/pt</strong>
+          <small>{{ slopeDirection }}</small>
+        </article>
+        <article>
+          <span>Visible curve</span>
+          <strong>{{ curveDirection }}</strong>
+          <small>Across the ±{{ gammaProfile?.window_points | number:'1.0-0' }} point window</small>
+        </article>
+        <article>
+          <span>Session history</span>
+          <strong>{{ historyRows.length }} captures</strong>
+          <small>{{ signTransitions }} gamma sign transitions</small>
+        </article>
+      </div>
+    }
+
+    <div class="workspace-grid">
+      <article class="chart-card">
+        <header>
+          <div><p class="section-eyebrow">Session movement</p><h3>Gamma at spot</h3><span>Click a point to select that TRACE capture</span></div>
+          <div class="legend"><span class="positive-key">Above zero</span><span class="negative-key">Below zero</span></div>
+        </header>
+        @if (historyRows.length) {
+          <div class="history-chart-wrap">
+            <svg [attr.viewBox]="'0 0 ' + historyWidth + ' ' + historyHeight" role="img" aria-label="Intraday gamma at-spot history">
+              <line x1="28" [attr.y1]="historyHeight / 2" [attr.x2]="historyWidth - 28" [attr.y2]="historyHeight / 2" class="history-zero" />
+              <path [attr.d]="historyPath" class="history-line" />
+              @for (row of historyRows; track row.capture_id; let index = $index) {
+                <circle
+                  [attr.cx]="historyX(index)"
+                  [attr.cy]="historyY(row.nearest_total_gamma ?? 0)"
+                  r="4.5"
+                  tabindex="0"
+                  [class.selected]="isSelected(row)"
+                  [class.negative-point]="(row.nearest_total_gamma ?? 0) < 0"
+                  (click)="selectHistoryPoint(row)"
+                  (keydown.enter)="selectHistoryPoint(row)"
+                  (keydown.space)="selectHistoryPoint(row)"
+                ><title>{{ row.ts | date:'h:mm a' }} · {{ formatCompact(row.nearest_total_gamma) }} · {{ row.local_gamma_setup || 'setup unavailable' }}</title></circle>
+              }
+            </svg>
+            <div class="axis-labels"><span>{{ historyRows[0].ts | date:'h:mm a' }}</span><span>Zero</span><span>{{ historyRows[historyRows.length - 1].ts | date:'h:mm a' }}</span></div>
+          </div>
+          <footer><span>Symmetric-log scale</span><span>{{ formatCompact(historyMinimum) }} to {{ formatCompact(historyMaximum) }}</span></footer>
+        } @else {
+          <div class="profile-state"><span>No at-spot gamma history is available for this session.</span></div>
+        }
       </article>
-      <article>
-        <span>Local slope</span>
-        <strong [class.positive]="(gammaProfile?.cross_spot_slope ?? 0) > 0" [class.negative]="(gammaProfile?.cross_spot_slope ?? 0) < 0">{{ formatCompact(gammaProfile?.cross_spot_slope) }}/pt</strong>
-        <small>{{ slopeDirection }}</small>
-      </article>
-      <article>
-        <span>Visible curve</span>
-        <strong>{{ curveDirection }}</strong>
-        <small>Across the ±{{ gammaProfile?.window_points | number:'1.0-0' }} point window</small>
-      </article>
-      <article>
-        <span>Source</span>
-        <strong>{{ sourceLabel }}</strong>
-        <small>{{ gammaProfile?.source?.time || gammaProfile?.source?.timestamp || gammaProfile?.ts | date:'MMM d, h:mm a' }}</small>
+
+      <article class="chart-card">
+        <header>
+          <div><p class="section-eyebrow">Selected capture</p><h3>Gamma curve near SPX</h3><span>{{ gammaProfile?.ts | date:'MMM d, h:mm a' }}</span></div>
+          @if (loading) { <mat-spinner diameter="22"></mat-spinner> }
+        </header>
+        @if (error && !hasData) {
+          <div class="profile-state profile-state--error"><mat-icon>warning</mat-icon><span>{{ error }}</span></div>
+        } @else if (hasData) {
+          <svg
+            class="profile-chart"
+            [attr.viewBox]="'0 0 ' + width + ' ' + height"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label="Gamma profile around the selected TRACE spot"
+          >
+            @for (tick of yTicks; track tick.label) {
+              <line class="profile-grid" x1="50" [attr.y1]="tick.position" [attr.x2]="width - 26" [attr.y2]="tick.position" />
+              <text class="profile-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
+            }
+            <line class="profile-zero" x1="50" [attr.y1]="zeroY" [attr.x2]="width - 26" [attr.y2]="zeroY" />
+            <text class="profile-zone-label" x="56" y="32">Positive gamma</text>
+            <text class="profile-zone-label" x="56" [attr.y]="height - 44">Negative gamma</text>
+            @for (bar of bars; track bar.key) {
+              <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
+            }
+            <line class="profile-spot" [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="height - 36" />
+            <text class="profile-spot-label" [attr.x]="spotX" y="31" text-anchor="middle">spot {{ gammaProfile?.spot | number:'1.0-1' }}</text>
+            <polyline class="profile-line" [attr.points]="points" />
+            <circle class="profile-marker" [attr.cx]="markerX" [attr.cy]="markerY" r="4.5" />
+            @for (tick of xTicks; track tick.position) {
+              <text class="profile-axis-label" [attr.x]="tick.position" [attr.y]="height - 12" text-anchor="middle">{{ tick.label }}</text>
+            }
+          </svg>
+          <footer><span>{{ sourceLabel }}</span><span>Window ±{{ gammaProfile?.window_points | number:'1.0-0' }} points</span></footer>
+        } @else {
+          <div class="profile-state"><span>Select a capture with an available gamma profile.</span></div>
+        }
       </article>
     </div>
-    <svg
-      class="profile-chart"
-      [attr.viewBox]="'0 0 ' + width + ' ' + height"
-      preserveAspectRatio="none"
-      role="img"
-      aria-label="Gamma profile around the selected TRACE spot"
-    >
-      @for (tick of yTicks; track tick.label) {
-        <line class="profile-grid" x1="50" [attr.y1]="tick.position" [attr.x2]="width - 26" [attr.y2]="tick.position" />
-        <text class="profile-axis-label" x="44" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
-      }
-      <line class="profile-zero" x1="50" [attr.y1]="zeroY" [attr.x2]="width - 26" [attr.y2]="zeroY" />
-      <text class="profile-zone-label" x="56" y="32">Positive gamma</text>
-      <text class="profile-zone-label" x="56" [attr.y]="height - 44">Negative gamma</text>
-      @for (bar of bars; track bar.key) {
-        <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
-      }
-      <line class="profile-spot" [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="height - 36" />
-      <text class="profile-spot-label" [attr.x]="spotX" y="31" text-anchor="middle">spot {{ gammaProfile?.spot | number:'1.0-1' }}</text>
-      <polyline class="profile-line" [attr.points]="points" />
-      <circle class="profile-marker" [attr.cx]="markerX" [attr.cy]="markerY" r="4.5" />
-      @for (tick of xTicks; track tick.position) {
-        <text class="profile-axis-label" [attr.x]="tick.position" [attr.y]="height - 12" text-anchor="middle">{{ tick.label }}</text>
-      }
-    </svg>
   } @else {
-    <div class="profile-state"><span>Select a capture with an available gamma profile.</span></div>
+    <div class="profile-state"><span>No gamma context is available for this session.</span></div>
   }
 </section>

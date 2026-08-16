@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 
-import { TraceGammaProfileResponse } from '../../trace.models';
+import { TraceGammaContextRow, TraceGammaProfileResponse } from '../../trace.models';
 
 interface AxisTick {
   readonly position: number;
@@ -26,11 +26,16 @@ interface ProfileBar {
 })
 export class GammaProfileComponent implements OnChanges {
   @Input() gammaProfile: TraceGammaProfileResponse | null = null;
+  @Input() gammaContextRows: readonly TraceGammaContextRow[] = [];
+  @Input() captureTs: string | null = null;
   @Input() loading = false;
   @Input() error: string | null = null;
+  @Output() captureSelected = new EventEmitter<string>();
 
   readonly width = 600;
   readonly height = 240;
+  readonly historyWidth = 600;
+  readonly historyHeight = 220;
   points = '';
   bars: readonly ProfileBar[] = [];
   xTicks: readonly AxisTick[] = [];
@@ -46,6 +51,39 @@ export class GammaProfileComponent implements OnChanges {
   curveDirection = 'Flat';
   sourceLabel = 'Latest available snapshot';
   hasData = false;
+
+  get historyRows(): readonly TraceGammaContextRow[] {
+    return this.gammaContextRows
+      .filter(row => row.nearest_total_gamma != null && Number.isFinite(row.nearest_total_gamma))
+      .slice()
+      .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+  }
+
+  get historyPath(): string {
+    const rows = this.historyRows;
+    const scale = robustScale(rows.map(row => row.nearest_total_gamma!));
+    return rows.map((row, index) => {
+      const command = index ? 'L' : 'M';
+      return `${command} ${this.historyX(index).toFixed(2)} ${historyY(row.nearest_total_gamma!, scale, this.historyHeight).toFixed(2)}`;
+    }).join(' ');
+  }
+
+  get historyMinimum(): number | null {
+    const values = this.historyRows.map(row => row.nearest_total_gamma!);
+    return values.length ? Math.min(...values) : null;
+  }
+
+  get historyMaximum(): number | null {
+    const values = this.historyRows.map(row => row.nearest_total_gamma!);
+    return values.length ? Math.max(...values) : null;
+  }
+
+  get signTransitions(): number {
+    const rows = this.historyRows;
+    return rows.slice(1).filter((row, index) =>
+      Math.sign(row.nearest_total_gamma!) !== Math.sign(rows[index].nearest_total_gamma!),
+    ).length;
+  }
 
   ngOnChanges(): void {
     const rows = this.gammaProfile?.rows ?? [];
@@ -112,6 +150,23 @@ export class GammaProfileComponent implements OnChanges {
     this.hasData = true;
   }
 
+  historyX(index: number): number {
+    const count = this.historyRows.length;
+    return 28 + (count <= 1 ? 0 : index / (count - 1) * (this.historyWidth - 56));
+  }
+
+  historyY(value: number): number {
+    return historyY(value, robustScale(this.historyRows.map(row => row.nearest_total_gamma!)), this.historyHeight);
+  }
+
+  isSelected(row: TraceGammaContextRow): boolean {
+    return row.capture_id === this.gammaProfile?.capture_id || row.ts === this.captureTs;
+  }
+
+  selectHistoryPoint(row: TraceGammaContextRow): void {
+    this.captureSelected.emit(row.ts);
+  }
+
   formatCompact(value: number | null | undefined): string {
     if (value == null || !Number.isFinite(value)) return '\u2014';
     const absolute = Math.abs(value);
@@ -133,4 +188,16 @@ function directionLabel(
   negative = 'Negative',
 ): string {
   return value > 0 ? positive : value < 0 ? negative : 'Flat';
+}
+
+function robustScale(values: number[]): number {
+  const sorted = values.map(Math.abs).filter(Number.isFinite).sort((left, right) => left - right);
+  if (!sorted.length) return 1;
+  return sorted[Math.floor((sorted.length - 1) * .95)] || 1;
+}
+
+function historyY(value: number, scale: number, height: number): number {
+  const clipped = Math.max(-scale, Math.min(scale, value));
+  const transformed = Math.sign(clipped) * Math.log1p(Math.abs(clipped) / Math.max(scale / 12, 1));
+  return height / 2 - transformed / Math.log1p(12) * (height / 2 - 24);
 }

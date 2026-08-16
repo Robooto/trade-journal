@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SharedMaterialModule } from '../../../../shared/material.module';
-import { TraceGammaProfileResponse } from '../../trace.models';
+import { TraceGammaContextRow, TraceGammaProfileResponse } from '../../trace.models';
 import { GammaProfileComponent } from './gamma-profile.component';
 
 const gammaProfile: TraceGammaProfileResponse = {
@@ -27,6 +27,12 @@ const gammaProfile: TraceGammaProfileResponse = {
   ],
 };
 
+const gammaHistory: TraceGammaContextRow[] = [
+  { date: '2026-07-24', ts: '2026-07-24T12:40:05-07:00', capture_id: 'capture-1', pocket_sign: 'negative', local_gamma_setup: 'negative', nearest_strike: 7400, nearest_total_gamma: -120_000_000, cross_spot_slope: -8_000_000 },
+  { date: '2026-07-24', ts: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', pocket_sign: 'positive', local_gamma_setup: 'positive', nearest_strike: 7412, nearest_total_gamma: 25_000_000, cross_spot_slope: 47_042_808 },
+  { date: '2026-07-24', ts: '2026-07-24T13:20:05-07:00', capture_id: 'capture-3', pocket_sign: 'positive', local_gamma_setup: 'positive', nearest_strike: 7420, nearest_total_gamma: 140_000_000, cross_spot_slope: 51_000_000 },
+];
+
 describe('GammaProfileComponent', () => {
   let fixture: ComponentFixture<GammaProfileComponent>;
   let component: GammaProfileComponent;
@@ -39,22 +45,36 @@ describe('GammaProfileComponent', () => {
     fixture = TestBed.createComponent(GammaProfileComponent);
     component = fixture.componentInstance;
     component.gammaProfile = gammaProfile;
+    component.gammaContextRows = gammaHistory;
+    component.captureTs = gammaProfile.ts;
     component.ngOnChanges();
     fixture.detectChanges();
   });
 
-  it('renders signed bars and the profile line for the selected capture', () => {
-    expect(fixture.nativeElement.textContent).toContain('Gamma Profile');
+  it('renders intraday gamma history beside the selected capture profile', () => {
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Gamma Profile');
+    expect(text).toContain('Gamma at spot');
+    expect(text).toContain('3 captures');
+    expect(text).toContain('1 gamma sign transitions');
+    expect(fixture.nativeElement.querySelector('path.history-line')).not.toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.history-chart-wrap circle')).toHaveLength(3);
+    expect(fixture.nativeElement.querySelector('.history-chart-wrap circle.selected')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('polyline.profile-line')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('rect.profile-bar--positive')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('rect.profile-bar--negative')).not.toBeNull();
-    expect(fixture.nativeElement.textContent).toContain('47.0M/pt');
-    expect(fixture.nativeElement.textContent).toContain('At spot');
-    expect(fixture.nativeElement.textContent).toContain('25.0M');
-    expect(fixture.nativeElement.textContent).toContain('nearest 7,412');
-    expect(fixture.nativeElement.textContent).toContain('Positive');
-    expect(fixture.nativeElement.textContent).toContain('Rising');
-    expect(fixture.nativeElement.textContent).toContain('Feature snapshot');
-    expect(fixture.nativeElement.querySelectorAll('text.profile-zone-label')).toHaveLength(2);
+    expect(text).toContain('47.0M/pt');
+    expect(text).toContain('25.0M');
+    expect(text).toContain('nearest 7,412');
+    expect(text).toContain('Rising');
+  });
+
+  it('selects a TRACE capture from an intraday history point', () => {
+    let selected = '';
+    component.captureSelected.subscribe(value => selected = value);
+
+    fixture.nativeElement.querySelector('.history-chart-wrap circle').dispatchEvent(new MouseEvent('click'));
+
+    expect(selected).toBe(gammaHistory[0].ts);
   });
 });
