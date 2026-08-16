@@ -35,10 +35,6 @@
         <span class="snapshot-label">HIRO Pressure</span>
         <strong>{{ labelize(row.flow_state) }}</strong>
         <small>{{ labelize(row.flow_relationship) }} · SPX {{ formatCompact(row.flow_spx_score, true) }} · equities {{ formatCompact(row.flow_equities_score, true) }} · {{ labelize(row.flow_readiness_status) }}</small>
-        @if (bullPutFlowTransitionCaution) {
-          <small class="snapshot-warning"><b>Bull-put caution</b> · first Buying Increasing transition</small>
-          <em>Research context · not scored · not a bear-call rule</em>
-        }
       </article>
 
       <article class="snapshot-card snapshot-card--gamma" [attr.data-card-tone]="gammaTone()">

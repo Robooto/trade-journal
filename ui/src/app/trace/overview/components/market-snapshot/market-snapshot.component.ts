@@ -72,12 +72,6 @@ export class MarketSnapshotComponent {
     return unique.slice(0, 2);
   }
 
-  get bullPutFlowTransitionCaution(): boolean {
-    if (this.activeIndex <= 0 || this.activeRow?.flow_acceleration !== 'buying_increasing') return false;
-    const prior = this.rows[this.activeIndex - 1]?.flow_acceleration;
-    return prior != null && prior !== 'missing' && prior !== 'buying_increasing';
-  }
-
   nodeCount(sign: 'positive' | 'negative'): number {
     return this.activeNodes.filter(node =>
       sign === 'negative' ? node.gamma_sign === 'negative' : node.gamma_sign !== 'negative',
@@ -85,7 +79,6 @@ export class MarketSnapshotComponent {
   }
 
   flowTone(): 'positive' | 'negative' | 'warning' | 'neutral' {
-    if (this.bullPutFlowTransitionCaution) return 'warning';
     const relationship = this.activeRow?.flow_relationship;
     if (relationship === 'aligned_up') return 'positive';
     if (relationship === 'aligned_down') return 'negative';

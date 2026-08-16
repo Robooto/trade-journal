@@ -74,7 +74,7 @@ describe('MarketSnapshotComponent', () => {
     expect(text).toContain('rate +119.0M/min');
     expect(text).toContain('Spx Up Equities Down');
     expect(text).toContain('Negative gamma');
-    expect(text).toContain('Bull-put caution');
+    expect(text).not.toContain('Bull-put caution');
     expect(text).toContain('7404 · Local Support8 pts · 3–10 intermediate');
     expect(text).toContain('7427 · Call Wall15 pts · 10–20 cleaner history');
     expect(text).toContain('at spot −400.6M');
