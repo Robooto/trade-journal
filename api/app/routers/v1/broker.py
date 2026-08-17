@@ -1,5 +1,6 @@
 import logging
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -8,6 +9,14 @@ from sqlalchemy.orm import Session
 
 from app import tastytrade
 from app.db import get_db
+from app.models import ImportedSpreadTradeORM
+from app.schemas.imported_trades import (
+    BrokerHistorySyncRequestV1,
+    BrokerHistorySyncResultV1,
+    ImportedSpreadTradeListV1,
+    TastyActivityCsvImportRequestV1,
+    TastyActivityCsvImportResultV1,
+)
 from app.schemas.brokerage import (
     AddWatchlistSymbolRequestV1,
     AddWatchlistSymbolResultV1,
@@ -41,10 +50,75 @@ from app.services.brokerage_service import fetch_holding_snapshot
 from app.services.research_context_orchestration import (
     fetch_research_symbol_context,
 )
+from app.services.tasty_activity_csv_service import TastyActivityCsvError, import_tasty_activity_csv
+from app.services.tasty_activity_history_service import (
+    TastyActivityHistoryError,
+    sync_tastytrade_activity_history,
+)
 from app.services.trades_errors import TastytradeFetchError
 
 
 router = APIRouter(prefix="/v1/broker", tags=["v1 - broker"])
+
+
+@router.post(
+    "/activity-imports/tastytrade-csv",
+    response_model=TastyActivityCsvImportResultV1,
+    summary="Import completed spread trades from a Tastytrade activity CSV",
+)
+def import_tastytrade_activity_csv(request: TastyActivityCsvImportRequestV1, db: Session = Depends(get_db)):
+    try:
+        return import_tasty_activity_csv(
+            db, request.csv_text,
+            as_of_date=request.as_of_date or datetime.now(ZoneInfo("America/Los_Angeles")).date(),
+        )
+    except TastyActivityCsvError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.get(
+    "/imported-spread-trades",
+    response_model=ImportedSpreadTradeListV1,
+    summary="List normalized imported spread round trips",
+)
+def list_imported_spread_trades(
+    start_date: date | None = None,
+    end_date: date | None = None,
+    zero_dte_only: bool = False,
+    db: Session = Depends(get_db),
+):
+    query = db.query(ImportedSpreadTradeORM)
+    if start_date:
+        query = query.filter(ImportedSpreadTradeORM.entry_ts >= datetime.combine(start_date, datetime.min.time()))
+    if end_date:
+        query = query.filter(ImportedSpreadTradeORM.entry_ts < datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
+    if zero_dte_only:
+        query = query.filter(ImportedSpreadTradeORM.zero_dte.is_(True))
+    rows = query.order_by(ImportedSpreadTradeORM.entry_ts).all()
+    return ImportedSpreadTradeListV1(total=len(rows), rows=rows)
+
+
+@router.post(
+    "/imported-spread-trades/sync",
+    response_model=BrokerHistorySyncResultV1,
+    summary="Synchronize completed spread trades from brokerage history",
+)
+def sync_imported_spread_trades(
+    request: BrokerHistorySyncRequestV1,
+    db: Session = Depends(get_db),
+):
+    token = _token_or_403(db)
+    try:
+        return sync_tastytrade_activity_history(
+            db,
+            token,
+            start_date=request.start_date,
+            end_date=request.end_date,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except TastyActivityHistoryError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 def _token_or_403(db: Session) -> str:

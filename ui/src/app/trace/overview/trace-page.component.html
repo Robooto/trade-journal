@@ -103,6 +103,11 @@
       </div>
     </section>
 
+    <app-personal-0dte-watch
+      [date]="facade.selectedDate()"
+      [captureTs]="capture.ts"
+    />
+
     <app-trace-market-snapshot
       [rows]="facade.captureRows()"
       [activeIndex]="facade.selectedCaptureIndex()"

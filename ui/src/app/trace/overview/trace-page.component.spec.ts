@@ -11,6 +11,8 @@ import { CharmWidgetComponent } from '../charm/charm-widget.component';
 import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './components/market-snapshot/market-snapshot.component';
+import { Personal0DteWatchComponent } from './components/personal-0dte-watch/personal-0dte-watch.component';
+import { TraceApiService } from './data-access/trace-api.service';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
@@ -25,6 +27,9 @@ class CharmApiStub {
     source: { close_window: false },
     rows: [{ spot: 7400, charm_per_minute: -10 }, { spot: 7420, charm_per_minute: 10 }],
   }));
+}
+class TraceApiStub {
+  readonly personal0DteWatch = vi.fn(() => of({ schema_version: 'trace-personal-0dte-watch.v1', status: 'ready', as_of: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', state: 'inactive', label: 'Provisional personal study', setup: null, observations: { spot: 7412, gamma_regime: 'negative', local_gamma_setup: null, in_research_window: false }, rules: { expiration: '0DTE', spread_width_points: 5, max_short_strike_distance_points: 15, research_window: '08:00–10:00 America/Los_Angeles', candidate_requires_positive_gamma: true, option_quote_required: true }, reason: 'No qualifying setup.', warnings: [] }));
 }
 class TraceFacadeStub {
   readonly sessions = signal([]);
@@ -61,14 +66,14 @@ describe('TracePageComponent', () => {
   beforeEach(async () => {
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
+      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, Personal0DteWatchComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
       imports: [
         CommonModule,
         FormsModule,
         SharedMaterialModule,
         NoopAnimationsModule,
       ],
-      providers: [{ provide: TraceFacade, useValue: facade }, { provide: CharmApiService, useClass: CharmApiStub }],
+      providers: [{ provide: TraceFacade, useValue: facade }, { provide: CharmApiService, useClass: CharmApiStub }, { provide: TraceApiService, useClass: TraceApiStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TracePageComponent);

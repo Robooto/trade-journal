@@ -32,3 +32,15 @@ uvicorn app.main:app \
 ```
 http://localhost:8876/docs
 ```
+
+
+## Completed spread history
+
+POST /v1/broker/imported-spread-trades/sync accepts a start_date and end_date,
+loads paginated Tastytrade orders and transactions for every account, pairs
+completed positions by exact leg exposure, and persists vertical round trips
+idempotently. The request window is limited to 181 calendar days.
+
+POST /v1/broker/activity-imports/tastytrade-csv remains available for historical
+backfills when brokerage history is unavailable. GET
+/v1/broker/imported-spread-trades provides the normalized

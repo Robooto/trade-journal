@@ -13,6 +13,7 @@ import {
   TraceSummaryResponse,
   TraceTimeseriesResponse,
 } from '../trace.models';
+import { Personal0DteWatchResponse } from '../components/personal-0dte-watch/personal-0dte-watch.models';
 
 @Injectable({ providedIn: 'root' })
 export class TraceApiService {
@@ -79,6 +80,11 @@ export class TraceApiService {
       `${this.sessionUrl(date)}/intraday-context`,
       { params },
     );
+  }
+
+  personal0DteWatch(date: string, ts: string): Observable<Personal0DteWatchResponse> {
+    const params = new HttpParams().set('ts', ts);
+    return this.http.get<Personal0DteWatchResponse>(this.sessionUrl(date) + '/personal-0dte-watch', { params });
   }
 
   private sessionUrl(date: string): string {

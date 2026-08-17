@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime, UniqueConstraint, func
+from sqlalchemy import Boolean, Column, String, Float, Date, Enum as SAEnum, ForeignKey, Integer, DateTime, UniqueConstraint, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -156,3 +156,40 @@ class BrokerActivityDispositionORM(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+class ImportedSpreadTradeORM(Base):
+    __tablename__ = "imported_spread_trades"
+    __table_args__ = (
+        UniqueConstraint(
+            "source", "account_number", "entry_order_id", "exit_order_id",
+            name="uq_imported_spread_trade_orders",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    source = Column(String(32), nullable=False, default="tastytrade_activity_csv")
+    symbol = Column(String(16), nullable=False, index=True)
+    account_number = Column(String(64), nullable=False, index=True)
+    entry_order_id = Column(String(64), nullable=False, index=True)
+    exit_order_id = Column(String(64), nullable=False, index=True)
+    entry_ts = Column(DateTime(timezone=True), nullable=False, index=True)
+    exit_ts = Column(DateTime(timezone=True), nullable=False)
+    expiration_date = Column(Date, nullable=False, index=True)
+    zero_dte = Column(Boolean, nullable=False, index=True)
+    strategy = Column(String(32), nullable=False, index=True)
+    option_right = Column(String(8), nullable=False)
+    low_strike = Column(Float, nullable=False)
+    high_strike = Column(Float, nullable=False)
+    short_strike = Column(Float, nullable=True)
+    long_strike = Column(Float, nullable=True)
+    width = Column(Float, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    entry_price = Column(Float, nullable=False)
+    entry_side = Column(String(8), nullable=False)
+    exit_price = Column(Float, nullable=False)
+    exit_side = Column(String(8), nullable=False)
+    gross_pnl_dollars = Column(Float, nullable=False)
+    max_risk_dollars = Column(Float, nullable=True)
+    holding_minutes = Column(Float, nullable=False)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())

@@ -1,0 +1,36 @@
+<section class="personal-watch" aria-labelledby="personal-watch-title">
+  <header>
+    <div>
+      <p class="personal-watch__eyebrow">Personal study · provisional</p>
+      <h2 id="personal-watch-title">0DTE near-money spread watch</h2>
+    </div>
+    @if (watch(); as response) {
+      <span class="personal-watch__state" [ngClass]="stateClass(response.state)">{{ response.state }}</span>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="personal-watch__message"><mat-spinner diameter="24"></mat-spinner><span>Checking this TRACE capture…</span></div>
+  } @else if (error()) {
+    <div class="personal-watch__message personal-watch__message--error"><mat-icon>warning</mat-icon><span>{{ error() }}</span></div>
+  } @else if (watch(); as response) {
+    <p class="personal-watch__reason">{{ response.reason }}</p>
+    <div class="personal-watch__facts">
+      <div><span>Gamma</span><strong>{{ response.observations.gamma_regime }}</strong></div>
+      <div><span>Window</span><strong>{{ response.observations.in_research_window ? '08:00–10:00 PT' : 'Outside study window' }}</strong></div>
+      <div><span>Structure</span><strong>{{ response.setup ? formatLevel(response.setup.structure_level) : 'No qualifying level' }}</strong></div>
+      <div><span>Short zone</span><strong>{{ shortZone(response) }}</strong></div>
+    </div>
+    @if (response.setup; as setup) {
+      <div class="personal-watch__setup">
+        <span>{{ directionLabel(setup.direction) }}</span>
+        <strong>{{ setup.spread_width_points }}-point credit vertical</strong>
+        <small>{{ setup.hiro_state.replaceAll('_', ' ') }} · {{ setup.structure_type?.replaceAll('_', ' ') }}</small>
+      </div>
+    }
+    <footer>
+      <mat-icon>science</mat-icon>
+      <span>Research only. Confirm a live 5-point quote; TRACE does not establish an executable spread.</span>
+    </footer>
+  }
+</section>
