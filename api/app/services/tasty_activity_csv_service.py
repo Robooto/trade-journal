@@ -4,7 +4,7 @@ import csv
 import io
 import re
 from collections import defaultdict, deque
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -100,7 +100,7 @@ def _parse_order(row: dict[str, str], *, as_of_date: date) -> dict[str, Any]:
     if fill_date > as_of_date:
         fill_date = fill_date.replace(year=as_of_date.year - 1)
     hour = int(values["hour"]) % 12 + (12 if values["meridiem"] == "p" else 0)
-    fill_ts = datetime(fill_date.year, fill_date.month, fill_date.day, hour, int(values["minute"]), tzinfo=PACIFIC)
+    fill_ts = datetime(fill_date.year, fill_date.month, fill_date.day, hour, int(values["minute"]), tzinfo=PACIFIC).astimezone(timezone.utc)
     legs = []
     for raw_leg in (row.get("Description") or "").splitlines():
         match = LEG_RE.fullmatch(raw_leg.strip())

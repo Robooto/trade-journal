@@ -1,6 +1,6 @@
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TastyActivityCsvImportRequestV1(BaseModel):
@@ -34,6 +34,11 @@ class ImportedSpreadTradeV1(BaseModel):
     gross_pnl_dollars: float
     max_risk_dollars: float | None = None
     holding_minutes: float
+
+    @field_validator("entry_ts", "exit_ts")
+    @classmethod
+    def ensure_utc_offset(cls, value: datetime) -> datetime:
+        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
 
     model_config = {"from_attributes": True}
 
