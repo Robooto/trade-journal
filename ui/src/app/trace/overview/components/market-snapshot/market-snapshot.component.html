@@ -89,6 +89,7 @@
         @if (charm; as point) {
           <strong [attr.data-tone]="valueTone(point.charm_at_market)">{{ formatCompact(point.charm_at_market, true) }}</strong>
           <small><b>Flip</b> {{ formatSpot(point.nearest_flip) }} · spot {{ formatSignedPoints(point.spot_minus_flip) }} pts from flip</small>
+          @if (charmBullPutQualifier()) { <small class="snapshot-qualifier">Bull-put research qualifier &middot; positive Charm</small> }
           <small><b>Interval</b> {{ formatDuration(point.interval_minutes * 60) }} · source age {{ formatDuration(point.source_age_seconds) }}</small>
           @if (point.close_window) { <small class="snapshot-warning">Close window · expiry effects can dominate</small> }
           <em>Experimental · {{ charmOverview?.quality?.usable_percent | number:'1.1-1' }}% usable · not scored</em>

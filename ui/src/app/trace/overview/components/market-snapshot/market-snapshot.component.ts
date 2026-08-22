@@ -52,6 +52,10 @@ export class MarketSnapshotComponent {
     return this.charmOverview?.series.find(row => row.capture_id === captureId) ?? null;
   }
 
+  charmBullPutQualifier(): boolean {
+    return this.charm?.bull_put_research_qualifier === true;
+  }
+
   get activeNodes(): readonly TraceHistogramRow[] {
     const captureId = this.activeRow?.capture_id;
     return this.histogramNodes

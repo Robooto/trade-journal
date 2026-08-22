@@ -48,7 +48,7 @@ const volatility = {
 
 const charm = {
   quality: { usable_percent: 94.6 },
-  series: [{ capture_id: 'capture-2', charm_at_market: 327_000_000, nearest_flip: 7416.4, spot_minus_flip: -4.4, interval_minutes: 5, source_age_seconds: 305, close_window: true }],
+  series: [{ capture_id: 'capture-2', charm_at_market: 327_000_000, bull_put_research_qualifier: true, nearest_flip: 7416.4, spot_minus_flip: -4.4, interval_minutes: 5, source_age_seconds: 305, close_window: true }],
 } as unknown as CharmOverview;
 
 describe('MarketSnapshotComponent', () => {
@@ -82,10 +82,20 @@ describe('MarketSnapshotComponent', () => {
     expect(text).toContain('Low ≤ 5.1 bps');
     expect(text).toContain('hedge 98 pts away');
     expect(text).toContain('Charm at Market+327.0M');
+    expect(text).toContain('Bull-put research qualifier');
     expect(text).toContain('1 positive · 1 negative');
     expect(fixture.nativeElement.querySelector('.snapshot-spot').textContent).toContain('7412');
     expect(fixture.nativeElement.querySelector('[data-card-tone="warning"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-hiro-shock="extreme-positive"]')).not.toBeNull();
+  });
+
+  it('limits the Charm qualifier to positive Charm', () => {
+    expect(component.charmBullPutQualifier()).toBe(true);
+    component.charmOverview = {
+      ...charm,
+      series: [{ ...charm.series[0], charm_at_market: -1, bull_put_research_qualifier: false }],
+    } as unknown as CharmOverview;
+    expect(component.charmBullPutQualifier()).toBe(false);
   });
 
   it('uses the study thresholds only for large SPX HIRO changes', () => {

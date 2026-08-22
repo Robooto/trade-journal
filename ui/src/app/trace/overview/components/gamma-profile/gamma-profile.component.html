@@ -21,6 +21,14 @@
   } @else if (hasData || historyRows.length) {
     <div class="context-note" role="note"><mat-icon>science</mat-icon><span>Descriptive research context only. Gamma does not select direction or change trade scoring.</span></div>
 
+    @if (persistentPositiveSteepeningWatch) {
+      <div class="slope-watch" role="status" title="Research-only context; not a trade trigger">
+        <mat-icon>south_east</mat-icon>
+        <div><span>Gamma slope watch</span><strong>Bearish research context</strong><small>{{ slopeWatchDetail }}</small></div>
+        <em>Non-scoring</em>
+      </div>
+    }
+
     @if (hasData) {
       <div class="profile-summary" aria-label="Selected gamma profile interpretation">
         <article>

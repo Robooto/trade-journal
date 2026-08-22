@@ -131,6 +131,10 @@ export class CharmWidgetComponent implements OnChanges, OnDestroy {
   get spotX(): number | null { return this.surfaceMarkerX(this.surface?.spot); }
   get flipX(): number | null { return this.surfaceMarkerX(this.surface?.nearest_flip); }
 
+  isBullPutQualifier(point: CharmSeriesPoint | null = this.selectedPoint): boolean {
+    return point?.bull_put_research_qualifier === true;
+  }
+
   formatPressure(value: number | null | undefined): string {
     if (value == null) return 'Unavailable';
     const absolute = Math.abs(value);

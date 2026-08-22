@@ -16,7 +16,7 @@ presentation; the mini continues to serve the same versioned APIs.
 | Price structure | Pass | Near-price and full-range domains mirror the legacy focus rules; spot, walls, shelf, and signed-GEX containment/expansion nodes use the same capture-linked timeline. |
 | HIRO pressure | Pass with intentional redesign | SPX/equities HIRO use a symmetric zero-centered domain and spot uses a separate axis. Rate-sign arrows show movement at each capture, while selected backend values, rates, and acceleration labels remain visible. |
 | Signed GEX map | Pass | Positive circles, negative diamonds, backend node states, key/all nodes, near/full modes, and selected cursor are present. |
-| Gamma around spot | Fixed in TR-08 | Angular now renders signed bars plus the curve, zero line, spot cursor, and backend cross-spot slope. |
+| Gamma around spot | Fixed in TR-08 | Angular renders signed bars, the curve, zero line, spot cursor, and backend cross-spot slope. Four positive slopes that steepen for three consecutive captures add a clearly labeled bearish research-context badge; it is non-scoring and changes no candidate or order state. |
 | Exact session rows | Fixed in TR-08 | A collapsed capture-history table exposes every timeline row and synchronizes selection by timestamp. |
 | Partial/error states | Pass | Independent source failures remain visible without taking down journal or positions. |
 | Responsive containment | Pass by automated layout contract | Charts have responsive SVG view boxes and the table scrolls inside its own container rather than widening the application. |
@@ -29,8 +29,9 @@ presentation; the mini continues to serve the same versioned APIs.
   backend acceleration labels for the selected capture. It does not recreate the
   legacy browser's separate six-capture classification in frontend code.
 - Charm is embedded as an experimental widget in the TRACE overview and stays synchronized
-  with the selected capture. A missing Charm response does not block the core TRACE session;
-  the former /trace/charm URL redirects to the overview.
+  with the selected capture. Positive at-market Charm renders the backend-owned bull-put
+  research qualifier; it remains experimental and non-scoring. A missing Charm response
+  does not block the core TRACE session; the former /trace/charm URL redirects to the overview.
 - Source readiness and quality are more explicit in Angular.
 
 ## Historical visual sign-off

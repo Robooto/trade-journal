@@ -6,6 +6,7 @@ export interface CharmSeriesPoint {
   spot: number;
   surface_spot: number;
   charm_at_market: number;
+  bull_put_research_qualifier: boolean;
   nearest_flip: number | null;
   spot_minus_flip: number | null;
   snapshot_ts: string;
@@ -23,6 +24,7 @@ export interface CharmOverview {
   interpretation: {
     scoring_enabled: false;
     directional_labels_enabled: false;
+    bull_put_research_qualifier_enabled: true;
     visual_parity: string;
     note: string;
   };

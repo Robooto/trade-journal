@@ -131,11 +131,11 @@ const charmFixture: CharmOverview = {
   schema_version: 'trace-charm-overview.v1',
   date,
   status: 'experimental',
-  interpretation: { scoring_enabled: false, directional_labels_enabled: false, visual_parity: 'ready', note: 'Research context only.' },
+  interpretation: { scoring_enabled: false, directional_labels_enabled: false, bull_put_research_qualifier_enabled: true, visual_parity: 'ready', note: 'Research context only.' },
   quality: { total_rows: 1, usable_rows: 1, capture_count: 1, usable_capture_count: 1, boundary_rows: 0, missing_pair_rows: 0, snapshot_after_target_rows: 0, min_interval_minutes: 5, max_interval_minutes: 5, usable_percent: 100, status: 'ready' },
   distribution: { count: 1, positive_count: 1, negative_count: 0, sign_transitions: 0, median: 1, p05: 1, p95: 1, min: 1, max: 1 },
   latest: null,
-  series: [{ ts: '2026-07-24T20:00:05Z', capture_id: 'capture-2', spot: 7412, surface_spot: 7410, charm_at_market: 327_000_000, nearest_flip: 7416.4, spot_minus_flip: -4.4, snapshot_ts: '2026-07-24T19:55:00Z', model_ts: '2026-07-24T19:55:00Z', next_model_ts: '2026-07-24T20:00:00Z', interval_minutes: 5, source_age_seconds: 305, close_window: true }],
+  series: [{ ts: '2026-07-24T20:00:05Z', capture_id: 'capture-2', spot: 7412, surface_spot: 7410, charm_at_market: 327_000_000, bull_put_research_qualifier: true, nearest_flip: 7416.4, spot_minus_flip: -4.4, snapshot_ts: '2026-07-24T19:55:00Z', model_ts: '2026-07-24T19:55:00Z', next_model_ts: '2026-07-24T20:00:00Z', interval_minutes: 5, source_age_seconds: 305, close_window: true }],
 };
 
 class CharmApiStub {

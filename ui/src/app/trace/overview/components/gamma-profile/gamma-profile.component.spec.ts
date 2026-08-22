@@ -77,4 +77,24 @@ describe('GammaProfileComponent', () => {
 
     expect(selected).toBe(gammaHistory[0].ts);
   });
+
+  it('shows a non-scoring bearish watch after three positive steepening captures', () => {
+    fixture.componentRef.setInput('gammaContextRows', [10, 20, 30, 40].map((slope, index) => ({
+      ...gammaHistory[1],
+      ts: `2026-07-24T13:${index}0:05-07:00`,
+      capture_id: `steep-${index}`,
+      cross_spot_slope: slope,
+    })));
+    fixture.componentRef.setInput('gammaProfile', {
+      ...gammaProfile,
+      capture_id: 'steep-3',
+      ts: '2026-07-24T13:30:05-07:00',
+    });
+    fixture.componentRef.setInput('captureTs', '2026-07-24T13:30:05-07:00');
+    fixture.detectChanges();
+
+    expect(component.persistentPositiveSteepeningWatch).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Bearish research context');
+    expect(fixture.nativeElement.textContent).toContain('Non-scoring');
+  });
 });

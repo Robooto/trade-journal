@@ -25,11 +25,11 @@
   } @else if (overview && selectedPoint) {
     <div class="context-note" role="note">
       <mat-icon>science</mat-icon>
-      <span>Descriptive research context only. Charm does not affect Flow Ideas or trade scoring.</span>
+      <span>Positive Charm is a bull-put research qualifier only. It does not affect Flow Ideas, trade scoring, or entry permission.</span>
     </div>
 
     <div class="metric-grid" aria-label="Selected Charm context">
-      <article><span>Charm at market</span><strong [class.positive]="selectedPoint.charm_at_market > 0" [class.negative]="selectedPoint.charm_at_market < 0">{{ formatPressure(selectedPoint.charm_at_market) }}</strong><small>{{ selectedPoint.ts | date:'h:mm a' }} · SPX {{ selectedPoint.spot | number:'1.0-1' }}</small></article>
+      <article><span>Charm at market</span><strong [class.positive]="selectedPoint.charm_at_market > 0" [class.negative]="selectedPoint.charm_at_market < 0">{{ formatPressure(selectedPoint.charm_at_market) }}</strong><small>{{ selectedPoint.ts | date:'h:mm a' }} · SPX {{ selectedPoint.spot | number:'1.0-1' }}</small>@if (isBullPutQualifier(selectedPoint)) { <small class="research-qualifier">Bull-put research qualifier &middot; positive Charm</small> }</article>
       <article><span>Nearest Charm flip</span><strong>{{ selectedPoint.nearest_flip | number:'1.1-1' }}</strong><small>Spot {{ formatPoints(selectedPoint.spot_minus_flip) }} from flip</small></article>
       <article><span>Usable captures</span><strong>{{ overview.quality.usable_capture_count }} / {{ overview.quality.capture_count }}</strong><small>{{ overview.distribution.sign_transitions }} sign transitions</small></article>
       <article><span>Source age</span><strong>{{ selectedPoint.source_age_seconds / 60 | number:'1.1-1' }} min</strong><small>{{ selectedPoint.interval_minutes | number:'1.0-1' }}-minute model interval</small></article>

@@ -11,7 +11,8 @@ import { CharmWidgetComponent } from './charm-widget.component';
 
 const point: CharmSeriesPoint = {
   ts: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', spot: 7412,
-  surface_spot: 7412, charm_at_market: 237_000_000, nearest_flip: 7416.4,
+  surface_spot: 7412, charm_at_market: 237_000_000, bull_put_research_qualifier: true,
+  nearest_flip: 7416.4,
   spot_minus_flip: -4.4, snapshot_ts: '2026-07-24T12:59:00-07:00',
   model_ts: '2026-07-24T12:55:00-07:00', next_model_ts: '2026-07-24T13:00:00-07:00',
   interval_minutes: 5, source_age_seconds: 300, close_window: false,
@@ -56,7 +57,22 @@ describe('CharmWidgetComponent', () => {
     expect(api.surface).toHaveBeenLastCalledWith('2026-07-24', point.ts, 60);
     expect(fixture.nativeElement.textContent).toContain('Charm pressure');
     expect(fixture.nativeElement.textContent).toContain('+237.00M');
+    expect(fixture.nativeElement.textContent).toContain('Bull-put research qualifier');
     expect(fixture.nativeElement.querySelectorAll('.chart-card')).toHaveLength(2);
+  });
+
+  it('does not show the bull-put qualifier when Charm is not positive', () => {
+    const negativePoint = {
+      ...point, charm_at_market: -1, bull_put_research_qualifier: false,
+    };
+    fixture.componentRef.setInput('captureTs', negativePoint.ts);
+    fixture.componentRef.setInput('overview', {
+      ...overview, latest: negativePoint, series: [negativePoint],
+    });
+    fixture.detectChanges();
+
+    expect(component.isBullPutQualifier()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.research-qualifier')).toBeNull();
   });
 
   it('notifies Angular when an asynchronous surface request finishes', () => {

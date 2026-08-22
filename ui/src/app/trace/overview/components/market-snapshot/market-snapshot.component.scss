@@ -32,6 +32,7 @@
 .snapshot-split--study-distance { flex:0 0 auto; margin-bottom:.65rem; padding-bottom:.65rem; border-bottom:1px solid rgba(148,163,184,.16); }
 .snapshot-split--study-distance strong { font-size:.82rem; }
 .snapshot-warning { color:#ffc328!important; font-weight:750; }
+.snapshot-qualifier { width:max-content;padding:.12rem .4rem;border:1px solid rgba(52,211,153,.35);border-radius:999px;background:rgba(52,211,153,.09);color:#86efac!important;font-weight:750; }
 .snapshot-node-groups { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.65rem; }
 .snapshot-node-groups>div { display:grid; min-width:0; gap:.3rem; }
 .snapshot-node { display:grid; grid-template-columns:auto minmax(2.7rem,.7fr) minmax(4rem,1fr) auto; align-items:center; gap:.35rem; min-width:0; padding:.28rem .4rem; border-left:2px solid #4dc3f2; border-radius:.25rem; background:rgba(14,165,233,.09); font-size:.65rem; }
