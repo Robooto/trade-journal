@@ -41,6 +41,7 @@
         <span class="snapshot-label">Gamma Structure</span>
         <strong>{{ gammaLabel() }}</strong>
         <small>{{ labelize(row.local_gamma_setup) }} · at spot {{ formatCompact(gammaContext?.nearest_total_gamma, true) }} · slope {{ formatCompact(gammaContext?.cross_spot_slope, true) }}/pt</small>
+        @if (persistentPositiveSteepeningWatch) { <small class="snapshot-qualifier snapshot-qualifier--gamma">Gamma slope watch &middot; bearish research context</small> }
         <em>Research context · not a forecast</em>
       </article>
 

@@ -98,6 +98,25 @@ describe('MarketSnapshotComponent', () => {
     expect(component.charmBullPutQualifier()).toBe(false);
   });
 
+  it('shows the gamma slope research badge after three positive steepening captures', () => {
+    fixture.componentRef.setInput('gammaContextRows', [10, 20, 30, 40].map((slope, index) => ({
+      ...gammaRows[0],
+      ts: `2026-07-24T12:${index + 2}0:05-07:00`,
+      capture_id: index === 3 ? 'capture-2' : `steep-${index}`,
+      cross_spot_slope: slope,
+    })) as TraceGammaContextRow[]);
+    fixture.detectChanges();
+
+    expect(component.persistentPositiveSteepeningWatch).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Gamma slope watch · bearish research context');
+    expect(fixture.nativeElement.querySelector('.snapshot-qualifier--gamma')).not.toBeNull();
+  });
+
+  it('hides the gamma slope research badge without a persistent steepening sequence', () => {
+    expect(component.persistentPositiveSteepeningWatch).toBe(false);
+    expect(fixture.nativeElement.querySelector('.snapshot-qualifier--gamma')).toBeNull();
+  });
+
   it('uses the study thresholds only for large SPX HIRO changes', () => {
     expect(component.hiroShockTone(749_999_999)).toBeNull();
     expect(component.hiroShockTone(-750_000_000)).toBe('shock-negative');

@@ -42,6 +42,20 @@ export class MarketSnapshotComponent {
     return this.gammaContextRows.find(row => row.capture_id === captureId) ?? null;
   }
 
+  get persistentPositiveSteepeningWatch(): boolean {
+    const rows = this.gammaContextRows
+      .filter(row => row.cross_spot_slope != null && Number.isFinite(row.cross_spot_slope))
+      .slice()
+      .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+    const selectedIndex = rows.findIndex(row => row.capture_id === this.activeRow?.capture_id);
+    if (selectedIndex < 3) return false;
+    const slopes = rows
+      .slice(selectedIndex - 3, selectedIndex + 1)
+      .map(row => row.cross_spot_slope as number);
+    return slopes.every(value => value > 0)
+      && slopes.slice(1).every((value, index) => Math.abs(value) > Math.abs(slopes[index]));
+  }
+
   get volatility(): TraceRealizedVolatilityRow | null {
     const captureId = this.activeRow?.capture_id;
     return this.realizedVolatility?.rows.find(row => row.capture_id === captureId) ?? null;
