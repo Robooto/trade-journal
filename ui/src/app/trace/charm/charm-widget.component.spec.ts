@@ -96,4 +96,14 @@ describe('CharmWidgetComponent', () => {
 
     expect(emitted).toHaveBeenCalledWith(point.ts);
   });
+
+  it('renders shared marked levels on the Charm surface price axis', () => {
+    fixture.componentRef.setInput('priceLevels', [
+      { id: 'level-1', price: 7410, label: 'Target', color: '#fbbf24' },
+    ]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Target');
+  });
 });

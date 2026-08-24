@@ -1,6 +1,6 @@
 # Trade Journal Product Roadmap
 
-Last reviewed: 2026-07-18
+Last reviewed: 2026-08-23
 
 ## Product goals
 
@@ -279,6 +279,11 @@ ingestion, analysis, ranking, and versioned APIs remain in
 - Price structure and zero-centered HIRO trend panels now share the timeline's
   selected-capture cursor. They render versioned backend values with responsive
   SVGs, patterned series, and no frontend market-direction classification.
+- Deferred charting-library migration: keep the current renderer-specific TRACE
+  charts until a requested interaction materially benefits from a shared charting
+  library. Revisit a staged migration
+  when synchronized zoom/crosshairs, direct drawing and dragging, richer
+  tooltips, or multi-pane inspection would offset the visual-parity rewrite.
 - Exact capture history and signed gamma bars are now present. Contract and
   interaction parity are complete. The standalone TRACE presentation and its
   fallback link were retired on 2026-08-08; the versioned mini APIs remain.

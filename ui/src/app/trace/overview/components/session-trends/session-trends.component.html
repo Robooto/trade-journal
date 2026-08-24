@@ -36,6 +36,10 @@
             <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
             <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
           }
+          @for (level of priceLevelMarkers; track level.id) {
+            <line class="marked-price-line" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+            <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
+          }
           @for (marker of priceNodeMarkers; track marker.key) {
             @if (marker.negative) {
               <path class="structure-node structure-node--negative" [ngClass]="marker.cssClass" [attr.d]="marker.path" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></path>
@@ -64,25 +68,41 @@
     <header class="trend-chart__header">
       <div>
         <h3 id="hiro-pressure-title">HIRO pressure</h3>
-        <p>SPX and equities HIRO share a symmetric zero-centered scale; spot uses the right axis.</p>
+        <p>{{ hiroViewMode === 'change' ? 'Capture-to-capture HIRO movement on a robust zero-centered scale; spot uses the right axis.' : 'Absolute SPX and equities HIRO pressure on a robust zero-centered scale; spot uses the right axis.' }}</p>
       </div>
-      @if (activeRow(); as active) {
-        <div class="hiro-facts" aria-label="Selected capture HIRO values">
-          <span>SPX <strong [attr.data-tone]="valueTone(active.spx_hiro)">{{ formatCompact(active.spx_hiro) }}</strong><small [attr.data-tone]="valueTone(active.spx_hiro_rate_per_minute)">{{ directionArrow(active.spx_hiro_rate_per_minute) }} {{ formatSignedCompact(active.spx_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_spx_acceleration) }}</small></span>
-          <span>Equities <strong [attr.data-tone]="valueTone(active.equities_hiro)">{{ formatCompact(active.equities_hiro) }}</strong><small [attr.data-tone]="valueTone(active.equities_hiro_rate_per_minute)">{{ directionArrow(active.equities_hiro_rate_per_minute) }} {{ formatSignedCompact(active.equities_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_equities_acceleration) }}</small></span>
+      <div class="hiro-header-tools">
+        <div class="trend-segment" aria-label="HIRO chart view">
+          <button type="button" [class.active]="hiroViewMode === 'change'" (click)="setHiroViewMode('change')">Change</button>
+          <button type="button" [class.active]="hiroViewMode === 'level'" (click)="setHiroViewMode('level')">Pressure</button>
         </div>
-      }
+        @if (activeRow(); as active) {
+          <div class="hiro-facts" aria-label="Selected capture HIRO values">
+            <span>SPX <strong [attr.data-tone]="valueTone(active.spx_hiro)">{{ formatCompact(active.spx_hiro) }}</strong><small [attr.data-tone]="valueTone(selectedHiroDelta('spx_hiro'))">&Delta; {{ formatSignedCompact(selectedHiroDelta('spx_hiro')) }} &middot; {{ directionArrow(active.spx_hiro_rate_per_minute) }} {{ formatSignedCompact(active.spx_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_spx_acceleration) }}</small></span>
+            <span>Equities <strong [attr.data-tone]="valueTone(active.equities_hiro)">{{ formatCompact(active.equities_hiro) }}</strong><small [attr.data-tone]="valueTone(selectedHiroDelta('equities_hiro'))">&Delta; {{ formatSignedCompact(selectedHiroDelta('equities_hiro')) }} &middot; {{ directionArrow(active.equities_hiro_rate_per_minute) }} {{ formatSignedCompact(active.equities_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_equities_acceleration) }}</small></span>
+          </div>
+        }
+      </div>
     </header>
 
+    <div class="hiro-research-note" role="note">
+      <span>Direction and magnitude are descriptive context, not trade approval. Rings mark &ge;750M capture moves; research has not established supportive or adverse direction.</span>
+      <strong>{{ hiroJumpCount }} large moves</strong>
+    </div>
+
     <div class="trend-legend" aria-label="HIRO pressure legend">
-      <span class="legend--spx-hiro"><i></i>SPX HIRO</span>
-      <span class="legend--equities-hiro"><i></i>Equities HIRO</span>
+      <span class="legend--spx-hiro"><i></i>SPX HIRO{{ hiroViewMode === 'change' ? ' change' : '' }}</span>
+      <span class="legend--equities-hiro"><i></i>Equities HIRO{{ hiroViewMode === 'change' ? ' change' : '' }}</span>
       <span class="legend--spot"><i></i>Spot</span>
+      <span class="legend--hiro-jump"><i></i>&ge;750M move</span>
     </div>
 
     @if (hiroHasData) {
       <div class="trend-svg-frame">
         <svg class="trend-svg trend-svg--hiro" [attr.viewBox]="'0 0 ' + width + ' ' + hiroHeight" preserveAspectRatio="none" role="img" aria-label="TRACE SPX and equities HIRO pressure with spot">
+          <rect class="hiro-zone hiro-zone--positive" x="76" y="20" [attr.width]="width - 148" [attr.height]="hiroZeroY - 20" />
+          <rect class="hiro-zone hiro-zone--negative" x="76" [attr.y]="hiroZeroY" [attr.width]="width - 148" [attr.height]="hiroHeight - 46 - hiroZeroY" />
+          <text class="hiro-zone-label hiro-zone-label--positive" x="84" y="35">{{ hiroViewMode === 'change' ? 'HIRO rising' : 'Positive HIRO' }}</text>
+          <text class="hiro-zone-label hiro-zone-label--negative" x="84" [attr.y]="hiroHeight - 54">{{ hiroViewMode === 'change' ? 'HIRO falling' : 'Negative HIRO' }}</text>
           @for (tick of hiroYTicks; track tick.position) {
             <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
             <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
@@ -90,12 +110,25 @@
           @for (tick of spotYTicks; track tick.position) {
             <text class="trend-axis-label" [attr.x]="width - 64" [attr.y]="tick.position + 4">{{ tick.label }}</text>
           }
+          @for (level of hiroPriceLevelMarkers; track level.id) {
+            <line class="marked-price-line" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+            <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
+          }
+          @if (hiroJumpLineYPositive !== null) {
+            <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroJumpLineYPositive" [attr.x2]="width - 72" [attr.y2]="hiroJumpLineYPositive" />
+          }
+          @if (hiroJumpLineYNegative !== null) {
+            <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroJumpLineYNegative" [attr.x2]="width - 72" [attr.y2]="hiroJumpLineYNegative" />
+          }
           <line class="hiro-zero-line" x1="76" [attr.y1]="hiroZeroY" [attr.x2]="width - 72" [attr.y2]="hiroZeroY" />
           @for (series of hiroSeries; track series.key) {
             <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
           }
           @for (marker of hiroDirectionMarkers; track marker.key) {
             <path class="hiro-direction-marker" [ngClass]="marker.cssClass" [attr.d]="marker.path"><title>{{ marker.title }}</title></path>
+          }
+          @for (marker of hiroJumpMarkers; track marker.key) {
+            <circle class="hiro-jump-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="6"><title>{{ marker.title }}</title></circle>
           }
           <line class="trend-active-line" [attr.x1]="hiroActiveX" y1="20" [attr.x2]="hiroActiveX" [attr.y2]="hiroHeight - 46" />
           @for (marker of hiroMarkers; track marker.key) {

@@ -12,6 +12,7 @@ import { Subscription } from 'rxjs';
 
 import { CharmApiService } from './charm-api.service';
 import { CharmOverview, CharmSeriesPoint, CharmSurface } from './charm.models';
+import { RenderedPriceLevel, TracePriceLevel, renderPriceLevels } from '../overview/trace-price-levels';
 
 @Component({
   selector: 'app-charm-widget',
@@ -25,6 +26,7 @@ export class CharmWidgetComponent implements OnChanges, OnDestroy {
   @Input() overview: CharmOverview | null = null;
   @Input() loading = false;
   @Input() error: string | null = null;
+  @Input() priceLevels: readonly TracePriceLevel[] = [];
   @Output() captureSelected = new EventEmitter<string>();
   @Output() refreshRequested = new EventEmitter<void>();
 
@@ -130,6 +132,19 @@ export class CharmWidgetComponent implements OnChanges, OnDestroy {
 
   get spotX(): number | null { return this.surfaceMarkerX(this.surface?.spot); }
   get flipX(): number | null { return this.surfaceMarkerX(this.surface?.nearest_flip); }
+
+  get surfacePriceLevels(): readonly RenderedPriceLevel[] {
+    const rows = this.surface?.rows ?? [];
+    if (!rows.length) return [];
+    const minimum = rows[0].spot;
+    const maximum = rows[rows.length - 1].spot;
+    return renderPriceLevels(
+      this.priceLevels,
+      minimum,
+      maximum,
+      price => rangeX(price, minimum, maximum, this.chartWidth),
+    );
+  }
 
   isBullPutQualifier(point: CharmSeriesPoint | null = this.selectedPoint): boolean {
     return point?.bull_put_research_qualifier === true;

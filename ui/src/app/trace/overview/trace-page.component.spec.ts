@@ -64,6 +64,7 @@ describe('TracePageComponent', () => {
   let facade: TraceFacadeStub;
 
   beforeEach(async () => {
+    globalThis.localStorage.removeItem('trade-journal.trace.price-levels.v1');
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
       declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, Personal0DteWatchComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
@@ -214,6 +215,25 @@ describe('TracePageComponent', () => {
     expect(facade.selectDate).toHaveBeenCalledWith('2026-07-24');
     expect(facade.selectCapture).toHaveBeenNthCalledWith(1, 4);
     expect(facade.selectCapture).toHaveBeenNthCalledWith(2, 1);
+  });
+
+  it('adds and removes browser-persisted marked price levels', () => {
+    const component = fixture.componentInstance;
+    component.priceLevelPrice = 7412.5;
+    component.priceLevelLabel = 'Invalidation';
+    component.priceLevelColor = '#fbbf24';
+
+    component.addPriceLevel();
+    fixture.detectChanges();
+
+    expect(component.priceLevels.levels()).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Invalidation');
+    expect(globalThis.localStorage.getItem('trade-journal.trace.price-levels.v1')).toContain('7412.5');
+
+    component.removePriceLevel(component.priceLevels.levels()[0].id);
+    fixture.detectChanges();
+
+    expect(component.priceLevels.levels()).toHaveLength(0);
   });
 
   it('keeps charts in the same sequence as the legacy TRACE dashboard', () => {

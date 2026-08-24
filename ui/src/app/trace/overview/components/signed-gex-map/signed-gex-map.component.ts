@@ -5,6 +5,7 @@ import {
   TraceHistogramRow,
 } from '../../trace.models';
 import { selectKeyGexNodes } from '../../signed-gex-node-selection';
+import { RenderedPriceLevel, TracePriceLevel, renderPriceLevels } from '../../trace-price-levels';
 
 type WindowMode = 'near' | 'full';
 type DetailMode = 'key' | 'all';
@@ -36,6 +37,7 @@ export class SignedGexMapComponent implements OnChanges {
   @Input() rows: readonly TraceDashboardRow[] = [];
   @Input() nodes: readonly TraceHistogramRow[] = [];
   @Input() activeIndex = 0;
+  @Input() priceLevels: readonly TracePriceLevel[] = [];
 
   readonly mapWidth = 1200;
   readonly mapHeight = 440;
@@ -49,6 +51,7 @@ export class SignedGexMapComponent implements OnChanges {
   activeX = 0;
   activeY = 0;
   activeNodes: readonly TraceHistogramRow[] = [];
+  renderedPriceLevels: readonly RenderedPriceLevel[] = [];
 
   ngOnChanges(): void {
     this.rebuildMap();
@@ -138,6 +141,7 @@ export class SignedGexMapComponent implements OnChanges {
       .join(' ');
     this.activeX = x(activeIndex);
     this.activeY = y(activeRow.spot ?? (minimum + maximum) / 2);
+    this.renderedPriceLevels = renderPriceLevels(this.priceLevels, minimum, maximum, y);
     const selectedCaptureNodes = visibleNodes.filter(node => node.capture_id === activeRow.capture_id);
     this.activeNodes = selectKeyGexNodes(selectedCaptureNodes, [activeRow])
       .sort((left, right) => (right.cluster_share ?? 0) - (left.cluster_share ?? 0))
@@ -169,6 +173,7 @@ export class SignedGexMapComponent implements OnChanges {
     this.xTicks = [];
     this.spotPoints = '';
     this.activeNodes = [];
+    this.renderedPriceLevels = [];
   }
 }
 

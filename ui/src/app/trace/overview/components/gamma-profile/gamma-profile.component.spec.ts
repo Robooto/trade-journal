@@ -97,4 +97,14 @@ describe('GammaProfileComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Bearish research context');
     expect(fixture.nativeElement.textContent).toContain('Non-scoring');
   });
+
+  it('renders shared marked levels on the hypothetical SPX axis', () => {
+    fixture.componentRef.setInput('priceLevels', [
+      { id: 'level-1', price: 7410, label: 'Invalidation', color: '#fbbf24' },
+    ]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Invalidation');
+  });
 });

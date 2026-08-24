@@ -34,7 +34,7 @@
         <article>
           <span>At spot</span>
           <strong [class.positive]="nearestGamma > 0" [class.negative]="nearestGamma < 0">{{ formatCompact(nearestGamma) }}</strong>
-          <small>{{ gammaDirection }} gamma · nearest {{ nearestSpot | number:'1.0-1' }}</small>
+          <small>{{ gammaDirection }} gamma &middot; nearest {{ nearestSpot | number:'1.0-1' }}</small>
         </article>
         <article>
           <span>Local slope</span>
@@ -76,7 +76,7 @@
                   (click)="selectHistoryPoint(row)"
                   (keydown.enter)="selectHistoryPoint(row)"
                   (keydown.space)="selectHistoryPoint(row)"
-                ><title>{{ row.ts | date:'h:mm a' }} · {{ formatCompact(row.nearest_total_gamma) }} · {{ row.local_gamma_setup || 'setup unavailable' }}</title></circle>
+                ><title>{{ row.ts | date:'h:mm a' }} &middot; {{ formatCompact(row.nearest_total_gamma) }} &middot; {{ row.local_gamma_setup || 'setup unavailable' }}</title></circle>
               }
             </svg>
             <div class="axis-labels"><span>{{ historyRows[0].ts | date:'h:mm a' }}</span><span>Zero</span><span>{{ historyRows[historyRows.length - 1].ts | date:'h:mm a' }}</span></div>
@@ -111,6 +111,10 @@
             <text class="profile-zone-label" x="56" [attr.y]="height - 44">Negative gamma</text>
             @for (bar of bars; track bar.key) {
               <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
+            }
+            @for (level of profilePriceLevels; track level.id) {
+              <line class="marked-price-line" [attr.x1]="level.position" y1="18" [attr.x2]="level.position" [attr.y2]="height - 36" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+              <text class="marked-price-label" [attr.x]="level.position" [attr.y]="height - 42" text-anchor="middle" [attr.fill]="level.color">{{ level.label }}</text>
             }
             <line class="profile-spot" [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="height - 36" />
             <text class="profile-spot-label" [attr.x]="spotX" y="31" text-anchor="middle">spot {{ gammaProfile?.spot | number:'1.0-1' }}</text>

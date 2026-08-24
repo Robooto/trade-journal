@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, HostListener, OnInit, computed } fr
 
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus } from './trace.models';
+import { TracePriceLevelsStore } from './trace-price-levels';
 
 @Component({
   selector: 'app-trace-page',
@@ -11,7 +12,11 @@ import { TraceContractStatus } from './trace.models';
   standalone: false,
 })
 export class TracePageComponent implements OnInit {
-  constructor(readonly facade: TraceFacade) {}
+  priceLevelPrice: number | null = null;
+  priceLevelLabel = '';
+  priceLevelColor = '#fbbf24';
+
+  constructor(readonly facade: TraceFacade, readonly priceLevels: TracePriceLevelsStore) {}
 
   ngOnInit(): void {
     this.facade.loadSessions();
@@ -38,6 +43,18 @@ export class TracePageComponent implements OnInit {
   selectCaptureTimestamp(timestamp: string): void {
     const index = this.facade.captureRows().findIndex(row => row.ts === timestamp);
     if (index >= 0) this.facade.selectCapture(index);
+  }
+
+  addPriceLevel(): void {
+    const price = Number(this.priceLevelPrice);
+    if (!Number.isFinite(price) || price <= 0) return;
+    this.priceLevels.add(price, this.priceLevelLabel, this.priceLevelColor);
+    this.priceLevelPrice = null;
+    this.priceLevelLabel = '';
+  }
+
+  removePriceLevel(id: string): void {
+    this.priceLevels.remove(id);
   }
 
   @HostListener('document:keydown', ['$event'])

@@ -42,6 +42,37 @@
     }
   </section>
 
+  <section class="price-level-panel" aria-labelledby="price-level-title">
+    <header>
+      <div>
+        <p class="trace-eyebrow">Shared chart annotations</p>
+        <h2 id="price-level-title">Marked price levels</h2>
+        <p>Saved in this browser and shown on every TRACE chart with a price axis.</p>
+      </div>
+      <form class="price-level-form" (ngSubmit)="addPriceLevel()">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>SPX price</mat-label>
+          <input matInput type="number" min="0.01" step="0.1" name="priceLevelPrice" [(ngModel)]="priceLevelPrice" required />
+        </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Label</mat-label>
+          <input matInput name="priceLevelLabel" [(ngModel)]="priceLevelLabel" placeholder="Invalidation, target..." />
+        </mat-form-field>
+        <label class="price-level-color">Color <input type="color" name="priceLevelColor" [(ngModel)]="priceLevelColor" /></label>
+        <button mat-flat-button color="primary" type="submit" [disabled]="!priceLevelPrice">Add level</button>
+      </form>
+    </header>
+    @if (priceLevels.levels().length) {
+      <div class="price-level-list" aria-label="Marked SPX price levels">
+        @for (level of priceLevels.levels(); track level.id) {
+          <span><i [style.background]="level.color"></i><strong>{{ level.price | number:'1.0-2' }}</strong>{{ level.label }}<button type="button" (click)="removePriceLevel(level.id)" [attr.aria-label]="'Remove ' + level.label"><mat-icon>close</mat-icon></button></span>
+        }
+      </div>
+    } @else {
+      <p class="price-level-empty">No marked levels yet.</p>
+    }
+  </section>
+
   @if (facade.sessionsLoading() && !facade.sessions().length) {
     <section class="trace-state" aria-live="polite">
       <mat-spinner diameter="28"></mat-spinner>
@@ -124,6 +155,7 @@
       [rows]="facade.captureRows()"
       [nodes]="histogram.rows"
       [activeIndex]="facade.selectedCaptureIndex()"
+      [priceLevels]="priceLevels.levels()"
     />
   }
 
@@ -132,6 +164,7 @@
       [rows]="facade.captureRows()"
       [nodes]="facade.bundle()?.histogram?.rows ?? []"
       [activeIndex]="facade.selectedCaptureIndex()"
+      [priceLevels]="priceLevels.levels()"
     />
   }
 
@@ -143,6 +176,7 @@
       [captureTs]="facade.selectedCapture()?.ts ?? null"
       [loading]="facade.gammaProfileLoading()"
       [error]="facade.gammaProfileError()"
+      [priceLevels]="priceLevels.levels()"
       (captureSelected)="selectCaptureTimestamp($event)"
     />
   }
@@ -152,6 +186,7 @@
     [overview]="facade.charmOverview()"
     [loading]="facade.charmLoading()"
     [error]="facade.charmError()"
+    [priceLevels]="priceLevels.levels()"
     (captureSelected)="selectCaptureTimestamp($event)"
     (refreshRequested)="facade.reload()"
   />

@@ -88,4 +88,14 @@ describe('SignedGexMapComponent', () => {
     expect(map.getAttribute('viewBox')).toBe('0 0 1200 440');
     expect(map.getAttribute('width')).toBeNull();
   });
+
+  it('renders shared marked levels on the strike axis', () => {
+    fixture.componentRef.setInput('priceLevels', [
+      { id: 'level-1', price: 7415, label: 'Decision level', color: '#fbbf24' },
+    ]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Decision level');
+  });
 });

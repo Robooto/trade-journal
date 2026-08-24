@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output } from '@angular/core';
 
 import { TraceGammaContextRow, TraceGammaProfileResponse } from '../../trace.models';
+import { RenderedPriceLevel, TracePriceLevel, renderPriceLevels } from '../../trace-price-levels';
 
 interface AxisTick {
   readonly position: number;
@@ -30,6 +31,7 @@ export class GammaProfileComponent implements OnChanges {
   @Input() captureTs: string | null = null;
   @Input() loading = false;
   @Input() error: string | null = null;
+  @Input() priceLevels: readonly TracePriceLevel[] = [];
   @Output() captureSelected = new EventEmitter<string>();
 
   readonly width = 600;
@@ -50,6 +52,7 @@ export class GammaProfileComponent implements OnChanges {
   slopeDirection = 'Unavailable';
   curveDirection = 'Flat';
   sourceLabel = 'Latest available snapshot';
+  profilePriceLevels: readonly RenderedPriceLevel[] = [];
   hasData = false;
 
   get historyRows(): readonly TraceGammaContextRow[] {
@@ -120,6 +123,7 @@ export class GammaProfileComponent implements OnChanges {
       this.slopeDirection = 'Unavailable';
       this.curveDirection = 'Flat';
       this.sourceLabel = 'Latest available snapshot';
+      this.profilePriceLevels = [];
       this.hasData = false;
       return;
     }
@@ -149,6 +153,7 @@ export class GammaProfileComponent implements OnChanges {
     this.yTicks = [-gammaLimit, 0, gammaLimit].map(value => ({ position: y(value), label: this.formatCompact(value) }));
     this.zeroY = zeroY;
     this.spotX = x(this.gammaProfile?.spot ?? xMinimum);
+    this.profilePriceLevels = renderPriceLevels(this.priceLevels, xMinimum, xMaximum, x);
     const nearest = [...rows].sort((left, right) =>
       Math.abs(left.spot - (this.gammaProfile?.spot ?? 0)) - Math.abs(right.spot - (this.gammaProfile?.spot ?? 0)),
     )[0];

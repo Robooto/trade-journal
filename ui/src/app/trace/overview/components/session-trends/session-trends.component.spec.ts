@@ -53,16 +53,37 @@ describe('SessionTrendsComponent', () => {
     expect(fixture.nativeElement.querySelector('.trend-line--equities-hiro')).not.toBeNull();
   });
 
-  it('shows signed GEX containment/expansion nodes and HIRO rate direction', () => {
+  it('defaults to HIRO change while preserving pressure direction detail', () => {
     expect(fixture.nativeElement.textContent).toContain('Containment +');
-    expect(fixture.nativeElement.textContent).toContain('Expansion −');
+    expect(fixture.nativeElement.textContent).toContain('Expansion');
     expect(fixture.nativeElement.querySelectorAll('.structure-node--positive')).toHaveLength(1);
     expect(fixture.nativeElement.querySelectorAll('.structure-node--negative')).toHaveLength(1);
+    expect(component.hiroViewMode).toBe('change');
+    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(0);
+    expect(fixture.nativeElement.textContent).toContain('not trade approval');
+
+    const pressureButton = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('.trend-segment button'),
+    ).find(button => button.textContent?.trim() === 'Pressure');
+    pressureButton?.click();
+    fixture.detectChanges();
+
     expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(24);
     expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker--up')).toHaveLength(12);
     expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker--down')).toHaveLength(12);
     expect(fixture.nativeElement.textContent).toContain('Strong Buying Increasing');
     expect(fixture.nativeElement.textContent).toContain('Selling Increasing');
+  });
+
+  it('shows shared marked prices on both price-aware session charts', () => {
+    fixture.componentRef.setInput('priceLevels', [
+      { id: 'level-1', price: 7420, label: 'Invalidation', color: '#fbbf24' },
+    ]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.trend-svg--price .marked-price-line')).toHaveLength(1);
+    expect(fixture.nativeElement.querySelectorAll('.trend-svg--hiro .marked-price-line')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('Invalidation');
   });
 
   it('keeps both responsive charts aligned to the selected capture', () => {
@@ -86,5 +107,15 @@ describe('SessionTrendsComponent', () => {
     expect(component.priceWindowMode).toBe('full');
     expect(fullLabels).not.toEqual(nearLabels);
     expect(component.hiroHasData).toBe(true);
+  });
+
+  it('highlights 750M capture changes as magnitude-only events', () => {
+    fixture.componentRef.setInput('rows', rows.map((row, index) => index === rows.length - 1
+      ? { ...row, spx_hiro: (row.spx_hiro ?? 0) + 1_000_000_000 }
+      : row));
+    fixture.detectChanges();
+
+    expect(component.hiroJumpCount).toBeGreaterThan(0);
+    expect(fixture.nativeElement.querySelectorAll('.hiro-jump-marker').length).toBeGreaterThan(0);
   });
 });

@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/c
 
 import { TraceDashboardRow, TraceHistogramRow } from '../../trace.models';
 import { selectKeyGexNodes } from '../../signed-gex-node-selection';
+import { RenderedPriceLevel, TracePriceLevel, renderPriceLevels } from '../../trace-price-levels';
 
 type PriceWindowMode = 'near' | 'full';
+type HiroViewMode = 'change' | 'level';
 type NumericRowKey = keyof Pick<
   TraceDashboardRow,
   | 'spot'
@@ -53,6 +55,14 @@ interface HiroDirectionMarker {
   readonly title: string;
 }
 
+interface HiroJumpMarker {
+  readonly key: string;
+  readonly x: number;
+  readonly y: number;
+  readonly cssClass: string;
+  readonly title: string;
+}
+
 const PRICE_SERIES: readonly {
   key: NumericRowKey;
   label: string;
@@ -76,6 +86,7 @@ export class SessionTrendsComponent implements OnChanges {
   @Input() rows: readonly TraceDashboardRow[] = [];
   @Input() nodes: readonly TraceHistogramRow[] = [];
   @Input() activeIndex = 0;
+  @Input() priceLevels: readonly TracePriceLevel[] = [];
 
   readonly width = 1200;
   readonly priceHeight = 330;
@@ -87,15 +98,22 @@ export class SessionTrendsComponent implements OnChanges {
   priceXTicks: readonly AxisTick[] = [];
   priceMarkers: readonly ActiveMarker[] = [];
   priceNodeMarkers: readonly StructureNodeMarker[] = [];
+  priceLevelMarkers: readonly RenderedPriceLevel[] = [];
   priceActiveX = 0;
   priceHasData = false;
 
+  hiroViewMode: HiroViewMode = 'change';
   hiroSeries: readonly TrendSeries[] = [];
   hiroYTicks: readonly AxisTick[] = [];
   spotYTicks: readonly AxisTick[] = [];
   hiroXTicks: readonly AxisTick[] = [];
   hiroMarkers: readonly ActiveMarker[] = [];
   hiroDirectionMarkers: readonly HiroDirectionMarker[] = [];
+  hiroJumpMarkers: readonly HiroJumpMarker[] = [];
+  hiroPriceLevelMarkers: readonly RenderedPriceLevel[] = [];
+  hiroJumpLineYPositive: number | null = null;
+  hiroJumpLineYNegative: number | null = null;
+  hiroJumpCount = 0;
   hiroZeroY = 0;
   hiroActiveX = 0;
   hiroHasData = false;
@@ -109,6 +127,20 @@ export class SessionTrendsComponent implements OnChanges {
     if (mode === this.priceWindowMode) return;
     this.priceWindowMode = mode;
     this.rebuildPriceChart();
+  }
+
+  setHiroViewMode(mode: HiroViewMode): void {
+    if (mode === this.hiroViewMode) return;
+    this.hiroViewMode = mode;
+    this.rebuildHiroChart();
+  }
+
+  selectedHiroDelta(key: 'spx_hiro' | 'equities_hiro'): number | null {
+    const index = clamp(this.activeIndex, 0, this.rows.length - 1);
+    if (index < 1) return null;
+    const current = numericValue(this.rows[index]?.[key]);
+    const previous = numericValue(this.rows[index - 1]?.[key]);
+    return current == null || previous == null ? null : current - previous;
   }
 
   activeRow(): TraceDashboardRow | null {
@@ -152,6 +184,7 @@ export class SessionTrendsComponent implements OnChanges {
       this.priceSeries = [];
       this.priceMarkers = [];
       this.priceNodeMarkers = [];
+      this.priceLevelMarkers = [];
       this.priceHasData = false;
       return;
     }
@@ -171,6 +204,7 @@ export class SessionTrendsComponent implements OnChanges {
     }));
     this.priceXTicks = timeTicks(this.rows, x);
     this.priceActiveX = x(activeIndex);
+    this.priceLevelMarkers = renderPriceLevels(this.priceLevels, minimum, maximum, y);
     this.priceMarkers = PRICE_SERIES.flatMap(series => {
       const value = numericValue(this.rows[activeIndex][series.key]);
       return value == null ? [] : [{
@@ -209,49 +243,61 @@ export class SessionTrendsComponent implements OnChanges {
 
   private rebuildHiroChart(): void {
     if (this.rows.length < 2) {
-      this.hiroSeries = [];
-      this.hiroMarkers = [];
-      this.hiroDirectionMarkers = [];
-      this.hiroHasData = false;
+      this.clearHiroChart();
       return;
     }
 
     const activeIndex = clamp(this.activeIndex, 0, this.rows.length - 1);
-    const hiroValues = this.rows.flatMap(row => [row.spx_hiro, row.equities_hiro])
-      .map(numericValue)
+    const spxLevels = this.rows.map(row => numericValue(row.spx_hiro));
+    const equitiesLevels = this.rows.map(row => numericValue(row.equities_hiro));
+    const spxChanges = captureChanges(spxLevels);
+    const equitiesChanges = captureChanges(equitiesLevels);
+    const flowValues = this.hiroViewMode === 'change'
+      ? [spxChanges, equitiesChanges]
+      : [spxLevels, equitiesLevels];
+    const hiroValues = flowValues.flat()
       .filter((value): value is number => value != null);
     const spotValues = this.rows.map(row => numericValue(row.spot))
       .filter((value): value is number => value != null);
     if (!hiroValues.length || !spotValues.length) {
-      this.hiroSeries = [];
-      this.hiroMarkers = [];
-      this.hiroDirectionMarkers = [];
-      this.hiroHasData = false;
+      this.clearHiroChart();
       return;
     }
 
-    const hiroLimit = Math.max(1, ...hiroValues.map(value => Math.abs(value))) * 1.08;
+    const hiroLimit = Math.max(1, robustAbsoluteLimit(hiroValues) * 1.1);
     const [spotMinimum, spotMaximum] = paddedDomain(spotValues, 12);
     const x = makeXScale(this.rows.length, this.width, 76, 72);
-    const yHiro = makeYScale(-hiroLimit, hiroLimit, this.hiroHeight, 20, 46);
+    const yHiro = makeClampedYScale(-hiroLimit, hiroLimit, this.hiroHeight, 20, 46);
     const ySpot = makeYScale(spotMinimum, spotMaximum, this.hiroHeight, 20, 46);
-    const seriesDefinitions: readonly {
-      key: NumericRowKey;
-      label: string;
-      cssClass: string;
-      scale: (value: number) => number;
-    }[] = [
-      { key: 'spx_hiro', label: 'SPX HIRO', cssClass: 'trend-line--spx-hiro', scale: yHiro },
-      { key: 'equities_hiro', label: 'Equities HIRO', cssClass: 'trend-line--equities-hiro', scale: yHiro },
-      { key: 'spot', label: 'Spot', cssClass: 'trend-line--spot', scale: ySpot },
-    ];
+    const flowDefinitions = [
+      {
+        key: 'spx_hiro',
+        label: this.hiroViewMode === 'change' ? 'SPX HIRO change' : 'SPX HIRO',
+        cssClass: 'trend-line--spx-hiro',
+        values: this.hiroViewMode === 'change' ? spxChanges : spxLevels,
+      },
+      {
+        key: 'equities_hiro',
+        label: this.hiroViewMode === 'change' ? 'Equities HIRO change' : 'Equities HIRO',
+        cssClass: 'trend-line--equities-hiro',
+        values: this.hiroViewMode === 'change' ? equitiesChanges : equitiesLevels,
+      },
+    ] as const;
 
-    this.hiroSeries = seriesDefinitions.map(series => ({
-      key: series.key,
-      label: series.label,
-      cssClass: series.cssClass,
-      points: seriesPoints(this.rows, series.key, x, series.scale),
-    })).filter(series => Boolean(series.points));
+    this.hiroSeries = [
+      ...flowDefinitions.map(series => ({
+        key: series.key,
+        label: series.label,
+        cssClass: series.cssClass,
+        points: valueSeriesPoints(series.values, x, yHiro),
+      })),
+      {
+        key: 'spot',
+        label: 'Spot',
+        cssClass: 'trend-line--spot',
+        points: seriesPoints(this.rows, 'spot', x, ySpot),
+      },
+    ].filter(series => Boolean(series.points));
     this.hiroYTicks = makeTicks(-hiroLimit, hiroLimit, 5).map(value => ({
       position: yHiro(value),
       label: this.formatCompact(value),
@@ -263,16 +309,28 @@ export class SessionTrendsComponent implements OnChanges {
     this.hiroXTicks = timeTicks(this.rows, x);
     this.hiroZeroY = yHiro(0);
     this.hiroActiveX = x(activeIndex);
-    this.hiroMarkers = seriesDefinitions.flatMap(series => {
-      const value = numericValue(this.rows[activeIndex][series.key]);
-      return value == null ? [] : [{
-        key: series.key,
-        cssClass: series.cssClass,
-        x: this.hiroActiveX,
-        y: series.scale(value),
-      }];
-    });
-    this.hiroDirectionMarkers = this.rows.flatMap((row, index) => {
+    this.hiroPriceLevelMarkers = renderPriceLevels(this.priceLevels, spotMinimum, spotMaximum, ySpot);
+    this.hiroMarkers = [
+      ...flowDefinitions.flatMap(series => {
+        const value = series.values[activeIndex];
+        return value == null ? [] : [{
+          key: series.key,
+          cssClass: series.cssClass,
+          x: this.hiroActiveX,
+          y: yHiro(value),
+        }];
+      }),
+      ...(() => {
+        const value = numericValue(this.rows[activeIndex].spot);
+        return value == null ? [] : [{
+          key: 'spot',
+          cssClass: 'trend-line--spot',
+          x: this.hiroActiveX,
+          y: ySpot(value),
+        }];
+      })(),
+    ];
+    this.hiroDirectionMarkers = this.hiroViewMode === 'change' ? [] : this.rows.flatMap((row, index) => {
       const definitions = [
         { key: 'spx', value: numericValue(row.spx_hiro), rate: numericValue(row.spx_hiro_rate_per_minute), label: 'SPX' },
         { key: 'equities', value: numericValue(row.equities_hiro), rate: numericValue(row.equities_hiro_rate_per_minute), label: 'Equities' },
@@ -288,7 +346,45 @@ export class SessionTrendsComponent implements OnChanges {
         }];
       });
     });
-    this.hiroHasData = this.hiroSeries.length > 0;
+
+    const jumpThreshold = 750_000_000;
+    this.hiroJumpMarkers = this.rows.slice(1).flatMap((row, offset) => {
+      const index = offset + 1;
+      return [
+        { key: 'spx', level: spxLevels[index], change: spxChanges[index], label: 'SPX', cssClass: 'hiro-jump-marker--spx' },
+        { key: 'equities', level: equitiesLevels[index], change: equitiesChanges[index], label: 'Equities', cssClass: 'hiro-jump-marker--equities' },
+      ].flatMap(definition => {
+        if (definition.change == null || definition.level == null || Math.abs(definition.change) < jumpThreshold) return [];
+        const displayValue = this.hiroViewMode === 'change' ? definition.change : definition.level;
+        return [{
+          key: `${row.capture_id}-${definition.key}-jump`,
+          x: x(index),
+          y: yHiro(displayValue),
+          cssClass: definition.cssClass,
+          title: `${definition.label} large HIRO move: ${this.formatSignedCompact(definition.change)} since prior capture. Magnitude context only.`,
+        }];
+      });
+    });
+    this.hiroJumpCount = this.hiroJumpMarkers.length;
+    this.hiroJumpLineYPositive = this.hiroViewMode === 'change' && jumpThreshold <= hiroLimit
+      ? yHiro(jumpThreshold)
+      : null;
+    this.hiroJumpLineYNegative = this.hiroViewMode === 'change' && jumpThreshold <= hiroLimit
+      ? yHiro(-jumpThreshold)
+      : null;
+    this.hiroHasData = this.hiroSeries.length > 1;
+  }
+
+  private clearHiroChart(): void {
+    this.hiroSeries = [];
+    this.hiroMarkers = [];
+    this.hiroDirectionMarkers = [];
+    this.hiroJumpMarkers = [];
+    this.hiroPriceLevelMarkers = [];
+    this.hiroJumpLineYPositive = null;
+    this.hiroJumpLineYNegative = null;
+    this.hiroJumpCount = 0;
+    this.hiroHasData = false;
   }
 
   private priceDomain(activeIndex: number): [number, number] {
@@ -341,6 +437,29 @@ function seriesPoints(
   }).join(' ');
 }
 
+function valueSeriesPoints(
+  values: readonly (number | null)[],
+  x: (index: number) => number,
+  y: (value: number) => number,
+): string {
+  return values.flatMap((value, index) =>
+    value == null ? [] : [`${x(index).toFixed(2)},${y(value).toFixed(2)}`],
+  ).join(' ');
+}
+
+function captureChanges(values: readonly (number | null)[]): readonly (number | null)[] {
+  return values.map((value, index) => {
+    const previous = index > 0 ? values[index - 1] : null;
+    return value == null || previous == null ? null : value - previous;
+  });
+}
+
+function robustAbsoluteLimit(values: readonly number[]): number {
+  const sorted = values.map(Math.abs).filter(Number.isFinite).sort((left, right) => left - right);
+  if (!sorted.length) return 1;
+  return sorted[Math.floor((sorted.length - 1) * 0.95)] || 1;
+}
+
 function makeXScale(
   rowCount: number,
   width: number,
@@ -358,6 +477,17 @@ function makeYScale(
   bottom: number,
 ): (value: number) => number {
   return value => top + (maximum - value) / Math.max(1, maximum - minimum) * (height - top - bottom);
+}
+
+function makeClampedYScale(
+  minimum: number,
+  maximum: number,
+  height: number,
+  top: number,
+  bottom: number,
+): (value: number) => number {
+  const scale = makeYScale(minimum, maximum, height, top, bottom);
+  return value => scale(clamp(value, minimum, maximum));
 }
 
 function paddedDomain(values: readonly number[], padding: number): [number, number] {

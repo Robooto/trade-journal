@@ -42,6 +42,10 @@
           <line class="gex-grid" x1="58" [attr.y1]="tick.position" [attr.x2]="mapWidth - 36" [attr.y2]="tick.position" />
           <text class="gex-axis-label" x="50" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
         }
+        @for (level of renderedPriceLevels; track level.id) {
+          <line class="marked-price-line" x1="58" [attr.y1]="level.position" [attr.x2]="mapWidth - 36" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+          <text class="marked-price-label" [attr.x]="mapWidth - 42" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
+        }
         @for (node of renderNodes; track node.key) {
           @if (node.negative) {
             <path [attr.class]="node.cssClass" [attr.d]="node.path" [attr.opacity]="node.opacity"><title>{{ node.title }}</title></path>
