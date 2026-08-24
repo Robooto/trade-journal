@@ -81,8 +81,21 @@ describe('SessionTrendsComponent', () => {
     ]);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.trend-svg--price .marked-price-line')).toHaveLength(1);
-    expect(fixture.nativeElement.querySelectorAll('.trend-svg--hiro .marked-price-line')).toHaveLength(1);
+    const priceChart = fixture.nativeElement.querySelector('.trend-svg--price') as SVGElement;
+    const hiroChart = fixture.nativeElement.querySelector('.trend-svg--hiro') as SVGElement;
+    const priceLayer = priceChart.querySelector('.marked-price-layer') as SVGElement;
+    const hiroLayer = hiroChart.querySelector('.marked-price-layer') as SVGElement;
+    const priceNode = priceChart.querySelector('.structure-node') as SVGElement;
+    const hiroSeries = hiroChart.querySelector('.trend-line') as SVGElement;
+
+    expect(priceChart.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    expect(hiroChart.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    expect(priceChart.querySelectorAll('.marked-price-line-halo')).toHaveLength(1);
+    expect(hiroChart.querySelectorAll('.marked-price-line-halo')).toHaveLength(1);
+    expect(Array.from(priceChart.children).indexOf(priceLayer))
+      .toBeGreaterThan(Array.from(priceChart.children).indexOf(priceNode));
+    expect(Array.from(hiroChart.children).indexOf(hiroLayer))
+      .toBeGreaterThan(Array.from(hiroChart.children).indexOf(hiroSeries));
     expect(fixture.nativeElement.textContent).toContain('Invalidation');
   });
 

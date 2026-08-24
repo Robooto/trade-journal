@@ -95,7 +95,14 @@ describe('SignedGexMapComponent', () => {
     ]);
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    const chart = fixture.nativeElement.querySelector('.gex-map') as SVGElement;
+    const levelLayer = chart.querySelector('.marked-price-layer') as SVGElement;
+    const node = chart.querySelector('.gex-node--positive') as SVGElement;
+
+    expect(chart.querySelectorAll('.marked-price-line')).toHaveLength(1);
+    expect(chart.querySelectorAll('.marked-price-line-halo')).toHaveLength(1);
+    expect(Array.from(chart.children).indexOf(levelLayer))
+      .toBeGreaterThan(Array.from(chart.children).indexOf(node));
     expect(fixture.nativeElement.textContent).toContain('Decision level');
   });
 });
