@@ -28,12 +28,14 @@
       <span>Positive Charm is a bull-put research qualifier only. Delta direction is descriptive. Neither affects Flow Ideas, scoring, grades, or entry permission.</span>
     </div>
 
-    @if (overview.interpretation?.evidence?.checkpoint; as checkpoint) {
-      <div class="checkpoint-strip" role="status">
-        <div><span>Frozen prospective checkpoint</span><strong>{{ checkpoint.completed_sessions }} / {{ checkpoint.required_sessions }} sessions</strong></div>
-        <div class="checkpoint-track"><i [style.width.%]="checkpoint.completed_sessions / checkpoint.required_sessions * 100"></i></div>
-        <small>Started {{ checkpoint.start_date }} · {{ overview.interpretation.evidence.status.replaceAll('_', ' ') }} · as of {{ overview.interpretation.evidence.as_of }}</small>
-      </div>
+    @if (overview.interpretation.evidence; as evidence) {
+      @if (evidence.checkpoint; as checkpoint) {
+        <div class="checkpoint-strip" role="status">
+          <div><span>Frozen prospective checkpoint</span><strong>{{ checkpoint.completed_sessions }} / {{ checkpoint.required_sessions }} sessions</strong></div>
+          <div class="checkpoint-track"><i [style.width.%]="checkpoint.completed_sessions / checkpoint.required_sessions * 100"></i></div>
+          <small>Started {{ checkpoint.start_date }} · {{ evidence.status.replaceAll('_', ' ') }} · as of {{ evidence.as_of }}</small>
+        </div>
+      }
     }
 
     <div class="metric-grid" aria-label="Selected Charm context">
