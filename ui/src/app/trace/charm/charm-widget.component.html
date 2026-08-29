@@ -28,7 +28,7 @@
       <span>Positive Charm is a bull-put research qualifier only. Delta direction is descriptive. Neither affects Flow Ideas, scoring, grades, or entry permission.</span>
     </div>
 
-    @if (overview.interpretation.evidence; as evidence) {
+    @if (overview.interpretation?.evidence; as evidence) {
       @if (evidence.checkpoint; as checkpoint) {
         <div class="checkpoint-strip" role="status">
           <div><span>Frozen prospective checkpoint</span><strong>{{ checkpoint.completed_sessions }} / {{ checkpoint.required_sessions }} sessions</strong></div>
