@@ -17,7 +17,7 @@ import { TraceApiService } from './data-access/trace-api.service';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
-import { TracePageComponent } from './trace-page.component';
+import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.component';
 
 class CharmApiStub {
   readonly surface = vi.fn(() => of({
@@ -89,6 +89,59 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Thin frontend boundary');
     expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
     expect(fixture.nativeElement.textContent).not.toContain('Legacy TRACE');
+  });
+
+  it('aligns automatic updates one minute after each ten-minute TRACE capture', () => {
+    expect(nextTraceAutoRefreshAt(new Date('2026-07-24T12:00:30'))).toEqual(new Date('2026-07-24T12:02:00'));
+    expect(nextTraceAutoRefreshAt(new Date('2026-07-24T12:02:00'))).toEqual(new Date('2026-07-24T12:12:00'));
+    expect(nextTraceAutoRefreshAt(new Date('2026-07-24T12:08:45'))).toEqual(new Date('2026-07-24T12:12:00'));
+  });
+
+  it('automatically reloads at the next aligned update time', () => {
+    fixture.destroy();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-24T12:00:30'));
+    facade.loadSessions.mockClear();
+    facade.reload.mockClear();
+
+    fixture = TestBed.createComponent(TracePageComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.nextAutoRefreshAt()).toEqual(new Date('2026-07-24T12:02:00'));
+    expect(fixture.nativeElement.textContent).toContain('Automatic updates on');
+
+    vi.advanceTimersByTime(89_999);
+    expect(facade.reload).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(facade.reload).toHaveBeenCalledOnce();
+    expect(fixture.componentInstance.nextAutoRefreshAt()).toEqual(new Date('2026-07-24T12:12:00'));
+
+    fixture.destroy();
+    vi.useRealTimers();
+  });
+
+  it('defers a scheduled update while hidden and catches up when visible', () => {
+    fixture.destroy();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-24T12:00:30'));
+    const visibilityState = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    facade.reload.mockClear();
+
+    fixture = TestBed.createComponent(TracePageComponent);
+    fixture.detectChanges();
+    vi.advanceTimersByTime(90_000);
+
+    expect(facade.reload).not.toHaveBeenCalled();
+    expect(fixture.componentInstance.nextAutoRefreshAt()).toBeNull();
+
+    visibilityState.mockReturnValue('visible');
+    fixture.componentInstance.handleVisibilityChange();
+
+    expect(facade.reload).toHaveBeenCalledOnce();
+    expect(fixture.componentInstance.nextAutoRefreshAt()).toEqual(new Date('2026-07-24T12:12:00'));
+
+    visibilityState.mockRestore();
+    fixture.destroy();
+    vi.useRealTimers();
   });
 
   it('selects only dates present in the TRACE session catalog', () => {

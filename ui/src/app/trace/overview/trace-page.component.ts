@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, HostListener, OnInit, computed, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, computed, effect, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { TraceFacade } from './data-access/trace.facade';
@@ -11,6 +11,9 @@ import {
 } from './trace-price-levels';
 
 const ALERT_COOLDOWN_MS = 30 * 60 * 1000;
+const TRACE_CAPTURE_INTERVAL_MINUTES = 10;
+const TRACE_CAPTURE_MINUTE_OFFSET = 1;
+const TRACE_REFRESH_DELAY_MINUTES = 1;
 
 @Component({
   selector: 'app-trace-page',
@@ -19,13 +22,18 @@ const ALERT_COOLDOWN_MS = 30 * 60 * 1000;
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: false,
 })
-export class TracePageComponent implements OnInit {
+export class TracePageComponent implements OnInit, OnDestroy {
   priceLevelPrice: number | null = null;
   priceLevelLabel = '';
   priceLevelColor = '#fbbf24';
   priceLevelKind: TracePriceLevelKind = 'unclassified';
 
   private readonly alertState = new Map<string, { armed: boolean; lastAlertedAt: number | null }>();
+  private autoRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private autoRefreshPending = false;
+
+  readonly lastRefreshRequestedAt = signal<Date | null>(null);
+  readonly nextAutoRefreshAt = signal<Date | null>(null);
 
   constructor(
     readonly facade: TraceFacade,
@@ -37,6 +45,17 @@ export class TracePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.facade.loadSessions();
+    this.lastRefreshRequestedAt.set(new Date());
+    this.scheduleNextAutoRefresh();
+  }
+
+  ngOnDestroy(): void {
+    this.clearAutoRefreshTimer();
+  }
+
+  refreshNow(): void {
+    this.requestRefresh();
+    this.scheduleNextAutoRefresh();
   }
 
   readonly selectedSessionDate = computed(() => parseSessionDate(this.facade.selectedDate()));
@@ -112,6 +131,17 @@ export class TracePageComponent implements OnInit {
     this.facade.stepCapture(event.key === 'ArrowLeft' ? -1 : 1);
   }
 
+  @HostListener('document:visibilitychange')
+  handleVisibilityChange(): void {
+    if (document.visibilityState === 'hidden') return;
+    const nextRefresh = this.nextAutoRefreshAt();
+    if (this.autoRefreshPending || !nextRefresh || Date.now() >= nextRefresh.getTime()) {
+      this.autoRefreshPending = false;
+      this.requestRefresh();
+      this.scheduleNextAutoRefresh();
+    }
+  }
+
   statusClass(status: TraceContractStatus | 'unavailable'): string {
     return `trace-status--${status.replace('_', '-')}`;
   }
@@ -127,6 +157,15 @@ export class TracePageComponent implements OnInit {
       hour: 'numeric',
       minute: '2-digit',
     }).format(parsed);
+  }
+
+  formatRefreshTime(value: Date | null): string {
+    if (!value) return 'Waiting for tab';
+    return new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(value);
   }
 
   priceLevelKindLabel(kind: TracePriceLevelKind): string {
@@ -186,6 +225,43 @@ export class TracePageComponent implements OnInit {
       );
     }
   }
+
+  private requestRefresh(now = new Date()): void {
+    this.lastRefreshRequestedAt.set(now);
+    this.facade.reload();
+  }
+
+  private scheduleNextAutoRefresh(now = new Date()): void {
+    this.clearAutoRefreshTimer();
+    const nextRefresh = nextTraceAutoRefreshAt(now);
+    this.nextAutoRefreshAt.set(nextRefresh);
+    this.autoRefreshTimer = setTimeout(() => {
+      this.autoRefreshTimer = null;
+      if (document.visibilityState === 'hidden') {
+        this.autoRefreshPending = true;
+        this.nextAutoRefreshAt.set(null);
+        return;
+      }
+      this.requestRefresh();
+      this.scheduleNextAutoRefresh();
+    }, Math.max(0, nextRefresh.getTime() - now.getTime()));
+  }
+
+  private clearAutoRefreshTimer(): void {
+    if (this.autoRefreshTimer !== null) clearTimeout(this.autoRefreshTimer);
+    this.autoRefreshTimer = null;
+  }
+}
+
+export function nextTraceAutoRefreshAt(now: Date): Date {
+  const next = new Date(now);
+  next.setMilliseconds(0);
+  next.setSeconds(0);
+  const refreshMinuteOffset = TRACE_CAPTURE_MINUTE_OFFSET + TRACE_REFRESH_DELAY_MINUTES;
+  const minutesSinceRefreshOffset = next.getMinutes() - refreshMinuteOffset;
+  const intervalsElapsed = Math.floor(minutesSinceRefreshOffset / TRACE_CAPTURE_INTERVAL_MINUTES);
+  next.setMinutes(refreshMinuteOffset + (intervalsElapsed + 1) * TRACE_CAPTURE_INTERVAL_MINUTES);
+  return next;
 }
 
 function isInteractiveTarget(target: EventTarget | null): boolean {

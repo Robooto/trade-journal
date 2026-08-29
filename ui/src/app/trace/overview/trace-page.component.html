@@ -6,7 +6,12 @@
       <p>Versioned market structure, flow, and volatility context from the mini.</p>
     </div>
     <div class="trace-actions">
-      <button mat-flat-button color="primary" type="button" (click)="facade.reload()">
+      <div class="trace-auto-refresh" aria-live="polite">
+        <strong><mat-icon>schedule</mat-icon> Automatic updates on</strong>
+        <span>Last requested {{ formatRefreshTime(lastRefreshRequestedAt()) }}</span>
+        <span>Next update {{ formatRefreshTime(nextAutoRefreshAt()) }}</span>
+      </div>
+      <button mat-flat-button color="primary" type="button" (click)="refreshNow()">
         <mat-icon>refresh</mat-icon>
         Refresh
       </button>

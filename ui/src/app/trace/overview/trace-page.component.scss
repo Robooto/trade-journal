@@ -51,7 +51,32 @@
 .trace-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.65rem;
+}
+
+.trace-auto-refresh {
+  display: grid;
+  justify-items: end;
+  gap: 0.08rem;
+  color: #93a4bd;
+  font-size: 0.72rem;
+  line-height: 1.25;
+}
+
+.trace-auto-refresh strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #a8e6c1;
+  font-size: 0.75rem;
+}
+
+.trace-auto-refresh mat-icon {
+  width: 1rem;
+  height: 1rem;
+  font-size: 1rem;
 }
 
 .trace-control-panel,
