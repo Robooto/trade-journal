@@ -13,6 +13,22 @@
     </div>
   </header>
 
+  @if (facade.researchStatus?.(); as status) {
+    <section class="research-evidence-strip" aria-label="TRACE research evidence status">
+      <header><div><p class="trace-eyebrow">Evidence registry</p><strong>{{ status.evidence_version }}</strong></div><span>As of {{ status.as_of }} · {{ status.scoring_enabled_count }} scoring-enabled</span></header>
+      <div class="research-evidence-badges">
+        @for (study of facade.visibleResearchStatuses?.() ?? []; track study.id) {
+          <span class="research-evidence-badge" [attr.data-status]="study.status">
+            <strong>{{ study.label }}</strong>
+            <small>{{ study.status.replaceAll('_', ' ') }}@if (study.checkpoint) { · {{ study.checkpoint.completed_sessions }}/{{ study.checkpoint.required_sessions }} }</small>
+          </span>
+        }
+      </div>
+    </section>
+  } @else if (facade.researchStatusError?.()) {
+    <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError?.() }}</span></div></section>
+  }
+
   <section class="trace-control-panel" aria-label="TRACE session controls">
     <mat-form-field appearance="outline" class="trace-date-field" subscriptSizing="dynamic">
       <mat-label>Session date</mat-label>

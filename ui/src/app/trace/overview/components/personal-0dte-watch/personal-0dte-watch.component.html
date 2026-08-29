@@ -18,8 +18,10 @@
     <div class="personal-watch__facts">
       <div><span>Gamma</span><strong>{{ response.observations.gamma_regime }}</strong></div>
       <div><span>Window</span><strong>{{ response.observations.in_research_window ? '08:00–10:00 PT' : 'Outside study window' }}</strong></div>
-      <div><span>Structure</span><strong>{{ response.setup ? formatLevel(response.setup.structure_level) : 'No qualifying level' }}</strong></div>
-      <div><span>Short zone</span><strong>{{ shortZone(response) }}</strong></div>
+      <div><span>Invalidation level</span><strong>{{ response.setup ? formatLevel(response.setup.structure_level) : 'No qualifying level' }}</strong></div>
+      <div><span>Invalidation distance</span><strong>{{ response.setup ? formatLevel(response.setup.invalidation_distance_points) + ' pts' : 'Unavailable' }}</strong></div>
+      <div><span>Short-strike requirement</span><strong>{{ shortStrikeRequirement(response) }}</strong></div>
+      <div><span>Studied strike buffer</span><strong>{{ response.setup ? response.setup.short_strike_requirement.studied_buffer_min_points + '–' + response.setup.short_strike_requirement.studied_buffer_max_points + ' pts beyond invalidation' : 'Verify live chain' }}</strong></div>
     </div>
     @if (response.setup; as setup) {
       <div class="personal-watch__setup">
@@ -27,6 +29,19 @@
         <strong>{{ setup.spread_width_points }}-point credit vertical</strong>
         <small>{{ setup.hiro_state.replaceAll('_', ' ') }} · {{ setup.structure_type?.replaceAll('_', ' ') }}</small>
       </div>
+    }
+    @if (response.execution_journal; as execution) {
+      <section class="personal-watch__execution" aria-label="Execution journal completeness">
+        <header><div><span>Execution journal</span><strong>{{ execution.status.replaceAll('_', ' ') }}</strong></div><small>{{ execution.note }}</small></header>
+        <div>
+          <span>TRACE overlap<strong>{{ execution.trace_candidate_overlap ? 'Yes' : 'No' }}</strong></span>
+          <span>Entry lag<strong>{{ executionValue(execution.entry_lag_minutes, ' min') }}</strong></span>
+          <span>SPX MFE / MAE<strong>{{ executionValue(execution.trace_path_mfe_points, ' pts') }} / {{ executionValue(execution.trace_path_mae_points, ' pts') }}</strong></span>
+          <span>Credit / fees<strong>{{ executionValue(execution.executed_credit) }} / {{ executionValue(execution.fees) }}</strong></span>
+          <span>Slippage<strong>{{ executionValue(execution.slippage) }}</strong></span>
+          <span>Quote time<strong>{{ execution.quote_timestamp || 'Not linked' }}</strong></span>
+        </div>
+      </section>
     }
     <footer>
       <mat-icon>science</mat-icon>

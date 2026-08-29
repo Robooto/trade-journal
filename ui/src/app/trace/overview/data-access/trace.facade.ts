@@ -25,6 +25,8 @@ import {
   TraceDashboardRow,
   TraceGammaProfileResponse,
   TraceRealizedVolatilityRow,
+  TraceResearchStatusResponse,
+  TraceStudyStatus,
   TraceResourceStatus,
   TraceSessionBundle,
   TraceSessionDescriptor,
@@ -46,6 +48,8 @@ export class TraceFacade implements OnDestroy {
   private readonly reloadSubject = new Subject<void>();
 
   readonly sessions = signal<readonly TraceSessionDescriptor[]>([]);
+  readonly researchStatus = signal<TraceResearchStatusResponse | null>(null);
+  readonly researchStatusError = signal<string | null>(null);
   readonly sessionsLoading = signal(false);
   readonly sessionsError = signal<string | null>(null);
   readonly selectedDate = signal('');
@@ -105,6 +109,17 @@ export class TraceFacade implements OnDestroy {
     this.resourceStatuses().filter(resource => resource.status !== 'unavailable').length,
   );
 
+  readonly visibleResearchStatuses = computed<readonly TraceStudyStatus[]>(() => {
+    const ids = new Set([
+      'credit-spread-confirmation-quality',
+      'gamma-slope-transitions',
+      'signed-gex-interaction',
+      'hiro-divergence-lifecycle',
+      'charm-delta-pressure',
+    ]);
+    return (this.researchStatus()?.studies ?? []).filter(study => ids.has(study.id));
+  });
+
   constructor(private readonly api: TraceApiService, private readonly charmApi: CharmApiService) {
     this.subscriptions.add(
       merge(
@@ -146,6 +161,7 @@ export class TraceFacade implements OnDestroy {
   }
 
   loadSessions(): void {
+    this.loadResearchStatus();
     this.sessionsLoading.set(true);
     this.sessionsError.set(null);
     const subscription = this.api.sessions().pipe(
@@ -156,6 +172,19 @@ export class TraceFacade implements OnDestroy {
         return EMPTY;
       }),
     ).subscribe(response => this.applySessions(response));
+    this.subscriptions.add(subscription);
+  }
+
+  private loadResearchStatus(): void {
+    if (typeof this.api.researchStatus !== 'function') return;
+    this.researchStatusError.set(null);
+    const subscription = this.api.researchStatus().pipe(
+      catchError(error => {
+        this.researchStatus.set(null);
+        this.researchStatusError.set(toSafeMessage(error, 'Research evidence status is unavailable.'));
+        return EMPTY;
+      }),
+    ).subscribe(response => this.researchStatus.set(response));
     this.subscriptions.add(subscription);
   }
 

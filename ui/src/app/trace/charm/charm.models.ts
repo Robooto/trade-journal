@@ -6,6 +6,9 @@ export interface CharmSeriesPoint {
   spot: number;
   surface_spot: number;
   charm_at_market: number;
+  delta_at_market?: number | null;
+  delta_at_market_change?: number | null;
+  delta_change_direction?: 'rising' | 'falling' | 'flat' | 'unavailable';
   bull_put_research_qualifier: boolean;
   nearest_flip: number | null;
   spot_minus_flip: number | null;
@@ -27,6 +30,13 @@ export interface CharmOverview {
     bull_put_research_qualifier_enabled: true;
     visual_parity: string;
     note: string;
+    evidence?: {
+      status: string;
+      as_of: string | null;
+      evidence_version?: string | null;
+      scoring_enabled: boolean;
+      checkpoint: { completed_sessions: number; required_sessions: number; start_date: string | null; protocol?: string } | null;
+    };
   };
   quality: {
     total_rows: number;

@@ -2,9 +2,22 @@ export type FlowReportStatus = 'ready' | 'partial' | 'missing';
 
 export interface FlowReportDate {
   readonly trading_date: string;
+  readonly report_date?: string | null;
   readonly status: FlowReportStatus;
   readonly candidate_count: number;
   readonly quality_issue_count: number;
+  readonly blocking_issue_count?: number;
+}
+
+export interface FlowQualitySummary {
+  readonly report_date: string | null;
+  readonly trading_date: string;
+  readonly status: FlowReportStatus;
+  readonly total_issue_count: number;
+  readonly blocking_issue_count: number;
+  readonly affected_symbols: readonly string[];
+  readonly affected_sections: readonly string[];
+  readonly suppressed_from_scoring: boolean;
 }
 
 export interface FlowDatesResponse {
@@ -51,12 +64,14 @@ export interface FlowCandidate {
 export interface FlowCandidatesResponse {
   readonly schema_version: 'flowpatrol-candidates.v1';
   readonly trading_date: string;
+  readonly report_date?: string | null;
   readonly status: FlowReportStatus;
   readonly total: number;
   readonly limit: number;
   readonly offset: number;
   readonly rows: readonly FlowCandidate[];
   readonly brokerage_enrichment: FlowBrokerageEnrichment;
+  readonly quality?: FlowQualitySummary;
 }
 
 export interface FlowIdeasServerFilters {

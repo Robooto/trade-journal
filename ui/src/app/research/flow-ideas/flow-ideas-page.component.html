@@ -59,13 +59,21 @@
     </section>
   }
 
-  @if (facade.candidateResponse()?.status === 'partial') {
+  @if (facade.candidateResponse()?.quality; as quality) {
+    <section class="flow-state flow-quality-strip" [class.flow-state-warning]="quality.status === 'partial'" role="status">
+      <mat-icon aria-hidden="true">{{ quality.status === 'partial' ? 'warning_amber' : 'verified' }}</mat-icon>
+      <div class="flow-quality-copy">
+        <strong>FlowPatrol quality · {{ quality.status }}</strong>
+        <p>Report {{ quality.report_date || 'unknown' }} · trading date {{ quality.trading_date }} · {{ quality.blocking_issue_count }} blocking / {{ quality.total_issue_count }} total issues.</p>
+        @if (quality.affected_symbols.length || quality.affected_sections.length) {
+          <p>Affected: {{ quality.affected_symbols.join(', ') || 'no symbol extracted' }} · sections {{ quality.affected_sections.join(', ') || 'unknown' }}. {{ quality.suppressed_from_scoring ? 'Blocked rows are suppressed from scoring.' : 'No rows are suppressed from scoring.' }}</p>
+        }
+      </div>
+    </section>
+  } @else if (facade.candidateResponse()?.status === 'partial') {
     <section class="flow-state flow-state-warning" role="status">
       <mat-icon aria-hidden="true">warning_amber</mat-icon>
-      <div>
-        <strong>Partial FlowPatrol report</strong>
-        <p>Some source quality checks blocked scoring. The accepted evidence remains available for research.</p>
-      </div>
+      <div><strong>Partial FlowPatrol report</strong><p>Some source quality checks blocked scoring. Accepted evidence remains available for research.</p></div>
     </section>
   }
 

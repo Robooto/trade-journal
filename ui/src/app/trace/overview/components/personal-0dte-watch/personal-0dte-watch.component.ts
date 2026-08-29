@@ -59,6 +59,17 @@ export class Personal0DteWatchComponent implements OnChanges, OnDestroy {
     return value == null ? 'Unavailable' : value.toLocaleString('en-US', { maximumFractionDigits: 1 });
   }
 
+  shortStrikeRequirement(response: Personal0DteWatchResponse): string {
+    const requirement = response.setup?.short_strike_requirement;
+    if (!requirement) return 'Verify live chain';
+    const operator = requirement.side === 'below' ? '≤' : '≥';
+    return `${operator} ${this.formatLevel(requirement.invalidation_level)}`;
+  }
+
+  executionValue(value: number | null | undefined, suffix = ''): string {
+    return value == null ? 'Not linked' : `${value.toFixed(1)}${suffix}`;
+  }
+
   shortZone(response: Personal0DteWatchResponse): string {
     const zone = response.setup?.short_strike_zone;
     return zone?.length === 2

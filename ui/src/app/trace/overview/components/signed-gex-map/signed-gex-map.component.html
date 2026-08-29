@@ -17,6 +17,11 @@
     </div>
   </header>
 
+  <div class="gex-research-caution" role="note">
+    <mat-icon>science</mat-icon>
+    <span>Research context only: negative-node breaches showed more follow-through in the current sample, but the effect changes across 3-, 5-, and 8-point touch definitions. Negative GEX is not support, resistance, a target, or a pass-through signal.</span>
+  </div>
+
   @if (activeNodes.length) {
     <div class="active-node-strip" aria-label="Selected capture key GEX nodes">
       @for (node of activeNodes; track node.capture_id + node.gamma_sign + node.timestamp + node.center_strike) {

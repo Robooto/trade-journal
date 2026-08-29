@@ -263,3 +263,35 @@ export interface TraceResourceStatus {
   readonly status: TraceContractStatus | 'unavailable';
   readonly warningCount: number;
 }
+export type TraceStudyDisposition =
+  | 'production'
+  | 'presentation_only'
+  | 'research'
+  | 'collecting'
+  | 'demoted'
+  | 'gate_ready';
+
+export interface TraceStudyCheckpoint {
+  readonly completed_sessions: number;
+  readonly required_sessions: number;
+  readonly start_date: string | null;
+  readonly protocol?: string;
+}
+
+export interface TraceStudyStatus {
+  readonly id: string;
+  readonly label: string;
+  readonly status: TraceStudyDisposition;
+  readonly scoring_enabled: boolean;
+  readonly note?: string;
+  readonly checkpoint?: TraceStudyCheckpoint;
+}
+
+export interface TraceResearchStatusResponse {
+  readonly schema_version: 'trace-study-registry.v1';
+  readonly as_of: string;
+  readonly evidence_version: string;
+  readonly study_count: number;
+  readonly scoring_enabled_count: number;
+  readonly studies: readonly TraceStudyStatus[];
+}

@@ -8,6 +8,7 @@ import {
   TraceHistogramResponse,
   TraceIntradayContextResponse,
   TraceRealizedVolatilityResponse,
+  TraceResearchStatusResponse,
   TraceSessionsResponse,
   TraceSnapshotResponse,
   TraceSummaryResponse,
@@ -23,6 +24,10 @@ export class TraceApiService {
 
   sessions(): Observable<TraceSessionsResponse> {
     return this.http.get<TraceSessionsResponse>(`${this.baseUrl}/sessions`);
+  }
+
+  researchStatus(): Observable<TraceResearchStatusResponse> {
+    return this.http.get<TraceResearchStatusResponse>(`${this.baseUrl}/research-status`);
   }
 
   summary(date: string): Observable<TraceSummaryResponse> {

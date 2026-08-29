@@ -16,7 +16,7 @@
 .personal-watch__state--watch { color: #f7c766; background: rgba(245, 158, 11, 0.15); }
 .personal-watch__state--inactive { color: #9dafc6; background: rgba(148, 163, 184, 0.12); }
 .personal-watch__reason { margin: 0; color: #c9d6e8; line-height: 1.45; }
-.personal-watch__facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.65rem; }
+.personal-watch__facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 0.65rem; }
 .personal-watch__facts div { min-width: 0; padding: 0.65rem 0.75rem; border-radius: 0.65rem; background: rgba(255, 255, 255, 0.04); }
 .personal-watch__facts span, .personal-watch__facts strong { display: block; }
 .personal-watch__facts span { color: #8193ab; font-size: 0.65rem; text-transform: uppercase; }
@@ -33,3 +33,5 @@
   .personal-watch__setup { grid-template-columns: 1fr; }
   .personal-watch__setup small { text-align: left; }
 }
+.personal-watch__execution{display:grid;gap:.55rem;padding:.7rem .8rem;border:1px solid rgba(148,163,184,.18);border-radius:.7rem;background:rgba(0,0,0,.12)}
+.personal-watch__execution header{display:flex;align-items:start;justify-content:space-between;gap:1rem}.personal-watch__execution header div{display:grid;gap:.1rem}.personal-watch__execution header span,.personal-watch__execution small,.personal-watch__execution>div span{color:#8193ab;font-size:.65rem;text-transform:uppercase}.personal-watch__execution header strong{font-size:.8rem;text-transform:capitalize}.personal-watch__execution header small{max-width:34rem;text-align:right;text-transform:none}.personal-watch__execution>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:.5rem}.personal-watch__execution>div span{display:grid;gap:.2rem}.personal-watch__execution>div strong{color:#dbe7f7;font-size:.75rem;text-transform:none}

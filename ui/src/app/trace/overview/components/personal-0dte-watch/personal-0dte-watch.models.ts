@@ -7,7 +7,16 @@ export interface Personal0DteWatchSetup {
   readonly structure_type: string | null;
   readonly structure_level: number;
   readonly structure_distance: number;
+  readonly invalidation_distance_points: number;
+  readonly invalidation_band: string;
   readonly short_strike_zone: readonly number[];
+  readonly short_strike_requirement: {
+    readonly side: 'below' | 'above';
+    readonly invalidation_level: number;
+    readonly studied_buffer_min_points: number;
+    readonly studied_buffer_max_points: number;
+    readonly status: 'unverified_live_chain';
+  };
   readonly spread_width_points: number;
 }
 
@@ -34,5 +43,17 @@ export interface Personal0DteWatchResponse {
     readonly option_quote_required: boolean;
   };
   readonly reason: string;
+  readonly execution_journal: {
+    readonly status: 'not_linked' | 'linked';
+    readonly trace_candidate_overlap: boolean;
+    readonly entry_lag_minutes: number | null;
+    readonly trace_path_mfe_points: number | null;
+    readonly trace_path_mae_points: number | null;
+    readonly executed_credit: number | null;
+    readonly fees: number | null;
+    readonly slippage: number | null;
+    readonly quote_timestamp: string | null;
+    readonly note: string;
+  };
   readonly warnings: readonly string[];
 }
