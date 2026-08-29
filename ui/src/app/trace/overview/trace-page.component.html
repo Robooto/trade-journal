@@ -74,14 +74,42 @@
           <mat-label>Label</mat-label>
           <input matInput name="priceLevelLabel" [(ngModel)]="priceLevelLabel" placeholder="Invalidation, target..." />
         </mat-form-field>
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Gamma type</mat-label>
+          <mat-select name="priceLevelKind" [(ngModel)]="priceLevelKind">
+            <mat-option value="unclassified">Unclassified</mat-option>
+            <mat-option value="positive_gamma">Positive gamma</mat-option>
+            <mat-option value="negative_gamma">Negative gamma</mat-option>
+          </mat-select>
+        </mat-form-field>
         <label class="price-level-color">Color <input type="color" name="priceLevelColor" [(ngModel)]="priceLevelColor" /></label>
         <button mat-flat-button color="primary" type="submit" [disabled]="!priceLevelPrice">Add level</button>
       </form>
     </header>
+    @if (nearbyPriceLevels().length) {
+      <div class="price-proximity-rail" aria-live="polite" aria-label="Nearby marked price levels">
+        @for (level of nearbyPriceLevels(); track level.id) {
+          <article [attr.data-state]="level.proximityState" [attr.data-kind]="level.kind">
+            <span class="price-proximity-state">{{ proximityStateLabel(level) }}</span>
+            <div>
+              <strong>{{ level.label }} · {{ level.price | number:'1.0-2' }}</strong>
+              <span>{{ level.distancePoints | number:'1.1-1' }} pts · {{ approachLabel(level) }}</span>
+            </div>
+            <small>{{ proximityContext(level.kind) }}</small>
+          </article>
+        }
+      </div>
+    }
     @if (priceLevels.levels().length) {
       <div class="price-level-list" aria-label="Marked SPX price levels">
-        @for (level of priceLevels.levels(); track level.id) {
-          <span><i [style.background]="level.color"></i><strong>{{ level.price | number:'1.0-2' }}</strong>{{ level.label }}<button type="button" (click)="removePriceLevel(level.id)" [attr.aria-label]="'Remove ' + level.label"><mat-icon>close</mat-icon></button></span>
+        @for (level of displayedPriceLevels(); track level.id) {
+          <span [attr.data-state]="level.proximityState ?? 'far'">
+            <i [style.background]="level.color"></i>
+            <strong>{{ level.price | number:'1.0-2' }}</strong>
+            {{ level.label }}
+            <small>{{ priceLevelKindLabel(level.kind) }}@if (level.distancePoints !== undefined) { · {{ level.distancePoints | number:'1.1-1' }} pts }</small>
+            <button type="button" (click)="removePriceLevel(level.id)" [attr.aria-label]="'Remove ' + level.label"><mat-icon>close</mat-icon></button>
+          </span>
         }
       </div>
     } @else {
@@ -171,7 +199,7 @@
       [rows]="facade.captureRows()"
       [nodes]="histogram.rows"
       [activeIndex]="facade.selectedCaptureIndex()"
-      [priceLevels]="priceLevels.levels()"
+      [priceLevels]="displayedPriceLevels()"
     />
   }
 
@@ -180,7 +208,7 @@
       [rows]="facade.captureRows()"
       [nodes]="facade.bundle()?.histogram?.rows ?? []"
       [activeIndex]="facade.selectedCaptureIndex()"
-      [priceLevels]="priceLevels.levels()"
+      [priceLevels]="displayedPriceLevels()"
     />
   }
 
@@ -192,7 +220,7 @@
       [captureTs]="facade.selectedCapture()?.ts ?? null"
       [loading]="facade.gammaProfileLoading()"
       [error]="facade.gammaProfileError()"
-      [priceLevels]="priceLevels.levels()"
+      [priceLevels]="displayedPriceLevels()"
       (captureSelected)="selectCaptureTimestamp($event)"
     />
   }
@@ -202,7 +230,7 @@
     [overview]="facade.charmOverview()"
     [loading]="facade.charmLoading()"
     [error]="facade.charmError()"
-    [priceLevels]="priceLevels.levels()"
+    [priceLevels]="displayedPriceLevels()"
     (captureSelected)="selectCaptureTimestamp($event)"
     (refreshRequested)="facade.reload()"
   />

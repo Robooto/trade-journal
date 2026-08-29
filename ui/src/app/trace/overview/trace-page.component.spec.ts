@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { SharedMaterialModule } from '../../shared/material.module';
 import { CharmApiService } from '../charm/charm-api.service';
@@ -222,11 +223,13 @@ describe('TracePageComponent', () => {
     component.priceLevelPrice = 7412.5;
     component.priceLevelLabel = 'Invalidation';
     component.priceLevelColor = '#fbbf24';
+    component.priceLevelKind = 'negative_gamma';
 
     component.addPriceLevel();
     fixture.detectChanges();
 
     expect(component.priceLevels.levels()).toHaveLength(1);
+    expect(component.priceLevels.levels()[0].kind).toBe('negative_gamma');
     expect(fixture.nativeElement.textContent).toContain('Invalidation');
     expect(globalThis.localStorage.getItem('trade-journal.trace.price-levels.v1')).toContain('7412.5');
 
@@ -234,6 +237,31 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     expect(component.priceLevels.levels()).toHaveLength(0);
+  });
+
+  it('shows a contextual soft alert when the latest capture enters five points of a level', () => {
+    const snackBar = TestBed.inject(MatSnackBar);
+    const open = vi.spyOn(snackBar, 'open');
+    const capture = { ts: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', spot: 7412 };
+    facade.captureRows.set([capture]);
+    facade.selectedCapture.set(capture);
+    facade.selectedCaptureIndex.set(0);
+    const component = fixture.componentInstance;
+    component.priceLevelPrice = 7415;
+    component.priceLevelLabel = 'Negative band';
+    component.priceLevelKind = 'negative_gamma';
+
+    component.addPriceLevel();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Elevated breach / acceleration risk');
+    expect(fixture.nativeElement.textContent).toContain('3.0 pts');
+    expect(open).toHaveBeenCalledOnce();
+    expect(open.mock.calls[0][0]).toContain('Negative band 7,415 · 3.0 pts');
+
+    facade.selectedCapture.set({ ...capture, spot: 7413 });
+    fixture.detectChanges();
+    expect(open).toHaveBeenCalledOnce();
   });
 
   it('keeps charts in the same sequence as the legacy TRACE dashboard', () => {

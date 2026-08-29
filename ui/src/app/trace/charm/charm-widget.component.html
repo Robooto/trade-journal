@@ -77,7 +77,7 @@
             <svg [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" role="img" aria-label="Charm pressure by hypothetical SPX spot">
               <line x1="28" [attr.y1]="chartHeight / 2" [attr.x2]="chartWidth - 28" [attr.y2]="chartHeight / 2" class="zero-line" />
               @for (level of surfacePriceLevels; track level.id) {
-                <line class="marked-price-line" [attr.x1]="level.position" y1="18" [attr.x2]="level.position" [attr.y2]="chartHeight - 18" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+                <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" [attr.x1]="level.position" y1="18" [attr.x2]="level.position" [attr.y2]="chartHeight - 18" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
                 <text class="marked-price-label" [attr.x]="level.position" y="31" text-anchor="middle" [attr.fill]="level.color">{{ level.label }}</text>
               }
               @if (spotX !== null) { <line [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="chartHeight - 18" class="spot-line"><title>SPX spot {{ surface?.spot }}</title></line> }

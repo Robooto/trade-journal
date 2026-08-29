@@ -52,8 +52,8 @@
           }
           <g class="marked-price-layer" aria-label="Marked price levels">
             @for (level of priceLevelMarkers; track level.id) {
-              <line class="marked-price-line-halo" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
-              <line class="marked-price-line" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+              <line [class]="'marked-price-line-halo marked-price-line-halo--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
+              <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
               <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
             }
           </g>
@@ -135,8 +135,8 @@
           }
           <g class="marked-price-layer" aria-label="Marked price levels">
             @for (level of hiroPriceLevelMarkers; track level.id) {
-              <line class="marked-price-line-halo" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
-              <line class="marked-price-line" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+              <line [class]="'marked-price-line-halo marked-price-line-halo--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
+              <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
               <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
             }
           </g>

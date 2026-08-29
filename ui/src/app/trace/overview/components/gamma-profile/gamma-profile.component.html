@@ -113,7 +113,7 @@
               <rect [attr.class]="bar.cssClass" [attr.x]="bar.x" [attr.y]="bar.y" [attr.width]="bar.width" [attr.height]="bar.height"><title>{{ bar.title }}</title></rect>
             }
             @for (level of profilePriceLevels; track level.id) {
-              <line class="marked-price-line" [attr.x1]="level.position" y1="18" [attr.x2]="level.position" [attr.y2]="height - 36" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
+              <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" [attr.x1]="level.position" y1="18" [attr.x2]="level.position" [attr.y2]="height - 36" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
               <text class="marked-price-label" [attr.x]="level.position" [attr.y]="height - 42" text-anchor="middle" [attr.fill]="level.color">{{ level.label }}</text>
             }
             <line class="profile-spot" [attr.x1]="spotX" y1="18" [attr.x2]="spotX" [attr.y2]="height - 36" />
