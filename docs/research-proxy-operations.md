@@ -1,6 +1,6 @@
 # Research proxy operations
 
-Last reviewed: 2026-07-18
+Last reviewed: 2026-08-30
 
 The Trade Journal UI exposes market-data research through the same browser
 origin while leaving the backend on the mini:
@@ -11,16 +11,17 @@ origin while leaving the backend on the mini:
   -> RESEARCH_BACKEND_URL/api/flowpatrol/*
 ```
 
-The Raspberry Pi deployment defaults to
-`RESEARCH_BACKEND_URL=http://192.168.50.248:8765`. Override it in the Pi
-`.env` when the mini address or port changes. Do not include a trailing slash.
+The mini deployment uses
+`RESEARCH_BACKEND_URL=http://192.168.50.248:8765`. Keep the address in the
+deployment `.env`, not Angular source, and do not include a trailing slash.
 
 ## Failure isolation
 
-The UI service does not depend on the mini container and the application's
-health check remains `/v1/`, which is served by the Trade Journal API. If the
-mini is stopped or unreachable, only `/research-api/*` requests return an
-upstream error; journal, positions, and the Angular shell remain available.
+The UI service does not depend on the market-data API process and the
+application's health check remains `/v1/`, which is served by the Trade Journal
+API. If the research API is stopped or unreachable, only `/research-api/*`
+requests return an upstream error; journal, positions, and the Angular shell
+remain available.
 
 The proxy uses a three-second connection timeout. Report processing may take
 longer, so its read timeout is 180 seconds. Nginx accepts a 21 MB multipart

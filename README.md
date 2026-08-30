@@ -63,12 +63,17 @@ Leave the value false or unset anywhere that should remain read-only. Production
 UI requests use same-origin `/v1` routing through Nginx. `CORS_ORIGINS` is only
 needed for separately hosted development clients and accepts a comma-separated
 list of allowed origins.
-## Pi deployment
+## Production deployment
+
+Production runs on the x86_64 mini beside the market-data pipeline. See
+[`docs/mini-operations.md`](docs/mini-operations.md) for backup, deployment,
+health, and rollback procedures. The former Raspberry Pi deployment remains a
+stopped rollback target during the migration window.
 
 Initial setup:
 
 ```bash
-git clone https://github.com/Robooto/trade-journal.git
+git clone git@github.com:Robooto/trade-journal.git
 cd trade-journal
 cp .env.example .env
 nano .env
@@ -80,9 +85,9 @@ Subsequent updates:
 
 ```bash
 cd trade-journal
-git pull
-docker compose down
-docker compose up --build -d
+git fetch --prune origin
+git checkout --detach origin/main
+docker compose up --build -d --remove-orphans
 ```
 
 Keep credentials out of Git and restrict access to local environment files.

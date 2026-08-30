@@ -1,5 +1,10 @@
 # Raspberry Pi operations
 
+Status: legacy rollback target after the 2026-08-30 production migration to
+the mini. Do not run the Pi and mini Trade Journal APIs concurrently with live
+trading or brokerage-watchlist writes enabled. See `mini-operations.md` for the
+active production procedure.
+
 The Raspberry Pi at `192.168.50.245` runs Trade Journal under the `roost` user.
 Local tests are the deployment gate; CI is intentionally deferred. SSH keys,
 brokerage credentials, databases, and other machine state stay outside Git.
