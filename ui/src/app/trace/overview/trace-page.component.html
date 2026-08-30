@@ -183,10 +183,16 @@
       </div>
     </section>
 
-    <app-personal-0dte-watch
-      [date]="facade.selectedDate()"
-      [captureTs]="capture.ts"
-    />
+    <div class="trace-0dte-comparison" aria-label="0DTE research comparison">
+      <app-personal-0dte-watch
+        [date]="facade.selectedDate()"
+        [captureTs]="capture.ts"
+      />
+      <app-strategy-posture
+        [date]="facade.selectedDate()"
+        [captureTs]="capture.ts"
+      />
+    </div>
 
     <app-trace-market-snapshot
       [rows]="facade.captureRows()"

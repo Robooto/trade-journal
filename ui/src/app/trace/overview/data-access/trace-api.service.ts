@@ -15,6 +15,7 @@ import {
   TraceTimeseriesResponse,
 } from '../trace.models';
 import { Personal0DteWatchResponse } from '../components/personal-0dte-watch/personal-0dte-watch.models';
+import { StrategyPostureResponse } from '../components/strategy-posture/strategy-posture.models';
 
 @Injectable({ providedIn: 'root' })
 export class TraceApiService {
@@ -90,6 +91,11 @@ export class TraceApiService {
   personal0DteWatch(date: string, ts: string): Observable<Personal0DteWatchResponse> {
     const params = new HttpParams().set('ts', ts);
     return this.http.get<Personal0DteWatchResponse>(this.sessionUrl(date) + '/personal-0dte-watch', { params });
+  }
+
+  strategyPosture(date: string, ts: string): Observable<StrategyPostureResponse> {
+    const params = new HttpParams().set('ts', ts);
+    return this.http.get<StrategyPostureResponse>(this.sessionUrl(date) + '/strategy-posture', { params });
   }
 
   private sessionUrl(date: string): string {

@@ -8,6 +8,7 @@ import { CaptureHistoryComponent } from './overview/components/capture-history/c
 import { GammaProfileComponent } from './overview/components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './overview/components/market-snapshot/market-snapshot.component';
 import { Personal0DteWatchComponent } from './overview/components/personal-0dte-watch/personal-0dte-watch.component';
+import { StrategyPostureComponent } from './overview/components/strategy-posture/strategy-posture.component';
 import { SessionTrendsComponent } from './overview/components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './overview/components/signed-gex-map/signed-gex-map.component';
 import { TracePageComponent } from './overview/trace-page.component';
@@ -20,6 +21,7 @@ import { TraceRoutingModule } from './trace-routing.module';
     GammaProfileComponent,
     MarketSnapshotComponent,
     Personal0DteWatchComponent,
+    StrategyPostureComponent,
     SessionTrendsComponent,
     SignedGexMapComponent,
     CharmWidgetComponent,

@@ -56,5 +56,11 @@ describe('TraceApiService', () => {
       request.params.get('ts') === ts &&
       request.params.get('window_rows') === '8',
     ).flush({});
+
+    api.strategyPosture(date, ts).subscribe();
+    http.expectOne(request =>
+      request.url === `/research-api/api/trace/${date}/strategy-posture` &&
+      request.params.get('ts') === ts,
+    ).flush({});
   });
 });

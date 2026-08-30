@@ -1,0 +1,46 @@
+<section class="strategy-posture" aria-labelledby="strategy-posture-title">
+  <header>
+    <div>
+      <p class="strategy-posture__eyebrow">Frozen shadow study · {{ posture()?.research?.status?.replaceAll('_', ' ') || 'research only' }}</p>
+      <h2 id="strategy-posture-title">Strategy posture comparison</h2>
+    </div>
+    @if (posture(); as response) {
+      <span class="strategy-posture__state" [ngClass]="statusClass(response.status)">{{ response.status }}</span>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="strategy-posture__message"><mat-spinner diameter="24"></mat-spinner><span>Classifying this TRACE capture…</span></div>
+  } @else if (error()) {
+    <div class="strategy-posture__message strategy-posture__message--error"><mat-icon>warning</mat-icon><span>{{ error() }}</span></div>
+  } @else if (posture(); as response) {
+    <div class="strategy-posture__headline">
+      <span>Shadow posture</span>
+      <strong>{{ postureLabel(response.posture) }}</strong>
+      <small>Compare with the unchanged personal watch; disagreement is expected research evidence.</small>
+    </div>
+
+    <div class="strategy-posture__facts">
+      <div><span>Frozen structure</span><strong>{{ response.frozen_structure ? formatLevel(response.frozen_structure.level) : 'None selected' }}</strong></div>
+      <div><span>Distance at freeze</span><strong>{{ response.frozen_structure ? formatLevel(response.frozen_structure.distance_points_at_freeze) + ' pts' : 'Unavailable' }}</strong></div>
+      <div><span>Gamma</span><strong>{{ response.observations.pocket_sign || 'Unavailable' }}</strong></div>
+      <div><span>SPX / equities HIRO</span><strong>{{ hiroLabel(response.observations.spx_hiro) }} / {{ hiroLabel(response.observations.equities_hiro) }}</strong></div>
+      <div><span>Prior capture</span><strong>{{ response.provenance.prior_capture_id || 'Unavailable' }}</strong></div>
+      <div><span>Evidence status</span><strong>{{ response.research.status.replaceAll('_', ' ') }}</strong></div>
+      <div><span>Scoring</span><strong>Disabled</strong></div>
+    </div>
+
+    @if (response.reason_codes.length) {
+      <div class="strategy-posture__reasons" aria-label="Strategy posture reasons">
+        @for (reason of response.reason_codes; track reason) {
+          <span>{{ reasonLabel(reason) }}</span>
+        }
+      </div>
+    }
+
+    <footer>
+      <mat-icon>science</mat-icon>
+      <span>Shadow comparison only. It does not replace the personal watch, evaluate an option chain, or authorize a trade.</span>
+    </footer>
+  }
+</section>
