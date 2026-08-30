@@ -16,9 +16,9 @@ Flow Ideas parity before adding new features.
 
 ```text
 Browser
-  -> Raspberry Pi trade-journal Nginx / Angular
+  -> mini trade-journal Nginx / Angular :8877
      -> /v1/*           -> trade-journal API
-     -> /research-api/* -> mini market-data-pipeline :8765
+     -> /research-api/* -> market-data-pipeline :8765
   -> SpotGamma EquityHub through an explicit external action
 
 Mini market-data-pipeline
@@ -117,7 +117,8 @@ Current endpoints cover functional parity. Harden these details with the client:
 3. Return `asset_type` or `is_index_etf` so Angular stops hard-coding XSP,
    SPY, SPX, IWM, and QQQ.
 4. Retain enrichment and quality status at queue and detail levels.
-5. Verify upload size, timeout, conflict, and validation through the Pi proxy.
+5. Verify upload size, timeout, conflict, and validation through the Trade
+   Journal proxy.
 
 Local display filters can remain client-side for parity. If volume grows, add
 backend filters rather than reproducing data rules in Angular.
@@ -149,8 +150,8 @@ schema/error metadata where needed.
 ### RF-02 - Research proxy and failure isolation
 
 Add configurable production/development proxies, upload size and timeout. Smoke
-test Pi-to-mini access and verify a stopped mini does not break journal or
-positions.
+test same-host process isolation and verify a stopped market-data service does
+not break journal or positions.
 
 ### RF-03 - Research shell and navigation
 
@@ -177,8 +178,8 @@ selection, navigation, or page load.
 
 ### RF-07 - Parity, cutover, and cleanup
 
-The deterministic local parity gate and Pi-to-mini smoke tests compared the old
-and new presentations on the same ready and partial dates. After the backend,
+The deterministic local parity gate and Trade Journal-to-market-data smoke tests
+compared the old and new presentations on the same ready and partial dates. After the backend,
 brokerage enrichment, index classification, watchlist, and proxy checks passed,
 the standalone Flow Ideas and TRACE pages were retired. Every versioned mini API
 and backend ownership boundary remains in place; see

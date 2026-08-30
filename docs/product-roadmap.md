@@ -300,7 +300,7 @@ ingestion, analysis, ranking, and versioned APIs remain in
 The July 2026 modernization established the current supported baseline: Angular
 21 on Node 22, Vitest and jsdom for UI tests, Python 3.11 for the API, hashed
 Python dependency locks, slim multi-stage containers, a non-root API runtime,
-container health checks, and guarded Pi deployment with backup and rollback.
+container health checks, and guarded mini deployment with backup and rollback.
 
 Next maintenance batch (low risk):
 
@@ -321,15 +321,15 @@ Breaking migrations to schedule and test separately:
 - Uvicorn, HTTPX, pytest, pytest-asyncio, and NumPy major or compatibility-line
   upgrades.
 - Move the API from Python 3.11 to a newer supported runtime only after all
-  production dependencies have ARM64 wheels and the Pi image passes the full
-  gate.
+  production dependencies support the mini's x86_64 image and it passes the
+  full gate.
 
 Container hardening follow-up:
 
 - Pin Python, Node, and Nginx base images by digest for reproducible releases,
   and adopt an explicit process for refreshing those digests after testing.
-- Periodically review the Pi OS, Docker Engine, and Compose versions separately
-  from application dependency upgrades.
+- Periodically review the mini OS, rootless Docker Engine, and Compose versions
+  separately from application dependency upgrades.
 
 ## Safety boundaries
 

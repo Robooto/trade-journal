@@ -42,6 +42,7 @@ fi
 
 echo "==> Compose configuration"
 docker compose config --quiet
+docker compose -f docker-compose.yml -f docker-compose.mini.yml config --quiet
 
 if [[ "${CHECK_DOCKER_BUILD:-0}" == "1" ]]; then
   echo "==> Production container builds"

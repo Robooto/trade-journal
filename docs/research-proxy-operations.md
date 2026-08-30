@@ -3,7 +3,7 @@
 Last reviewed: 2026-08-30
 
 The Trade Journal UI exposes market-data research through the same browser
-origin while leaving the backend on the mini:
+origin while keeping backend ownership and processes separate on the mini:
 
 ```text
 /research-api/api/flowpatrol/*
@@ -39,13 +39,13 @@ source code should always call the relative `/research-api/` path.
 Render and validate the Compose model:
 
 ```bash
-docker compose config --quiet
+docker compose -f docker-compose.yml -f docker-compose.mini.yml config --quiet
 ```
 
 Build the UI image to render the Nginx template:
 
 ```bash
-docker compose build ui
+docker compose -f docker-compose.yml -f docker-compose.mini.yml build ui
 ```
 
 After starting the stack, verify the independent paths:
@@ -56,6 +56,6 @@ curl --fail http://127.0.0.1:8877/research-api/api/health
 curl --fail http://127.0.0.1:8877/research-api/api/flowpatrol/dates
 ```
 
-Stopping or blocking the mini should make the latter two fail without changing
-the first result. Research availability is intentionally not part of the
-Trade Journal container health check.
+Stopping or blocking the market-data API should make the latter two fail
+without changing the first result. Research availability is intentionally not
+part of the Trade Journal container health check.

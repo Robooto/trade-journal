@@ -68,9 +68,9 @@ list of allowed origins.
 Production runs on the x86_64 mini beside the market-data pipeline. See
 [`docs/mini-operations.md`](docs/mini-operations.md) for backup, deployment,
 health, and rollback procedures. The former Raspberry Pi deployment remains a
-stopped rollback target during the migration window.
+stopped, write-disabled recovery snapshot and is not a deployment target.
 
-Initial setup:
+Initial setup on the mini:
 
 ```bash
 git clone git@github.com:Robooto/trade-journal.git
@@ -78,16 +78,14 @@ cd trade-journal
 cp .env.example .env
 nano .env
 # Add broker credentials and deliberately choose whether live trading is enabled.
-docker compose up --build -d
+docker compose -f docker-compose.yml -f docker-compose.mini.yml \
+  up --build --detach
 ```
 
-Subsequent updates:
+Subsequent updates run from a trusted workstation checkout:
 
 ```bash
-cd trade-journal
-git fetch --prune origin
-git checkout --detach origin/main
-docker compose up --build -d --remove-orphans
+scripts/mini-ops.sh deploy
 ```
 
 Keep credentials out of Git and restrict access to local environment files.

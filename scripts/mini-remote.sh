@@ -8,10 +8,12 @@ STATE_DIR="${TRADE_JOURNAL_STATE_DIR:-$HOME/.local/state/trade-journal}"
 BACKUP_DIR="${TRADE_JOURNAL_BACKUP_DIR:-$HOME/backups/trade-journal}"
 DATABASE_PATH="${TRADE_JOURNAL_DATABASE_PATH:-$APP_DIR/api/journal.db}"
 HEALTH_URL="${TRADE_JOURNAL_HEALTH_URL:-http://127.0.0.1:8877/v1/}"
+RESEARCH_HEALTH_URL="${TRADE_JOURNAL_RESEARCH_HEALTH_URL:-http://127.0.0.1:8877/research-api/api/health}"
+COMPOSE=(docker compose -f docker-compose.yml -f docker-compose.mini.yml)
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
-    echo "Missing required command on Pi: $1" >&2
+    echo "Missing required command on mini: $1" >&2
     exit 1
   }
 }
@@ -26,10 +28,17 @@ enter_app() {
 
 require_clean_checkout() {
   if ! git diff --quiet || ! git diff --cached --quiet; then
-    echo "Refusing to deploy over tracked changes on the Pi:" >&2
+    echo "Refusing to deploy over tracked changes on the mini:" >&2
     git status --short >&2
     exit 1
   fi
+}
+
+require_rootless_docker() {
+  docker info --format '{{json .SecurityOptions}}' | grep -q 'rootless' || {
+    echo "docker-compose.mini.yml requires the mini's rootless Docker daemon." >&2
+    exit 1
+  }
 }
 
 backup_database() {
@@ -42,31 +51,24 @@ backup_database() {
   local timestamp destination
   timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
   destination="$BACKUP_DIR/journal-$timestamp.db"
-  python3 - "$DATABASE_PATH" "$destination" <<'PY'
-import sqlite3
-import sys
-
-source_path, destination_path = sys.argv[1:]
-with sqlite3.connect(source_path) as source:
-    with sqlite3.connect(destination_path) as destination:
-        source.backup(destination)
-print(destination_path)
-PY
+  python3 scripts/sqlite-backup.py "$DATABASE_PATH" "$destination"
   find "$BACKUP_DIR" -maxdepth 1 -type f -name 'journal-*.db' -mtime +30 -delete
 }
 
 wait_for_health() {
   local attempt
   for attempt in $(seq 1 30); do
-    if curl --fail --silent --show-error "$HEALTH_URL" >/dev/null; then
+    if curl --fail --silent --show-error "$HEALTH_URL" >/dev/null \
+      && curl --fail --silent --show-error "$RESEARCH_HEALTH_URL" >/dev/null; then
       echo "Healthy: $HEALTH_URL"
+      echo "Research healthy: $RESEARCH_HEALTH_URL"
       return 0
     fi
     sleep 2
   done
   echo "Health verification failed: $HEALTH_URL" >&2
-  docker compose ps >&2
-  docker compose logs --tail=100 >&2
+  "${COMPOSE[@]}" ps >&2
+  "${COMPOSE[@]}" logs --tail=100 >&2
   return 1
 }
 
@@ -76,6 +78,7 @@ deploy_revision() {
 
   enter_app
   require_clean_checkout
+  require_rootless_docker
   mkdir -p "$STATE_DIR"
   backup_database
 
@@ -85,9 +88,9 @@ deploy_revision() {
   printf '%s\n' "$current_revision" > "$STATE_DIR/previous-revision"
   printf '%s\n' "$target_revision" > "$STATE_DIR/current-revision"
 
-  echo "Deploying $target_revision (previous: $current_revision)"
+  echo "Deploying $target_revision to mini (previous: $current_revision)"
   git checkout --detach "$target_revision"
-  docker compose up --build --detach --remove-orphans --force-recreate
+  "${COMPOSE[@]}" up --build --detach --remove-orphans --force-recreate
   wait_for_health
 }
 
@@ -97,8 +100,9 @@ case "$COMMAND" in
     require_command docker
     require_command curl
     require_command python3
-    docker compose version
     enter_app
+    require_rootless_docker
+    "${COMPOSE[@]}" config --quiet
     echo "Checkout: $APP_DIR"
     echo "Revision: $(git rev-parse --short HEAD)"
     git status --short --branch
@@ -118,12 +122,9 @@ case "$COMMAND" in
     require_command curl
     enter_app
     echo "Revision: $(git rev-parse --short HEAD)"
-    docker compose ps
-    if curl --fail --silent --show-error "$HEALTH_URL" >/dev/null; then
-      echo "Health: OK ($HEALTH_URL)"
-    else
-      echo "Health: FAILED ($HEALTH_URL)"
-    fi
+    "${COMPOSE[@]}" ps
+    curl --fail --silent --show-error "$HEALTH_URL" >/dev/null && echo "Health: OK ($HEALTH_URL)"
+    curl --fail --silent --show-error "$RESEARCH_HEALTH_URL" >/dev/null && echo "Research: OK ($RESEARCH_HEALTH_URL)"
     df -h "$APP_DIR"
     if [[ -d "$BACKUP_DIR" ]]; then
       echo "Latest backups:"
@@ -133,9 +134,9 @@ case "$COMMAND" in
   logs)
     enter_app
     if [[ -n "$ARGUMENT" ]]; then
-      docker compose logs --tail=200 "$ARGUMENT"
+      "${COMPOSE[@]}" logs --tail=200 "$ARGUMENT"
     else
-      docker compose logs --tail=200
+      "${COMPOSE[@]}" logs --tail=200
     fi
     ;;
   backup)

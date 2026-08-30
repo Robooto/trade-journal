@@ -19,22 +19,35 @@ shareable backup. Only one Trade Journal API host may have
 
 ## Deployment
 
-Before changing revisions, create an online SQLite backup and record the
-current commit:
+From the workspace checkout, use the guarded mini operations command. It runs
+the local deployment gate, creates an online SQLite backup, records the current
+revision, fetches the requested revision, rebuilds the stack, and verifies both
+Trade Journal and Research health:
 
 ```bash
-cd /home/roost/trade-journal
-mkdir -p /home/roost/backups/trade-journal
-python3 scripts/sqlite-backup.py api/journal.db /home/roost/backups/trade-journal/journal-$(date -u +%Y%m%dT%H%M%SZ).db
-git rev-parse HEAD
-git fetch --prune origin
-git checkout --detach origin/main
-docker compose -f docker-compose.yml -f docker-compose.mini.yml \
-  up --build --detach --remove-orphans
+scripts/mini-ops.sh check
+scripts/mini-ops.sh preflight
+scripts/mini-ops.sh deploy
 ```
 
-If `scripts/sqlite-backup.py` is unavailable, use Python's `sqlite3.Connection.backup`
-API; never copy a database file while it may be receiving writes.
+The default SSH target is `roost@192.168.50.248`. Override it with
+`TRADE_JOURNAL_SSH_HOST` and optionally set
+`TRADE_JOURNAL_SSH_IDENTITY` to an SSH private-key path. Deploy a specific tag,
+branch, or commit with `scripts/mini-ops.sh deploy <ref>`.
+
+Routine operations:
+
+```bash
+scripts/mini-ops.sh status
+scripts/mini-ops.sh logs
+scripts/mini-ops.sh logs api
+scripts/mini-ops.sh backup
+scripts/mini-ops.sh rollback
+```
+
+Backups are retained for 30 days. If `scripts/sqlite-backup.py` is unavailable,
+use Python's `sqlite3.Connection.backup` API; never copy a database file while
+it may be receiving writes.
 
 Host ports default to 8877 for UI and 8876 for API. A side-by-side validation
 stack must use a separate checkout and copied database; changing only the
@@ -74,6 +87,5 @@ containers. Do not restore an older database automatically: stop the API, make
 another backup of current state, select the intended backup explicitly, and
 run `PRAGMA integrity_check` before restart.
 
-The Raspberry Pi remains a stopped rollback target during the migration
-window. Starting it requires first stopping the mini Trade Journal stack or
-forcing both Pi write-safety flags to `false`.
+The retired Raspberry Pi is only a stopped, write-disabled recovery snapshot.
+Do not deploy to it. See `raspberry-pi-operations.md` for the retirement guard.
