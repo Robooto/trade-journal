@@ -29,7 +29,8 @@ python3 scripts/sqlite-backup.py api/journal.db /home/roost/backups/trade-journa
 git rev-parse HEAD
 git fetch --prune origin
 git checkout --detach origin/main
-docker compose up --build --detach --remove-orphans
+docker compose -f docker-compose.yml -f docker-compose.mini.yml \
+  up --build --detach --remove-orphans
 ```
 
 If `scripts/sqlite-backup.py` is unavailable, use Python's `sqlite3.Connection.backup`
@@ -43,8 +44,14 @@ isolated checkout, override ports and disable writes without editing Compose:
 ```bash
 TRADE_JOURNAL_UI_PORT=8977 TRADE_JOURNAL_API_PORT=8976 \
   LIVE_TRADING_ENABLED=false BROKERAGE_WATCHLIST_WRITES_ENABLED=false \
-  docker compose -p trade-journal-stage up --build --detach
+  docker compose -f docker-compose.yml -f docker-compose.mini.yml \
+  -p trade-journal-stage up --build --detach
 ```
+
+The mini runs rootless Docker. Its override runs the API as container UID 0,
+which maps to the unprivileged `roost` user on the host and permits access to
+the owner-only SQLite bind mount. Do not use this override with a rootful Docker
+daemon.
 
 ## Health checks
 
@@ -52,7 +59,7 @@ TRADE_JOURNAL_UI_PORT=8977 TRADE_JOURNAL_API_PORT=8976 \
 curl --fail http://127.0.0.1:8877/
 curl --fail http://127.0.0.1:8876/v1/
 curl --fail http://127.0.0.1:8877/research-api/api/health
-docker compose ps
+docker compose -f docker-compose.yml -f docker-compose.mini.yml ps
 ```
 
 Also verify journal reads and brokerage-backed account context before enabling
