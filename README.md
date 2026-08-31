@@ -25,6 +25,9 @@ Tastytrade client.
 - Account risk context with net liquidity, brokerage buying power, review zones, theta/vega relative to net liquidity, beta-delta concentration, and balance data-quality notes.
 - A single-leg bracket-order workflow that previews by default and requires explicit live confirmation.
 - Historical price charts and a versioned equity analysis package.
+- One SPX 0DTE Decision Journal card that renders the pipeline-owned system
+  take/pass score and stores one immutable human take/pass, supported credit
+  type, and notes per TRACE capture; neither path can submit an order.
 - LLM-friendly position, market-data, volatility, and equity-analysis responses.
 
 ## Equity analysis package

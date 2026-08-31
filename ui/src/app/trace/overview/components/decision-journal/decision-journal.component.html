@@ -1,0 +1,77 @@
+<section class="decision-journal" aria-labelledby="decision-journal-title">
+  <header>
+    <div>
+      <p class="decision-journal__eyebrow">Prospective research · no order submission</p>
+      <h2 id="decision-journal-title">SPX 0DTE Decision Journal</h2>
+    </div>
+    @if (systemDecision(); as response) {
+      <span class="decision-journal__state" [ngClass]="statusClass(response.decision_status)">{{ response.decision_status }}</span>
+    }
+  </header>
+
+  @if (loading()) {
+    <div class="decision-journal__message"><mat-spinner diameter="24"></mat-spinner><span>Scoring this TRACE capture…</span></div>
+  } @else if (error()) {
+    <div class="decision-journal__message decision-journal__message--error"><mat-icon>warning</mat-icon><span>{{ error() }}</span></div>
+  } @else if (systemDecision(); as response) {
+    <div class="decision-journal__headline" [ngClass]="decisionClass(response.decision)">
+      <span>System decision</span>
+      <strong>{{ response.decision }} · {{ label(response.trade_type) }}</strong>
+      <small>Grade {{ response.grade }} · {{ response.quality_score }}/100 hierarchy strength</small>
+    </div>
+
+    <div class="decision-journal__facts">
+      <div><span>Frozen structure</span><strong>{{ response.frozen_structure ? formatLevel(response.frozen_structure.level) : 'None selected' }}</strong></div>
+      <div><span>Room at freeze</span><strong>{{ response.frozen_structure ? formatLevel(response.frozen_structure.distance_points_at_freeze) + ' pts' : 'Unavailable' }}</strong></div>
+      <div><span>Paper width</span><strong>{{ response.paper_trade.spread_width_points }} points</strong></div>
+      <div><span>Profit target</span><strong>{{ formatPercent(response.paper_trade.profit_target_fraction_of_initial_credit) }} of initial credit</strong></div>
+      <div><span>Forced exit</span><strong>{{ response.paper_trade.forced_exit_time }}</strong></div>
+      <div><span>Execution</span><strong>Disabled</strong></div>
+    </div>
+
+    <div class="decision-journal__reasons" aria-label="System decision reasons">
+      @for (reason of response.reason_codes; track reason) {
+        <span>{{ label(reason) }}</span>
+      }
+    </div>
+
+    <section class="decision-journal__human" aria-labelledby="human-decision-title">
+      <header>
+        <div>
+          <span>Your capture decision</span>
+          <strong id="human-decision-title">Take, pass, and optional notes</strong>
+        </div>
+        <small>Saved decisions are immutable.</small>
+      </header>
+      @if (humanDecision(); as saved) {
+        <div class="decision-journal__saved">
+          <strong>{{ saved.decision }} · {{ label(saved.trade_type) }}</strong>
+          <span>{{ saved.notes || 'No notes' }}</span>
+        </div>
+      } @else {
+        <div class="decision-journal__choices" role="group" aria-label="Human take or pass">
+          <button type="button" [class.is-selected]="humanChoice === 'take'" (click)="chooseHumanDecision('take')">Take</button>
+          <button type="button" [class.is-selected]="humanChoice === 'pass'" (click)="chooseHumanDecision('pass')">Pass</button>
+        </div>
+        @if (humanChoice === 'take') {
+          <label>Trade type
+            <select [(ngModel)]="humanTradeType">
+              <option [ngValue]="null">Choose one</option>
+              <option value="bull_put_credit">Bull put credit</option>
+              <option value="bear_call_credit">Bear call credit</option>
+            </select>
+          </label>
+        }
+        <label>Notes
+          <textarea [(ngModel)]="humanNotes" maxlength="2000" rows="3" placeholder="What did you see, trust, or disagree with?"></textarea>
+        </label>
+        <button class="decision-journal__save" type="button" [disabled]="saving()" (click)="saveHumanDecision()">
+          {{ saving() ? 'Saving…' : 'Freeze my decision' }}
+        </button>
+      }
+      @if (saveError()) { <p class="decision-journal__error">{{ saveError() }}</p> }
+    </section>
+
+    <footer><mat-icon>science</mat-icon><span>The score ranks hierarchy evidence; it is not probability of profit or permission to trade.</span></footer>
+  }
+</section>

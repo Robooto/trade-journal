@@ -183,14 +183,11 @@
       </div>
     </section>
 
-    <div class="trace-0dte-comparison" aria-label="0DTE research comparison">
-      <app-personal-0dte-watch
+    <div class="trace-0dte-comparison" aria-label="SPX 0DTE Decision Journal">
+      <app-decision-journal
         [date]="facade.selectedDate()"
         [captureTs]="capture.ts"
-      />
-      <app-strategy-posture
-        [date]="facade.selectedDate()"
-        [captureTs]="capture.ts"
+        [captureId]="capture.capture_id"
       />
     </div>
 

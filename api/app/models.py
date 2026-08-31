@@ -193,3 +193,23 @@ class ImportedSpreadTradeORM(Base):
     max_risk_dollars = Column(Float, nullable=True)
     holding_minutes = Column(Float, nullable=False)
     created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+
+class Spx0DteHumanDecisionORM(Base):
+    __tablename__ = "spx_0dte_human_decisions"
+    __table_args__ = (
+        UniqueConstraint(
+            "session_date",
+            "capture_id",
+            name="uq_spx_0dte_human_decision_session_capture",
+        ),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_date = Column(Date, nullable=False, index=True)
+    trace_ts = Column(DateTime(timezone=True), nullable=False, index=True)
+    capture_id = Column(String(128), nullable=False, index=True)
+    decision = Column(String(8), nullable=False)
+    trade_type = Column(String(32), nullable=True)
+    notes = Column(String(2000), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

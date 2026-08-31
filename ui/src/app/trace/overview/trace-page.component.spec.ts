@@ -12,8 +12,7 @@ import { CharmWidgetComponent } from '../charm/charm-widget.component';
 import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './components/market-snapshot/market-snapshot.component';
-import { Personal0DteWatchComponent } from './components/personal-0dte-watch/personal-0dte-watch.component';
-import { StrategyPostureComponent } from './components/strategy-posture/strategy-posture.component';
+import { DecisionJournalComponent } from './components/decision-journal/decision-journal.component';
 import { TraceApiService } from './data-access/trace-api.service';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
@@ -31,27 +30,25 @@ class CharmApiStub {
   }));
 }
 class TraceApiStub {
-  readonly personal0DteWatch = vi.fn(() => of({ schema_version: 'trace-personal-0dte-watch.v1', status: 'ready', as_of: '2026-07-24T13:00:05-07:00', capture_id: 'capture-2', state: 'inactive', label: 'Provisional personal study', setup: null, observations: { spot: 7412, gamma_regime: 'negative', local_gamma_setup: null, in_research_window: false }, rules: { expiration: '0DTE', spread_width_points: 5, max_short_strike_distance_points: 15, research_window: '08:00–10:00 America/Los_Angeles', candidate_requires_positive_gamma: true, option_quote_required: true }, reason: 'No qualifying setup.', warnings: [] }));
-  readonly strategyPosture = vi.fn(() => of({
-    schema_version: 'spx-0dte-strategy-posture-shadow.v1',
-    status: 'ineligible',
-    classification_status: 'ineligible',
+  readonly decisionJournal = vi.fn(() => of({
+    schema_version: 'spx-0dte-decision.v1',
+    protocol_id: 'spx-0dte-decision-journal-v1',
     date: '2026-07-24',
-    generated_at: '2026-07-24T20:00:00Z',
-    as_of: '2026-07-24T13:00:05-07:00',
+    ts: '2026-07-24T13:00:05-07:00',
     capture_id: 'capture-2',
     prior_capture_id: 'capture-1',
-    selection: 'exact',
-    posture: null,
-    direction: null,
-    reason_codes: ['outside_research_window'],
+    decision_status: 'ineligible', decision: 'pass', trade_type: null, quality_score: 0, grade: 'D',
+    score_components: {}, hard_gates: { inside_decision_window: false }, reason_codes: ['outside_decision_window'],
     frozen_structure: null,
-    protocol: { id: 'spx-0dte-strategy-posture-v1', status: 'preregistered', frozen_on: '2026-08-30', prospective_start_date: '2026-08-31', automatic_scoring: false },
-    research: { study_id: 'spx-0dte-strategy-posture', status: 'preregistered', scoring_enabled: false, mode: 'shadow' },
-    provenance: { date: '2026-07-24', capture_id: 'capture-2', capture_ts: '2026-07-24T13:00:05-07:00', prior_capture_id: 'capture-1', prior_capture_ts: '2026-07-24T12:50:05-07:00' },
-    observations: { spot: 7412, pocket_sign: 'negative', spx_hiro: -1, spx_hiro_delta: -1, equities_hiro: -1, equities_hiro_delta: -1 },
-    warnings: ['research_only', 'scoring_disabled'],
+    execution_ready: false, paper_trade_status: 'not_open',
+    paper_trade: { spread_width_points: 5, profit_target_fraction_of_initial_credit: 0.5, forced_exit_time: '12:00 America/Los_Angeles' },
+    selection: 'exact',
+    protocol: { id: 'spx-0dte-decision-journal-v1', status: 'preregistered', frozen_on: '2026-08-30', prospective_start_date: '2026-08-31' },
+    study: { id: 'spx-0dte-decision-journal', status: 'preregistered', mode: 'prospective_decision_journal', order_submission_enabled: false, ai_decisioning: false },
+    warnings: [],
   }));
+  readonly human0DteDecision = vi.fn(() => of({ schema_version: 'spx-0dte-human-decision-list.v1', rows: [] }));
+  readonly createHuman0DteDecision = vi.fn();
 }
 class TraceFacadeStub {
   readonly sessions = signal([]);
@@ -89,7 +86,7 @@ describe('TracePageComponent', () => {
     globalThis.localStorage.removeItem('trade-journal.trace.price-levels.v1');
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, Personal0DteWatchComponent, StrategyPostureComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
+      declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, DecisionJournalComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
       imports: [
         CommonModule,
         FormsModule,
@@ -233,8 +230,7 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.textContent).toContain('Session timeline');
-    expect(fixture.nativeElement.textContent).toContain('0DTE near-money spread watch');
-    expect(fixture.nativeElement.textContent).toContain('Strategy posture comparison');
+    expect(fixture.nativeElement.textContent).toContain('SPX 0DTE Decision Journal');
     expect(fixture.nativeElement.textContent).toContain('Market snapshot');
     expect(fixture.nativeElement.textContent).toContain('−1.28B');
     expect(fixture.nativeElement.textContent).toContain('Medium movement');

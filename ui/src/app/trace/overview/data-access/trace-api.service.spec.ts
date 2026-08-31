@@ -57,10 +57,17 @@ describe('TraceApiService', () => {
       request.params.get('window_rows') === '8',
     ).flush({});
 
-    api.strategyPosture(date, ts).subscribe();
+    api.decisionJournal(date, ts).subscribe();
     http.expectOne(request =>
-      request.url === `/research-api/api/trace/${date}/strategy-posture` &&
+      request.url === `/research-api/api/trace/${date}/0dte-decision-journal` &&
       request.params.get('ts') === ts,
+    ).flush({});
+
+    api.human0DteDecision(date, 'capture-1').subscribe();
+    http.expectOne(request =>
+      request.url === '/v1/0dte-decisions' &&
+      request.params.get('session_date') === date &&
+      request.params.get('capture_id') === 'capture-1',
     ).flush({});
   });
 });

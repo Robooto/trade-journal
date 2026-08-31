@@ -14,8 +14,12 @@ import {
   TraceSummaryResponse,
   TraceTimeseriesResponse,
 } from '../trace.models';
-import { Personal0DteWatchResponse } from '../components/personal-0dte-watch/personal-0dte-watch.models';
-import { StrategyPostureResponse } from '../components/strategy-posture/strategy-posture.models';
+import {
+  Spx0DteDecisionJournalResponse,
+  Spx0DteHumanDecision,
+  Spx0DteHumanDecisionCreate,
+  Spx0DteHumanDecisionList,
+} from '../components/decision-journal/decision-journal.models';
 
 @Injectable({ providedIn: 'root' })
 export class TraceApiService {
@@ -88,14 +92,22 @@ export class TraceApiService {
     );
   }
 
-  personal0DteWatch(date: string, ts: string): Observable<Personal0DteWatchResponse> {
+  decisionJournal(date: string, ts: string): Observable<Spx0DteDecisionJournalResponse> {
     const params = new HttpParams().set('ts', ts);
-    return this.http.get<Personal0DteWatchResponse>(this.sessionUrl(date) + '/personal-0dte-watch', { params });
+    return this.http.get<Spx0DteDecisionJournalResponse>(
+      this.sessionUrl(date) + '/0dte-decision-journal', { params },
+    );
   }
 
-  strategyPosture(date: string, ts: string): Observable<StrategyPostureResponse> {
-    const params = new HttpParams().set('ts', ts);
-    return this.http.get<StrategyPostureResponse>(this.sessionUrl(date) + '/strategy-posture', { params });
+  human0DteDecision(date: string, captureId: string): Observable<Spx0DteHumanDecisionList> {
+    const params = new HttpParams()
+      .set('session_date', date)
+      .set('capture_id', captureId);
+    return this.http.get<Spx0DteHumanDecisionList>('/v1/0dte-decisions', { params });
+  }
+
+  createHuman0DteDecision(payload: Spx0DteHumanDecisionCreate): Observable<Spx0DteHumanDecision> {
+    return this.http.post<Spx0DteHumanDecision>('/v1/0dte-decisions', payload);
   }
 
   private sessionUrl(date: string): string {
