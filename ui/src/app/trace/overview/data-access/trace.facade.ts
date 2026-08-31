@@ -114,6 +114,7 @@ export class TraceFacade implements OnDestroy {
       'credit-spread-confirmation-quality',
       'gamma-slope-transitions',
       'signed-gex-interaction',
+      'hiro-cancellation-strength',
       'hiro-divergence-lifecycle',
       'charm-delta-pressure',
     ]);

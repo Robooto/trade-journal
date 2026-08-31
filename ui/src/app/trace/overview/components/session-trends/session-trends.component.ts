@@ -63,6 +63,12 @@ interface HiroJumpMarker {
   readonly title: string;
 }
 
+interface HiroBalanceMarker {
+  readonly key: string;
+  readonly x: number;
+  readonly title: string;
+}
+
 const PRICE_SERIES: readonly {
   key: NumericRowKey;
   label: string;
@@ -110,6 +116,7 @@ export class SessionTrendsComponent implements OnChanges {
   hiroMarkers: readonly ActiveMarker[] = [];
   hiroDirectionMarkers: readonly HiroDirectionMarker[] = [];
   hiroJumpMarkers: readonly HiroJumpMarker[] = [];
+  hiroBalanceMarkers: readonly HiroBalanceMarker[] = [];
   hiroPriceLevelMarkers: readonly RenderedPriceLevel[] = [];
   hiroJumpLineYPositive: number | null = null;
   hiroJumpLineYNegative: number | null = null;
@@ -177,6 +184,20 @@ export class SessionTrendsComponent implements OnChanges {
   valueTone(value: number | null | undefined): 'positive' | 'negative' | 'neutral' {
     if (value == null || value === 0) return 'neutral';
     return value > 0 ? 'positive' : 'negative';
+  }
+
+  hiroRelationshipLabel(row: TraceDashboardRow): string {
+    if (row.hiro_relationship_class === 'opposing' && row.hiro_balance_score != null) {
+      return `Opposing \u00b7 ${Math.round(row.hiro_balance_score * 100)}% balanced`;
+    }
+    if (row.hiro_relationship_class === 'aligned') return 'Aligned';
+    if (row.hiro_relationship_class === 'flat_or_zero') return 'Flat / zero';
+    return 'Unavailable';
+  }
+
+  gammaLabel(value: string | null | undefined): string {
+    if (!value) return 'Gamma unavailable';
+    return `${this.labelize(value)} gamma`;
   }
 
   private rebuildPriceChart(): void {
@@ -346,6 +367,18 @@ export class SessionTrendsComponent implements OnChanges {
         }];
       });
     });
+    this.hiroBalanceMarkers = this.hiroViewMode === 'change' ? [] : this.rows.flatMap((row, index) => {
+      if (
+        row.hiro_relationship_class !== 'opposing'
+        || row.hiro_balance_bucket !== 'high'
+        || row.hiro_balance_score == null
+      ) return [];
+      return [{
+        key: `${row.capture_id}-high-opposing-balance`,
+        x: x(index),
+        title: `High opposing-flow balance: ${Math.round(row.hiro_balance_score * 100)}%. Descriptive research context only.`,
+      }];
+    });
 
     const jumpThreshold = 750_000_000;
     this.hiroJumpMarkers = this.rows.slice(1).flatMap((row, offset) => {
@@ -380,6 +413,7 @@ export class SessionTrendsComponent implements OnChanges {
     this.hiroMarkers = [];
     this.hiroDirectionMarkers = [];
     this.hiroJumpMarkers = [];
+    this.hiroBalanceMarkers = [];
     this.hiroPriceLevelMarkers = [];
     this.hiroJumpLineYPositive = null;
     this.hiroJumpLineYNegative = null;

@@ -10,6 +10,7 @@ import {
   TraceGammaProfileResponse,
   TraceHistogramResponse,
   TraceRealizedVolatilityResponse,
+  TraceResearchStatusResponse,
   TraceSessionsResponse,
   TraceSummaryResponse,
   TraceTimeseriesResponse,
@@ -179,6 +180,48 @@ class TraceApiStub {
 }
 
 describe('TraceFacade', () => {
+  it('includes the non-scoring HIRO cancellation checkpoint in visible evidence', () => {
+    const facade = new TraceFacade(
+      new TraceApiStub() as unknown as TraceApiService,
+      new CharmApiStub() as unknown as CharmApiService,
+    );
+    const researchStatus: TraceResearchStatusResponse = {
+      schema_version: 'trace-study-registry.v1',
+      as_of: '2026-08-31',
+      evidence_version: 'week-end-2026-08-28',
+      study_count: 2,
+      scoring_enabled_count: 0,
+      studies: [
+        {
+          id: 'hiro-cancellation-strength',
+          label: 'HIRO cancellation strength',
+          status: 'preregistered',
+          scoring_enabled: false,
+          checkpoint: {
+            completed_sessions: 0,
+            required_sessions: 40,
+            remaining_sessions: 40,
+            start_date: '2026-09-01',
+            definition_frozen: true,
+          },
+        },
+        {
+          id: 'unrelated-study',
+          label: 'Unrelated',
+          status: 'research',
+          scoring_enabled: false,
+        },
+      ],
+    };
+
+    facade.researchStatus.set(researchStatus);
+
+    expect(facade.visibleResearchStatuses().map(study => study.id))
+      .toEqual(['hiro-cancellation-strength']);
+    expect(facade.visibleResearchStatuses()[0].checkpoint?.required_sessions).toBe(40);
+    facade.ngOnDestroy();
+  });
+
   it('selects the newest session and loads the independent source bundle', () => {
     const api = new TraceApiStub();
     const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);

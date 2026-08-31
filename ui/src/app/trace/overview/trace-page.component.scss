@@ -471,4 +471,6 @@
 .research-evidence-badge small { color: #9aabc0; font-size: .64rem; text-transform: capitalize; }
 .research-evidence-badge[data-status='demoted'] { border-color: rgba(248,113,113,.42); }
 .research-evidence-badge[data-status='collecting'] { border-color: rgba(250,204,21,.4); }
+.research-evidence-badge[data-status='preregistered'] { border-color: rgba(203,166,247,.42); }
+.research-evidence-badge[data-status='ready_for_review'] { border-color: rgba(250,204,21,.5); }
 .research-evidence-badge[data-status='presentation_only'] { border-color: rgba(52,211,153,.35); }

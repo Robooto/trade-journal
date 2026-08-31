@@ -131,4 +131,37 @@ describe('SessionTrendsComponent', () => {
     expect(component.hiroJumpCount).toBeGreaterThan(0);
     expect(fixture.nativeElement.querySelectorAll('.hiro-jump-marker').length).toBeGreaterThan(0);
   });
+
+  it('shows opposing-flow balance without turning it into a signal', () => {
+    const balancedRows = rows.map((row, index) => index === rows.length - 1
+      ? {
+          ...row,
+          spx_hiro: -1_000_000_000,
+          equities_hiro: 900_000_000,
+          pocket_sign: 'positive',
+          hiro_relationship_class: 'opposing' as const,
+          hiro_balance_score: 0.947,
+          hiro_balance_bucket: 'high' as const,
+          hiro_combined_abs_magnitude: 1_900_000_000,
+          hiro_balance_scoring_effect: 'none' as const,
+        }
+      : row);
+    fixture.componentRef.setInput('rows', balancedRows);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Opposing \u00b7 95% balanced');
+    expect(fixture.nativeElement.textContent).toContain('1.90B combined');
+    expect(fixture.nativeElement.textContent).toContain('Positive gamma');
+    expect(fixture.nativeElement.textContent).toContain('has not established lower movement or direction');
+    expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(0);
+
+    const pressureButton = Array.from<HTMLButtonElement>(
+      fixture.nativeElement.querySelectorAll('.trend-segment button'),
+    ).find(button => button.textContent?.trim() === 'Pressure');
+    pressureButton?.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('High opposing balance');
+  });
 });

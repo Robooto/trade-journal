@@ -82,13 +82,14 @@
           <div class="hiro-facts" aria-label="Selected capture HIRO values">
             <span>SPX <strong [attr.data-tone]="valueTone(active.spx_hiro)">{{ formatCompact(active.spx_hiro) }}</strong><small [attr.data-tone]="valueTone(selectedHiroDelta('spx_hiro'))">&Delta; {{ formatSignedCompact(selectedHiroDelta('spx_hiro')) }} &middot; {{ directionArrow(active.spx_hiro_rate_per_minute) }} {{ formatSignedCompact(active.spx_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_spx_acceleration) }}</small></span>
             <span>Equities <strong [attr.data-tone]="valueTone(active.equities_hiro)">{{ formatCompact(active.equities_hiro) }}</strong><small [attr.data-tone]="valueTone(selectedHiroDelta('equities_hiro'))">&Delta; {{ formatSignedCompact(selectedHiroDelta('equities_hiro')) }} &middot; {{ directionArrow(active.equities_hiro_rate_per_minute) }} {{ formatSignedCompact(active.equities_hiro_rate_per_minute) }}/min &middot; {{ labelize(active.flow_equities_acceleration) }}</small></span>
+            <span class="hiro-balance-fact" [attr.data-balance]="active.hiro_balance_bucket ?? active.hiro_relationship_class">Relationship <strong>{{ hiroRelationshipLabel(active) }}</strong><small>{{ formatCompact(active.hiro_combined_abs_magnitude) }} combined &middot; {{ gammaLabel(active.pocket_sign) }}</small></span>
           </div>
         }
       </div>
     </header>
 
     <div class="hiro-research-note" role="note">
-      <span>Direction and magnitude are descriptive context, not trade approval. Rings mark &ge;750M capture moves; research has not established supportive or adverse direction.</span>
+      <span>Direction, magnitude, and opposing-flow balance are descriptive only, not trade approval. High balance has not established lower movement or direction. Rings mark &ge;750M capture moves.</span>
       <strong>{{ hiroJumpCount }} large moves</strong>
     </div>
 
@@ -97,6 +98,9 @@
       <span class="legend--equities-hiro"><i></i>Equities HIRO{{ hiroViewMode === 'change' ? ' change' : '' }}</span>
       <span class="legend--spot"><i></i>Spot</span>
       <span class="legend--hiro-jump"><i></i>&ge;750M move</span>
+      @if (hiroViewMode === 'level') {
+        <span class="legend--hiro-balance"><i></i>High opposing balance</span>
+      }
     </div>
 
     @if (hiroHasData) {
@@ -120,6 +124,9 @@
             <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroJumpLineYNegative" [attr.x2]="width - 72" [attr.y2]="hiroJumpLineYNegative" />
           }
           <line class="hiro-zero-line" x1="76" [attr.y1]="hiroZeroY" [attr.x2]="width - 72" [attr.y2]="hiroZeroY" />
+          @for (marker of hiroBalanceMarkers; track marker.key) {
+            <line class="hiro-balance-marker" [attr.x1]="marker.x" y1="20" [attr.x2]="marker.x" [attr.y2]="hiroHeight - 46"><title>{{ marker.title }}</title></line>
+          }
           @for (series of hiroSeries; track series.key) {
             <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
           }

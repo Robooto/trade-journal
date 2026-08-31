@@ -92,6 +92,11 @@ export interface TraceDashboardRow {
   readonly equities_hiro_source_age_seconds: number | null;
   readonly equities_hiro_interval_seconds: number | null;
   readonly equities_hiro_repeated_source: boolean | null;
+  readonly hiro_relationship_class: 'opposing' | 'aligned' | 'flat_or_zero' | 'unavailable';
+  readonly hiro_balance_score: number | null;
+  readonly hiro_balance_bucket: 'low' | 'medium' | 'high' | null;
+  readonly hiro_combined_abs_magnitude: number | null;
+  readonly hiro_balance_scoring_effect: 'none';
   readonly flow_state: string | null;
   readonly flow_relationship: string | null;
   readonly flow_acceleration: string | null;
@@ -267,7 +272,9 @@ export type TraceStudyDisposition =
   | 'production'
   | 'presentation_only'
   | 'research'
+  | 'preregistered'
   | 'collecting'
+  | 'ready_for_review'
   | 'demoted'
   | 'gate_ready';
 
@@ -275,6 +282,9 @@ export interface TraceStudyCheckpoint {
   readonly completed_sessions: number;
   readonly required_sessions: number;
   readonly start_date: string | null;
+  readonly remaining_sessions?: number;
+  readonly definition_frozen?: boolean;
+  readonly evidence_version?: string;
   readonly protocol?: string;
 }
 
