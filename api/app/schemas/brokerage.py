@@ -457,6 +457,7 @@ class OptionQuoteSnapshotRequestV1(BaseModel):
 
 class OptionQuoteObservationV1(BaseModel):
     symbol: str
+    quoted_at: Optional[datetime] = None
     mark: Optional[float] = None
     bid: Optional[float] = None
     ask: Optional[float] = None

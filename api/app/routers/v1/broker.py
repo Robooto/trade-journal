@@ -332,6 +332,7 @@ def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Sess
         raise HTTPException(status_code=502, detail="Brokerage option quotes are unavailable.") from exc
     observations = [OptionQuoteObservationV1(
         symbol=row.symbol,
+        quoted_at=row.updated_at or getattr(row, "updatedAt", None),
         mark=_number(row.mark), bid=_number(row.bid), ask=_number(row.ask),
         bid_size=_number(row.bid_size), ask_size=_number(row.ask_size),
         volume=_number(row.volume), open_interest=_number(row.open_interest),

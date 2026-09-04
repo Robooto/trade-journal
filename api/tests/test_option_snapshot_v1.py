@@ -40,5 +40,20 @@ async def test_option_quote_snapshot_preserves_missing_contracts(client, monkeyp
     assert payload["schema_version"] == "option-quote-snapshot.v1"
     assert payload["observations"][0]["bid"] == 2.1
     assert payload["observations"][0]["open_interest"] == 120
+    assert payload["observations"][0].get("quoted_at") is None
     assert payload["missing_option_symbols"] == ["MISSING"]
     assert payload["source"]["status"] == "partial"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("timestamp_key", ["updated-at", "updatedAt"])
+async def test_option_quote_preserves_provider_timestamp(client, monkeypatch, timestamp_key):
+    monkeypatch.setattr(broker.tastytrade, "get_active_token", lambda db: "Bearer FAKE")
+    monkeypatch.setattr(broker.tastytrade, "fetch_market_data", lambda *args, **kwargs: [
+        TastyMarketData.model_validate({"symbol": "OPTION", timestamp_key: "2026-09-04T15:00:00Z"})
+    ])
+    response = await client.post("/v1/broker/option-quote-snapshots", json={
+        "underlying_symbol": "SPX", "option_symbols": ["OPTION"],
+    })
+    assert response.status_code == 200
+    assert response.json()["observations"][0]["quoted_at"] == "2026-09-04T15:00:00Z"

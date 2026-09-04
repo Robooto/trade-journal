@@ -40,6 +40,7 @@ class TastyPosition(TastyModel):
 
 class TastyMarketData(TastyModel):
     symbol: str
+    updated_at: Optional[str] = Field(None, alias="updated-at")
     mark: Optional[str | int | float] = None
     bid: Optional[str | int | float] = None
     ask: Optional[str | int | float] = None
