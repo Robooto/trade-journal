@@ -132,7 +132,7 @@
 
 .trace-0dte-comparison {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   gap: 1rem;
   min-width: 0;
@@ -244,12 +244,6 @@
 .trace-state--error {
   color: #ffd2da;
   border-color: rgba(244, 63, 94, 0.3);
-}
-
-@media (max-width: 960px) {
-  .trace-0dte-comparison {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
 .price-level-panel {
