@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
+import { By } from '@angular/platform-browser';
+import { PaperEvidence } from './components/decision-journal/decision-journal.models';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -107,6 +109,54 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Thin frontend boundary');
     expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
     expect(fixture.nativeElement.textContent).not.toContain('Legacy TRACE');
+  });
+
+  it('shows missing paper evidence without inventing a zero win rate', () => {
+    facade.selectedDate.set('2026-09-04');
+    facade.selectedCapture.set({ ts: '2026-09-04T08:00:00-07:00', capture_id: 'entry' });
+    fixture.detectChanges();
+    const journal = fixture.debugElement.query(By.directive(DecisionJournalComponent)).componentInstance as DecisionJournalComponent;
+    const evidence: PaperEvidence = {
+      schema_version: 'spx-paper-outcomes.v1', date: '2026-09-04', as_of: '2026-09-04T08:00:00-07:00',
+      status: 'no_evidence', costs_status: 'untracked', net_win_rate: null, preferred_credit_dollars: 160,
+      summary: { take_episodes: 1, recorded_entries: 0, closed_episodes: 0, open_episodes: 0,
+        unevaluable_episodes: 1, gross_win_rate: null, gross_pnl_dollars: null, gross_expectancy_dollars: null },
+      episodes: [],
+    };
+    journal.systemDecision.update(value => value ? { ...value, paper_evidence: evidence } : value);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.querySelector('.decision-journal__paper').textContent;
+    expect(text).toContain('No paper quotes recorded');
+    expect(text).toContain('Unavailable');
+    expect(text).not.toContain('0%');
+    expect(text).toContain('net results unavailable');
+    journal.systemDecision.update(value => value ? { ...value, paper_evidence: { ...evidence, status: 'unavailable', summary: null } } : value);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('This is not zero performance');
+  });
+
+  it('renders gross outcomes and zero P/L explicitly without calling them net', () => {
+    facade.selectedDate.set('2026-09-04');
+    facade.selectedCapture.set({ ts: '2026-09-04T08:10:00-07:00', capture_id: 'exit' });
+    fixture.detectChanges();
+    const journal = fixture.debugElement.query(By.directive(DecisionJournalComponent)).componentInstance as DecisionJournalComponent;
+    const evidence: PaperEvidence = {
+      schema_version: 'spx-paper-outcomes.v1', date: '2026-09-04', as_of: '2026-09-04T08:10:00-07:00',
+      status: 'available', costs_status: 'untracked', net_win_rate: null, preferred_credit_dollars: 160,
+      summary: { take_episodes: 1, recorded_entries: 1, closed_episodes: 1, open_episodes: 0,
+        unevaluable_episodes: 0, gross_win_rate: 0, gross_pnl_dollars: 0, gross_expectancy_dollars: 0 },
+      episodes: [{ capture_id: 'entry', onset_ts: '2026-09-04T08:00:00-07:00', trade_type: 'bull_put_credit',
+        status: 'closed', reason: 'hierarchy_changed', entry_credit_dollars: 160, credit_difference_dollars: 0,
+        exit_debit_dollars: 160, gross_pnl_dollars: 0 }],
+    };
+    journal.systemDecision.update(value => value ? { ...value, paper_evidence: evidence } : value);
+    fixture.detectChanges();
+    const text = fixture.nativeElement.querySelector('.decision-journal__paper').textContent;
+    expect(text).toContain('0%');
+    expect(text).toContain('$0.00');
+    expect(text).toContain('8:00 AM');
+    expect(text).toContain('Gross win rate');
+    expect(text).toContain('not a take/pass gate');
   });
 
   it('aligns automatic updates one minute after each ten-minute TRACE capture', () => {

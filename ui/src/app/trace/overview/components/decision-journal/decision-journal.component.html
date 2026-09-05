@@ -35,6 +35,54 @@
       }
     </div>
 
+    <section class="decision-journal__paper" aria-labelledby="paper-evidence-title">
+      <h3 id="paper-evidence-title">Paper outcomes · gross only</h3>
+      <p>Selected session through this capture. Preferred entry credit: about $160 per five-point spread, not a take/pass gate.</p>
+      @if (response.paper_evidence; as evidence) {
+        @if (evidence.status === 'unavailable') {
+          <p role="status">Paper evidence is unavailable. This is not zero performance.</p>
+        } @else {
+          @if (evidence.status === 'no_evidence') {
+            <p role="status">No paper quotes recorded in this window. Live collection requires validation before activation.</p>
+          }
+          @if (evidence.summary; as summary) {
+            <div class="decision-journal__facts">
+              <div><span>Entry coverage</span><strong>{{ summary.recorded_entries }} / {{ summary.take_episodes }} takes</strong></div>
+              <div><span>Closed / open / unevaluable</span><strong>{{ summary.closed_episodes }} / {{ summary.open_episodes }} / {{ summary.unevaluable_episodes }}</strong></div>
+              <div><span>Gross win rate · closed only</span><strong>{{ summary.gross_win_rate == null ? 'Unavailable' : formatPercent(summary.gross_win_rate) }}</strong></div>
+              <div><span>Gross P/L</span><strong>{{ summary.gross_pnl_dollars == null ? 'Unavailable' : (summary.gross_pnl_dollars | currency:'USD') }}</strong></div>
+              <div><span>Gross average · closed only</span><strong>{{ summary.gross_expectancy_dollars == null ? 'Unavailable' : (summary.gross_expectancy_dollars | currency:'USD') }}</strong></div>
+            </div>
+          }
+          @if (evidence.episodes.length) {
+            <details>
+              <summary>Episode details ({{ evidence.episodes.length }})</summary>
+              <div class="decision-journal__table" tabindex="0" role="region" aria-label="Paper episode results">
+                <table>
+                  <thead><tr><th>Onset (Pacific)</th><th>Type</th><th>Status / reason</th><th>Entry credit</th><th>Versus $160</th><th>Close debit</th><th>Gross P/L</th></tr></thead>
+                  <tbody>
+                    @for (episode of evidence.episodes; track episode.capture_id) {
+                      <tr>
+                        <td>{{ formatOnset(episode.onset_ts) }}</td><td>{{ label(episode.trade_type) }}</td>
+                        <td>{{ label(episode.status) }} · {{ label(episode.reason) }}</td>
+                        <td>{{ episode.entry_credit_dollars == null ? '—' : (episode.entry_credit_dollars | currency:'USD') }}</td>
+                        <td>{{ episode.credit_difference_dollars == null ? '—' : (episode.credit_difference_dollars | currency:'USD') }}</td>
+                        <td>{{ episode.exit_debit_dollars == null ? '—' : (episode.exit_debit_dollars | currency:'USD') }}</td>
+                        <td>{{ episode.gross_pnl_dollars == null ? '—' : (episode.gross_pnl_dollars | currency:'USD') }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          }
+        }
+      } @else {
+        <p role="status">Paper outcome coverage is not available from this API version.</p>
+      }
+      <small>Fees and additional slippage untracked; net results unavailable. Ten-minute quotes are not fills or intrainterval extremes. Missing paths are excluded and may bias gross results. This does not test the net 55% objective.</small>
+    </section>
+
     <section class="decision-journal__human" aria-labelledby="human-decision-title">
       <header>
         <div>

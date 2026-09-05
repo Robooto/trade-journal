@@ -1,4 +1,10 @@
 :host { display: block; min-width: 0; }
+.decision-journal__paper { min-width:0; display:grid; gap:.65rem; border-top:1px solid rgba(148,163,184,.22); padding-top:1rem; }
+.decision-journal__paper h3,.decision-journal__paper p { margin:0; }
+.decision-journal__paper p,.decision-journal__paper small { color:#b7c5d8; }
+.decision-journal__table { overflow-x:auto; max-width:100%; }
+.decision-journal__table table { width:100%; border-collapse:collapse; font-size:.78rem; }
+.decision-journal__table th,.decision-journal__table td { padding:.6rem; text-align:left; border-bottom:1px solid rgba(148,163,184,.22); }
 .decision-journal { display:grid; gap:.85rem; padding:1rem; border:1px solid rgba(141,181,255,.3); border-radius:1rem; background:linear-gradient(135deg,rgba(27,38,54,.97),rgba(16,22,31,.97)); color:#eef4ff; }
 .decision-journal header { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; }
 .decision-journal h2 { margin:0; font-size:1.15rem; }

@@ -125,4 +125,10 @@ export class DecisionJournalComponent implements OnChanges, OnDestroy {
   formatPercent(value: number): string {
     return `${Math.round(value * 100)}%`;
   }
+
+  formatOnset(value: string): string {
+    return new Date(value).toLocaleTimeString('en-US', {
+      timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit',
+    });
+  }
 }

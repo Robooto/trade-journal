@@ -45,6 +45,38 @@ export interface Spx0DteDecisionJournalResponse {
     readonly ai_decisioning: false;
   };
   readonly warnings: readonly string[];
+  readonly paper_evidence?: PaperEvidence;
+}
+
+export interface PaperEvidence {
+  readonly schema_version: 'spx-paper-outcomes.v1';
+  readonly date: string;
+  readonly as_of: string;
+  readonly status: 'available' | 'no_evidence' | 'unavailable';
+  readonly costs_status: 'untracked';
+  readonly net_win_rate: null;
+  readonly preferred_credit_dollars: number;
+  readonly summary: {
+    readonly take_episodes: number;
+    readonly recorded_entries: number;
+    readonly closed_episodes: number;
+    readonly open_episodes: number;
+    readonly unevaluable_episodes: number;
+    readonly gross_win_rate: number | null;
+    readonly gross_pnl_dollars: number | null;
+    readonly gross_expectancy_dollars: number | null;
+  } | null;
+  readonly episodes: readonly {
+    readonly capture_id: string;
+    readonly onset_ts: string;
+    readonly trade_type: string;
+    readonly status: string;
+    readonly reason: string;
+    readonly entry_credit_dollars: number | null;
+    readonly credit_difference_dollars: number | null;
+    readonly exit_debit_dollars: number | null;
+    readonly gross_pnl_dollars: number | null;
+  }[];
 }
 
 export interface Spx0DteHumanDecision {
