@@ -54,6 +54,37 @@
               <div><span>Gross average · closed only</span><strong>{{ summary.gross_expectancy_dollars == null ? 'Unavailable' : (summary.gross_expectancy_dollars | currency:'USD') }}</strong></div>
             </div>
           }
+          @if (evidence.management_comparison; as comparison) {
+            <h4>Position management comparisons · {{ label(comparison.mode) }}</h4>
+            <p>Prospective sessions start {{ comparison.prospective_start_date }}. Earlier sessions are retrospective research.</p>
+            <p>{{ comparison.position_rule }}</p>
+            <p>{{ comparison.exit_rule }}</p>
+            <div class="decision-journal__table" tabindex="0" role="region" aria-label="Position management comparisons">
+              <table>
+                <thead><tr><th>Exit policy</th><th>Closed / open</th><th>Unevaluable / skipped</th><th>Gross P/L</th><th>Gross win rate</th></tr></thead>
+                <tbody>
+                  @for (policy of comparison.policies; track policy.id) {
+                    <tr>
+                      <td>{{ policy.label }}</td>
+                      <td>{{ policy.summary.closed_episodes }} / {{ policy.summary.open_episodes }}</td>
+                      <td>{{ policy.summary.unevaluable_episodes }} / {{ policy.summary.skipped_episodes }}</td>
+                      <td>{{ policy.summary.gross_pnl_dollars == null ? 'Unavailable' : (policy.summary.gross_pnl_dollars | currency:'USD') }}</td>
+                      <td>{{ policy.summary.gross_win_rate == null ? 'Unavailable' : formatPercent(policy.summary.gross_win_rate) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @for (policy of comparison.policies; track policy.id) {
+              <details>
+                <summary>{{ policy.label }} · entry and exit details</summary>
+                @for (episode of policy.episodes; track episode.capture_id) {
+                  <p>{{ formatOnset(episode.onset_ts) }} · {{ label(episode.status) }} · {{ label(episode.reason) }} · {{ episode.gross_pnl_dollars == null ? '—' : (episode.gross_pnl_dollars | currency:'USD') }}</p>
+                }
+              </details>
+            }
+            <small>Compare policies within this table: they share position limits. The original episode totals above may include more entries. Research only; no policy is promoted automatically.</small>
+          }
           @if (evidence.episodes.length) {
             <details>
               <summary>Episode details ({{ evidence.episodes.length }})</summary>
@@ -64,7 +95,9 @@
                     @for (episode of evidence.episodes; track episode.capture_id) {
                       <tr>
                         <td>{{ formatOnset(episode.onset_ts) }}</td><td>{{ label(episode.trade_type) }}</td>
-                        <td>{{ label(episode.status) }} · {{ label(episode.reason) }}</td>
+                        <td>{{ label(episode.status) }} · {{ label(episode.reason) }}
+                          @for (signal of episode.exit_signals || []; track signal) { <small> · {{ label(signal) }}</small> }
+                        </td>
                         <td>{{ episode.entry_credit_dollars == null ? '—' : (episode.entry_credit_dollars | currency:'USD') }}</td>
                         <td>{{ episode.credit_difference_dollars == null ? '—' : (episode.credit_difference_dollars | currency:'USD') }}</td>
                         <td>{{ episode.exit_debit_dollars == null ? '—' : (episode.exit_debit_dollars | currency:'USD') }}</td>

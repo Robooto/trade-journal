@@ -49,6 +49,32 @@ export interface Spx0DteDecisionJournalResponse {
 }
 
 export interface PaperEvidence {
+  readonly management_comparison?: {
+    readonly schema_version: 'spx-paper-management.v1';
+    readonly prospective_start_date: string;
+    readonly mode: 'prospective' | 'retrospective';
+    readonly position_rule: string;
+    readonly exit_rule: string;
+    readonly policies: readonly {
+      readonly id: string;
+      readonly label: string;
+      readonly summary: {
+        readonly closed_episodes: number;
+        readonly open_episodes: number;
+        readonly unevaluable_episodes: number;
+        readonly skipped_episodes: number;
+        readonly gross_pnl_dollars: number | null;
+        readonly gross_win_rate: number | null;
+      };
+      readonly episodes: readonly {
+        readonly capture_id: string;
+        readonly onset_ts: string;
+        readonly status: string;
+        readonly reason: string;
+        readonly gross_pnl_dollars: number | null;
+      }[];
+    }[];
+  };
   readonly schema_version: 'spx-paper-outcomes.v1';
   readonly date: string;
   readonly as_of: string;
@@ -72,6 +98,7 @@ export interface PaperEvidence {
     readonly trade_type: string;
     readonly status: string;
     readonly reason: string;
+    readonly exit_signals?: readonly string[];
     readonly entry_credit_dollars: number | null;
     readonly credit_difference_dollars: number | null;
     readonly exit_debit_dollars: number | null;

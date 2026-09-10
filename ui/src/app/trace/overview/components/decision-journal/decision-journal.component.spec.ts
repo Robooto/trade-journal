@@ -72,4 +72,29 @@ describe('DecisionJournalComponent', () => {
     }));
     expect(fixture.componentInstance.humanDecision()?.decision).toBe('take');
   });
+  it('shows research comparison scope, skipped positions and unavailable performance', () => {
+    fixture.componentInstance.systemDecision.set({ ...RESPONSE, paper_evidence: {
+      schema_version: 'spx-paper-outcomes.v1', date: RESPONSE.date, as_of: RESPONSE.ts!,
+      status: 'available', costs_status: 'untracked', net_win_rate: null,
+      preferred_credit_dollars: 160, summary: null, episodes: [],
+      management_comparison: {
+        schema_version: 'spx-paper-management.v1', mode: 'retrospective', prospective_start_date: '2026-09-11',
+        position_rule: 'One position; fresh take onset after exit.', exit_rule: 'Original structure and noon remain active.',
+        policies: [{ id: 'confirmed-opposition.v1', label: 'Confirmed opposition · 10 minutes',
+          summary: { closed_episodes: 0, open_episodes: 1, unevaluable_episodes: 0, skipped_episodes: 2,
+                     gross_pnl_dollars: null, gross_win_rate: null },
+          episodes: [{ capture_id: 'c2', onset_ts: RESPONSE.ts!, status: 'skipped',
+                       reason: 'position_occupied_or_same_capture_exit', gross_pnl_dollars: null }],
+        }],
+      },
+    }});
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Confirmed opposition · 10 minutes');
+    expect(text).toContain('2026-09-11');
+    expect(text).toContain('Unavailable');
+    expect(text).toContain('0 / 2');
+    expect(text).toContain('no policy is promoted automatically');
+  });
+
 });
