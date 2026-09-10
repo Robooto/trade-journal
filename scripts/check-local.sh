@@ -28,7 +28,7 @@ if [[ -n "$NPM_BIN" && "$NPM_BIN" != /mnt/* ]]; then
   npm --prefix ui run build -- --configuration=production
 
   echo "==> UI spec type-check"
-  npm --prefix ui exec -- tsc -p tsconfig.spec.json --noEmit
+  (cd ui && npm exec -- tsc -p tsconfig.spec.json --noEmit)
 
   echo "==> UI unit tests"
   npm --prefix ui test -- --watch=false
