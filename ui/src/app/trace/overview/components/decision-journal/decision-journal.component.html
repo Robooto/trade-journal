@@ -54,6 +54,42 @@
               <div><span>Gross average · closed only</span><strong>{{ summary.gross_expectancy_dollars == null ? 'Unavailable' : (summary.gross_expectancy_dollars | currency:'USD') }}</strong></div>
             </div>
           }
+          @if (evidence.width_comparison; as widths) {
+            <details>
+              <summary>Spread width research · 5 versus 10 points</summary>
+              <p>Five points remains the baseline. Same short strike and entry opportunities; same exit policies. Prospective collection from {{ widths.prospective_start_date }}.</p>
+              @if (widths.status === 'unavailable') {
+                <p role="status">Width comparison evidence is unavailable.</p>
+              } @else {
+                <p>Entries recorded at both widths: {{ widths.paired_entry_count }} / {{ widths.expected_entry_count }}.</p>
+                @if (widths.status === 'no_evidence') {
+                  <p role="status">No ten-point evidence for this window. Historical quotes are not reconstructed.</p>
+                }
+                @for (width of widths.widths; track width.width_points) {
+                  <h4>{{ width.width_points }}-point spreads</h4>
+                  <p>Entry coverage: {{ width.recorded_entries }} / {{ widths.expected_entry_count }} · Average credit: {{ width.mean_entry_credit_dollars == null ? 'Unavailable' : (width.mean_entry_credit_dollars | currency:'USD') }}</p>
+                  <div class="decision-journal__table" tabindex="0" role="region" [attr.aria-label]="width.width_points + '-point spread results'">
+                    <table>
+                      <thead><tr><th>Exit policy</th><th>Closed / open</th><th>Unevaluable / skipped</th><th>Gross P/L</th><th>Average outcome</th><th>Mean return on max risk</th><th>Realized drawdown</th></tr></thead>
+                      <tbody>
+                        @for (policy of width.policies; track policy.id) {
+                          <tr>
+                            <td>{{ policy.label }}</td><td>{{ policy.summary.closed_episodes }} / {{ policy.summary.open_episodes }}</td>
+                            <td>{{ policy.summary.unevaluable_episodes }} / {{ policy.summary.skipped_episodes }}</td>
+                            <td>{{ policy.summary.gross_pnl_dollars == null ? 'Unavailable' : (policy.summary.gross_pnl_dollars | currency:'USD') }}</td>
+                            <td>{{ policy.summary.gross_expectancy_dollars == null ? 'Unavailable' : (policy.summary.gross_expectancy_dollars | currency:'USD') }}</td>
+                            <td>{{ policy.summary.mean_return_on_max_risk == null ? 'Unavailable' : formatPercent(policy.summary.mean_return_on_max_risk) }}</td>
+                            <td>{{ policy.summary.realized_drawdown_dollars == null ? 'Unavailable' : (policy.summary.realized_drawdown_dollars | currency:'USD') }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+                <small>Gross closed outcomes only; fees and extra slippage untracked. Mean return on max risk is per trade, not a portfolio return. Drawdown excludes intratrade swings. Different exit timing can change which later entries fit the one-position limit; check coverage before comparing.</small>
+              }
+            </details>
+          }
           @if (evidence.management_comparison; as comparison) {
             <h4>Position management comparisons · {{ label(comparison.mode) }}</h4>
             <p>Prospective sessions start {{ comparison.prospective_start_date }}. Earlier sessions are retrospective research.</p>

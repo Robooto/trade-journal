@@ -48,7 +48,35 @@ export interface Spx0DteDecisionJournalResponse {
   readonly paper_evidence?: PaperEvidence;
 }
 
+export interface PaperWidthComparison {
+  readonly schema_version: 'spx-paper-widths.v1';
+  readonly status: 'available' | 'no_evidence' | 'unavailable';
+  readonly prospective_start_date: string;
+  readonly paired_entry_count: number;
+  readonly expected_entry_count: number;
+  readonly widths: readonly {
+    readonly width_points: number;
+    readonly recorded_entries: number;
+    readonly mean_entry_credit_dollars: number | null;
+    readonly policies: readonly {
+      readonly id: string;
+      readonly label: string;
+      readonly summary: {
+        readonly closed_episodes: number;
+        readonly open_episodes: number;
+        readonly unevaluable_episodes: number;
+        readonly skipped_episodes: number;
+        readonly gross_pnl_dollars: number | null;
+        readonly gross_expectancy_dollars: number | null;
+        readonly mean_return_on_max_risk: number | null;
+        readonly realized_drawdown_dollars: number | null;
+      };
+    }[];
+  }[];
+}
+
 export interface PaperEvidence {
+  readonly width_comparison?: PaperWidthComparison;
   readonly management_comparison?: {
     readonly schema_version: 'spx-paper-management.v1';
     readonly prospective_start_date: string;

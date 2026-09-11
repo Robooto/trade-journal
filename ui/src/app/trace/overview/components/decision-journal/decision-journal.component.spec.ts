@@ -77,6 +77,10 @@ describe('DecisionJournalComponent', () => {
       schema_version: 'spx-paper-outcomes.v1', date: RESPONSE.date, as_of: RESPONSE.ts!,
       status: 'available', costs_status: 'untracked', net_win_rate: null,
       preferred_credit_dollars: 160, summary: null, episodes: [],
+      width_comparison: {
+        schema_version: 'spx-paper-widths.v1', status: 'no_evidence', prospective_start_date: '2026-09-11',
+        paired_entry_count: 0, expected_entry_count: 1, widths: [],
+      },
       management_comparison: {
         schema_version: 'spx-paper-management.v1', mode: 'retrospective', prospective_start_date: '2026-09-11',
         position_rule: 'One position; fresh take onset after exit.', exit_rule: 'Original structure and noon remain active.',
@@ -95,6 +99,8 @@ describe('DecisionJournalComponent', () => {
     expect(text).toContain('Unavailable');
     expect(text).toContain('0 / 2');
     expect(text).toContain('no policy is promoted automatically');
+    expect(text).toContain('Spread width research · 5 versus 10 points');
+    expect(text).toContain('No ten-point evidence for this window');
   });
 
 });
