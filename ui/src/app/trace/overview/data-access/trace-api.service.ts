@@ -7,6 +7,9 @@ import {
   TraceGammaProfileResponse,
   TraceHistogramResponse,
   TraceIntradayContextResponse,
+  TracePaperReplayResponse,
+  TracePaperReplayEntriesResponse,
+  TracePaperScorecardResponse,
   TraceRealizedVolatilityResponse,
   TraceResearchStatusResponse,
   TraceSessionsResponse,
@@ -55,6 +58,23 @@ export class TraceApiService {
     return this.http.get<TraceRealizedVolatilityResponse>(
       `${this.sessionUrl(date)}/realized-volatility`,
     );
+  }
+
+  paperScorecard(fromDate?: string, toDate?: string, limit = 90): Observable<TracePaperScorecardResponse> {
+    let params = new HttpParams().set('limit', String(limit));
+    if (fromDate) params = params.set('from_date', fromDate);
+    if (toDate) params = params.set('to_date', toDate);
+    return this.http.get<TracePaperScorecardResponse>(`${this.baseUrl}/paper-scorecard`, { params });
+  }
+
+  paperReplay(date: string, captureId: string, entryCaptureId?: string): Observable<TracePaperReplayResponse> {
+    let params = new HttpParams().set('capture_id', captureId);
+    if (entryCaptureId) params = params.set('entry_capture_id', entryCaptureId);
+    return this.http.get<TracePaperReplayResponse>(`${this.sessionUrl(date)}/paper-replay`, { params });
+  }
+
+  paperReplayEntries(date: string): Observable<TracePaperReplayEntriesResponse> {
+    return this.http.get<TracePaperReplayEntriesResponse>(`${this.sessionUrl(date)}/paper-replay-entries`);
   }
 
   gammaProfile(

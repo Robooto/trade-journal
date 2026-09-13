@@ -153,6 +153,8 @@ class TraceApiStub {
   readonly gammaProfileStreams: Observable<TraceGammaProfileResponse>[] = [];
   readonly gammaProfileRequests: { date: string; ts: string }[] = [];
   realizedVolatilityFails = false;
+  readonly paperScorecardCalls: Array<{ fromDate?: string; toDate?: string }> = [];
+  readonly paperReplayStreams: Subject<any>[] = [];
 
   sessions(): Observable<TraceSessionsResponse> { return of(sessionsFixture); }
   summary(selectedDate: string): Observable<TraceSummaryResponse> {
@@ -177,6 +179,14 @@ class TraceApiStub {
         }))
       : of(volatilityFixture);
   }
+  paperScorecard(fromDate?: string, toDate?: string): Observable<any> {
+    this.paperScorecardCalls.push({ fromDate, toDate });
+    return of({ schema_version: 'spx-paper-scorecard.v1', status: 'no_evidence', cohorts: [], warnings: [], session_count: 0, source_status_counts: {}, from_date: fromDate ?? '', to_date: toDate ?? '' });
+  }
+  paperReplayEntries(): Observable<any> {
+    return of({ schema_version: 'spx-paper-replay-entries.v1', date, status: 'no_evidence', entries: [] });
+  }
+  paperReplay(): Observable<any> { return this.paperReplayStreams.shift() ?? of(null); }
 }
 
 describe('TraceFacade', () => {
@@ -240,6 +250,28 @@ describe('TraceFacade', () => {
       ts: '2026-07-24T13:00:05-07:00',
     }]);
     expect(facade.availableResourceCount()).toBe(5);
+    facade.ngOnDestroy();
+  });
+
+  it('preserves an explicitly selected scorecard range across session refresh', () => {
+    const api = new TraceApiStub();
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
+    facade.loadPaperScorecard('2026-07-01', '2026-07-05');
+    facade.loadSessions();
+    expect(api.paperScorecardCalls.at(-1)).toEqual({ fromDate: '2026-07-01', toDate: '2026-07-05' });
+    facade.ngOnDestroy();
+  });
+
+  it('clears completed replay and rejects delayed results after cutoff/session changes', () => {
+    const api = new TraceApiStub();
+    const delayed = new Subject<any>();
+    api.paperReplayStreams.push(delayed);
+    const facade = new TraceFacade(api as unknown as TraceApiService, new CharmApiStub() as unknown as CharmApiService);
+    facade.selectDate(date);
+    facade.loadPaperReplay(date, 'capture-2', 'entry-1');
+    facade.selectCapture(0);
+    delayed.next({ schema_version: 'spx-paper-replay.v1' });
+    expect(facade.paperReplay()).toBeNull();
     facade.ngOnDestroy();
   });
 

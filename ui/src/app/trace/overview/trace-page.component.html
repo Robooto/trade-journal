@@ -63,6 +63,59 @@
     }
   </section>
 
+  <section class="paper-scorecard-panel" aria-labelledby="paper-scorecard-title">
+    <header class="trace-timeline-heading">
+      <div>
+        <p class="trace-eyebrow">Paper evidence</p>
+        <h2 id="paper-scorecard-title">Cross-session scorecard</h2>
+        <p>Closed gross indications grouped by policy, timing, and protocol cohort.</p>
+      </div>
+      <form class="paper-scorecard-range" (ngSubmit)="submitPaperRange()">
+        <label>From <input type="date" [(ngModel)]="paperFromDate" name="paperFromDate" /></label>
+        <label>To <input type="date" [(ngModel)]="paperToDate" name="paperToDate" /></label>
+        <button mat-flat-button color="primary" type="submit" [disabled]="facade.paperScorecardLoading()">Update</button>
+      </form>
+    </header>
+    @if (facade.paperScorecardLoading()) {
+      <div class="trace-state"><mat-spinner diameter="24"></mat-spinner><span>Loading paper evidence…</span></div>
+    } @else if (facade.paperScorecardError()) {
+      <div class="trace-state trace-state--error" role="alert"><mat-icon>cloud_off</mat-icon><span>{{ facade.paperScorecardError() }}</span></div>
+    } @else if (facade.paperScorecard(); as scorecard) {
+      <div class="paper-scorecard-warnings">Gross indications; fees and slippage are untracked. Ten-minute observations do not show intrainterval extremes. Missing path quotes remain unevaluable and excluded from expectancy. Drawdown uses closed modeled outcomes only. Quote coverage denominator is admitted episodes; skipped entries are separate.</div>
+      @if (scorecard.status === 'unavailable') { <div class="trace-state trace-state--error" role="alert"><mat-icon>cloud_off</mat-icon><span>Paper quote store is unavailable; no zero-return sample was fabricated.</span></div> }
+      @if (scorecard.status === 'partial') { <div class="paper-scorecard-warnings">Some source sessions are incomplete; unevaluable and excluded episodes remain visible.</div> }
+      @if (scorecard.cohorts.length) {
+        <div class="paper-scorecard-grid">
+          @for (cohort of scorecard.cohorts; track cohort.policy_id + cohort.study_mode + cohort.timing_policy + cohort.protocol_sha256) {
+            <article class="paper-cohort-card">
+              <header><strong>{{ cohort.policy_label }}</strong><span>{{ cohort.study_mode }} · {{ cohort.timing_policy }}</span></header>
+              <small>Protocol {{ cohort.protocol_sha256 === 'unavailable' ? 'unavailable' : cohort.protocol_sha256.slice(0, 10) }}</small>
+              <dl>
+                <div><dt>Closed</dt><dd>{{ cohort.summary.closed }}</dd></div>
+                <div><dt>Win rate</dt><dd>{{ formatPercent(cohort.summary.gross_win_rate) }}</dd></div>
+                <div><dt>Expectancy</dt><dd>{{ formatMoney(cohort.summary.gross_expectancy_dollars) }}</dd></div>
+                <div><dt>Gross P/L</dt><dd>{{ formatMoney(cohort.summary.gross_pnl_dollars) }}</dd></div>
+                <div><dt>Worst session</dt><dd>{{ formatMoney(cohort.summary.worst_session_gross_pnl_dollars) }}</dd></div>
+                <div><dt>Closed drawdown</dt><dd>{{ formatMoney(cohort.summary.realized_closed_drawdown_dollars) }}</dd></div>
+                <div><dt>Quote coverage</dt><dd>{{ formatPercent(cohort.summary.entry_coverage) }} ({{ cohort.summary.entry_coverage_denominator }} admitted)</dd></div>
+                <div><dt>State</dt><dd>{{ cohort.summary.open }} open · {{ cohort.summary.unevaluable }} unevaluable · {{ cohort.summary.skipped }} skipped</dd></div>
+              </dl>
+              <details><summary>Daily evidence ({{ cohort.summary.daily.length }} sessions)</summary>
+                <div class="paper-daily-list">
+                  @for (day of cohort.summary.daily; track day.date) {
+                    <span>{{ day.date }} · {{ day.closed }} closed · {{ day.open }} open · {{ day.unevaluable }} unevaluable · {{ day.skipped }} skipped · {{ formatMoney(day.gross_pnl_dollars) }}@if (day.no_entry) { · no entry }</span>
+                  }
+                </div>
+              </details>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="trace-state"><mat-icon>info</mat-icon><span>{{ scorecard.status === 'unavailable' ? 'Paper evidence could not be read.' : 'No paper evidence in this range.' }}</span></div>
+      }
+    }
+  </section>
+
   <section class="price-level-panel" aria-labelledby="price-level-title">
     <header>
       <div>
@@ -181,7 +234,53 @@
           <mat-icon>chevron_right</mat-icon>
         </button>
       </div>
+      <div class="paper-replay-action">
+        <label class="paper-replay-selector">Recorded entry
+          <select [ngModel]="selectedReplayEntry" (ngModelChange)="selectReplayEntry($event)" name="selectedReplayEntry" [disabled]="facade.paperReplayEntriesLoading() || !eligibleReplayEntries().length">
+            @for (entry of eligibleReplayEntries(); track entry.capture_id) {
+              <option [value]="entry.capture_id">{{ formatTimestamp(entry.ts) }} · {{ entry.trade_type }}</option>
+            }
+          </select>
+        </label>
+        <button mat-stroked-button type="button" (click)="replaySelectedTrade()" [disabled]="facade.paperReplayLoading()">
+          <mat-icon>replay</mat-icon> Replay paper trade through this capture
+        </button>
+        <span>Uses the selected capture as the evidence cutoff; the latest earlier recorded entry is selected.</span>
+      </div>
     </section>
+
+    @if (facade.paperReplayLoading()) {
+      <section class="trace-state"><mat-spinner diameter="24"></mat-spinner><span>Loading trade replay…</span></section>
+    } @else if (facade.paperReplayError()) {
+      <section class="trace-state trace-state--error" role="status"><mat-icon>info</mat-icon><span>{{ facade.paperReplayError() }}</span></section>
+    } @else if (facade.paperReplay(); as replay) {
+      <section class="paper-replay-panel" aria-labelledby="paper-replay-title">
+        <header><div><p class="trace-eyebrow">Recorded trade replay</p><h2 id="paper-replay-title">{{ replay.trade.trade_type }} · {{ replay.trade.status }}</h2></div><span>Entry {{ formatTimestamp(replay.trade.onset_ts) }} · through {{ formatTimestamp(replay.as_of) }}</span></header>
+        <div class="paper-replay-facts"><span>Entry credit {{ formatMoney(replay.trade.entry_credit_dollars) }}</span><span>Strikes {{ replay.trade.short_strike }} / {{ replay.trade.long_strike }}</span><span>Frozen {{ replay.trade.frozen_structure?.type || 'structure unavailable' }} {{ replay.trade.frozen_structure?.level || '' }}</span><span>Exit {{ replay.trade.reason }}</span><span>Gross P/L {{ formatMoney(replay.trade.gross_pnl_dollars) }}</span></div>
+        <svg class="paper-replay-chart" viewBox="0 0 100 100" role="img" aria-label="SPX sampled replay path">
+          <line x1="8" x2="98" y1="88" y2="88" class="paper-replay-axis" />
+          <line x1="8" x2="8" y1="8" y2="88" class="paper-replay-axis" />
+          @for (tick of replayPriceTicks(); track tick) {
+            <text x="0" [attr.y]="replayLevelY(tick) + 1">{{ tick | number:'1.0-1' }}</text>
+          }
+          @for (tick of replayTimeTicks(); track tick.x) {
+            <text [attr.x]="tick.x" y="97" text-anchor="middle">{{ tick.label }}</text>
+          }
+          @for (level of replay.levels; track level.label) {
+            @if (level.price !== null) { <line x1="8" x2="98" [attr.y1]="replayLevelY(level.price)" [attr.y2]="replayLevelY(level.price)" class="paper-replay-level" /><text x="9" [attr.y]="replayLevelY(level.price) - 1">{{ level.label }} {{ level.price }}</text> }
+          }
+          @for (segment of replaySegments(); track $index) {
+            <polyline [attr.points]="segment" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+          }
+          @for (event of replay.hierarchy_events; track event.ts + event.event) {
+            <line [attr.x1]="replayX(event.capture_id)" [attr.x2]="replayX(event.capture_id)" y1="5" y2="95" class="paper-replay-marker" />
+            @if (replaySpot(event.capture_id) !== null) { <circle [attr.cx]="replayX(event.capture_id)" [attr.cy]="replaySpotY(event.capture_id)" r="2" [attr.class]="event.capture_id === replay.entry_capture_id ? 'paper-replay-entry' : 'paper-replay-exit'" /> }
+          }
+        </svg>
+        @if (replayHasGaps()) { <p class="paper-replay-gap">Path gaps are split in the source evidence; no intragap price is inferred.</p> }
+        <div class="paper-replay-events"><strong>Hierarchy events</strong>@for (event of replay.hierarchy_events; track event.ts + event.event) { <span>{{ formatTimestamp(event.ts) }} · {{ event.event }}</span> }</div>
+      </section>
+    }
 
     <div class="trace-0dte-comparison" aria-label="SPX 0DTE Decision Journal">
       <app-decision-journal

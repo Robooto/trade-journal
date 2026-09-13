@@ -24,6 +24,9 @@ import {
   TraceContractBase,
   TraceDashboardRow,
   TraceGammaProfileResponse,
+  TracePaperReplayResponse,
+  TracePaperReplayEntriesResponse,
+  TracePaperScorecardResponse,
   TraceRealizedVolatilityRow,
   TraceResearchStatusResponse,
   TraceStudyStatus,
@@ -46,6 +49,9 @@ export class TraceFacade implements OnDestroy {
   private readonly selectedDateSubject = new BehaviorSubject<string>('');
   private readonly gammaProfileSubject = new Subject<{ date: string; ts: string } | null>();
   private readonly reloadSubject = new Subject<void>();
+  private paperScorecardRequest = 0;
+  private paperReplayRequest = 0;
+  private paperReplayEntriesRequest = 0;
 
   readonly sessions = signal<readonly TraceSessionDescriptor[]>([]);
   readonly researchStatus = signal<TraceResearchStatusResponse | null>(null);
@@ -63,6 +69,16 @@ export class TraceFacade implements OnDestroy {
   readonly charmOverview = signal<CharmOverview | null>(null);
   readonly charmLoading = signal(false);
   readonly charmError = signal<string | null>(null);
+  readonly paperScorecard = signal<TracePaperScorecardResponse | null>(null);
+  readonly paperScorecardLoading = signal(false);
+  readonly paperScorecardError = signal<string | null>(null);
+  readonly paperReplay = signal<TracePaperReplayResponse | null>(null);
+  readonly paperReplayLoading = signal(false);
+  readonly paperReplayError = signal<string | null>(null);
+  readonly paperReplayEntries = signal<TracePaperReplayEntriesResponse | null>(null);
+  readonly paperReplayEntriesLoading = signal(false);
+  readonly paperReplayEntriesError = signal<string | null>(null);
+  private paperScorecardRange: { fromDate?: string; toDate?: string } | null = null;
 
   readonly selectedSession = computed<TraceSessionDescriptor | null>(() =>
     this.sessions().find(session => session.date === this.selectedDate()) ?? null,
@@ -176,6 +192,70 @@ export class TraceFacade implements OnDestroy {
     this.subscriptions.add(subscription);
   }
 
+  loadPaperScorecard(fromDate?: string, toDate?: string): void {
+    if (typeof this.api.paperScorecard !== 'function') return;
+    if (fromDate || toDate) this.paperScorecardRange = { fromDate, toDate };
+    else if (this.paperScorecardRange) ({ fromDate, toDate } = this.paperScorecardRange);
+    const requestId = ++this.paperScorecardRequest;
+    this.paperScorecardLoading.set(true);
+    this.paperScorecardError.set(null);
+    this.paperScorecard.set(null);
+    const subscription = this.api.paperScorecard(fromDate, toDate).pipe(
+      finalize(() => { if (requestId === this.paperScorecardRequest) this.paperScorecardLoading.set(false); }),
+      catchError(error => {
+        if (requestId === this.paperScorecardRequest) this.paperScorecardError.set(toSafeMessage(error, 'Paper scorecard is unavailable.'));
+        return EMPTY;
+      }),
+    ).subscribe(response => { if (requestId === this.paperScorecardRequest) this.paperScorecard.set(response); });
+    this.subscriptions.add(subscription);
+  }
+
+  loadPaperReplay(date: string, captureId: string, entryCaptureId?: string): void {
+    if (typeof this.api.paperReplay !== 'function') return;
+    const requestId = ++this.paperReplayRequest;
+    this.paperReplayLoading.set(true);
+    this.paperReplayError.set(null);
+    this.paperReplay.set(null);
+    const subscription = this.api.paperReplay(date, captureId, entryCaptureId).pipe(
+      finalize(() => { if (requestId === this.paperReplayRequest) this.paperReplayLoading.set(false); }),
+      catchError(error => {
+        if (requestId === this.paperReplayRequest) this.paperReplayError.set(toSafeMessage(error, 'No recorded paper trade is available for this capture.'));
+        return EMPTY;
+      }),
+    ).subscribe(response => { if (requestId === this.paperReplayRequest) this.paperReplay.set(response); });
+    this.subscriptions.add(subscription);
+  }
+
+  clearPaperReplay(): void {
+    this.paperReplayRequest += 1;
+    this.paperReplayLoading.set(false);
+    this.paperReplay.set(null);
+    this.paperReplayError.set(null);
+  }
+
+  loadPaperReplayEntries(date: string): void {
+    if (typeof this.api.paperReplayEntries !== 'function') return;
+    const requestId = ++this.paperReplayEntriesRequest;
+    this.paperReplayEntriesLoading.set(true);
+    this.paperReplayEntriesError.set(null);
+    const subscription = this.api.paperReplayEntries(date).pipe(
+      finalize(() => { if (requestId === this.paperReplayEntriesRequest) this.paperReplayEntriesLoading.set(false); }),
+      catchError(error => {
+        if (requestId === this.paperReplayEntriesRequest) this.paperReplayEntriesError.set(toSafeMessage(error, 'Recorded paper entries are unavailable.'));
+        return EMPTY;
+      }),
+    ).subscribe(response => { if (requestId === this.paperReplayEntriesRequest) this.paperReplayEntries.set(response); });
+    this.subscriptions.add(subscription);
+  }
+
+  resetPaperReplay(): void {
+    this.clearPaperReplay();
+    this.paperReplayEntriesRequest += 1;
+    this.paperReplayEntriesLoading.set(false);
+    this.paperReplayEntries.set(null);
+    this.paperReplayEntriesError.set(null);
+  }
+
   private loadResearchStatus(): void {
     if (typeof this.api.researchStatus !== 'function') return;
     this.researchStatusError.set(null);
@@ -193,6 +273,7 @@ export class TraceFacade implements OnDestroy {
     const normalized = date.trim();
     if (!normalized || normalized === this.selectedDate()) return;
     this.selectedDate.set(normalized);
+    this.resetPaperReplay();
     this.sessionError.set(null);
     this.selectedDateSubject.next(normalized);
   }
@@ -205,6 +286,7 @@ export class TraceFacade implements OnDestroy {
     }
     const normalized = Math.max(0, Math.min(lastIndex, Math.round(index)));
     if (normalized === this.selectedCaptureIndex()) return;
+    this.clearPaperReplay();
     this.selectedCaptureIndex.set(normalized);
     this.requestGammaProfile();
   }
@@ -224,6 +306,13 @@ export class TraceFacade implements OnDestroy {
 
   private applySessions(response: TraceSessionsResponse): void {
     this.sessions.set(response.sessions);
+    const orderedDates = response.sessions.map(session => session.date).sort();
+    if (orderedDates.length && typeof this.api.paperScorecard === 'function') {
+      this.loadPaperScorecard(
+        this.paperScorecardRange?.fromDate ?? orderedDates[Math.max(0, orderedDates.length - 10)],
+        this.paperScorecardRange?.toDate ?? orderedDates[orderedDates.length - 1],
+      );
+    }
     if (!response.sessions.length) {
       this.selectedDate.set('');
       this.bundle.set(null);
@@ -245,11 +334,13 @@ export class TraceFacade implements OnDestroy {
     this.sessionLoading.set(true);
     this.sessionError.set(null);
     this.bundle.set(null);
+    this.resetPaperReplay();
     this.selectedCaptureIndex.set(0);
     this.resetGammaProfile();
     this.charmOverview.set(null);
     this.charmError.set(null);
     this.charmLoading.set(true);
+    this.loadPaperReplayEntries(date);
 
     return forkJoin({
       summary: capture(this.api.summary(date)),

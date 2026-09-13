@@ -468,3 +468,34 @@
 .research-evidence-badge[data-status='preregistered'] { border-color: rgba(203,166,247,.42); }
 .research-evidence-badge[data-status='ready_for_review'] { border-color: rgba(250,204,21,.5); }
 .research-evidence-badge[data-status='presentation_only'] { border-color: rgba(52,211,153,.35); }
+
+.paper-scorecard-panel,
+.paper-replay-panel { display: grid; gap: 1rem; padding: 1.25rem; margin-top: 1rem; border: 1px solid rgba(120,166,255,.18); border-radius: 1rem; background: rgba(20,29,44,.72); }
+.paper-scorecard-panel > header,
+.paper-replay-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.paper-scorecard-range { display: flex; align-items: end; gap: .55rem; color: #91a3ba; font-size: .75rem; }
+.paper-scorecard-range label { display: grid; gap: .25rem; }
+.paper-scorecard-range input { padding: .45rem; border: 1px solid rgba(148,163,184,.35); border-radius: .35rem; color: #dfe9fb; background: rgba(8,12,18,.72); }
+.paper-scorecard-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(18rem,1fr)); gap: .75rem; }
+.paper-scorecard-warnings { color: #f7c766; font-size: .75rem; }
+.paper-cohort-card { display: grid; gap: .55rem; padding: .9rem; border: 1px solid rgba(148,163,184,.18); border-radius: .7rem; background: rgba(8,12,18,.38); }
+.paper-cohort-card header { display: flex; justify-content: space-between; gap: .5rem; }
+.paper-cohort-card header span, .paper-cohort-card small, .paper-replay-panel header > span, .paper-replay-action span { color: #91a3ba; font-size: .72rem; }
+.paper-cohort-card dl, .paper-replay-facts { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .45rem .8rem; margin: 0; }
+.paper-cohort-card dl div { display: flex; justify-content: space-between; gap: .5rem; }
+.paper-cohort-card dt { color: #91a3ba; font-size: .72rem; }
+.paper-cohort-card dd { margin: 0; color: #dfe9fb; font-size: .78rem; font-weight: 700; }
+.paper-cohort-card details { color: #91a3ba; font-size: .72rem; }
+.paper-daily-list { display: grid; gap: .2rem; padding-top: .45rem; }
+.paper-replay-action { display: flex; align-items: center; gap: .8rem; margin-top: .7rem; }
+.paper-replay-chart { width: 100%; min-height: 12rem; padding: .5rem; overflow: visible; color: #78a6ff; border-radius: .6rem; background: rgba(8,12,18,.5); }
+.paper-replay-chart text { fill: #dfe9fb; font-size: 2.5px; }
+.paper-replay-level { stroke: rgba(247,199,102,.7); stroke-dasharray: 2 1; stroke-width: .45; }
+.paper-replay-axis { stroke: rgba(148,163,184,.42); stroke-width: .4; }
+.paper-replay-marker { stroke: #f78da7; stroke-dasharray: 1 1; stroke-width: .7; }
+.paper-replay-entry { fill: #75e8a7; stroke: #0b1622; stroke-width: .6; }
+.paper-replay-exit { fill: #f78da7; stroke: #0b1622; stroke-width: .6; }
+.paper-replay-events { display: flex; flex-wrap: wrap; gap: .45rem .8rem; color: #91a3ba; font-size: .75rem; }
+.paper-replay-events strong { color: #dfe9fb; }
+.paper-replay-gap { margin: 0; color: #f7c766; font-size: .75rem; }
+@media (max-width: 720px) { .paper-scorecard-panel > header, .paper-replay-panel > header, .paper-replay-action { display: grid; } .paper-scorecard-range { align-items: stretch; flex-wrap: wrap; } }

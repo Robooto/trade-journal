@@ -305,3 +305,88 @@ export interface TraceResearchStatusResponse {
   readonly scoring_enabled_count: number;
   readonly studies: readonly TraceStudyStatus[];
 }
+
+export interface TracePaperScorecardDaily {
+  readonly date: string;
+  readonly closed: number;
+  readonly open: number;
+  readonly unevaluable: number;
+  readonly skipped: number;
+  readonly gross_pnl_dollars: number | null;
+  readonly no_entry?: boolean;
+}
+
+export interface TracePaperScorecardCohort {
+  readonly policy_id: string;
+  readonly policy_label: string;
+  readonly study_mode: string;
+  readonly timing_policy: string;
+  readonly protocol_sha256: string;
+  readonly summary: {
+    readonly take_episodes: number;
+    readonly closed: number;
+    readonly open: number;
+    readonly unevaluable: number;
+    readonly skipped: number;
+    readonly wins: number;
+    readonly losses: number;
+    readonly gross_win_rate: number | null;
+    readonly gross_pnl_dollars: number | null;
+    readonly gross_expectancy_dollars: number | null;
+    readonly worst_session_gross_pnl_dollars: number | null;
+    readonly realized_closed_drawdown_dollars: number | null;
+    readonly entry_coverage: number | null;
+    readonly entry_coverage_denominator: number;
+    readonly daily: readonly TracePaperScorecardDaily[];
+  };
+}
+
+export interface TracePaperScorecardResponse {
+  readonly schema_version: 'spx-paper-scorecard.v1';
+  readonly from_date: string;
+  readonly to_date: string;
+  readonly status: TraceContractStatus | 'no_evidence' | 'unavailable';
+  readonly session_count: number;
+  readonly source_status_counts: Readonly<Record<string, number>>;
+  readonly cohorts: readonly TracePaperScorecardCohort[];
+  readonly warnings: readonly string[];
+}
+
+export interface TracePaperReplayResponse {
+  readonly schema_version: 'spx-paper-replay.v1';
+  readonly date: string;
+  readonly as_of: string;
+  readonly selected_capture_id: string;
+  readonly entry_capture_id: string;
+  readonly trade: {
+    readonly capture_id: string;
+    readonly onset_ts: string;
+    readonly status: string;
+    readonly reason: string;
+    readonly trade_type: string;
+    readonly timing_policy: string;
+    readonly frozen_structure: { readonly type?: string; readonly level?: number } | null;
+    readonly short_strike: number | null;
+    readonly long_strike: number | null;
+    readonly entry_credit_dollars: number | null;
+    readonly exit_debit_dollars: number | null;
+    readonly gross_pnl_dollars: number | null;
+  };
+  readonly path: readonly { readonly ts: string; readonly capture_id: string; readonly spot: number | null; readonly gap_seconds: number | null; readonly gap: boolean; readonly entry?: boolean; readonly exit?: boolean }[];
+  readonly levels: readonly { readonly label: string; readonly price: number | null }[];
+  readonly hierarchy_events: readonly { readonly ts: string; readonly capture_id: string; readonly event: string }[];
+  readonly gaps_explicit: boolean;
+  readonly warnings: readonly string[];
+}
+
+export interface TracePaperReplayEntriesResponse {
+  readonly schema_version: 'spx-paper-replay-entries.v1';
+  readonly date: string;
+  readonly status: 'available' | 'no_evidence' | 'unavailable';
+  readonly entries: readonly {
+    readonly capture_id: string;
+    readonly ts: string;
+    readonly trade_type: string | null;
+    readonly protocol_sha256: string | null;
+  }[];
+}
