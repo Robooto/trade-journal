@@ -90,6 +90,7 @@ class TraceFacadeStub {
   readonly loadPaperScorecard = vi.fn();
   readonly loadPaperReplay = vi.fn();
   readonly loadPaperReplayEntries = vi.fn();
+  readonly clearPaperReplay = vi.fn();
   readonly resetPaperReplay = vi.fn();
 }
 
@@ -122,6 +123,29 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Thin frontend boundary');
     expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
     expect(fixture.nativeElement.textContent).not.toContain('Legacy TRACE');
+  });
+
+  it('keeps paper trading in its own tab and opens TRACE by default', () => {
+    const traceTab = fixture.nativeElement.querySelector('#trace-workspace-tab') as HTMLButtonElement;
+    const paperTab = fixture.nativeElement.querySelector('#paper-workspace-tab') as HTMLButtonElement;
+    const tracePanel = fixture.nativeElement.querySelector('#trace-workspace-panel') as HTMLElement;
+    const paperPanel = fixture.nativeElement.querySelector('#paper-workspace-panel') as HTMLElement;
+
+    expect(traceTab.getAttribute('aria-selected')).toBe('true');
+    expect(paperTab.getAttribute('aria-selected')).toBe('false');
+    expect(tracePanel.hidden).toBe(false);
+    expect(paperPanel.hidden).toBe(true);
+    expect(tracePanel.querySelector('.price-level-panel')).not.toBeNull();
+    expect(tracePanel.querySelector('.paper-scorecard-panel')).toBeNull();
+    expect(paperPanel.querySelector('.paper-scorecard-panel')).not.toBeNull();
+
+    paperTab.click();
+    fixture.detectChanges();
+
+    expect(traceTab.getAttribute('aria-selected')).toBe('false');
+    expect(paperTab.getAttribute('aria-selected')).toBe('true');
+    expect(tracePanel.hidden).toBe(true);
+    expect(paperPanel.hidden).toBe(false);
   });
 
   it('shows missing paper evidence without inventing a zero win rate', () => {

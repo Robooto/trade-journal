@@ -23,6 +23,7 @@ const TRACE_REFRESH_DELAY_MINUTES = 1;
   standalone: false,
 })
 export class TracePageComponent implements OnInit, OnDestroy {
+  activeWorkspaceTab: 'trace' | 'paper' = 'trace';
   priceLevelPrice: number | null = null;
   priceLevelLabel = '';
   priceLevelColor = '#fbbf24';
