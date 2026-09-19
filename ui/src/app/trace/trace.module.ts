@@ -13,6 +13,7 @@ import { SignedGexMapComponent } from './overview/components/signed-gex-map/sign
 import { TracePageComponent } from './overview/trace-page.component';
 import { TraceRoutingModule } from './trace-routing.module';
 import { PaperLedgerComponent } from './overview/components/paper-ledger/paper-ledger.component';
+import { PaperNowComponent } from './overview/components/paper-now/paper-now.component';
 
 @NgModule({
   declarations: [
@@ -25,6 +26,6 @@ import { PaperLedgerComponent } from './overview/components/paper-ledger/paper-l
     SignedGexMapComponent,
     CharmWidgetComponent,
   ],
-  imports: [CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent],
+  imports: [CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent],
 })
 export class TraceModule {}

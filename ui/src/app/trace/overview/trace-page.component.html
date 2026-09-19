@@ -19,8 +19,8 @@
   </header>
 
   @if (facade.researchStatus?.(); as status) {
-    <section class="research-evidence-strip" aria-label="TRACE research evidence status">
-      <header><div><p class="trace-eyebrow">Evidence registry</p><strong>{{ status.evidence_version }}</strong></div><span>As of {{ status.as_of }} · {{ status.scoring_enabled_count }} scoring-enabled</span></header>
+    <details class="research-evidence-strip" aria-label="TRACE research evidence status">
+      <summary><span><span class="trace-eyebrow">Prospective research</span><strong>{{ status.study_count }} tracked studies</strong></span><small>As of {{ status.as_of }} · {{ status.scoring_enabled_count }} scoring-enabled · expand for status</small></summary>
       <div class="research-evidence-badges">
         @for (study of facade.visibleResearchStatuses?.() ?? []; track study.id) {
           <span class="research-evidence-badge" [attr.data-status]="study.status">
@@ -29,7 +29,7 @@
           </span>
         }
       </div>
-    </section>
+    </details>
   } @else if (facade.researchStatusError?.()) {
     <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError?.() }}</span></div></section>
   }
@@ -279,15 +279,13 @@
     aria-labelledby="paper-workspace-tab"
     [hidden]="activeWorkspaceTab !== 'paper'"
   >
-    @if (activeWorkspaceTab === 'paper') {
-      <app-paper-ledger [fromDate]="paperFromDate" [toDate]="paperToDate" />
-    }
+    @if (activeWorkspaceTab === 'paper') { <app-paper-now [date]="paperToDate" [refreshAt]="lastRefreshRequestedAt()" /> }
     <section class="paper-scorecard-panel" aria-labelledby="paper-scorecard-title">
       <header class="trace-timeline-heading">
         <div>
           <p class="trace-eyebrow">Paper evidence</p>
-          <h2 id="paper-scorecard-title">Cross-session scorecard</h2>
-          <p>Closed gross indications grouped by policy, timing, and protocol cohort.</p>
+          <h2 id="paper-scorecard-title">Results so far</h2>
+          <p>Baseline directional spreads for the selected sessions. Expand to compare policies and inspect daily evidence.</p>
         </div>
         <form class="paper-scorecard-range" (ngSubmit)="submitPaperRange()">
           <label>From <input type="date" [(ngModel)]="paperFromDate" name="paperFromDate" /></label>
@@ -300,16 +298,22 @@
       } @else if (facade.paperScorecardError()) {
         <div class="trace-state trace-state--error" role="alert"><mat-icon>cloud_off</mat-icon><span>{{ facade.paperScorecardError() }}</span></div>
       } @else if (facade.paperScorecard(); as scorecard) {
-        <div class="paper-scorecard-warnings">Gross indications; fees and slippage are untracked. Ten-minute observations do not show intrainterval extremes. Missing path quotes remain unevaluable and excluded from expectancy. Drawdown uses closed modeled outcomes only. Quote coverage denominator is admitted episodes; skipped entries are separate.</div>
+        <div class="paper-scorecard-warnings">Modeled gross results, not fills or net returns. Missing quotes are excluded, not counted as losses or zero returns.</div>
         @if (scorecard.status === 'unavailable') { <div class="trace-state trace-state--error" role="alert"><mat-icon>cloud_off</mat-icon><span>Paper quote store is unavailable; no zero-return sample was fabricated.</span></div> }
         @if (scorecard.status === 'partial') { <div class="paper-scorecard-warnings">Some source sessions are incomplete; unevaluable and excluded episodes remain visible.</div> }
         @if (scorecard.cohorts.length) {
+          @for (cohort of scorecard.cohorts; track cohort.policy_id + cohort.study_mode + cohort.timing_policy + cohort.protocol_sha256) {
+            @if (cohort.policy_id === 'baseline-one-position.v1' && cohort.study_mode === 'prospective' && cohort.timing_policy === 'regular-close.v2') {
+              <div class="paper-primary-result"><strong>Current directional baseline</strong><span>{{ cohort.summary.closed }} closed</span><span>{{ formatPercent(cohort.summary.gross_win_rate) }} gross win rate</span><span>{{ formatMoney(cohort.summary.gross_pnl_dollars) }} gross P/L</span><small>{{ cohort.policy_label }} · regular-close timing</small></div>
+            }
+          }
+          <details class="paper-results-details"><summary>Compare all {{ scorecard.cohorts.length }} policy cohorts and daily evidence</summary>
+          <p class="paper-scorecard-warnings">Fees and slippage are untracked. Ten-minute observations miss intrainterval extremes. Drawdown uses closed modeled outcomes only; quote coverage counts admitted episodes, while skipped entries are separate.</p>
           <div class="paper-scorecard-grid">
             @for (cohort of scorecard.cohorts; track cohort.policy_id + cohort.study_mode + cohort.timing_policy + cohort.protocol_sha256) {
               <article class="paper-cohort-card">
                 <header><strong>{{ cohort.policy_label }}</strong><span>{{ cohort.study_mode }} · {{ cohort.timing_policy }}</span></header>
                 <small>Protocol {{ cohort.protocol_sha256 === 'unavailable' ? 'unavailable' : cohort.protocol_sha256.slice(0, 10) }}</small>
-                <button mat-stroked-button type="button" (click)="inspectPaperPolicy(cohort.policy_id)">Inspect this policy’s five-point contracts</button>
                 <dl>
                   <div><dt>Closed</dt><dd>{{ cohort.summary.closed }}</dd></div>
                   <div><dt>Win rate</dt><dd>{{ formatPercent(cohort.summary.gross_win_rate) }}</dd></div>
@@ -330,6 +334,7 @@
               </article>
             }
           </div>
+          </details>
         } @else {
           <div class="trace-state"><mat-icon>info</mat-icon><span>{{ scorecard.status === 'unavailable' ? 'Paper evidence could not be read.' : 'No paper evidence in this range.' }}</span></div>
         }
@@ -397,16 +402,25 @@
         </section>
       }
 
-      <div class="trace-0dte-comparison" aria-label="SPX 0DTE Decision Journal">
-        <app-decision-journal
-          [date]="facade.selectedDate()"
-          [captureTs]="capture.ts"
-          [captureId]="capture.capture_id"
-        />
-      </div>
+      <details class="paper-research-disclosure" (toggle)="paperResearchExpanded = $any($event.target).open">
+        <summary><span><strong>Prospective research · selected capture</strong><small>Decision evidence, spread widths, and management comparisons</small></span><mat-icon>expand_more</mat-icon></summary>
+        @if (paperResearchExpanded) {
+          <app-decision-journal
+            [date]="facade.selectedDate()"
+            [captureTs]="capture.ts"
+            [captureId]="capture.capture_id"
+            [showCaptureDecision]="false"
+          />
+        }
+      </details>
+
     } @else {
-      <section class="trace-state"><mat-icon>info</mat-icon><span>Select a TRACE session and capture to inspect its paper decision and replay.</span></section>
+      <section class="trace-state"><mat-icon>info</mat-icon><span>Select a TRACE session and capture to inspect its trade replay.</span></section>
     }
+    <details class="paper-ledger-disclosure" (toggle)="ledgerExpanded = $any($event.target).open">
+      <summary><span><strong>Exact contracts &amp; admission ledger</strong><small>Filter opportunities, inspect option legs, quotes, and recorded paths</small></span><mat-icon>expand_more</mat-icon></summary>
+      @if (ledgerExpanded && activeWorkspaceTab === 'paper') { <app-paper-ledger [fromDate]="paperFromDate" [toDate]="paperToDate" /> }
+    </details>
   </div>
 
 

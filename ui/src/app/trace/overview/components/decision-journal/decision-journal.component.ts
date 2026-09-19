@@ -21,6 +21,7 @@ export class DecisionJournalComponent implements OnChanges, OnDestroy {
   @Input({ required: true }) date = '';
   @Input() captureTs: string | null = null;
   @Input() captureId: string | null = null;
+  @Input() showCaptureDecision = true;
 
   readonly systemDecision = signal<Spx0DteDecisionJournalResponse | null>(null);
   readonly humanDecision = signal<Spx0DteHumanDecision | null>(null);
@@ -62,10 +63,12 @@ export class DecisionJournalComponent implements OnChanges, OnDestroy {
         this.loading.set(false);
       },
     }));
-    this.requests.add(this.api.human0DteDecision(this.date, this.captureId).subscribe({
-      next: response => this.humanDecision.set(response.rows[0] ?? null),
-      error: () => this.saveError.set('Your saved decision could not be loaded.'),
-    }));
+    if (this.showCaptureDecision) {
+      this.requests.add(this.api.human0DteDecision(this.date, this.captureId).subscribe({
+        next: response => this.humanDecision.set(response.rows[0] ?? null),
+        error: () => this.saveError.set('Your saved decision could not be loaded.'),
+      }));
+    }
   }
 
   ngOnDestroy(): void {

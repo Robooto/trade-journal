@@ -1,0 +1,44 @@
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { TraceApiService } from '../../data-access/trace-api.service';
+import { PaperLedgerResponse, PaperLedgerRow } from '../paper-ledger/paper-ledger.component';
+
+@Component({
+  selector: 'app-paper-now',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './paper-now.component.html',
+  styleUrl: './paper-now.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PaperNowComponent implements OnChanges, OnDestroy {
+  @Input() date = '';
+  @Input() refreshAt: Date | null = null;
+  readonly response = signal<PaperLedgerResponse | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal(false);
+  private request?: Subscription;
+
+  constructor(private readonly api: TraceApiService) {}
+
+  ngOnChanges(): void {
+    this.request?.unsubscribe();
+    this.response.set(null);
+    this.error.set(false);
+    if (!this.date) return;
+    this.loading.set(true);
+    this.request = this.api.paperTrades(this.date, this.date, {
+      policy_id: 'baseline-one-position.v1', status: 'open', offset: '0', limit: '6',
+    }).subscribe({
+      next: response => { this.response.set(response); this.loading.set(false); },
+      error: () => { this.error.set(true); this.loading.set(false); },
+    });
+  }
+
+  ngOnDestroy(): void { this.request?.unsubscribe(); }
+
+  strategyLabel(row: PaperLedgerRow): string {
+    return row.strategy_id === 'spx-structure-iron-condor.v1' ? 'Structure iron condor' : 'Directional vertical';
+  }
+}

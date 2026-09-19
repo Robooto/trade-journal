@@ -4,6 +4,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* TRACE's page stylesheet is budgeted separately; these disclosure rules are scoped here. */
+.trace-page .research-evidence-strip > summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; list-style: none; }
+.trace-page .research-evidence-strip > summary::-webkit-details-marker { display: none; }
+.trace-page .research-evidence-strip > summary::after { content: '⌄'; color: #8db5ff; font-size: 1.2rem; }
+.trace-page .research-evidence-strip[open] > summary::after { content: '⌃'; }
+.trace-page .research-evidence-strip > summary > span { display: grid; gap: .1rem; }
+.trace-page .research-evidence-strip > summary small { color: #91a3ba; font-size: .74rem; }
+.trace-page .paper-primary-result { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .85rem 1rem; border: 1px solid rgba(120,166,255,.25); border-radius: .7rem; background: rgba(8,12,18,.38); font-size: .82rem; }
+.trace-page .paper-primary-result strong { color: #eef4ff; }
+.trace-page .paper-primary-result span { color: #a8e6c1; }
+.trace-page .paper-primary-result small { color: #91a3ba; }
+.trace-page .paper-results-details { min-width: 0; }
+.trace-page .paper-results-details > summary { color: #b9d3ff; font-size: .82rem; font-weight: 700; cursor: pointer; }
+.trace-page .paper-results-details > p { margin: .7rem 0; }
+.trace-page .paper-results-details .paper-scorecard-grid { margin-top: .75rem; }
+.trace-page .paper-ledger-disclosure, .trace-page .paper-research-disclosure { min-width: 0; border: 1px solid rgba(120,166,255,.18); border-radius: 1rem; background: rgba(20,29,44,.72); }
+.trace-page .paper-ledger-disclosure > summary, .trace-page .paper-research-disclosure > summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; cursor: pointer; list-style: none; }
+.trace-page .paper-ledger-disclosure > summary::-webkit-details-marker, .trace-page .paper-research-disclosure > summary::-webkit-details-marker { display: none; }
+.trace-page .paper-ledger-disclosure > summary span, .trace-page .paper-research-disclosure > summary span { display: grid; gap: .2rem; }
+.trace-page .paper-ledger-disclosure > summary small, .trace-page .paper-research-disclosure > summary small { color: #91a3ba; font-size: .75rem; }
+.trace-page .paper-ledger-disclosure[open] > summary mat-icon, .trace-page .paper-research-disclosure[open] > summary mat-icon { transform: rotate(180deg); }
+.trace-page .paper-ledger-disclosure app-paper-ledger { display: block; padding: 0 1rem 1rem; }
+.trace-page .paper-research-disclosure app-decision-journal { display: block; padding: 0 1rem 1rem; }
+
 html {
   color-scheme: light dark;
   @include mat.theme((

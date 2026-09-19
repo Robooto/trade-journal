@@ -1,0 +1,42 @@
+<section class="paper-now" aria-labelledby="paper-now-title">
+  <header>
+    <div><p class="eyebrow">At a glance</p><h2 id="paper-now-title">Paper trading now</h2></div>
+    <span>Research only · no orders submitted</span>
+  </header>
+  <div class="strategy-grid" aria-label="Paper strategies">
+    <article>
+      <strong>Directional verticals</strong>
+      <p>SPX credit spreads from recorded decision entries. Five-point baseline, with ten-point width compared separately.</p>
+    </article>
+    <article>
+      <strong>Structure iron condor</strong>
+      <p>Five-point wings: put side at support, call side at resistance. Both sides qualify at 3–40 points, including 10–20.</p>
+    </article>
+  </div>
+  <div class="open-positions">
+    <h3>Positions marked open <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
+    @if (!date) { <p>Waiting for a recorded paper session.</p> }
+    @else if (loading()) { <p role="status">Checking recorded positions…</p> }
+    @else if (error() || response()?.status === 'unavailable') { <p role="alert">Position evidence is unavailable; open status cannot be confirmed.</p> }
+    @else if (response(); as data) {
+      @if (data.status === 'no_evidence') { <p>No paper evidence has been recorded for this session.</p> }
+      @else if (!data.total) { <p>No positions are marked open at the latest evaluation.</p> }
+      @else {
+        <p class="position-note">Modeled positions, not broker holdings. Five- and ten-point versions may represent the same entry.</p>
+        <div class="position-list">
+          @for (trade of data.rows; track trade.evaluation_id) {
+            <details>
+              <summary><strong>{{ strategyLabel(trade) }}</strong><span>{{ trade.trade_type.replaceAll('_', ' ') }} · {{ trade.width_points }}-point wings · {{ trade.onset_ts | date:'shortTime' }}</span></summary>
+              <div class="position-detail">
+                <p>Entry credit {{ trade.entry_credit_dollars == null ? 'unavailable' : (trade.entry_credit_dollars | currency:'USD':'symbol':'1.0-0') }} · {{ trade.reason.replaceAll('_', ' ') }}</p>
+                @for (leg of trade.legs; track leg.symbol) { <span>{{ leg.side }} {{ leg.quantity }} {{ leg.option_type }} {{ leg.strike }} · {{ leg.symbol }}</span> }
+                @if (!trade.legs.length) { <span>Exact contract legs were not recorded.</span> }
+              </div>
+            </details>
+          }
+        </div>
+        @if (data.total > data.rows.length) { <p>Showing {{ data.rows.length }} of {{ data.total }} open records; browse the ledger below for more.</p> }
+      }
+    }
+  </div>
+</section>
