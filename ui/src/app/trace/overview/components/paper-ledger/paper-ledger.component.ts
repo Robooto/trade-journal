@@ -33,12 +33,19 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
   @Input() fromDate = '';
   @Input() toDate = '';
   strategy = ''; policy = 'baseline-one-position.v1'; width = ''; status = ''; search = ''; offset = 0;
+  private policyInitialized = false;
   readonly response = signal<PaperLedgerResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   private request?: Subscription;
   constructor(private readonly api: TraceApiService) {}
-  ngOnChanges(): void { this.load(true); }
+  ngOnChanges(): void {
+    if (!this.policyInitialized && this.toDate) {
+      this.policy = this.toDate >= '2026-09-21' ? 'credit-risk-to-close.v2' : 'baseline-one-position.v1';
+      this.policyInitialized = true;
+    }
+    this.load(true);
+  }
   ngOnDestroy(): void { this.request?.unsubscribe(); }
   load(reset = false): void {
     if (!this.fromDate || !this.toDate) return;

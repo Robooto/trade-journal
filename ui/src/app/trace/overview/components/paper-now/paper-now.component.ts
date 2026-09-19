@@ -29,7 +29,8 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     if (!this.date) return;
     this.loading.set(true);
     this.request = this.api.paperTrades(this.date, this.date, {
-      policy_id: 'baseline-one-position.v1', status: 'open', offset: '0', limit: '6',
+      policy_id: this.date >= '2026-09-21' ? 'credit-risk-to-close.v2' : 'baseline-one-position.v1',
+      status: 'open', offset: '0', limit: '6',
     }).subscribe({
       next: response => { this.response.set(response); this.loading.set(false); },
       error: () => { this.error.set(true); this.loading.set(false); },
