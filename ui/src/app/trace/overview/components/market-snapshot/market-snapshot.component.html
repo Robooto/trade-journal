@@ -43,6 +43,7 @@
         <small>{{ labelize(row.local_gamma_setup) }} · at spot {{ formatCompact(gammaContext?.nearest_total_gamma, true) }} · slope {{ formatCompact(gammaContext?.cross_spot_slope, true) }}/pt</small>
         @if (persistentPositiveSteepeningWatch) { <small class="snapshot-qualifier snapshot-qualifier--gamma">Gamma slope watch &middot; bearish research context</small> }
         <em>Research context · not a forecast</em>
+        <small>September 18 review: the tested transition to positive slope did not support a bullish advantage. No score boost or opposite trade is implied.</small>
       </article>
 
       <article class="snapshot-card snapshot-card--volatility" [attr.data-card-tone]="volatilityTone()">
@@ -59,6 +60,7 @@
 
       <article class="snapshot-card snapshot-card--structure">
         <span class="snapshot-label">Price Structure</span>
+        <small>10–20 and wider room have favorable historical path evidence; 3–10 remains uncertain. These are buffered, one-sided proxies—not condor returns.</small>
         <div class="snapshot-split snapshot-split--study-distance">
           <div>
             <span>Support study distance</span>

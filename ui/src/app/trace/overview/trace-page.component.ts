@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, computed, effect, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, ViewChild, computed, effect, signal } from '@angular/core';
+import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { TraceFacade } from './data-access/trace.facade';
@@ -23,6 +24,17 @@ const TRACE_REFRESH_DELAY_MINUTES = 1;
   standalone: false,
 })
 export class TracePageComponent implements OnInit, OnDestroy {
+  @ViewChild(PaperLedgerComponent) paperLedger?: PaperLedgerComponent;
+
+  inspectPaperPolicy(policy: string): void {
+    if (!this.paperLedger) return;
+    this.paperLedger.strategy = 'spx-directional-vertical.v1';
+    this.paperLedger.policy = policy;
+    this.paperLedger.width = '5';
+    this.paperLedger.status = ''; this.paperLedger.search = '';
+    this.paperLedger.load(true);
+    document.getElementById('paper-ledger-title')?.scrollIntoView({ behavior: 'smooth' });
+  }
   activeWorkspaceTab: 'trace' | 'paper' = 'trace';
   priceLevelPrice: number | null = null;
   priceLevelLabel = '';

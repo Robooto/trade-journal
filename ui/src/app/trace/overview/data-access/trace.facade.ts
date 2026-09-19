@@ -127,6 +127,8 @@ export class TraceFacade implements OnDestroy {
 
   readonly visibleResearchStatuses = computed<readonly TraceStudyStatus[]>(() => {
     const ids = new Set([
+      'structure-iron-condor',
+      'structure-distance-short-strike',
       'credit-spread-confirmation-quality',
       'gamma-slope-transitions',
       'signed-gex-interaction',

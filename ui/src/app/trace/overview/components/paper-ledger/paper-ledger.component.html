@@ -1,0 +1,40 @@
+<section class="ledger" aria-labelledby="paper-ledger-title">
+  <h2 id="paper-ledger-title">Exact contracts & admission ledger</h2>
+  <p>One-position policy by default. Recorded opportunities are not necessarily admitted trades. Quotes are sampled indications, not broker fills; fees and extra slippage are untracked.</p>
+  <form (ngSubmit)="load(true)" class="filters">
+    <label>Strategy<select name="strategy" [(ngModel)]="strategy"><option value="">All paper strategies</option><option value="spx-directional-vertical.v1">Directional verticals</option><option value="spx-structure-iron-condor.v1">Structure iron condor</option></select></label>
+    <label>Vertical policy<select name="policy" [(ngModel)]="policy"><option value="baseline-one-position.v1">Baseline · one position</option><option value="all-recorded">All recorded opportunities (overlapping)</option><option value="confirmed-opposition.v1">Confirmed opposition</option><option value="original-structure.v1">Original structure</option><option value="defined-risk-to-close.v1">Defined risk to close</option></select></label>
+    <label>Wing width<select name="width" [(ngModel)]="width"><option value="">Both</option><option value="5">5 points</option><option value="10">10 points</option></select></label>
+    <label>Outcome<select name="status" [(ngModel)]="status"><option value="">All outcomes</option><option>closed</option><option>open</option><option>skipped</option><option>unevaluable</option></select></label>
+    <label>Contract / date / reason<input name="search" [(ngModel)]="search" maxlength="100" /></label>
+    <button type="submit" [disabled]="loading()">Apply filters / refresh</button>
+  </form>
+  <p>The independent condor uses its own whole-position policy: puts at support, calls at resistance, both sides 3–40 points away; five-point wings. No condor results exist until prospective collection begins.</p>
+  @if (loading()) { <p role="status">Loading exact contracts…</p> }
+  @if (error()) { <p role="alert">{{ error() }}</p> }
+  @if (response(); as data) {
+    @if (data.status === 'unavailable') { <p role="alert">Paper evidence could not be reconciled. Missing data is not a zero return.</p> }
+    @for (cohort of data.cohorts; track cohort.strategy_id + cohort.policy_id + cohort.width_points + cohort.protocol_sha256) {
+      <div class="cohort"><strong>{{ cohort.strategy_id }} · {{ cohort.width_points }}-point wings · {{ cohort.policy_id }}</strong><span>{{ cohort.summary.closed }} closed / {{ cohort.summary.open }} open / {{ cohort.summary.skipped }} skipped / {{ cohort.summary.unevaluable }} unevaluable · {{ money(cohort.summary.gross_pnl_dollars) }} gross</span></div>
+    }
+    <p>{{ data.total }} matching opportunities · dates {{ fromDate }} through {{ toDate }} · {{ data.sessions.length }} recorded sessions</p>
+    @if (!data.rows.length && data.status !== 'unavailable') { <p>No matching opportunities. A session without entries is distinct from an unavailable store.</p> }
+    @for (trade of data.rows; track trade.evaluation_id) {
+      <details class="trade">
+        <summary>{{ trade.onset_ts }} · {{ trade.trade_type }} · {{ trade.width_points }}-point wings · {{ trade.status }} · {{ money(trade.gross_pnl_dollars) }} gross</summary>
+        <p>Entry: {{ trade.entry_status }} · {{ trade.reason }} · Exit: {{ trade.exit_ts || 'Not recorded' }}</p>
+        <p>Credit {{ money(trade.entry_credit_dollars) }} · Debit {{ money(trade.exit_debit_dollars) }} · Expiration max risk {{ money(trade.max_risk_dollars) }}</p>
+        @for (cost of trade.cost_scenarios || []; track cost.label) { <p>{{ cost.label }}: {{ money(cost.net_scenario_dollars) }}</p> }
+        <div class="table-scroll"><table><thead><tr><th>Action</th><th>Stored option symbol</th><th>Type / strike</th><th>Expiration</th><th>Entry bid / ask</th><th>Exit bid / ask</th></tr></thead><tbody>
+          @for (leg of trade.legs; track leg.symbol) {
+            <tr><td>{{ leg.side | uppercase }} {{ leg.quantity }}</td><td><code>{{ leg.symbol }}</code></td><td>{{ leg.option_type }} {{ leg.strike }}</td><td>{{ leg.expiration }}</td><td>{{ leg.entry_quote ? leg.entry_quote.bid + ' / ' + leg.entry_quote.ask : 'Not persisted' }}<small>{{ leg.entry_quote?.quoted_at }}</small></td><td>{{ leg.exit_quote ? leg.exit_quote.bid + ' / ' + leg.exit_quote.ask : 'Not persisted' }}<small>{{ leg.exit_quote?.quoted_at }}</small></td></tr>
+          }
+        </tbody></table></div>
+        @if (!trade.legs.length) { <p>Contract selection was not persisted; no symbols inferred.</p> }
+        <details><summary>Frozen levels & protocol</summary><pre>{{ (trade.structures || trade.frozen_structure) | json }}</pre><p>{{ trade.timing_policy }} · {{ trade.protocol_sha256 }}</p></details>
+        <details><summary>Recorded path through exit / evaluation cutoff</summary><div class="table-scroll"><table><thead><tr><th>Capture</th><th>SPX</th><th>Quote status</th><th>Persisted prices</th></tr></thead><tbody>@for (point of trade.path; track point.ts) { <tr><td>{{ point.ts }}</td><td>{{ point.spot }}</td><td>{{ point.quote_status }}</td><td><pre>{{ point.prices | json }}</pre></td></tr> }</tbody></table></div></details>
+      </details>
+    }
+    <nav aria-label="Ledger pages"><button type="button" (click)="page(-50)" [disabled]="offset === 0">Previous</button><span>{{ offset + 1 }}–{{ offset + data.rows.length }} of {{ data.total }}</span><button type="button" (click)="page(50)" [disabled]="offset + data.rows.length >= data.total">Next</button></nav>
+  }
+</section>

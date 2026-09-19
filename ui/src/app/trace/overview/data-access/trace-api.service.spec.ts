@@ -15,6 +15,13 @@ describe('TraceApiService', () => {
 
   afterEach(() => http.verify());
 
+  it('passes ledger filters through the read-only research proxy', () => {
+    api.paperTrades('2026-09-14', '2026-09-18', { search: 'SPXW 260918P07625000', width_points: '5', offset: '0', limit: '50' }).subscribe();
+    http.expectOne(request => request.url === '/research-api/api/trace/paper-trades' && request.method === 'GET'
+      && request.params.get('search') === 'SPXW 260918P07625000' && request.params.get('from_date') === '2026-09-14'
+      && request.params.get('width_points') === '5').flush({});
+  });
+
   it('uses the same-origin research proxy for session discovery and dashboard sources', () => {
     api.sessions().subscribe();
     http.expectOne('/research-api/api/trace/sessions').flush({});

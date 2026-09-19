@@ -20,6 +20,7 @@ import { SessionTrendsComponent } from './components/session-trends/session-tren
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
 import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.component';
+import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 
 class CharmApiStub {
   readonly surface = vi.fn(() => of({
@@ -32,6 +33,7 @@ class CharmApiStub {
   }));
 }
 class TraceApiStub {
+  readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
   readonly decisionJournal = vi.fn(() => of({
     schema_version: 'spx-0dte-decision.v1',
     protocol_id: 'spx-0dte-decision-journal-v1',
@@ -104,6 +106,7 @@ describe('TracePageComponent', () => {
     await TestBed.configureTestingModule({
       declarations: [TracePageComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, DecisionJournalComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
       imports: [
+        PaperLedgerComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,

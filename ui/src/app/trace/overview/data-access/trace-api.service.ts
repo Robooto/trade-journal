@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import type { PaperLedgerResponse } from '../components/paper-ledger/paper-ledger.component';
 
 import {
   TraceGammaContextResponse,
@@ -65,6 +66,12 @@ export class TraceApiService {
     if (fromDate) params = params.set('from_date', fromDate);
     if (toDate) params = params.set('to_date', toDate);
     return this.http.get<TracePaperScorecardResponse>(`${this.baseUrl}/paper-scorecard`, { params });
+  }
+
+  paperTrades(fromDate: string, toDate: string, filters: Record<string, string>): Observable<PaperLedgerResponse> {
+    let params = new HttpParams().set('from_date', fromDate).set('to_date', toDate);
+    for (const [key, value] of Object.entries(filters)) if (value) params = params.set(key, value);
+    return this.http.get<PaperLedgerResponse>(`${this.baseUrl}/paper-trades`, { params });
   }
 
   paperReplay(date: string, captureId: string, entryCaptureId?: string): Observable<TracePaperReplayResponse> {

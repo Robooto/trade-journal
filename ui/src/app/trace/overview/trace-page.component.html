@@ -279,6 +279,9 @@
     aria-labelledby="paper-workspace-tab"
     [hidden]="activeWorkspaceTab !== 'paper'"
   >
+    @if (activeWorkspaceTab === 'paper') {
+      <app-paper-ledger [fromDate]="paperFromDate" [toDate]="paperToDate" />
+    }
     <section class="paper-scorecard-panel" aria-labelledby="paper-scorecard-title">
       <header class="trace-timeline-heading">
         <div>
@@ -306,6 +309,7 @@
               <article class="paper-cohort-card">
                 <header><strong>{{ cohort.policy_label }}</strong><span>{{ cohort.study_mode }} · {{ cohort.timing_policy }}</span></header>
                 <small>Protocol {{ cohort.protocol_sha256 === 'unavailable' ? 'unavailable' : cohort.protocol_sha256.slice(0, 10) }}</small>
+                <button mat-stroked-button type="button" (click)="inspectPaperPolicy(cohort.policy_id)">Inspect this policy’s five-point contracts</button>
                 <dl>
                   <div><dt>Closed</dt><dd>{{ cohort.summary.closed }}</dd></div>
                   <div><dt>Win rate</dt><dd>{{ formatPercent(cohort.summary.gross_win_rate) }}</dd></div>

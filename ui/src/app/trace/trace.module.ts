@@ -12,6 +12,7 @@ import { SessionTrendsComponent } from './overview/components/session-trends/ses
 import { SignedGexMapComponent } from './overview/components/signed-gex-map/signed-gex-map.component';
 import { TracePageComponent } from './overview/trace-page.component';
 import { TraceRoutingModule } from './trace-routing.module';
+import { PaperLedgerComponent } from './overview/components/paper-ledger/paper-ledger.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,6 @@ import { TraceRoutingModule } from './trace-routing.module';
     SignedGexMapComponent,
     CharmWidgetComponent,
   ],
-  imports: [CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule],
+  imports: [CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent],
 })
 export class TraceModule {}
