@@ -6,23 +6,45 @@
   <div class="strategy-grid" aria-label="Paper strategies">
     <article>
       <strong>Directional verticals</strong>
-      <p>SPX credit spreads from recorded decision entries. Five-point baseline, with ten-point width compared separately. New risk arm exits at a sampled buyback debit ≥3× entry credit, not a frozen-level breach.</p>
+      <p>10-point SPX spreads using our existing directional entry hierarchy. One position at a time; no five-point comparison. Hierarchy-change exits remain active.</p>
     </article>
     <article>
       <strong>Structure iron condor</strong>
-      <p>Five-point wings: put side at support, call side at resistance. Both sides qualify at 3–40 points, including 10–20. Exit at a sampled buyback debit ≥3× entry credit, not a frozen-level breach.</p>
+      <p>10-point wings: puts at nearest support, calls at nearest resistance. Both boundaries must independently be 10–20 SPX points from spot. One position at a time.</p>
     </article>
   </div>
+  <p>Both: sampled buyback debit ≥3× entry credit stops the trade; 50% credit profit target and regular-close exit. Frozen structure breaking does not close a trade.</p>
+  <h3>Strategy comparison · new cohort from September 21</h3>
+  @if (comparisonError() || comparison()?.status === 'unavailable') { <p role="alert">Comparison evidence unavailable. Missing data is not zero profit.</p> }
+  @else if (comparison(); as data) {
+    <div class="strategy-grid">
+      @for (strategy of data.strategy_summaries || []; track strategy.strategy_id) {
+        <article>
+          <strong>{{ strategy.label }}</strong>
+          <p>{{ strategy.summary.closed }} closed · {{ strategy.summary.closed_sessions }} closed-trade sessions · {{ strategy.summary.open }} open</p>
+          <p>Gross P/L: {{ strategy.summary.gross_pnl_dollars == null ? 'Not available' : (strategy.summary.gross_pnl_dollars | currency) }}</p>
+          <p>After assumed costs: {{ strategy.summary.cost_scenario_pnl_dollars == null ? 'Not available' : (strategy.summary.cost_scenario_pnl_dollars | currency) }}</p>
+          <details><summary>Risk and evidence quality</summary>
+            <p>Mean return on max risk: {{ strategy.summary.mean_return_on_max_risk == null ? 'Not available' : (strategy.summary.mean_return_on_max_risk | percent:'1.1-1') }}</p>
+            <p>Closed drawdown: {{ strategy.summary.realized_closed_drawdown_dollars == null ? 'Not available' : (strategy.summary.realized_closed_drawdown_dollars | currency) }}</p>
+            <p>Entry coverage: {{ strategy.summary.entry_coverage == null ? 'Not available' : (strategy.summary.entry_coverage | percent) }} · {{ strategy.summary.unevaluable }} unevaluable · {{ strategy.summary.skipped }} skipped</p>
+          </details>
+        </article>
+      }
+    </div>
+    @if (!data.strategy_summaries?.length) { <p>No results recorded for the new setup yet.</p> }
+  } @else { <p>Waiting for new-cohort evidence.</p> }
+  <small>One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries and exits mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
   <div class="open-positions">
     <h3>Positions marked open <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
-    @if (!date) { <p>Waiting for a recorded paper session.</p> }
+    @if (!date || date < '2026-09-21') { <p>The focused setup begins September 21. Older trades remain in the archive below.</p> }
     @else if (loading()) { <p role="status">Checking recorded positions…</p> }
     @else if (error() || response()?.status === 'unavailable') { <p role="alert">Position evidence is unavailable; open status cannot be confirmed.</p> }
     @else if (response(); as data) {
       @if (data.status === 'no_evidence') { <p>No paper evidence has been recorded for this session.</p> }
       @else if (!data.total) { <p>No positions are marked open at the latest evaluation.</p> }
       @else {
-        <p class="position-note">Modeled positions, not broker holdings. Five- and ten-point versions may represent the same entry.</p>
+        <p class="position-note">Modeled positions, not broker holdings. Only the active ten-point setups are shown.</p>
         <div class="position-list">
           @for (trade of data.rows; track trade.evaluation_id) {
             <details>

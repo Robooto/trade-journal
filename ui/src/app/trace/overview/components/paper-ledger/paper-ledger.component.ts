@@ -19,6 +19,12 @@ export interface PaperLedgerRow {
   path: { ts: string; spot: number | null; quote_status: string; prices: unknown }[];
 }
 export interface PaperLedgerResponse {
+  strategy_summaries?: { strategy_id: string; label: string; summary: {
+    closed: number; open: number; skipped: number; unevaluable: number; closed_sessions: number;
+    gross_pnl_dollars: number | null; cost_scenario_pnl_dollars: number | null;
+    mean_return_on_max_risk: number | null; realized_closed_drawdown_dollars: number | null;
+    entry_coverage: number | null;
+  } }[];
   status: string; total: number; rows: PaperLedgerRow[]; sessions: string[];
   cohorts: { strategy_id: string; policy_id: string; width_points: number; protocol_sha256: string;
     summary: { closed: number; open: number; skipped: number; unevaluable: number; gross_pnl_dollars: number | null } }[];
@@ -32,18 +38,14 @@ export interface PaperLedgerResponse {
 export class PaperLedgerComponent implements OnChanges, OnDestroy {
   @Input() fromDate = '';
   @Input() toDate = '';
-  strategy = ''; policy = 'baseline-one-position.v1'; width = ''; status = ''; search = ''; offset = 0;
-  private policyInitialized = false;
+  strategy = ''; policy = 'credit-risk-to-close.v2'; width = '10'; status = ''; search = ''; offset = 0;
+  includeArchived = false;
   readonly response = signal<PaperLedgerResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   private request?: Subscription;
   constructor(private readonly api: TraceApiService) {}
   ngOnChanges(): void {
-    if (!this.policyInitialized && this.toDate) {
-      this.policy = this.toDate >= '2026-09-21' ? 'credit-risk-to-close.v2' : 'baseline-one-position.v1';
-      this.policyInitialized = true;
-    }
     this.load(true);
   }
   ngOnDestroy(): void { this.request?.unsubscribe(); }
@@ -54,10 +56,16 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
     this.response.set(null); this.error.set(''); this.loading.set(true);
     this.request = this.api.paperTrades(this.fromDate, this.toDate, {
       strategy_id: this.strategy, policy_id: this.policy, width_points: this.width,
+      active_only: String(!this.includeArchived),
       status: this.status, search: this.search, offset: String(this.offset), limit: '50',
     }).subscribe({ next: response => { this.response.set(response); this.loading.set(false); },
       error: () => { this.error.set('Paper ledger unavailable. No results have been substituted.'); this.loading.set(false); } });
   }
   page(delta: number): void { this.offset = Math.max(0, this.offset + delta); this.load(); }
+  archiveChanged(): void {
+    this.policy = this.includeArchived ? 'baseline-one-position.v1' : 'credit-risk-to-close.v2';
+    this.width = this.includeArchived ? '' : '10';
+    this.load(true);
+  }
   money(value: number | null | undefined): string { return value == null ? 'Unavailable' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value); }
 }

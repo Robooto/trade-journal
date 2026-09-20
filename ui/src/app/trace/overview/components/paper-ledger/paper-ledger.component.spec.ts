@@ -46,4 +46,10 @@ describe('PaperLedgerComponent', () => {
     expect(fixture.componentInstance.response()).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('No results have been substituted');
   });
+  it('defaults to the focused cohort and only exposes older setups when requested', () => {
+    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ active_only: 'true', width_points: '10' }));
+    const c = fixture.componentInstance;
+    c.includeArchived = true; c.archiveChanged();
+    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ active_only: 'false', width_points: '', policy_id: 'baseline-one-position.v1' }));
+  });
 });

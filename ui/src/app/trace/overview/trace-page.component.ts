@@ -39,6 +39,7 @@ export class TracePageComponent implements OnInit, OnDestroy {
   private autoRefreshPending = false;
 
   readonly lastRefreshRequestedAt = signal<Date | null>(null);
+  readonly latestPaperDate = computed(() => this.facade.sessions().map(session => session.date).sort().at(-1) ?? '');
   readonly nextAutoRefreshAt = signal<Date | null>(null);
   private scorecardRangeInitialized = false;
 

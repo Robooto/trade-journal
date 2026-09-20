@@ -279,7 +279,8 @@
     aria-labelledby="paper-workspace-tab"
     [hidden]="activeWorkspaceTab !== 'paper'"
   >
-    @if (activeWorkspaceTab === 'paper') { <app-paper-now [date]="paperToDate" [refreshAt]="lastRefreshRequestedAt()" /> }
+    @if (activeWorkspaceTab === 'paper') { <app-paper-now [date]="latestPaperDate()" [refreshAt]="lastRefreshRequestedAt()" /> }
+    <details class="paper-results-details"><summary>Historical policies and session detail</summary>
     <section class="paper-scorecard-panel" aria-labelledby="paper-scorecard-title">
       <header class="trace-timeline-heading">
         <div>
@@ -340,6 +341,7 @@
         }
       }
     </section>
+    </details>
 
     @if (facade.selectedCapture(); as capture) {
       <section class="paper-replay-panel paper-replay-controls" aria-labelledby="paper-replay-controls-title">
