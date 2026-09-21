@@ -1,11 +1,11 @@
 <section class="ledger" aria-labelledby="paper-ledger-title">
   <h2 id="paper-ledger-title">Exact contracts & admission ledger</h2>
-  <p>One-position policy by default. Recorded opportunities are not necessarily admitted trades. Quotes are sampled indications, not broker fills; fees and extra slippage are untracked.</p>
+  <p>Independent overlapping positions on fresh qualifying signals. Recorded opportunities are not necessarily admitted trades. Quotes are sampled indications, not broker fills; fees and extra slippage are untracked.</p>
   <form (ngSubmit)="load(true)" class="filters">
     <label><input type="checkbox" name="archived" [(ngModel)]="includeArchived" (ngModelChange)="archiveChanged()" /> Include archived setups</label>
     <label>Strategy<select name="strategy" [(ngModel)]="strategy"><option value="">All paper strategies</option><option value="spx-directional-vertical.v1">Directional verticals</option><option value="spx-structure-iron-condor.v1">Structure iron condor</option></select></label>
     @if (includeArchived) {
-      <label>Vertical policy<select name="policy" [(ngModel)]="policy"><option value="baseline-one-position.v1">Legacy baseline · structure exit</option><option value="credit-risk-to-close.v2">Current · 3× debit stop</option><option value="all-recorded">All recorded opportunities (overlapping)</option><option value="confirmed-opposition.v1">Confirmed opposition</option><option value="original-structure.v1">Original structure</option><option value="defined-risk-to-close.v1">Defined risk to close</option></select></label>
+      <label>Vertical policy<select name="policy" [(ngModel)]="policy"><option value="baseline-one-position.v1">Legacy baseline · structure exit</option><option value="credit-risk-to-close.v3">Current · independent 3× debit stop</option><option value="credit-risk-to-close.v2">Archived · hierarchy exit</option><option value="all-recorded">All recorded opportunities (overlapping)</option><option value="confirmed-opposition.v1">Confirmed opposition</option><option value="original-structure.v1">Original structure</option><option value="defined-risk-to-close.v1">Defined risk to close</option></select></label>
       <label>Wing width<select name="width" [(ngModel)]="width"><option value="">Both</option><option value="5">5 points</option><option value="10">10 points</option></select></label>
     }
     <label>Outcome<select name="status" [(ngModel)]="status"><option value="">All outcomes</option><option>closed</option><option>open</option><option>skipped</option><option>unevaluable</option></select></label>

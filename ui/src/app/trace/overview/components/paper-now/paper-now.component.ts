@@ -35,7 +35,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     if (!this.date || this.date < '2026-09-21') return;
     this.loading.set(true);
     this.request = this.api.paperTrades(this.date, this.date, {
-      policy_id: this.date >= '2026-09-21' ? 'credit-risk-to-close.v2' : 'baseline-one-position.v1',
+      policy_id: this.date >= '2026-09-21' ? 'credit-risk-to-close.v3' : 'baseline-one-position.v1',
       status: 'open', offset: '0', limit: '6',
       width_points: '10', active_only: 'true',
     }).subscribe({
@@ -43,7 +43,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
       error: () => { this.error.set(true); this.loading.set(false); },
     });
     this.comparisonRequest = this.api.paperTrades('2026-09-21', this.date, {
-      policy_id: 'credit-risk-to-close.v2', width_points: '10', active_only: 'true', limit: '1',
+      policy_id: 'credit-risk-to-close.v3', width_points: '10', active_only: 'true', limit: '1',
     }).subscribe({
       next: response => this.comparison.set(response),
       error: () => this.comparisonError.set(true),

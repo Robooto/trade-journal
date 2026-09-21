@@ -6,14 +6,14 @@
   <div class="strategy-grid" aria-label="Paper strategies">
     <article>
       <strong>Directional verticals</strong>
-      <p>10-point SPX spreads using our existing directional entry hierarchy. One position at a time; no five-point comparison. Hierarchy-change exits remain active.</p>
+      <p>10-point SPX spreads using our existing directional entry hierarchy. Fresh qualifying signals can open additional trades while earlier trades remain open. No hierarchy-change exits.</p>
     </article>
     <article>
       <strong>Structure iron condor</strong>
-      <p>10-point wings: puts at nearest support, calls at nearest resistance. Both boundaries must independently be 10–20 SPX points from spot. One position at a time.</p>
+      <p>10-point wings: puts at nearest support, calls at nearest resistance. Both boundaries must independently be 10–20 SPX points from spot. Fresh qualifying signals can open additional trades while earlier trades remain open.</p>
     </article>
   </div>
-  <p>Both: sampled buyback debit ≥3× entry credit stops the trade; 50% credit profit target and regular-close exit. Frozen structure breaking does not close a trade.</p>
+  <p>Both: sampled buyback debit ≥3× entry credit stops the trade; 50% credit profit target and regular-close exit. Neither hierarchy changes nor structure breaks close trades. New entries run 08:00–noon Pacific; repeated captures of an unchanged signal do not add trades.</p>
   <h3>Strategy comparison · new cohort from September 21</h3>
   @if (comparisonError() || comparison()?.status === 'unavailable') { <p role="alert">Comparison evidence unavailable. Missing data is not zero profit.</p> }
   @else if (comparison(); as data) {
@@ -34,7 +34,7 @@
     </div>
     @if (!data.strategy_summaries?.length) { <p>No results recorded for the new setup yet.</p> }
   } @else { <p>Waiting for new-cohort evidence.</p> }
-  <small>One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries and exits mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
+  <small>One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
   <div class="open-positions">
     <h3>Positions marked open <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
     @if (!date || date < '2026-09-21') { <p>The focused setup begins September 21. Older trades remain in the archive below.</p> }

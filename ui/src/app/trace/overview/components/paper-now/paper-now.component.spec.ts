@@ -23,7 +23,7 @@ describe('PaperNowComponent', () => {
     const fixture = TestBed.createComponent(PaperNowComponent);
     fixture.componentRef.setInput('date', '2026-09-21');
     fixture.detectChanges();
-    expect(api.paperTrades).toHaveBeenCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ status: 'open', policy_id: 'credit-risk-to-close.v2' }));
+    expect(api.paperTrades).toHaveBeenCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ status: 'open', policy_id: 'credit-risk-to-close.v3' }));
     expect(fixture.nativeElement.textContent).toContain('Directional verticals');
     expect(fixture.nativeElement.textContent).toContain('Structure iron condor');
     expect(fixture.nativeElement.textContent).toContain('SPXW 990P');

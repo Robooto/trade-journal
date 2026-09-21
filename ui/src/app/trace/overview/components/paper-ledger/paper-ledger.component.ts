@@ -38,7 +38,7 @@ export interface PaperLedgerResponse {
 export class PaperLedgerComponent implements OnChanges, OnDestroy {
   @Input() fromDate = '';
   @Input() toDate = '';
-  strategy = ''; policy = 'credit-risk-to-close.v2'; width = '10'; status = ''; search = ''; offset = 0;
+  strategy = ''; policy = 'credit-risk-to-close.v3'; width = '10'; status = ''; search = ''; offset = 0;
   includeArchived = false;
   readonly response = signal<PaperLedgerResponse | null>(null);
   readonly loading = signal(false);
@@ -63,7 +63,7 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
   }
   page(delta: number): void { this.offset = Math.max(0, this.offset + delta); this.load(); }
   archiveChanged(): void {
-    this.policy = this.includeArchived ? 'baseline-one-position.v1' : 'credit-risk-to-close.v2';
+    this.policy = this.includeArchived ? 'baseline-one-position.v1' : 'credit-risk-to-close.v3';
     this.width = this.includeArchived ? '' : '10';
     this.load(true);
   }

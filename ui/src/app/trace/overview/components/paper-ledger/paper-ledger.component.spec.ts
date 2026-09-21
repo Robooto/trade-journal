@@ -32,7 +32,7 @@ describe('PaperLedgerComponent', () => {
     for (const symbol of ['SPXW 985P', 'SPXW 990P', 'SPXW 1025C', 'SPXW 1030C']) expect(text).toContain(symbol);
     expect(text).toContain('BUY 1'); expect(text).toContain('SELL 1'); expect(text).toContain('$380.00');
     expect(text).toContain('Not persisted');
-    expect(api.paperTrades).toHaveBeenCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ policy_id: 'credit-risk-to-close.v2' }));
+    expect(api.paperTrades).toHaveBeenCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ policy_id: 'credit-risk-to-close.v3' }));
   });
   it('resets paging on filter changes and preserves full contract search text', () => {
     const c = fixture.componentInstance;
