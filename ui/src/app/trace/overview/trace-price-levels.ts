@@ -59,6 +59,16 @@ export class TracePriceLevelsStore {
     this.write(this.state().filter(level => level.id !== id));
   }
 
+  update(id: string, price: number, label: string, color: string, kind: TracePriceLevelKind): boolean {
+    if (!Number.isFinite(price) || price <= 0 || !this.state().some(level => level.id === id)) return false;
+    this.write(this.state().map(level => level.id === id ? {
+      id, price, label: label.trim() || formatPrice(price),
+      color: validColor(color) ? color : DEFAULT_COLOR,
+      kind: validKind(kind) ? kind : 'unclassified' as const,
+    } : level).sort((left, right) => right.price - left.price));
+    return true;
+  }
+
   private write(levels: readonly TracePriceLevel[]): void {
     this.state.set(levels);
     try {

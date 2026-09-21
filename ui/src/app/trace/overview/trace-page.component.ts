@@ -25,6 +25,7 @@ const TRACE_REFRESH_DELAY_MINUTES = 1;
 export class TracePageComponent implements OnInit, OnDestroy {
   activeWorkspaceTab: 'trace' | 'paper' = 'trace';
   priceLevelPrice: number | null = null;
+  editingPriceLevelId: string | null = null;
   priceLevelLabel = '';
   priceLevelColor = '#fbbf24';
   priceLevelKind: TracePriceLevelKind = 'unclassified';
@@ -239,12 +240,33 @@ export class TracePageComponent implements OnInit, OnDestroy {
   addPriceLevel(): void {
     const price = Number(this.priceLevelPrice);
     if (!Number.isFinite(price) || price <= 0) return;
-    this.priceLevels.add(price, this.priceLevelLabel, this.priceLevelColor, this.priceLevelKind);
+    if (this.editingPriceLevelId) {
+      if (!this.priceLevels.update(this.editingPriceLevelId, price, this.priceLevelLabel, this.priceLevelColor, this.priceLevelKind)) return;
+      this.alertState.delete(this.editingPriceLevelId);
+    } else {
+      this.priceLevels.add(price, this.priceLevelLabel, this.priceLevelColor, this.priceLevelKind);
+    }
+    this.cancelPriceLevelEdit();
+  }
+
+  editPriceLevel(id: string): void {
+    const level = this.priceLevels.levels().find(item => item.id === id);
+    if (!level) return;
+    this.editingPriceLevelId = id;
+    this.priceLevelPrice = level.price;
+    this.priceLevelLabel = level.label;
+    this.priceLevelColor = level.color;
+    this.priceLevelKind = level.kind;
+  }
+
+  cancelPriceLevelEdit(): void {
+    this.editingPriceLevelId = null;
     this.priceLevelPrice = null;
     this.priceLevelLabel = '';
   }
 
   removePriceLevel(id: string): void {
+    if (this.editingPriceLevelId === id) this.cancelPriceLevelEdit();
     this.priceLevels.remove(id);
   }
 

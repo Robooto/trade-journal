@@ -377,6 +377,30 @@ describe('TracePageComponent', () => {
     expect(component.priceLevels.levels()).toHaveLength(0);
   });
 
+  it('edits an existing annotation through the shared form and cancels without saving', () => {
+    const component = fixture.componentInstance;
+    component.priceLevels.add(7400, 'Support');
+    fixture.detectChanges();
+    const id = component.priceLevels.levels()[0].id;
+    fixture.nativeElement.querySelector('button[aria-label="Edit Support"]').click();
+    fixture.detectChanges();
+    expect(component.editingPriceLevelId).toBe(id);
+    expect(component.priceLevelPrice).toBe(7400);
+    expect(fixture.nativeElement.textContent).toContain('Save changes');
+    component.priceLevelPrice = 7425;
+    component.addPriceLevel();
+    expect(component.priceLevels.levels()).toHaveLength(1);
+    expect(component.priceLevels.levels()[0].price).toBe(7425);
+    expect(component.priceLevels.levels()[0].id).toBe(id);
+    component.editPriceLevel(id);
+    component.priceLevelPrice = 7500;
+    component.cancelPriceLevelEdit();
+    expect(component.priceLevels.levels()[0].price).toBe(7425);
+    component.editPriceLevel(id);
+    component.removePriceLevel(id);
+    expect(component.editingPriceLevelId).toBeNull();
+  });
+
   it('shows a contextual soft alert when the latest capture enters five points of a level', () => {
     const snackBar = TestBed.inject(MatSnackBar);
     const open = vi.spyOn(snackBar, 'open');

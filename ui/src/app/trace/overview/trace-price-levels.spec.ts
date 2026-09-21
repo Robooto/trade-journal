@@ -42,6 +42,21 @@ describe('TracePriceLevelsStore', () => {
     ]);
   });
 
+  it('updates the same level, reorders it and persists without duplicating', () => {
+    const store = TestBed.inject(TracePriceLevelsStore);
+    store.add(7400, 'Support');
+    const id = store.levels()[0].id;
+    store.add(7450, 'Resistance');
+    expect(store.update(id, 7460, ' Revised ', '#34d399', 'positive_gamma')).toBe(true);
+    expect(store.levels()).toHaveLength(2);
+    expect(store.levels()[0]).toEqual({ id, price: 7460, label: 'Revised', color: '#34d399', kind: 'positive_gamma' });
+    expect(new TracePriceLevelsStore().levels()).toEqual(store.levels());
+    const before = store.levels();
+    for (const price of [0, -1, NaN, Infinity]) expect(store.update(id, price, '', '#ffffff', 'unclassified')).toBe(false);
+    expect(store.update('missing', 7460, '', '#ffffff', 'unclassified')).toBe(false);
+    expect(store.levels()).toBe(before);
+  });
+
   it('classifies watch, near, and touch distances and approach direction', () => {
     const levels = [
       { id: 'touch', price: 7410, label: 'Touch', color: '#fbbf24', kind: 'positive_gamma' as const },
