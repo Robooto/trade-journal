@@ -22,6 +22,14 @@ describe('TraceApiService', () => {
       && request.params.get('width_points') === '5').flush({});
   });
 
+  it('sends both entry identity fields for an iron-condor replay', () => {
+    api.paperReplay('2026-09-22', 'cutoff', 'entry', 'spx-structure-iron-condor.v1').subscribe();
+    http.expectOne(request => request.url === '/research-api/api/trace/2026-09-22/paper-replay'
+      && request.params.get('capture_id') === 'cutoff'
+      && request.params.get('entry_capture_id') === 'entry'
+      && request.params.get('strategy_id') === 'spx-structure-iron-condor.v1').flush({});
+  });
+
   it('uses the same-origin research proxy for session discovery and dashboard sources', () => {
     api.sessions().subscribe();
     http.expectOne('/research-api/api/trace/sessions').flush({});

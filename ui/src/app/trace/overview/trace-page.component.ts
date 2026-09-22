@@ -63,9 +63,9 @@ export class TracePageComponent implements OnInit, OnDestroy {
       const entries = this.facade.paperReplayEntries()?.entries ?? [];
       const cutoff = this.facade.selectedCapture()?.ts;
       const eligible = cutoff ? entries.filter(entry => entry.ts <= cutoff) : [];
-      this.selectedReplayEntry = eligible.some(entry => entry.capture_id === this.selectedReplayEntry)
+      this.selectedReplayEntry = eligible.some(entry => this.replayEntryKey(entry) === this.selectedReplayEntry)
         ? this.selectedReplayEntry
-        : (eligible.at(-1)?.capture_id ?? '');
+        : (eligible.length ? this.replayEntryKey(eligible[eligible.length - 1]) : '');
     });
   }
 
@@ -137,7 +137,12 @@ export class TracePageComponent implements OnInit, OnDestroy {
   replaySelectedTrade(): void {
     const capture = this.facade.selectedCapture();
     const date = this.facade.selectedDate();
-    if (capture && date) this.facade.loadPaperReplay(date, capture.capture_id, this.selectedReplayEntry || undefined);
+    const entry = this.eligibleReplayEntries().find(row => this.replayEntryKey(row) === this.selectedReplayEntry);
+    if (capture && date && entry) this.facade.loadPaperReplay(date, capture.capture_id, entry.capture_id, entry.strategy_id);
+  }
+
+  replayEntryKey(entry: { capture_id: string; strategy_id?: string }): string {
+    return `${entry.strategy_id || 'spx-directional-vertical.v1'}:${entry.capture_id}`;
   }
 
   eligibleReplayEntries() {

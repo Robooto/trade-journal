@@ -357,8 +357,8 @@
         <div class="paper-replay-action">
           <label class="paper-replay-selector">Recorded entry
             <select [ngModel]="selectedReplayEntry" (ngModelChange)="selectReplayEntry($event)" name="selectedReplayEntry" [disabled]="facade.paperReplayEntriesLoading() || !eligibleReplayEntries().length">
-              @for (entry of eligibleReplayEntries(); track entry.capture_id) {
-                <option [value]="entry.capture_id">{{ formatTimestamp(entry.ts) }} · {{ entry.trade_type }}</option>
+              @for (entry of eligibleReplayEntries(); track replayEntryKey(entry)) {
+                <option [value]="replayEntryKey(entry)">{{ formatTimestamp(entry.ts) }} · {{ entry.strategy_id === 'spx-structure-iron-condor.v1' ? 'Iron condor' : entry.trade_type?.replaceAll('_', ' ') }}</option>
               }
             </select>
           </label>
@@ -383,7 +383,25 @@
       } @else if (facade.paperReplay(); as replay) {
         <section class="paper-replay-panel" aria-labelledby="paper-replay-title">
           <header><div><p class="trace-eyebrow">Recorded trade replay</p><h2 id="paper-replay-title">{{ replay.trade.trade_type }} · {{ replay.trade.status }}</h2></div><span>Entry {{ formatTimestamp(replay.trade.onset_ts) }} · through {{ formatTimestamp(replay.as_of) }}</span></header>
-          <div class="paper-replay-facts"><span>Entry credit {{ formatMoney(replay.trade.entry_credit_dollars) }}</span><span>Strikes {{ replay.trade.short_strike }} / {{ replay.trade.long_strike }}</span><span>Frozen {{ replay.trade.frozen_structure?.type || 'structure unavailable' }} {{ replay.trade.frozen_structure?.level || '' }}</span><span>Exit {{ replay.trade.reason }}</span><span>Gross P/L {{ formatMoney(replay.trade.gross_pnl_dollars) }}</span></div>
+          <div class="paper-replay-facts">
+            <span>Entry credit {{ formatMoney(replay.trade.entry_credit_dollars) }}</span>
+            <span>Exit debit {{ formatMoney(replay.trade.exit_debit_dollars) }}</span>
+            @if (replay.trade.strategy_id === 'spx-structure-iron-condor.v1') {
+              <span>Frozen support {{ replay.trade.structures?.['support']?.level ?? 'unavailable' }}</span>
+              <span>Frozen resistance {{ replay.trade.structures?.['resistance']?.level ?? 'unavailable' }}</span>
+            } @else {
+              <span>Strikes {{ replay.trade.short_strike }} / {{ replay.trade.long_strike }}</span>
+              <span>Frozen {{ replay.trade.frozen_structure?.type || 'structure unavailable' }} {{ replay.trade.frozen_structure?.level || '' }}</span>
+            }
+            <span>Exit {{ replay.trade.reason.replaceAll('_', ' ') }}</span><span>Gross P/L {{ formatMoney(replay.trade.gross_pnl_dollars) }}</span>
+          </div>
+          @if (replay.trade.legs?.length) {
+            <div class="paper-replay-legs" aria-label="Recorded option legs">
+              @for (leg of replay.trade.legs; track leg.symbol) {
+                <span>{{ leg.side | uppercase }} {{ leg.quantity }} {{ leg.option_type }} {{ leg.strike }} · <code>{{ leg.symbol }}</code></span>
+              }
+            </div>
+          }
           <svg class="paper-replay-chart" viewBox="0 0 100 100" role="img" aria-label="SPX sampled replay path">
             <line x1="8" x2="98" y1="88" y2="88" class="paper-replay-axis" />
             <line x1="8" x2="8" y1="8" y2="88" class="paper-replay-axis" />
@@ -405,7 +423,7 @@
             }
           </svg>
           @if (replayHasGaps()) { <p class="paper-replay-gap">Path gaps are split in the source evidence; no intragap price is inferred.</p> }
-          <div class="paper-replay-events"><strong>Hierarchy events</strong>@for (event of replay.hierarchy_events; track event.ts + event.event) { <span>{{ formatTimestamp(event.ts) }} · {{ event.event }}</span> }</div>
+          <div class="paper-replay-events"><strong>Recorded events</strong>@for (event of replay.hierarchy_events; track event.ts + event.event) { <span>{{ formatTimestamp(event.ts) }} · {{ event.event.replaceAll('_', ' ') }}</span> }</div>
         </section>
       }
 

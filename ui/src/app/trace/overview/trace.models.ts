@@ -364,8 +364,11 @@ export interface TracePaperReplayResponse {
     readonly status: string;
     readonly reason: string;
     readonly trade_type: string;
+    readonly strategy_id?: string;
     readonly timing_policy: string;
     readonly frozen_structure: { readonly type?: string; readonly level?: number } | null;
+    readonly structures?: Readonly<Record<string, { readonly type?: string; readonly level?: number; readonly distance?: number }>>;
+    readonly legs?: readonly { readonly side: string; readonly option_type: string; readonly strike: number; readonly symbol: string; readonly expiration: string; readonly quantity: number }[];
     readonly short_strike: number | null;
     readonly long_strike: number | null;
     readonly entry_credit_dollars: number | null;
@@ -387,6 +390,7 @@ export interface TracePaperReplayEntriesResponse {
     readonly capture_id: string;
     readonly ts: string;
     readonly trade_type: string | null;
+    readonly strategy_id?: string;
     readonly protocol_sha256: string | null;
   }[];
 }

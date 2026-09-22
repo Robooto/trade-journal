@@ -74,9 +74,10 @@ export class TraceApiService {
     return this.http.get<PaperLedgerResponse>(`${this.baseUrl}/paper-trades`, { params });
   }
 
-  paperReplay(date: string, captureId: string, entryCaptureId?: string): Observable<TracePaperReplayResponse> {
+  paperReplay(date: string, captureId: string, entryCaptureId?: string, strategyId?: string): Observable<TracePaperReplayResponse> {
     let params = new HttpParams().set('capture_id', captureId);
     if (entryCaptureId) params = params.set('entry_capture_id', entryCaptureId);
+    if (strategyId) params = params.set('strategy_id', strategyId);
     return this.http.get<TracePaperReplayResponse>(`${this.sessionUrl(date)}/paper-replay`, { params });
   }
 

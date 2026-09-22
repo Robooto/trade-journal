@@ -212,13 +212,13 @@ export class TraceFacade implements OnDestroy {
     this.subscriptions.add(subscription);
   }
 
-  loadPaperReplay(date: string, captureId: string, entryCaptureId?: string): void {
+  loadPaperReplay(date: string, captureId: string, entryCaptureId?: string, strategyId?: string): void {
     if (typeof this.api.paperReplay !== 'function') return;
     const requestId = ++this.paperReplayRequest;
     this.paperReplayLoading.set(true);
     this.paperReplayError.set(null);
     this.paperReplay.set(null);
-    const subscription = this.api.paperReplay(date, captureId, entryCaptureId).pipe(
+    const subscription = this.api.paperReplay(date, captureId, entryCaptureId, strategyId).pipe(
       finalize(() => { if (requestId === this.paperReplayRequest) this.paperReplayLoading.set(false); }),
       catchError(error => {
         if (requestId === this.paperReplayRequest) this.paperReplayError.set(toSafeMessage(error, 'No recorded paper trade is available for this capture.'));

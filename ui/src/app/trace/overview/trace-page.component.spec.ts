@@ -475,4 +475,42 @@ describe('TracePageComponent', () => {
     expect(component.replayTimeTicks().map(tick => tick.label)).toHaveLength(3);
     expect(component.replayPriceTicks()).toEqual([7400, 7390, 7380]);
   });
+
+  it('selects and renders a four-leg condor replay alongside a vertical at the same capture', () => {
+    const date = '2026-09-22';
+    const ts = `${date}T07:50:00-07:00`;
+    facade.selectedDate.set(date);
+    facade.selectedCapture.set({ capture_id: 'entry', ts });
+    facade.paperReplayEntries.set({ entries: [
+      { capture_id: 'entry', ts, trade_type: 'bear_call_credit', strategy_id: 'spx-directional-vertical.v1' },
+      { capture_id: 'entry', ts, trade_type: 'iron_condor', strategy_id: 'spx-structure-iron-condor.v1' },
+    ] });
+    fixture.componentInstance.activeWorkspaceTab = 'paper';
+    fixture.detectChanges();
+    const component = fixture.componentInstance;
+    const condorKey = 'spx-structure-iron-condor.v1:entry';
+    component.selectReplayEntry(condorKey);
+    component.replaySelectedTrade();
+    expect(facade.loadPaperReplay).toHaveBeenCalledWith(date, 'entry', 'entry', 'spx-structure-iron-condor.v1');
+    facade.paperReplay.set({
+      date, as_of: ts, entry_capture_id: 'entry',
+      trade: { onset_ts: ts, trade_type: 'iron_condor', strategy_id: 'spx-structure-iron-condor.v1',
+        status: 'closed', reason: 'half_credit_target', entry_credit_dollars: 330,
+        exit_debit_dollars: 165, gross_pnl_dollars: 165,
+        structures: { support: { level: 7750 }, resistance: { level: 7777.5 } },
+        legs: [
+          { side: 'buy', quantity: 1, option_type: 'put', strike: 7740, symbol: 'SPXW  P7740' },
+          { side: 'sell', quantity: 1, option_type: 'put', strike: 7750, symbol: 'SPXW  P7750' },
+          { side: 'sell', quantity: 1, option_type: 'call', strike: 7780, symbol: 'SPXW  C7780' },
+          { side: 'buy', quantity: 1, option_type: 'call', strike: 7790, symbol: 'SPXW  C7790' },
+        ] },
+      levels: [], path: [{ ts, capture_id: 'entry', spot: 7765, gap: false }], hierarchy_events: [],
+    });
+    fixture.detectChanges();
+    const panel = fixture.nativeElement.querySelector('#paper-workspace-panel') as HTMLElement;
+    expect(panel.textContent).toContain('Frozen support 7750');
+    expect(panel.textContent).toContain('Frozen resistance 7777.5');
+    for (const strike of ['P7740', 'P7750', 'C7780', 'C7790']) expect(panel.textContent).toContain(strike);
+    expect(panel.textContent).toContain('Gross P/L $165');
+  });
 });
