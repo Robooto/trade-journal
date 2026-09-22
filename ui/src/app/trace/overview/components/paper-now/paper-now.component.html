@@ -13,8 +13,9 @@
       <p>10-point wings: puts at nearest support, calls at nearest resistance. Both boundaries must independently be 10–20 SPX points from spot. Fresh qualifying signals can open additional trades while earlier trades remain open.</p>
     </article>
   </div>
-  <p>Both: sampled buyback debit ≥3× entry credit stops the trade; 50% credit profit target and regular-close exit. Neither hierarchy changes nor structure breaks close trades. New entries run 7:00 a.m.–12:50 p.m. Pacific (inclusive); repeated captures of an unchanged signal do not add trades.</p>
-  <h3>Strategy comparison · new cohort from September 21</h3>
+  <p>Both: sampled buyback debit ≥2× entry credit (effective September 22; earlier trades retain 3×) stops the trade; 50% credit profit target and regular-close exit. Neither hierarchy changes nor structure breaks close trades. New entries run 7:00 a.m.–12:50 p.m. Pacific (inclusive); repeated captures of an unchanged signal do not add trades.</p>
+  <p>From September 22: minimum entry credit $50 per one-lot vertical or whole iron condor. Lower-credit quotes are skipped, not counted as losses.</p>
+  <h3>Strategy comparison · cohort from {{ cohortStart }}</h3>
   @if (comparisonError() || comparison()?.status === 'unavailable') { <p role="alert">Comparison evidence unavailable. Missing data is not zero profit.</p> }
   @else if (comparison(); as data) {
     <div class="strategy-grid">
@@ -34,7 +35,7 @@
     </div>
     @if (!data.strategy_summaries?.length) { <p>No results recorded for the new setup yet.</p> }
   } @else { <p>Waiting for new-cohort evidence.</p> }
-  <small>One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
+  <small>Stop versions are kept separate; September 21 results remain in the archive after the new cohort begins. One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
   <div class="open-positions">
     <h3>Positions marked open <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
     @if (!date || date < '2026-09-21') { <p>The focused setup begins September 21. Older trades remain in the archive below.</p> }

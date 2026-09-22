@@ -309,7 +309,7 @@
         @if (scorecard.status === 'partial') { <div class="paper-scorecard-warnings">Some source sessions are incomplete; unevaluable and excluded episodes remain visible.</div> }
         @if (scorecard.cohorts.length) {
           @for (cohort of scorecard.cohorts; track cohort.policy_id + cohort.study_mode + cohort.timing_policy + cohort.protocol_sha256) {
-            @if (cohort.policy_id === (paperToDate >= '2026-09-21' ? 'credit-risk-to-close.v3' : 'baseline-one-position.v1') && cohort.study_mode === 'prospective' && cohort.timing_policy === 'regular-close.v2') {
+            @if (cohort.policy_id === (paperToDate >= '2026-09-22' ? 'credit-risk-to-close.v4' : paperToDate >= '2026-09-21' ? 'credit-risk-to-close.v3' : 'baseline-one-position.v1') && cohort.study_mode === 'prospective' && cohort.timing_policy === 'regular-close.v2') {
               <div class="paper-primary-result"><strong>Current directional baseline</strong><span>{{ cohort.summary.closed }} closed</span><span>{{ formatPercent(cohort.summary.gross_win_rate) }} gross win rate</span><span>{{ formatMoney(cohort.summary.gross_pnl_dollars) }} gross P/L</span><small>{{ cohort.policy_label }} · regular-close timing</small></div>
             }
           }
