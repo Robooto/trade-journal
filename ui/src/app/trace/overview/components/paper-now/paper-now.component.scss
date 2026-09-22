@@ -8,10 +8,12 @@ header span { font-size: .72rem; }
 .strategy-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(16rem,1fr)); gap: .75rem; }
 .strategy-grid article { padding: .9rem; border: 1px solid rgba(148,163,184,.2); border-radius: .7rem; background: rgba(8,12,18,.32); }
 .strategy-grid p { margin: .35rem 0 0; font-size: .78rem; line-height: 1.45; }
-.open-positions { display: grid; gap: .5rem; }
+.session-trades { display: grid; gap: .75rem; }
 h3 { font-size: 1rem; }
 h3 small { font-size: .72rem; font-weight: normal; }
-.open-positions > p { margin: 0; font-size: .8rem; }
+.session-trades > p, .strategy-trades > p { margin: 0; font-size: .8rem; }
+.strategy-trades { display: grid; gap: .45rem; }
+.strategy-trades h4 { margin: .25rem 0 0; font-size: .9rem; }
 .position-list { display: grid; gap: .45rem; }
 .position-list details { padding: .65rem .8rem; border: 1px solid rgba(148,163,184,.2); border-radius: .6rem; background: rgba(8,12,18,.35); }
 .position-list summary { cursor: pointer; }

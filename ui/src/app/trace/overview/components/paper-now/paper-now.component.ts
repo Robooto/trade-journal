@@ -39,7 +39,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     this.loading.set(true);
     this.request = this.api.paperTrades(this.date, this.date, {
       policy_id: this.policyId,
-      status: 'open', offset: '0', limit: '6',
+      offset: '0', limit: '200',
       width_points: '10', active_only: 'true',
     }).subscribe({
       next: response => { this.response.set(response); this.loading.set(false); },
@@ -55,7 +55,11 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
 
   ngOnDestroy(): void { this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); }
 
-  strategyLabel(row: PaperLedgerRow): string {
-    return row.strategy_id === 'spx-structure-iron-condor.v1' ? 'Structure iron condor' : 'Directional vertical';
+  trades(strategyId: string): PaperLedgerRow[] {
+    return (this.response()?.rows || []).filter(row => row.strategy_id === strategyId && row.entry_status === 'recorded');
+  }
+
+  skipped(strategyId: string): number {
+    return (this.response()?.rows || []).filter(row => row.strategy_id === strategyId && row.status === 'skipped').length;
   }
 }

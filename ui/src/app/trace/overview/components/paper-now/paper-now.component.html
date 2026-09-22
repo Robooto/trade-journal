@@ -36,29 +36,34 @@
     @if (!data.strategy_summaries?.length) { <p>No results recorded for the new setup yet.</p> }
   } @else { <p>Waiting for new-cohort evidence.</p> }
   <small>Stop versions are kept separate; September 21 results remain in the archive after the new cohort begins. One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
-  <div class="open-positions">
-    <h3>Positions marked open <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
+  <div class="session-trades">
+    <h3>Session trades <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
     @if (!date || date < '2026-09-21') { <p>The focused setup begins September 21. Older trades remain in the archive below.</p> }
-    @else if (loading()) { <p role="status">Checking recorded positions…</p> }
-    @else if (error() || response()?.status === 'unavailable') { <p role="alert">Position evidence is unavailable; open status cannot be confirmed.</p> }
+    @else if (loading()) { <p role="status">Checking recorded trades…</p> }
+    @else if (error() || response()?.status === 'unavailable') { <p role="alert">Session trade evidence is unavailable.</p> }
     @else if (response(); as data) {
       @if (data.status === 'no_evidence') { <p>No paper evidence has been recorded for this session.</p> }
-      @else if (!data.total) { <p>No positions are marked open at the latest evaluation.</p> }
       @else {
-        <p class="position-note">Modeled positions, not broker holdings. Only the active ten-point setups are shown.</p>
-        <div class="position-list">
-          @for (trade of data.rows; track trade.evaluation_id) {
-            <details>
-              <summary><strong>{{ strategyLabel(trade) }}</strong><span>{{ trade.trade_type.replaceAll('_', ' ') }} · {{ trade.width_points }}-point wings · {{ trade.onset_ts | date:'shortTime' }}</span></summary>
-              <div class="position-detail">
-                <p>Entry credit {{ trade.entry_credit_dollars == null ? 'unavailable' : (trade.entry_credit_dollars | currency:'USD':'symbol':'1.0-0') }} · {{ trade.reason.replaceAll('_', ' ') }}</p>
-                @for (leg of trade.legs; track leg.symbol) { <span>{{ leg.side }} {{ leg.quantity }} {{ leg.option_type }} {{ leg.strike }} · {{ leg.symbol }}</span> }
-                @if (!trade.legs.length) { <span>Exact contract legs were not recorded.</span> }
-              </div>
-            </details>
-          }
-        </div>
-        @if (data.total > data.rows.length) { <p>Showing {{ data.rows.length }} of {{ data.total }} open records; browse the ledger below for more.</p> }
+        <p class="position-note">Modeled trades from sampled quotes, not broker fills. Gross results exclude costs. Only the active ten-point setups are shown.</p>
+        @for (strategy of [{ id: 'spx-structure-iron-condor.v1', label: 'Structure iron condors' }, { id: 'spx-directional-vertical.v1', label: 'Directional verticals' }]; track strategy.id) {
+          <section class="strategy-trades">
+            <h4>{{ strategy.label }} · {{ trades(strategy.id).length }} entered@if (skipped(strategy.id)) { · {{ skipped(strategy.id) }} skipped}</h4>
+            @if (!trades(strategy.id).length) { <p>No entered trades recorded.</p> }
+            <div class="position-list">
+              @for (trade of trades(strategy.id); track trade.evaluation_id) {
+                <details>
+                  <summary><strong>{{ trade.trade_type.replaceAll('_', ' ') }} · {{ trade.onset_ts | date:'shortTime' }}</strong><span>{{ trade.status }} · {{ trade.gross_pnl_dollars == null ? 'P/L unavailable' : (trade.gross_pnl_dollars | currency:'USD':'symbol':'1.0-0') + ' gross' }}</span></summary>
+                  <div class="position-detail">
+                    <p>Entry credit {{ trade.entry_credit_dollars == null ? 'unavailable' : (trade.entry_credit_dollars | currency:'USD':'symbol':'1.0-0') }} · Exit debit {{ trade.exit_debit_dollars == null ? 'unavailable' : (trade.exit_debit_dollars | currency:'USD':'symbol':'1.0-0') }} · {{ trade.reason.replaceAll('_', ' ') }}</p>
+                    @for (leg of trade.legs; track leg.symbol) { <span>{{ leg.side }} {{ leg.quantity }} {{ leg.option_type }} {{ leg.strike }} · {{ leg.symbol }}</span> }
+                    @if (!trade.legs.length) { <span>Exact contract legs were not recorded.</span> }
+                  </div>
+                </details>
+              }
+            </div>
+          </section>
+        }
+        @if (data.total > data.rows.length) { <p>Showing {{ data.rows.length }} of {{ data.total }} opportunities; browse the ledger below for more.</p> }
       }
     }
   </div>
