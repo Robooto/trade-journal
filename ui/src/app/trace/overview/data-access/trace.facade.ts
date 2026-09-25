@@ -135,6 +135,8 @@ export class TraceFacade implements OnDestroy {
       'hiro-cancellation-strength',
       'hiro-divergence-lifecycle',
       'charm-delta-pressure',
+      'flowpatrol-longitudinal',
+      'flowpatrol-next-report-outcomes',
     ]);
     return (this.researchStatus()?.studies ?? []).filter(study => ids.has(study.id));
   });

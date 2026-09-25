@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app import tastytrade
@@ -33,6 +33,7 @@ from app.schemas.brokerage import (
     OptionQuoteSnapshotV1,
     ResearchSymbolContextRequestV1,
     ResearchSymbolContextV1,
+    ResearchMetricObservationV1,
 )
 from app.settings import settings
 from app.services.activity_inbox_service import fetch_activity_inbox
@@ -50,6 +51,7 @@ from app.services.brokerage_service import fetch_holding_snapshot
 from app.services.research_context_orchestration import (
     fetch_research_symbol_context,
 )
+from app.services.research_metric_store import list_research_metric_history
 from app.services.tasty_activity_csv_service import TastyActivityCsvError, import_tasty_activity_csv
 from app.services.tasty_activity_history_service import (
     TastyActivityHistoryError,
@@ -59,6 +61,23 @@ from app.services.trades_errors import TastytradeFetchError
 
 
 router = APIRouter(prefix="/v1/broker", tags=["v1 - broker"])
+
+
+@router.get(
+    "/research-metrics/{symbol}",
+    response_model=list[ResearchMetricObservationV1],
+    summary="Read persisted daily market and IV observations for research",
+)
+def get_research_metric_history(
+    symbol: str,
+    start_date: date | None = Query(default=None),
+    end_date: date | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """Read existing snapshots only; this endpoint does not fetch or persist broker data."""
+    if start_date and end_date and start_date > end_date:
+        raise HTTPException(status_code=422, detail="start_date must not follow end_date")
+    return list_research_metric_history(db, symbol, start_date=start_date, end_date=end_date)
 
 
 @router.post(

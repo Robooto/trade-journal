@@ -295,6 +295,19 @@ export interface TraceStudyStatus {
   readonly scoring_enabled: boolean;
   readonly note?: string;
   readonly checkpoint?: TraceStudyCheckpoint;
+  readonly weekly_coverage?: {
+    readonly source: string;
+    readonly requested_range: readonly string[];
+    readonly eligible_dates: readonly string[] | null;
+    readonly observed_dates?: readonly string[] | null;
+    readonly excluded_dates: readonly { readonly trading_date: string; readonly reason: string | null }[] | null;
+    readonly latest_trading_date: string | null;
+    readonly latest_report_date?: string | null;
+    readonly last_received_at: string | null;
+    readonly last_observation_at?: string | null;
+    readonly denominator?: { readonly name: string; readonly value: number } | null;
+    readonly reason?: string;
+  };
 }
 
 export interface TraceResearchStatusResponse {
@@ -303,6 +316,11 @@ export interface TraceResearchStatusResponse {
   readonly evidence_version: string;
   readonly study_count: number;
   readonly scoring_enabled_count: number;
+  readonly latest_weekly_review?: {
+    readonly week_start: string;
+    readonly week_end: string;
+    readonly run_status: string;
+  } | null;
   readonly studies: readonly TraceStudyStatus[];
 }
 

@@ -9,6 +9,9 @@ from app.services.research_metric_store import (
     list_research_metric_history,
     upsert_research_metric,
 )
+from app.routers.v1.broker import get_research_metric_history
+from fastapi import HTTPException
+import pytest
 
 
 def observation(
@@ -97,6 +100,17 @@ def test_history_is_ordered_and_supports_date_bounds():
             date(2026, 7, 16),
         ]
         assert [item.iv_rank_percent for item in history] == [15.0, 16.0]
+
+
+def test_read_only_research_history_endpoint_uses_persisted_dates():
+    with session() as db:
+        for day in (14, 15, 16):
+            upsert_research_metric(db, observation(date(2026, 7, day)))
+        rows = get_research_metric_history('aapl', date(2026, 7, 15), date(2026, 7, 16), db)
+        assert [row.observation_date for row in rows] == [date(2026, 7, 15), date(2026, 7, 16)]
+        with pytest.raises(HTTPException) as exc:
+            get_research_metric_history('aapl', date(2026, 7, 16), date(2026, 7, 15), db)
+        assert exc.value.status_code == 422
 
 
 def test_iv_rank_and_broker_five_day_iv_change_remain_distinct():

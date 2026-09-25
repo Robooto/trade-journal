@@ -518,7 +518,7 @@
 .research-evidence-strip header div { display: grid; gap: 0.1rem; }
 .research-evidence-strip header span { color: #91a3ba; font-size: 0.74rem; }
 .research-evidence-badges { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.research-evidence-badge { display: grid; gap: 0.1rem; padding: 0.42rem 0.62rem; border: 1px solid rgba(148,163,184,.22); border-radius: .65rem; background: rgba(255,255,255,.035); }
+.research-evidence-badge { display: grid; gap: 0.1rem; max-width: 19rem; overflow-wrap: anywhere; padding: 0.42rem 0.62rem; border: 1px solid rgba(148,163,184,.22); border-radius: .65rem; background: rgba(255,255,255,.035); }
 .research-evidence-badge strong { font-size: .72rem; }
 .research-evidence-badge small { color: #9aabc0; font-size: .64rem; text-transform: capitalize; }
 .research-evidence-badge[data-status='demoted'] { border-color: rgba(248,113,113,.42); }

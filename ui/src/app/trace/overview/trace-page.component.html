@@ -20,12 +20,21 @@
 
   @if (facade.researchStatus?.(); as status) {
     <details class="research-evidence-strip" aria-label="TRACE research evidence status">
-      <summary><span><span class="trace-eyebrow">Prospective research</span><strong>{{ status.study_count }} tracked studies</strong></span><small>As of {{ status.as_of }} · {{ status.scoring_enabled_count }} scoring-enabled · expand for status</small></summary>
+      <summary><span><span class="trace-eyebrow">TRACE + FlowPatrol research</span><strong>{{ status.study_count }} tracked studies</strong></span><small>Registry as of {{ status.as_of }}@if (status.latest_weekly_review) { · latest review {{ status.latest_weekly_review.week_end }} } · {{ status.scoring_enabled_count }} scoring-enabled · expand for status</small></summary>
       <div class="research-evidence-badges">
         @for (study of facade.visibleResearchStatuses?.() ?? []; track study.id) {
           <span class="research-evidence-badge" [attr.data-status]="study.status">
             <strong>{{ study.label }}</strong>
             <small>{{ study.status.replaceAll('_', ' ') }}@if (study.checkpoint) { · {{ study.checkpoint.completed_sessions }}/{{ study.checkpoint.required_sessions }} }</small>
+            @if (study.weekly_coverage; as coverage) {
+              <small>Week data: @if (coverage.eligible_dates) { {{ coverage.eligible_dates.length }} eligible source dates@if (coverage.excluded_dates?.length) { · {{ coverage.excluded_dates?.length }} excluded } } @else if (coverage.observed_dates) { {{ coverage.observed_dates.length }} dates with observations · exclusions unknown } @else { exact dates unavailable }@if (coverage.latest_trading_date) { · latest {{ coverage.latest_trading_date }} }</small>
+              @if (coverage.denominator; as denominator) { <small>{{ denominator.name }}: {{ denominator.value }}</small> }
+              @if (coverage.latest_report_date) { <small>Latest report: {{ coverage.latest_report_date }}</small> }
+              @if (coverage.last_observation_at) { <small>Last study observation: {{ coverage.last_observation_at }}</small> }
+              @if (coverage.excluded_dates?.length) {
+                <small>Excluded: @for (excluded of coverage.excluded_dates; track excluded.trading_date) { {{ excluded.trading_date }} ({{ excluded.reason?.replaceAll('_', ' ') }}) }</small>
+              }
+            }
           </span>
         }
       </div>
