@@ -25,6 +25,14 @@
           <p>{{ strategy.summary.closed }} closed · {{ strategy.summary.closed_sessions }} closed-trade sessions · {{ strategy.summary.open }} open</p>
           <p>Gross P/L: {{ strategy.summary.gross_pnl_dollars == null ? 'Not available' : (strategy.summary.gross_pnl_dollars | currency) }}</p>
           <p>After assumed costs: {{ strategy.summary.cost_scenario_pnl_dollars == null ? 'Not available' : (strategy.summary.cost_scenario_pnl_dollars | currency) }}</p>
+          <dl class="performance-metrics">
+            <div><dt>Gross expectancy / close</dt><dd>{{ money(strategy.summary.gross_expectancy_dollars) }}</dd></div>
+            <div><dt>Average winning close</dt><dd>{{ money(strategy.summary.average_win_dollars) }}</dd></div>
+            <div><dt>Average losing close</dt><dd>{{ money(strategy.summary.average_loss_dollars) }}</dd></div>
+            <div><dt>Worst session gross P/L</dt><dd>{{ money(strategy.summary.worst_session_gross_pnl_dollars) }}</dd></div>
+            <div><dt>Gross win rate</dt><dd>{{ strategy.summary.gross_win_rate == null ? 'Not available' : (strategy.summary.gross_win_rate | percent:'1.1-1') }}</dd></div>
+          </dl>
+          <small>Win rate alone does not establish profitability. Averages use closed outcomes; missing winner or loser groups remain unavailable.</small>
           <details><summary>Risk and evidence quality</summary>
             <p>Mean return on max risk: {{ strategy.summary.mean_return_on_max_risk == null ? 'Not available' : (strategy.summary.mean_return_on_max_risk | percent:'1.1-1') }}</p>
             <p>Closed drawdown: {{ strategy.summary.realized_closed_drawdown_dollars == null ? 'Not available' : (strategy.summary.realized_closed_drawdown_dollars | currency) }}</p>
@@ -36,6 +44,27 @@
     @if (!data.strategy_summaries?.length) { <p>No results recorded for the new setup yet.</p> }
   } @else { <p>Waiting for new-cohort evidence.</p> }
   <small>Stop versions are kept separate; September 21 results remain in the archive after the new cohort begins. One contract per leg. Cost scenario assumes $0.65 per contract-side plus $10 round-trip slippage per position—not actual fills. Different entries mean this is descriptive, not a controlled test. Review weekly; no winner from a small sample.</small>
+  <section class="distance-shadow" aria-label="Structure-distance shadow comparison">
+    <h3>Structure-distance shadow · from September 28</h3>
+    <p>Exclude the stored fragile band (less than 3 points); exactly 3 points is retained. Retained trades use baseline contracts and exits. Missing distance is retained and counted.</p>
+    @if (date < '2026-09-28') { <p>Awaiting the September 28 prospective start. Earlier trades are not test results.</p> }
+    @else if (shadowError() || shadow()?.status === 'unavailable') { <p role="alert">Shadow evidence unavailable. No zero-return result has been substituted.</p> }
+    @else if (shadow()?.distance_shadow; as test) {
+      <p>{{ test.eligible_opportunities }} eligible opportunities · {{ test.excluded_opportunities }} excluded · {{ test.missing_distance_retained }} retained with missing distance</p>
+      <p>Review progress: {{ test.eligible_sessions }}/{{ test.required_sessions }} eligible baseline sessions · {{ test.baseline.closed }}/{{ test.required_baseline_closes }} baseline closes. Reaching the floor triggers review only.</p>
+      <div class="strategy-grid">
+        @for (arm of [{ label: 'Same-opportunity baseline', result: test.baseline }, { label: 'Distance shadow', result: test.shadow }, { label: 'Excluded trades — baseline outcomes', result: test.excluded_baseline }]; track arm.label) {
+          <article><strong>{{ arm.label }}</strong>
+            <p>{{ arm.result.closed }} closed · {{ arm.result.open }} open · {{ arm.result.unevaluable }} unevaluable · {{ arm.result.skipped }} skipped</p>
+            <p>Gross P/L {{ money(arm.result.gross_pnl_dollars) }} · after assumed costs {{ money(arm.result.cost_scenario_pnl_dollars) }}</p>
+            <p>{{ arm.result.wins }} winning / {{ arm.result.losses }} losing closes</p>
+          </article>
+        }
+      </div>
+      <small>Excluded winners are missed gains; excluded losses are avoided losses. Missing outcomes remain unevaluable. No rule changes automatically.</small>
+    } @else if (shadow()) { <p>No eligible shadow evidence recorded yet.</p> }
+    @else { <p role="status">Loading shadow evidence…</p> }
+  </section>
   <div class="session-trades">
     <h3>Session trades <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
     @if (!date || date < '2026-09-21') { <p>The focused setup begins September 21. Older trades remain in the archive below.</p> }

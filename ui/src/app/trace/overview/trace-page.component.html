@@ -26,6 +26,8 @@
           <span class="research-evidence-badge" [attr.data-status]="study.status">
             <strong>{{ study.label }}</strong>
             <small>{{ study.status.replaceAll('_', ' ') }}@if (study.checkpoint) { · {{ study.checkpoint.completed_sessions }}/{{ study.checkpoint.required_sessions }} }</small>
+            <small>Data gate: {{ study.data_readiness === 'ready' ? 'sample floor met' : study.data_readiness === 'collecting' ? 'collecting' : 'not assessed' }}</small>
+            <small>Validation: {{ (study.validation_status || 'not_assessed').replaceAll('_', ' ') }} · {{ study.scoring_enabled ? 'scoring enabled' : 'not scored' }}</small>
             @if (study.weekly_coverage; as coverage) {
               <small>Week data: @if (coverage.eligible_dates) { {{ coverage.eligible_dates.length }} eligible source dates@if (coverage.excluded_dates?.length) { · {{ coverage.excluded_dates?.length }} excluded } } @else if (coverage.observed_dates) { {{ coverage.observed_dates.length }} dates with observations · exclusions unknown } @else { exact dates unavailable }@if (coverage.latest_trading_date) { · latest {{ coverage.latest_trading_date }} }</small>
               @if (coverage.denominator; as denominator) { <small>{{ denominator.name }}: {{ denominator.value }}</small> }
@@ -231,6 +233,7 @@
       [histogramNodes]="facade.bundle()?.histogram?.rows ?? []"
       [gammaContextRows]="facade.bundle()?.gammaContext?.rows ?? []"
       [realizedVolatility]="facade.bundle()?.realizedVolatility ?? null"
+      [researchStatus]="facade.researchStatus()"
       [charmOverview]="facade.charmOverview()"
       [charmLoading]="facade.charmLoading()"
       [charmError]="facade.charmError()"

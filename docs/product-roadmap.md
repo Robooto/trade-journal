@@ -346,3 +346,13 @@ Container hardening follow-up:
 - [brokerage-api-inventory.md](brokerage-api-inventory.md)
 - [tastytrade-route-use-map.md](tastytrade-route-use-map.md)
 - Workspace product map: `../../docs/trading-product-map.md`
+
+### September 26 research review follow-through
+
+The main paper view now shows gross expectancy, average winning/losing close and
+worst-session loss alongside costs and win rate. The distance-shadow panel uses
+same-opportunity baseline, retained and excluded outcomes from September 28,
+including missing distance and review progress. The market snapshot adds verified
+weekly/cumulative distance and confirmation tables, with admissions, skips and
+paired timing context. Research badges separate data readiness from validation;
+Charm's failed replication is visible even after its session floor is met.

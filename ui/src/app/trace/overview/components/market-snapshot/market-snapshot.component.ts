@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 import { CharmOverview, CharmSeriesPoint } from '../../../charm/charm.models';
 import {
+  TraceResearchStatusResponse,
   TraceDashboardRow,
   TraceGammaContextRow,
   TraceHistogramRow,
@@ -19,6 +20,16 @@ import {
 export class MarketSnapshotComponent {
   @Input() rows: readonly TraceDashboardRow[] = [];
   @Input() activeIndex = 0;
+  @Input() researchStatus: TraceResearchStatusResponse | null = null;
+
+  get candidateStudies() {
+    return (this.researchStatus?.studies ?? []).filter(study =>
+      ['structure-distance-short-strike', 'credit-spread-entry-timing'].includes(study.id));
+  }
+
+  get charmValidation(): string {
+    return (this.researchStatus?.studies.find(study => study.id === 'charm-delta-pressure')?.validation_status ?? 'not_assessed').replaceAll('_', ' ');
+  }
   @Input() histogramNodes: readonly TraceHistogramRow[] = [];
   @Input() gammaContextRows: readonly TraceGammaContextRow[] = [];
   @Input() realizedVolatility: TraceRealizedVolatilityResponse | null = null;

@@ -20,12 +20,25 @@ export interface PaperLedgerRow {
   excluded_baseline_outcome?: { status: string; reason: string; gross_pnl_dollars: number | null };
   path: { ts: string; spot: number | null; quote_status: string; prices: unknown }[];
 }
+export interface PaperPerformanceSummary {
+  closed: number; open: number; skipped: number; unevaluable: number;
+  wins: number; losses: number; gross_pnl_dollars: number | null;
+  cost_scenario_pnl_dollars: number | null; closed_sessions: number;
+}
 export interface PaperLedgerResponse {
+  distance_shadow?: {
+    start_date: string; required_sessions: number; required_baseline_closes: number;
+    eligible_sessions: number; eligible_opportunities: number; excluded_opportunities: number; missing_distance_retained: number;
+    baseline: PaperPerformanceSummary; shadow: PaperPerformanceSummary; excluded_baseline: PaperPerformanceSummary;
+  } | null;
   strategy_summaries?: { strategy_id: string; label: string; summary: {
     closed: number; open: number; skipped: number; unevaluable: number; closed_sessions: number;
     gross_pnl_dollars: number | null; cost_scenario_pnl_dollars: number | null;
     mean_return_on_max_risk: number | null; realized_closed_drawdown_dollars: number | null;
     entry_coverage: number | null;
+    gross_expectancy_dollars?: number | null; gross_win_rate?: number | null;
+    average_win_dollars?: number | null; average_loss_dollars?: number | null;
+    worst_session_gross_pnl_dollars?: number | null;
   } }[];
   status: string; total: number; rows: PaperLedgerRow[]; sessions: string[];
   cohorts: { strategy_id: string; policy_id: string; width_points: number; protocol_sha256: string;

@@ -49,3 +49,28 @@ describe('PaperNowComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('focused setup begins September 21');
   });
 });
+
+describe('PaperNowComponent performance and distance shadow', () => {
+  it('shows loss-size metrics and excludes pre-start trades from the shadow request', async () => {
+    const baseline = { closed: 31, open: 0, skipped: 8, unevaluable: 0, closed_sessions: 4,
+      gross_pnl_dollars: -495, cost_scenario_pnl_dollars: -885.6,
+      gross_expectancy_dollars: -15.97, average_win_dollars: 60, average_loss_dollars: -201.67,
+      worst_session_gross_pnl_dollars: -900, gross_win_rate: 22 / 31 };
+    const result = { status: 'available', rows: [], total: 0, cohorts: [], sessions: [],
+      strategy_summaries: [{ strategy_id: 'spx-directional-vertical.v1', label: 'Directional verticals', summary: baseline }] };
+    const api = { paperTrades: vi.fn(() => of(result)) };
+    await TestBed.configureTestingModule({ imports: [PaperNowComponent], providers: [{ provide: TraceApiService, useValue: api }] }).compileComponents();
+    const fixture = TestBed.createComponent(PaperNowComponent);
+    fixture.componentRef.setInput('date', '2026-09-25'); fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Gross expectancy / close');
+    expect(text).toContain('-$15.97');
+    expect(text).toContain('-$201.67');
+    expect(text).toContain('-$900.00');
+    expect(text).toContain('Awaiting the September 28 prospective start');
+    expect(api.paperTrades).toHaveBeenCalledTimes(2);
+    fixture.componentRef.setInput('date', '2026-09-28'); fixture.detectChanges();
+    expect(api.paperTrades).toHaveBeenCalledWith('2026-09-28', '2026-09-28', expect.objectContaining({ policy_id: 'structure-distance-shadow.v1', limit: '1' }));
+    expect(fixture.nativeElement.textContent).toContain('No eligible shadow evidence recorded yet');
+  });
+});

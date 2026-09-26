@@ -20,6 +20,9 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   readonly error = signal(false);
   readonly comparison = signal<PaperLedgerResponse | null>(null);
   readonly comparisonError = signal(false);
+  readonly shadow = signal<PaperLedgerResponse | null>(null);
+  readonly shadowError = signal(false);
+  private shadowRequest?: Subscription;
   private request?: Subscription;
   private comparisonRequest?: Subscription;
 
@@ -29,6 +32,10 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   get policyId(): string { return this.date >= '2026-09-22' ? 'credit-risk-to-close.v4' : 'credit-risk-to-close.v3'; }
 
   ngOnChanges(): void {
+    this.shadowRequest?.unsubscribe();
+    this.shadow.set(null);
+    this.shadowError.set(false);
+    this.loading.set(false);
     this.request?.unsubscribe();
     this.comparisonRequest?.unsubscribe();
     this.comparison.set(null);
@@ -45,6 +52,15 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
       next: response => { this.response.set(response); this.loading.set(false); },
       error: () => { this.error.set(true); this.loading.set(false); },
     });
+    if (this.date >= '2026-09-28') {
+      this.shadowRequest = this.api.paperTrades('2026-09-28', this.date, {
+        policy_id: 'structure-distance-shadow.v1', strategy_id: 'spx-directional-vertical.v1',
+        width_points: '10', active_only: 'true', limit: '1',
+      }).subscribe({
+        next: response => this.shadow.set(response),
+        error: () => this.shadowError.set(true),
+      });
+    }
     this.comparisonRequest = this.api.paperTrades(this.cohortStart, this.date, {
       policy_id: this.policyId, width_points: '10', active_only: 'true', limit: '1',
     }).subscribe({
@@ -53,7 +69,11 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+
+  money(value: number | null | undefined): string {
+    return value == null ? 'Not available' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  }
 
   trades(strategyId: string): PaperLedgerRow[] {
     return (this.response()?.rows || []).filter(row => row.strategy_id === strategyId && row.entry_status === 'recorded');

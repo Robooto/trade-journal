@@ -276,7 +276,10 @@ export type TraceStudyDisposition =
   | 'collecting'
   | 'ready_for_review'
   | 'demoted'
-  | 'gate_ready';
+  | 'gate_ready'
+  | 'not_replicated'
+  | 'replicated'
+  | 'paused';
 
 export interface TraceStudyCheckpoint {
   readonly completed_sessions: number;
@@ -295,6 +298,16 @@ export interface TraceStudyStatus {
   readonly scoring_enabled: boolean;
   readonly note?: string;
   readonly checkpoint?: TraceStudyCheckpoint;
+  readonly data_readiness?: 'ready' | 'collecting' | 'unavailable';
+  readonly validation_status?: string;
+  readonly evidence_tables?: readonly {
+    readonly title: string;
+    readonly scope: string;
+    readonly week_end: string;
+    readonly source: string;
+    readonly columns: readonly string[];
+    readonly rows: readonly (readonly string[])[];
+  }[];
   readonly weekly_coverage?: {
     readonly source: string;
     readonly requested_range: readonly string[];
