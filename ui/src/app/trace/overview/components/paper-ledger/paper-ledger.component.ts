@@ -16,6 +16,8 @@ export interface PaperLedgerRow {
   exit_debit_dollars: number | null; gross_pnl_dollars: number | null; max_risk_dollars: number | null;
   exit_ts: string | null; frozen_structure: unknown; structures: unknown;
   cost_scenarios?: { label: string; net_scenario_dollars: number }[];
+  distance_filter?: string;
+  excluded_baseline_outcome?: { status: string; reason: string; gross_pnl_dollars: number | null };
   path: { ts: string; spot: number | null; quote_status: string; prices: unknown }[];
 }
 export interface PaperLedgerResponse {

@@ -116,10 +116,14 @@
                 <summary>{{ policy.label }} · entry and exit details</summary>
                 @for (episode of policy.episodes; track episode.capture_id) {
                   <p>{{ formatOnset(episode.onset_ts) }} · {{ label(episode.status) }} · {{ label(episode.reason) }} · {{ episode.gross_pnl_dollars == null ? '—' : (episode.gross_pnl_dollars | currency:'USD') }}</p>
+                  @if (episode.excluded_baseline_outcome; as baseline) {
+                    <small>Excluded opportunity's baseline: {{ label(baseline.status) }} · {{ label(baseline.reason) }} · {{ baseline.gross_pnl_dollars == null ? 'Unavailable' : (baseline.gross_pnl_dollars | currency:'USD') }} gross</small>
+                  }
+                  @if (episode.distance_filter === 'missing_distance_retained') { <small>Entry distance unavailable; retained in both arms.</small> }
                 }
               </details>
             }
-            <small>Compare policies within this table: they share position limits. The original episode totals above may include more entries. Research only; no policy is promoted automatically.</small>
+            <small>Compare admissions and exclusions alongside returns. The structure-distance shadow excludes the frozen fragile band; other policy rows can have different entry or exit rules. Research only; no policy is promoted automatically.</small>
           }
           @if (evidence.episodes.length) {
             <details>

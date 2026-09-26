@@ -7,6 +7,8 @@
     @if (includeArchived) {
       <label>Vertical policy<select name="policy" [(ngModel)]="policy"><option value="baseline-one-position.v1">Legacy baseline · structure exit</option><option value="credit-risk-to-close.v4">Current · independent 2× debit stop</option><option value="credit-risk-to-close.v3">September 21 · independent 3× debit stop</option><option value="credit-risk-to-close.v2">Archived · hierarchy exit</option><option value="all-recorded">All recorded opportunities (overlapping)</option><option value="confirmed-opposition.v1">Confirmed opposition</option><option value="original-structure.v1">Original structure</option><option value="defined-risk-to-close.v1">Defined risk to close</option></select></label>
       <label>Wing width<select name="width" [(ngModel)]="width"><option value="">Both</option><option value="5">5 points</option><option value="10">10 points</option></select></label>
+    } @else {
+      <label>Vertical policy<select name="policy" [(ngModel)]="policy"><option value="credit-risk-to-close.v4">Baseline · independent 2× debit stop</option><option value="credit-risk-to-close.v3">September 21 · independent 3× debit stop</option><option value="first-opposite-take.v1">Shadow · first opposite take (from Sep 25)</option><option value="structure-distance-shadow.v1">Shadow · exclude fragile distance (from Sep 28)</option></select></label>
     }
     <label>Outcome<select name="status" [(ngModel)]="status"><option value="">All outcomes</option><option>closed</option><option>open</option><option>skipped</option><option>unevaluable</option></select></label>
     <label>Contract / date / reason<input name="search" [(ngModel)]="search" maxlength="100" /></label>
@@ -26,6 +28,8 @@
       <details class="trade">
         <summary>{{ trade.onset_ts }} · {{ trade.trade_type }} · {{ trade.width_points }}-point wings · {{ trade.status }} · {{ money(trade.gross_pnl_dollars) }} gross</summary>
         <p>Entry: {{ trade.entry_status }} · {{ trade.reason }} · Exit: {{ trade.exit_ts || 'Not recorded' }}</p>
+        @if (trade.excluded_baseline_outcome; as baseline) { <p>Excluded opportunity's baseline: {{ baseline.status }} · {{ baseline.reason }} · {{ money(baseline.gross_pnl_dollars) }} gross. This outcome belongs to the baseline.</p> }
+        @if (trade.distance_filter === 'missing_distance_retained') { <p>Entry distance unavailable; retained in both arms.</p> }
         <p>Credit {{ money(trade.entry_credit_dollars) }} · Debit {{ money(trade.exit_debit_dollars) }} · Expiration max risk {{ money(trade.max_risk_dollars) }}</p>
         @for (cost of trade.cost_scenarios || []; track cost.label) { <p>{{ cost.label }}: {{ money(cost.net_scenario_dollars) }}</p> }
         <div class="table-scroll"><table><thead><tr><th>Action</th><th>Stored option symbol</th><th>Type / strike</th><th>Expiration</th><th>Entry bid / ask</th><th>Exit bid / ask</th></tr></thead><tbody>

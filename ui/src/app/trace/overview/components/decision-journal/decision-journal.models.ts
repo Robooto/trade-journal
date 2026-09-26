@@ -100,6 +100,8 @@ export interface PaperEvidence {
         readonly status: string;
         readonly reason: string;
         readonly gross_pnl_dollars: number | null;
+        readonly distance_filter?: string;
+        readonly excluded_baseline_outcome?: { readonly status: string; readonly reason: string; readonly gross_pnl_dollars: number | null };
       }[];
     }[];
   };

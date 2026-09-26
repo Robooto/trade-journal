@@ -46,6 +46,18 @@ describe('PaperLedgerComponent', () => {
     expect(fixture.componentInstance.response()).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('No results have been substituted');
   });
+  it('selects the distance shadow and identifies excluded P/L as baseline evidence', () => {
+    api.paperTrades.mockReturnValue(of({ ...RESPONSE, rows: [{ ...RESPONSE.rows[0],
+      status: 'skipped', reason: 'fragile_structure_distance', gross_pnl_dollars: null,
+      excluded_baseline_outcome: { status: 'closed', reason: 'two_times_entry_credit_stop', gross_pnl_dollars: -160 },
+    }] }));
+    const c = fixture.componentInstance;
+    c.policy = 'structure-distance-shadow.v1'; c.load(true); fixture.detectChanges();
+    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ policy_id: 'structure-distance-shadow.v1', active_only: 'true' }));
+    expect(fixture.nativeElement.textContent).toContain("Excluded opportunity's baseline: closed");
+    expect(fixture.nativeElement.textContent).toContain('-$160.00');
+    expect(fixture.nativeElement.querySelector('details.trade summary').textContent).toContain('Unavailable gross');
+  });
   it('defaults to the focused cohort and only exposes older setups when requested', () => {
     expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ active_only: 'true', width_points: '10' }));
     const c = fixture.componentInstance;
