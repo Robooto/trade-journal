@@ -46,6 +46,13 @@ The package does not replace current option-chain, quote, Greek, liquidity,
 catalyst, portfolio-risk, or trading-plan checks before exact contracts are
 considered.
 
+## Development
+
+Run `make` for development commands, `make test` for installed-dependency tests,
+and `make deploy` to run the guarded mini deployment for the current pushed
+commit. See [development and maintenance](docs/development.md) for setup,
+contract generation, focused tests, and TRACE component ownership.
+
 ## Running the project
 
 ```bash

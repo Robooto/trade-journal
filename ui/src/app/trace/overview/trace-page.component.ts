@@ -29,20 +29,13 @@ export class TracePageComponent implements OnInit, OnDestroy {
   priceLevelLabel = '';
   priceLevelColor = '#fbbf24';
   priceLevelKind: TracePriceLevelKind = 'unclassified';
-  paperFromDate = '';
-  paperToDate = '';
-  selectedReplayEntry = '';
-  ledgerExpanded = false;
-  paperResearchExpanded = false;
 
   private readonly alertState = new Map<string, { armed: boolean; lastAlertedAt: number | null }>();
   private autoRefreshTimer: ReturnType<typeof setTimeout> | null = null;
   private autoRefreshPending = false;
 
   readonly lastRefreshRequestedAt = signal<Date | null>(null);
-  readonly latestPaperDate = computed(() => this.facade.sessions().map(session => session.date).sort().at(-1) ?? '');
   readonly nextAutoRefreshAt = signal<Date | null>(null);
-  private scorecardRangeInitialized = false;
 
   constructor(
     readonly facade: TraceFacade,
@@ -50,23 +43,6 @@ export class TracePageComponent implements OnInit, OnDestroy {
     private readonly snackBar: MatSnackBar,
   ) {
     effect(() => this.updateProximityAlerts(this.priceLevelProximities()));
-    effect(() => {
-      const sessions = this.facade.sessions();
-      if (!this.scorecardRangeInitialized && sessions.length) {
-        const dates = sessions.map(session => session.date).sort();
-        this.paperFromDate = dates[Math.max(0, dates.length - 10)];
-        this.paperToDate = dates[dates.length - 1];
-        this.scorecardRangeInitialized = true;
-      }
-    });
-    effect(() => {
-      const entries = this.facade.paperReplayEntries()?.entries ?? [];
-      const cutoff = this.facade.selectedCapture()?.ts;
-      const eligible = cutoff ? entries.filter(entry => entry.ts <= cutoff) : [];
-      this.selectedReplayEntry = eligible.some(entry => this.replayEntryKey(entry) === this.selectedReplayEntry)
-        ? this.selectedReplayEntry
-        : (eligible.length ? this.replayEntryKey(eligible[eligible.length - 1]) : '');
-    });
   }
 
   ngOnInit(): void {
@@ -124,122 +100,6 @@ export class TracePageComponent implements OnInit, OnDestroy {
   selectCaptureTimestamp(timestamp: string): void {
     const index = this.facade.captureRows().findIndex(row => row.ts === timestamp);
     if (index >= 0) this.facade.selectCapture(index);
-  }
-
-  submitPaperRange(): void {
-    const dates = this.facade.sessions().map(session => session.date).sort();
-    this.facade.loadPaperScorecard(
-      this.paperFromDate || dates[Math.max(0, dates.length - 10)],
-      this.paperToDate || dates[dates.length - 1],
-    );
-  }
-
-  replaySelectedTrade(): void {
-    const capture = this.facade.selectedCapture();
-    const date = this.facade.selectedDate();
-    const entry = this.eligibleReplayEntries().find(row => this.replayEntryKey(row) === this.selectedReplayEntry);
-    if (capture && date && entry) this.facade.loadPaperReplay(date, capture.capture_id, entry.capture_id, entry.strategy_id);
-  }
-
-  replayEntryKey(entry: { capture_id: string; strategy_id?: string }): string {
-    return `${entry.strategy_id || 'spx-directional-vertical.v1'}:${entry.capture_id}`;
-  }
-
-  eligibleReplayEntries() {
-    const cutoff = this.facade.selectedCapture()?.ts;
-    return (this.facade.paperReplayEntries()?.entries ?? []).filter(entry => !cutoff || entry.ts <= cutoff);
-  }
-
-  selectReplayEntry(value: string): void {
-    this.selectedReplayEntry = value;
-    this.facade.clearPaperReplay();
-  }
-
-  formatMoney(value: number | null | undefined): string {
-    return value === null || value === undefined ? '—' : `$${value.toFixed(0)}`;
-  }
-
-  formatPercent(value: number | null | undefined): string {
-    return value === null || value === undefined ? '—' : `${(value * 100).toFixed(0)}%`;
-  }
-
-  replaySegments(): string[] {
-    const points = this.facade.paperReplay()?.path ?? [];
-    const spots = points.map(point => point.spot).filter((spot): spot is number => spot !== null && Number.isFinite(spot));
-    if (spots.length < 2) return [];
-    const segments: string[] = []; let current: string[] = [];
-    points.forEach((point, index) => {
-      if (point.gap || point.spot === null) {
-        if (current.length > 0) segments.push(current.join(' '));
-        current = [];
-        if (point.spot === null) return;
-      }
-      current.push(`${this.replayXAt(index, points.length)},${this.replayY(point.spot, spots)}`);
-    });
-    if (current.length > 0) segments.push(current.join(' '));
-    return segments;
-  }
-
-  replayY(value: number, spots?: number[]): number {
-    const values = spots ?? (this.facade.paperReplay()?.path.map(point => point.spot).filter((spot): spot is number => spot !== null && Number.isFinite(spot)) ?? []);
-    const levels = this.facade.paperReplay()?.levels.map(level => level.price).filter((price): price is number => price !== null && Number.isFinite(price)) ?? [];
-    const low = Math.min(...values, ...levels); const high = Math.max(...values, ...levels); const span = high - low || 1;
-    return 88 - ((value - low) / span) * 76;
-  }
-
-  replayLevelY(value: number): number {
-    return this.replayY(value);
-  }
-
-  replayX(captureId: string): number {
-    const points = this.facade.paperReplay()?.path ?? [];
-    const index = points.findIndex(point => point.capture_id === captureId);
-    return index < 0 ? 0 : this.replayXAt(index, points.length);
-  }
-
-  replaySpot(captureId: string): number | null {
-    return this.facade.paperReplay()?.path.find(point => point.capture_id === captureId)?.spot ?? null;
-  }
-
-  replaySpotY(captureId: string): number {
-    const spot = this.replaySpot(captureId);
-    return spot === null ? 88 : this.replayY(spot);
-  }
-
-  replayXAt(index: number, count: number): number {
-    const points = this.facade.paperReplay()?.path ?? [];
-    const first = points.length ? Date.parse(points[0].ts) : NaN;
-    const last = points.length ? Date.parse(points[points.length - 1].ts) : NaN;
-    const current = points[index] ? Date.parse(points[index].ts) : NaN;
-    if (Number.isFinite(first) && Number.isFinite(last) && Number.isFinite(current) && last > first) {
-      return 8 + ((current - first) / (last - first)) * 90;
-    }
-    return 8 + (index / Math.max(1, count - 1)) * 90;
-  }
-
-  replayPriceTicks(): number[] {
-    const replay = this.facade.paperReplay();
-    const values = [...(replay?.path.map(point => point.spot).filter((spot): spot is number => spot !== null && Number.isFinite(spot)) ?? []), ...(replay?.levels.map(level => level.price).filter((price): price is number => price !== null && Number.isFinite(price)) ?? [])];
-    if (!values.length) return [];
-    const low = Math.min(...values); const high = Math.max(...values); const step = (high - low || 1) / 2;
-    return [high, high - step, low];
-  }
-
-  replayTimeTicks(): { x: number; label: string }[] {
-    const points = this.facade.paperReplay()?.path ?? [];
-    if (!points.length) return [];
-    return [0, Math.floor((points.length - 1) / 2), points.length - 1].map(index => ({
-      x: this.replayXAt(index, points.length), label: this.formatReplayTime(points[index].ts),
-    }));
-  }
-
-  formatReplayTime(value: string): string {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? value.slice(11, 16) : new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(parsed);
-  }
-
-  replayHasGaps(): boolean {
-    return Boolean(this.facade.paperReplay()?.path.some(point => point.gap));
   }
 
   addPriceLevel(): void {
@@ -308,7 +168,6 @@ export class TracePageComponent implements OnInit, OnDestroy {
   statusClass(status: TraceContractStatus | 'unavailable'): string {
     return `trace-status--${status.replace('_', '-')}`;
   }
-
 
   formatTimestamp(value: string | null | undefined): string {
     if (!value) return 'Unavailable';

@@ -1,0 +1,49 @@
+.trace-eyebrow {
+  margin: 0 0 0.25rem;
+  color: #8db5ff;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.trace-state {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1rem;
+  min-width: 0;
+  box-sizing: border-box;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  background: rgba(22, 27, 34, 0.92);
+}
+
+.trace-state div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.trace-state span {
+  color: #91a3ba;
+  font-size: 0.82rem;
+}
+
+.trace-state--error {
+  color: #ffd2da;
+  border-color: rgba(244, 63, 94, 0.3);
+}
+
+.trace-timeline-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.trace-timeline-heading h2 {
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+@media (max-width: 640px) { .trace-timeline-heading { align-items: flex-start; flex-direction: column; } }

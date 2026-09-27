@@ -1,0 +1,21 @@
+<svg class="paper-replay-chart" viewBox="0 0 100 100" role="img" aria-label="SPX sampled replay path">
+  <line x1="8" x2="98" y1="88" y2="88" class="paper-replay-axis" />
+  <line x1="8" x2="8" y1="8" y2="88" class="paper-replay-axis" />
+  @for (tick of replayPriceTicks(); track tick) {
+    <text x="0" [attr.y]="replayLevelY(tick) + 1">{{ tick | number:'1.0-1' }}</text>
+  }
+  @for (tick of replayTimeTicks(); track tick.x) {
+    <text [attr.x]="tick.x" y="97" text-anchor="middle">{{ tick.label }}</text>
+  }
+  @for (level of replay.levels; track level.label) {
+    @if (level.price !== null) { <line x1="8" x2="98" [attr.y1]="replayLevelY(level.price)" [attr.y2]="replayLevelY(level.price)" class="paper-replay-level" /><text x="9" [attr.y]="replayLevelY(level.price) - 1">{{ level.label }} {{ level.price }}</text> }
+  }
+  @for (segment of replaySegments(); track $index) {
+    <polyline [attr.points]="segment" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" />
+  }
+  @for (event of replay.hierarchy_events; track event.ts + event.event) {
+    <line [attr.x1]="replayX(event.capture_id)" [attr.x2]="replayX(event.capture_id)" y1="5" y2="95" class="paper-replay-marker" />
+    @if (replaySpot(event.capture_id) !== null) { <circle [attr.cx]="replayX(event.capture_id)" [attr.cy]="replaySpotY(event.capture_id)" r="2" [attr.class]="event.capture_id === replay.entry_capture_id ? 'paper-replay-entry' : 'paper-replay-exit'" /> }
+  }
+</svg>
+@if (replayHasGaps()) { <p class="paper-replay-gap">Path gaps are split in the source evidence; no intragap price is inferred.</p> }

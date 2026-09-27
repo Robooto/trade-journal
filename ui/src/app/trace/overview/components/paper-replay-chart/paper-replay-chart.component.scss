@@ -1,0 +1,9 @@
+:host { display: grid; gap: 1rem; min-width: 0; }
+.paper-replay-chart { width: 100%; min-height: 12rem; padding: .5rem; overflow: visible; color: #78a6ff; border-radius: .6rem; background: rgba(8,12,18,.5); }
+.paper-replay-chart text { fill: #dfe9fb; font-size: 2.5px; }
+.paper-replay-level { stroke: rgba(247,199,102,.7); stroke-dasharray: 2 1; stroke-width: .45; }
+.paper-replay-axis { stroke: rgba(148,163,184,.42); stroke-width: .4; }
+.paper-replay-marker { stroke: #f78da7; stroke-dasharray: 1 1; stroke-width: .7; }
+.paper-replay-entry { fill: #75e8a7; stroke: #0b1622; stroke-width: .6; }
+.paper-replay-exit { fill: #f78da7; stroke: #0b1622; stroke-width: .6; }
+.paper-replay-gap { margin: 0; color: #f7c766; font-size: .75rem; }

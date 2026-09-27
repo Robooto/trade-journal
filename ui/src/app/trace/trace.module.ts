@@ -1,3 +1,5 @@
+import { PaperWorkspaceComponent } from './overview/components/paper-workspace/paper-workspace.component';
+import { PaperReplayChartComponent } from './overview/components/paper-replay-chart/paper-replay-chart.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
@@ -18,6 +20,7 @@ import { PaperNowComponent } from './overview/components/paper-now/paper-now.com
 @NgModule({
   declarations: [
     TracePageComponent,
+    PaperWorkspaceComponent,
     CaptureHistoryComponent,
     GammaProfileComponent,
     MarketSnapshotComponent,
@@ -26,6 +29,6 @@ import { PaperNowComponent } from './overview/components/paper-now/paper-now.com
     SignedGexMapComponent,
     CharmWidgetComponent,
   ],
-  imports: [CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent],
+  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent],
 })
 export class TraceModule {}
