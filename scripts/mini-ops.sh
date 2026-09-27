@@ -13,7 +13,7 @@ Usage: scripts/mini-ops.sh <command> [argument]
 Commands:
   check                 Run the complete local deployment gate
   preflight             Check mini prerequisites and application state
-  deploy [git-ref]      Test locally, then deploy origin/main or an exact ref
+  deploy [git-ref]      Test clean local HEAD, then deploy that exact commit
   status                Show revision, containers, health, disk, and backups
   logs [service]        Show the last 200 container log lines
   backup                Create an online SQLite backup on the mini
@@ -23,8 +23,25 @@ Environment:
   TRADE_JOURNAL_SSH_HOST      SSH alias or destination (default: roost@192.168.50.248)
   TRADE_JOURNAL_SSH_IDENTITY  Optional SSH private-key path
   TRADE_JOURNAL_REMOTE_DIR    Remote checkout (default: ~/trade-journal)
-  SKIP_LOCAL_CHECK=1          Skip the local gate for deploy (emergencies only)
+  SKIP_LOCAL_CHECK=1          Skip tests only; revision/checkout guards still apply (emergencies only)
 EOF
+}
+
+# Check both before and after the gate: a concurrent edit or checkout invalidates it.
+require_tested_checkout() {
+  if [[ "$(git -C "$ROOT_DIR" rev-parse HEAD)" != "$tested_revision" ]] \
+    || ! git -C "$ROOT_DIR" diff --quiet \
+    || ! git -C "$ROOT_DIR" diff --cached --quiet; then
+    echo "Deploy requires unchanged, committed local HEAD ($tested_revision). Commit changes and rerun." >&2
+    exit 1
+  fi
+  local untracked
+  untracked="$(git -C "$ROOT_DIR" ls-files --others --exclude-standard -- api/app api/tests ui scripts)"
+  if [[ -n "$untracked" ]]; then
+    echo "Untracked application/test/deployment files must be committed or removed before deploy:" >&2
+    printf '%s\n' "$untracked" >&2
+    exit 1
+  fi
 }
 
 command_name="${1:-}"
@@ -37,9 +54,21 @@ case "$command_name" in
   preflight|status|backup|rollback)
     ;;
   deploy)
+    tested_revision="$(git -C "$ROOT_DIR" rev-parse --verify HEAD)"
+    requested_revision="$(git -C "$ROOT_DIR" rev-parse --verify --end-of-options "${argument:-HEAD}^{commit}")"
+    if [[ "$requested_revision" != "$tested_revision" ]]; then
+      echo "Requested revision differs from local HEAD. Check out the requested revision before deploying." >&2
+      exit 1
+    fi
+    require_tested_checkout
+    argument="$tested_revision"
     if [[ "${SKIP_LOCAL_CHECK:-0}" != "1" ]]; then
       "$ROOT_DIR/scripts/check-local.sh"
+    else
+      echo "WARNING: tests skipped for $tested_revision (emergency override)." >&2
     fi
+    require_tested_checkout
+    echo "Deploy revision: $tested_revision"
     ;;
   logs)
     ;;

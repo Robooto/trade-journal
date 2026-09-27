@@ -14,7 +14,9 @@ creates `api/.venv`, installs the locked API development dependencies, and runs
 | --- | --- |
 | `make test-ui` | Type-check specs and run UI tests with installed dependencies |
 | `make test-api` | Run the API suite with installed dependencies |
-| `make test` | Run both suites |
+| `make test` | Run API, UI, and deployment guard suites |
+| `make test-ops` | Test deployment guards with isolated Git repos and fake services |
+| `make smoke` | Read-only browser check of the deployed TRACE and paper views |
 | `make test-api ARGS="-k journal"` | Limit API tests during a change |
 | `make test-ui ARGS="--include=src/app/trace/**/*.spec.ts"` | Limit UI tests during a change |
 | `make dev` | Start the Angular development server |
@@ -39,12 +41,47 @@ types; the existing full gate checks drift when the pipeline virtualenv exists.
 After reviewing, committing, and pushing changes, run `make deploy`. It deploys
 the current local commit by default, keeping the tested revision explicit.
 `make deploy REF=<pushed-commit-or-tag>` selects another revision; check out that
-revision locally first so the gate tests the code you intend to deploy.
+revision locally first. Both entry points reject a ref that does not resolve to
+local HEAD. Deployment requires committed tracked files and no untracked files
+under `api/app`, `api/tests`, `ui`, or `scripts`; unrelated local notes are left
+alone. HEAD and the checkout are checked again after testing. The remote receives
+the full commit ID, verifies it before backup/rebuild, and serializes deployments
+and rollbacks with `flock`. The successful revision is recorded only after both
+health checks pass. `SKIP_LOCAL_CHECK=1` is an explicit emergency test override;
+it does not bypass revision or checkout checks and reports that tests were skipped.
 
 This delegates to `scripts/mini-ops.sh`: the complete local gate, remote database
 backup, revision tracking, container rebuild, and application/research health
 checks are preserved. `make status` shows the deployed revision and health.
 See [mini operations](mini-operations.md) for preflight, logs, and rollback.
+
+## Browser smoke check
+
+`make smoke` uses pinned `@playwright/cli` 0.1.21 through `npx` and defaults to
+`http://192.168.50.248:8877/trace`. It exercises TRACE loading, paper history,
+date-range persistence across tabs, a recorded replay, and the contract ledger.
+It reads evidence and changes only browser form state. It does not submit a
+historical range or any trading action. Browser errors fail the check.
+
+The workstation needs Node/npm and Chrome available to Playwright. Set
+`PLAYWRIGHT_CONFIG=/absolute/path/config.json` to use an installed Chromium
+instead, for example:
+
+```json
+{"browser":{"browserName":"chromium","launchOptions":{"executablePath":"/absolute/path/to/chromium","headless":true}}}
+```
+
+```bash
+PLAYWRIGHT_CONFIG=/absolute/path/config.json make smoke
+SMOKE_URL=http://localhost:4200/trace make smoke
+```
+
+The check intentionally requires a latest session with a recorded replay path.
+Missing replay evidence fails as an incomplete smoke check, rather than silently
+passing. Logs and a screenshot are saved under ignored
+`output/playwright/smoke-*/`; inspect `result.log` when a check fails. Smoke checks
+are separate from `make check` and deployment so an unavailable browser or a
+new session without trades does not prevent a needed service deployment.
 
 ## TRACE component boundaries
 
@@ -57,6 +94,8 @@ See [mini operations](mini-operations.md) for preflight, logs, and rollback.
   active tab.
 - `PaperReplayChartComponent`: renders an input replay, preserving recorded
   timestamp spacing and gaps. It does not inject the facade or fetch data.
+- `data-access/paper.models.ts`: shared ledger/leg response types used by the
+  API client and both paper views; generated summary contracts remain pipeline-owned.
 - `TraceFacade`: session data, API requests, cancellation and response state.
 - `PaperNowComponent` and `PaperLedgerComponent`: catalog-driven current paper
   presentation and exact contract evidence, respectively.

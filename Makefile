@@ -2,12 +2,14 @@
 PYTHON ?= api/.venv/bin/python
 REF ?= $(shell git rev-parse --verify HEAD)
 
-.PHONY: help setup test test-api test-ui check contracts contracts-update dev deploy status
+.PHONY: help setup test test-api test-ui test-ops smoke check contracts contracts-update dev deploy status
 help:
 	@echo 'setup             Install locked API and UI development dependencies'
 	@echo 'test              Run API and UI tests using installed dependencies'
 	@echo 'test-api          Run API tests (ARGS="..." for pytest options)'
 	@echo 'test-ui           Type-check and run UI tests (ARGS="..." for Angular options)'
+	@echo 'test-ops          Exercise deployment guards in isolated test repositories'
+	@echo 'smoke             Check TRACE, paper replay, and ledger in a real browser'
 	@echo 'check             Run the complete deployment gate, including clean installs'
 	@echo 'contracts         Verify generated research contracts against the sibling pipeline'
 	@echo 'contracts-update  Regenerate contracts after a pipeline contract change'
@@ -20,7 +22,7 @@ setup:
 	$(PYTHON) -m pip install --require-hashes -r api/requirements-dev.txt
 	npm --prefix ui ci
 
-test: test-api test-ui
+test: test-api test-ui test-ops
 
 test-api:
 	PYTHONPATH=api $(PYTHON) -m pytest api/tests -q $(ARGS)
@@ -28,6 +30,12 @@ test-api:
 test-ui:
 	cd ui && npm exec -- tsc -p tsconfig.spec.json --noEmit
 	npm --prefix ui test -- --watch=false $(ARGS)
+
+test-ops:
+	$(PYTHON) -m unittest discover -s scripts/tests -v
+
+smoke:
+	./scripts/smoke-ui.sh
 
 check:
 	./scripts/check-local.sh

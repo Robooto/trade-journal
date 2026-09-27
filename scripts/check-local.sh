@@ -19,6 +19,9 @@ fi
 echo "==> Development dependencies"
 "$PYTHON_BIN" -m pip install --require-hashes -r api/requirements-dev.txt
 
+echo "==> Deployment guard tests"
+"$PYTHON_BIN" -m unittest discover -s scripts/tests -v
+
 echo "==> Backend tests"
 PYTHONPATH=api "$PYTHON_BIN" -m pytest api/tests -q
 

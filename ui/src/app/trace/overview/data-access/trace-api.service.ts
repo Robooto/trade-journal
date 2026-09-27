@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import type { PaperCatalog } from './generated/research-contracts';
-import type { PaperLedgerResponse } from '../components/paper-ledger/paper-ledger.component';
+import type { PaperLedgerResponse } from './paper.models';
 
 import {
   TraceGammaContextResponse,

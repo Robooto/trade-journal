@@ -21,7 +21,7 @@ shareable backup. Only one Trade Journal API host may have
 
 From the workspace checkout, use the guarded mini operations command. It runs
 the local deployment gate, creates an online SQLite backup, records the current
-revision, fetches the requested revision, rebuilds the stack, and verifies both
+revision, fetches the exact locally tested commit, rebuilds the stack, and verifies both
 Trade Journal and Research health:
 
 ```bash
@@ -33,7 +33,16 @@ scripts/mini-ops.sh deploy
 The default SSH target is `roost@192.168.50.248`. Override it with
 `TRADE_JOURNAL_SSH_HOST` and optionally set
 `TRADE_JOURNAL_SSH_IDENTITY` to an SSH private-key path. Deploy a specific tag,
-branch, or commit with `scripts/mini-ops.sh deploy <ref>`.
+branch, or commit with `scripts/mini-ops.sh deploy <ref>` after checking out that
+revision locally. The default is local HEAD. Dirty tracked files, untracked
+application/test/deployment files, a different requested revision, or edits made
+during the gate stop deployment before SSH. Mini rejects non-commit references
+and dirty application sources, locks concurrent deployments/rollbacks, and
+records the successful revision only after health checks pass. The optional
+emergency test skip retains these guards.
+
+Run `make smoke` after deployment for the TRACE/paper browser checks; browser
+setup and evidence requirements are in [development](development.md#browser-smoke-check).
 
 Routine operations:
 

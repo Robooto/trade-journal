@@ -32,6 +32,13 @@ require_clean_checkout() {
     git status --short >&2
     exit 1
   fi
+  local untracked
+  untracked="$(git ls-files --others --exclude-standard -- api/app api/tests ui scripts)"
+  if [[ -n "$untracked" ]]; then
+    echo "Refusing to build with untracked application/test/deployment files on mini:" >&2
+    printf '%s\n' "$untracked" >&2
+    exit 1
+  fi
 }
 
 require_rootless_docker() {
@@ -72,30 +79,48 @@ wait_for_health() {
   return 1
 }
 
+lock_deployment() {
+  mkdir -p "$STATE_DIR"
+  exec 9>"$STATE_DIR/deploy.lock"
+  flock -n 9 || { echo "Another mini deployment is running." >&2; exit 1; }
+}
+
 deploy_revision() {
   local requested_ref="$1"
   local current_revision target_revision
 
+  # Branches are resolved on the workstation, never again after its test gate.
+  [[ "$requested_ref" =~ ^[0-9a-f]{40}$|^[0-9a-f]{64}$ ]] || {
+    echo "Deploy requires a full commit ID from the workstation gate." >&2
+    return 1
+  }
   enter_app
   require_clean_checkout
   require_rootless_docker
-  mkdir -p "$STATE_DIR"
-  backup_database
-
   current_revision="$(git rev-parse HEAD)"
   git fetch --prune origin
-  target_revision="$(git rev-parse --verify "$requested_ref^{commit}")"
+  target_revision="$(git rev-parse --verify --end-of-options "$requested_ref^{commit}")"
+  [[ "$target_revision" == "$requested_ref" ]] || return 1
+  # Check after fetch too, before backup, revision state, or running services change.
+  require_clean_checkout
+  backup_database
   printf '%s\n' "$current_revision" > "$STATE_DIR/previous-revision"
-  printf '%s\n' "$target_revision" > "$STATE_DIR/current-revision"
 
   echo "Deploying $target_revision to mini (previous: $current_revision)"
   git checkout --detach "$target_revision"
+  [[ "$(git rev-parse HEAD)" == "$target_revision" ]] || return 1
+  require_clean_checkout
   "${COMPOSE[@]}" up --build --detach --remove-orphans --force-recreate
   wait_for_health
+  [[ "$(git rev-parse HEAD)" == "$target_revision" ]] || return 1
+  require_clean_checkout
+  printf '%s\n' "$target_revision" > "$STATE_DIR/current-revision"
+  echo "Verified deployed revision: $target_revision"
 }
 
 case "$COMMAND" in
   preflight)
+    require_command flock
     require_command git
     require_command docker
     require_command curl
@@ -115,7 +140,9 @@ case "$COMMAND" in
     require_command docker
     require_command curl
     require_command python3
-    deploy_revision "${ARGUMENT:-origin/main}"
+    require_command flock
+    lock_deployment
+    deploy_revision "$ARGUMENT"
     ;;
   status)
     require_command docker
@@ -149,6 +176,8 @@ case "$COMMAND" in
     require_command docker
     require_command curl
     require_command python3
+    require_command flock
+    lock_deployment
     [[ -f "$STATE_DIR/previous-revision" ]] || {
       echo "No previous revision recorded at $STATE_DIR/previous-revision" >&2
       exit 1

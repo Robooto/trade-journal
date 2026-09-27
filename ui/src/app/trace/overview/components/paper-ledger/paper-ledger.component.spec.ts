@@ -2,7 +2,8 @@ import { catalogForTest } from '../../data-access/paper-catalog.fixture';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
-import { PaperLedgerComponent, PaperLedgerResponse } from './paper-ledger.component';
+import { PaperLedgerComponent } from './paper-ledger.component';
+import type { PaperLedgerResponse } from '../../data-access/paper.models';
 
 const RESPONSE = { status: 'available', total: 1, sessions: ['2026-09-21'], cohorts: [], rows: [{
   evaluation_id: 'synthetic', onset_ts: '2026-09-21T08:00:00-07:00', trade_type: 'iron_condor', width_points: 5,

@@ -21,3 +21,7 @@ dist/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Browser smoke artifacts
+output/playwright/
+.playwright-cli/

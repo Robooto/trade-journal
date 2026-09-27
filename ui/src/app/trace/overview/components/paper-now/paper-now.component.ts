@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
-import { PaperLedgerResponse, PaperLedgerRow } from '../paper-ledger/paper-ledger.component';
+import type { PaperLedgerResponse, PaperLedgerRow } from '../../data-access/paper.models';
 
 @Component({
   selector: 'app-paper-now',
