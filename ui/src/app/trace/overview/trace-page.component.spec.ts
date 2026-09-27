@@ -56,6 +56,7 @@ class TraceApiStub {
 class TraceFacadeStub {
   readonly sessions = signal([]);
   readonly researchStatus = signal(null);
+  readonly paperCatalog = signal(null);
   readonly sessionsLoading = signal(false);
   readonly sessionsError = signal<string | null>(null);
   readonly selectedDate = signal('');

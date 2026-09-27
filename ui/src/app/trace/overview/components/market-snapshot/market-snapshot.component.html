@@ -136,7 +136,7 @@
             <h4>{{ table.scope === 'week' ? 'Weekly' : 'Cumulative' }} through {{ table.week_end }} · {{ table.title }}</h4>
             <div class="evidence-table-scroll" tabindex="0" [attr.aria-label]="table.title">
               <table><thead><tr>@for (column of table.columns; track $index) { <th scope="col">{{ column }}</th> }</tr></thead>
-                <tbody>@for (row of table.rows; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> }</tbody>
+                <tbody>@for (row of table.rows; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> } @empty { <tr><td [attr.colspan]="table.columns.length">No qualifying rows in this scope.</td></tr> }</tbody>
               </table>
             </div>
           } @empty { <p>Verified study results unavailable. No historical rates have been substituted.</p> }

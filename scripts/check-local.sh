@@ -10,6 +10,12 @@ else
   PYTHON_BIN="${PYTHON_BIN:-python3}"
 fi
 
+if [[ -x "$ROOT_DIR/../market-data-pipeline/.venv/bin/python" ]]; then
+  echo "==> Research API contract drift check"
+  (cd "$ROOT_DIR/../market-data-pipeline" && PYTHONPATH=src .venv/bin/python scripts/export_research_contracts.py \
+    --check --typescript "$ROOT_DIR/ui/src/app/trace/overview/data-access/generated/research-contracts.ts")
+fi
+
 echo "==> Development dependencies"
 "$PYTHON_BIN" -m pip install --require-hashes -r api/requirements-dev.txt
 

@@ -356,3 +356,14 @@ including missing distance and review progress. The market snapshot adds verifie
 weekly/cumulative distance and confirmation tables, with admissions, skips and
 paired timing context. Research badges separate data readiness from validation;
 Charm's failed replication is visible even after its session floor is met.
+
+### Research presentation maintenance
+
+Paper views discover cohort dates, policy IDs, labels, wing width and entry-rule
+metadata from the pipeline paper catalog. Catalog failures are explicit; the UI
+never substitutes hardcoded policies. Generated research contracts live under
+`ui/src/app/trace/overview/data-access/generated/`; regenerate through the pipeline
+export script, not by editing those files. Dashboard study tables use structured,
+hash-verified evidence rather than Markdown. See the pipeline's
+`docs/api-contracts/research-dashboard.md` for schema, regeneration and legacy-run
+conversion procedures. These changes preserve frozen trading behavior.

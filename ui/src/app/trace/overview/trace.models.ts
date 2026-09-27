@@ -1,3 +1,4 @@
+import type { PublishedEvidence } from './data-access/generated/research-contracts';
 export type TraceContractStatus = 'ready' | 'partial' | 'missing';
 export type TraceSessionRelation =
   | 'historical'
@@ -300,14 +301,7 @@ export interface TraceStudyStatus {
   readonly checkpoint?: TraceStudyCheckpoint;
   readonly data_readiness?: 'ready' | 'collecting' | 'unavailable';
   readonly validation_status?: string;
-  readonly evidence_tables?: readonly {
-    readonly title: string;
-    readonly scope: string;
-    readonly week_end: string;
-    readonly source: string;
-    readonly columns: readonly string[];
-    readonly rows: readonly (readonly string[])[];
-  }[];
+  readonly evidence_tables?: readonly PublishedEvidence[];
   readonly weekly_coverage?: {
     readonly source: string;
     readonly requested_range: readonly string[];

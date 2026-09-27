@@ -1,3 +1,4 @@
+import type { PaperCatalog } from './generated/research-contracts';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, OnDestroy, computed, signal } from '@angular/core';
 import {
@@ -70,6 +71,7 @@ export class TraceFacade implements OnDestroy {
   readonly charmLoading = signal(false);
   readonly charmError = signal<string | null>(null);
   readonly paperScorecard = signal<TracePaperScorecardResponse | null>(null);
+  readonly paperCatalog = signal<PaperCatalog | null>(null);
   readonly paperScorecardLoading = signal(false);
   readonly paperScorecardError = signal<string | null>(null);
   readonly paperReplay = signal<TracePaperReplayResponse | null>(null);
@@ -201,6 +203,13 @@ export class TraceFacade implements OnDestroy {
     if (fromDate || toDate) this.paperScorecardRange = { fromDate, toDate };
     else if (this.paperScorecardRange) ({ fromDate, toDate } = this.paperScorecardRange);
     const requestId = ++this.paperScorecardRequest;
+    this.paperCatalog.set(null);
+    if (toDate && typeof this.api.paperCatalog === 'function') {
+      this.subscriptions.add(this.api.paperCatalog(toDate).subscribe({
+        next: catalog => { if (requestId === this.paperScorecardRequest) this.paperCatalog.set(catalog); },
+        error: () => { if (requestId === this.paperScorecardRequest) this.paperCatalog.set(null); },
+      }));
+    }
     this.paperScorecardLoading.set(true);
     this.paperScorecardError.set(null);
     this.paperScorecard.set(null);

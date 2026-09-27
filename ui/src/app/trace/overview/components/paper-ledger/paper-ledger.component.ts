@@ -1,3 +1,4 @@
+import type { PaperCatalog, DistanceShadow, StrategySummary } from '../../data-access/generated/research-contracts';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -20,26 +21,9 @@ export interface PaperLedgerRow {
   excluded_baseline_outcome?: { status: string; reason: string; gross_pnl_dollars: number | null };
   path: { ts: string; spot: number | null; quote_status: string; prices: unknown }[];
 }
-export interface PaperPerformanceSummary {
-  closed: number; open: number; skipped: number; unevaluable: number;
-  wins: number; losses: number; gross_pnl_dollars: number | null;
-  cost_scenario_pnl_dollars: number | null; closed_sessions: number;
-}
 export interface PaperLedgerResponse {
-  distance_shadow?: {
-    start_date: string; required_sessions: number; required_baseline_closes: number;
-    eligible_sessions: number; eligible_opportunities: number; excluded_opportunities: number; missing_distance_retained: number;
-    baseline: PaperPerformanceSummary; shadow: PaperPerformanceSummary; excluded_baseline: PaperPerformanceSummary;
-  } | null;
-  strategy_summaries?: { strategy_id: string; label: string; summary: {
-    closed: number; open: number; skipped: number; unevaluable: number; closed_sessions: number;
-    gross_pnl_dollars: number | null; cost_scenario_pnl_dollars: number | null;
-    mean_return_on_max_risk: number | null; realized_closed_drawdown_dollars: number | null;
-    entry_coverage: number | null;
-    gross_expectancy_dollars?: number | null; gross_win_rate?: number | null;
-    average_win_dollars?: number | null; average_loss_dollars?: number | null;
-    worst_session_gross_pnl_dollars?: number | null;
-  } }[];
+  distance_shadow?: DistanceShadow | null;
+  strategy_summaries?: readonly StrategySummary[];
   status: string; total: number; rows: PaperLedgerRow[]; sessions: string[];
   cohorts: { strategy_id: string; policy_id: string; width_points: number; protocol_sha256: string;
     summary: { closed: number; open: number; skipped: number; unevaluable: number; gross_pnl_dollars: number | null } }[];
@@ -53,20 +37,32 @@ export interface PaperLedgerResponse {
 export class PaperLedgerComponent implements OnChanges, OnDestroy {
   @Input() fromDate = '';
   @Input() toDate = '';
-  strategy = ''; policy = 'credit-risk-to-close.v4'; width = '10'; status = ''; search = ''; offset = 0;
+  strategy = ''; policy = ''; width = ''; status = ''; search = ''; offset = 0;
   includeArchived = false;
   readonly response = signal<PaperLedgerResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal('');
   private request?: Subscription;
+  private catalogRequest?: Subscription;
+  readonly catalog = signal<PaperCatalog | null>(null);
   constructor(private readonly api: TraceApiService) {}
   ngOnChanges(): void {
-    if (!this.includeArchived) this.policy = this.toDate >= '2026-09-22' ? 'credit-risk-to-close.v4' : 'credit-risk-to-close.v3';
-    this.load(true);
+    this.catalogRequest?.unsubscribe();
+    this.request?.unsubscribe();
+    this.catalog.set(null);
+    this.error.set('');
+    this.response.set(null);
+    if (!this.toDate) return;
+    this.loading.set(true);
+    this.catalogRequest = this.api.paperCatalog(this.toDate).subscribe({
+      next: catalog => { this.catalog.set(catalog); this.archiveChanged(); },
+      error: () => { this.loading.set(false); this.error.set('Paper configuration unavailable. No default policy was substituted.'); },
+    });
   }
-  ngOnDestroy(): void { this.request?.unsubscribe(); }
+  ngOnDestroy(): void { this.request?.unsubscribe(); this.catalogRequest?.unsubscribe(); }
+  get policies() { return this.catalog()?.policies.filter(policy => this.includeArchived ? policy.kind !== 'shadow' : policy.kind !== 'archive') ?? []; }
   load(reset = false): void {
-    if (!this.fromDate || !this.toDate) return;
+    if (!this.fromDate || !this.toDate || !this.policy || !this.catalog()) { this.loading.set(false); return; }
     if (reset) this.offset = 0;
     this.request?.unsubscribe();
     this.response.set(null); this.error.set(''); this.loading.set(true);
@@ -79,8 +75,10 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
   }
   page(delta: number): void { this.offset = Math.max(0, this.offset + delta); this.load(); }
   archiveChanged(): void {
-    this.policy = this.includeArchived ? 'baseline-one-position.v1' : (this.toDate >= '2026-09-22' ? 'credit-risk-to-close.v4' : 'credit-risk-to-close.v3');
-    this.width = this.includeArchived ? '' : '10';
+    const catalog = this.catalog();
+    if (!catalog) return;
+    this.policy = this.includeArchived ? catalog.archive_default_policy_id : catalog.active?.policy_id ?? '';
+    this.width = this.includeArchived ? '' : String(catalog.active?.width_points ?? '');
     this.load(true);
   }
   money(value: number | null | undefined): string { return value == null ? 'Unavailable' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value); }

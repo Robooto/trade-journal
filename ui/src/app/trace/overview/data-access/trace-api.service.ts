@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import type { PaperCatalog } from './generated/research-contracts';
 import type { PaperLedgerResponse } from '../components/paper-ledger/paper-ledger.component';
 
 import {
@@ -33,6 +34,10 @@ export class TraceApiService {
 
   sessions(): Observable<TraceSessionsResponse> {
     return this.http.get<TraceSessionsResponse>(`${this.baseUrl}/sessions`);
+  }
+
+  paperCatalog(date: string): Observable<PaperCatalog> {
+    return this.http.get<PaperCatalog>(`${this.baseUrl}/paper-catalog`, { params: { as_of: date } });
   }
 
   researchStatus(): Observable<TraceResearchStatusResponse> {

@@ -1,3 +1,4 @@
+import { catalogForTest } from '../../data-access/paper-catalog.fixture';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
@@ -19,7 +20,7 @@ const RESPONSE = { status: 'available', total: 1, sessions: ['2026-09-21'], coho
 
 describe('PaperLedgerComponent', () => {
   let fixture: ComponentFixture<PaperLedgerComponent>;
-  const api = { paperTrades: vi.fn(() => of(RESPONSE)) };
+  const api = { paperCatalog: vi.fn((date: string) => of(catalogForTest(date))), paperTrades: vi.fn(() => of(RESPONSE)) };
   beforeEach(async () => {
     api.paperTrades.mockReset().mockReturnValue(of(RESPONSE));
     await TestBed.configureTestingModule({ imports: [PaperLedgerComponent], providers: [{ provide: TraceApiService, useValue: api }] }).compileComponents();

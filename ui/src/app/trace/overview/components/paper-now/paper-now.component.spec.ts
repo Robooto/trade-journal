@@ -1,3 +1,4 @@
+import { catalogForTest } from '../../data-access/paper-catalog.fixture';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
@@ -13,7 +14,7 @@ describe('PaperNowComponent', () => {
       legs: [{ side: 'sell', quantity: 1, option_type: 'put', strike: 990, symbol: 'SPXW 990P' }],
     }],
   };
-  const api = { paperTrades: vi.fn(() => of(response)) };
+  const api = { paperCatalog: vi.fn((date: string) => of(catalogForTest(date))), paperTrades: vi.fn(() => of(response)) };
 
   beforeEach(async () => {
     api.paperTrades.mockReset().mockReturnValue(of(response));
@@ -46,7 +47,7 @@ describe('PaperNowComponent', () => {
     const fixture = TestBed.createComponent(PaperNowComponent);
     fixture.componentRef.setInput('date', '2026-09-18'); fixture.detectChanges();
     expect(api.paperTrades).not.toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain('focused setup begins September 21');
+    expect(fixture.nativeElement.textContent).toContain('focused setup begins 2026-09-21');
   });
 });
 
@@ -58,7 +59,7 @@ describe('PaperNowComponent performance and distance shadow', () => {
       worst_session_gross_pnl_dollars: -900, gross_win_rate: 22 / 31 };
     const result = { status: 'available', rows: [], total: 0, cohorts: [], sessions: [],
       strategy_summaries: [{ strategy_id: 'spx-directional-vertical.v1', label: 'Directional verticals', summary: baseline }] };
-    const api = { paperTrades: vi.fn(() => of(result)) };
+    const api = { paperCatalog: vi.fn((date: string) => of(catalogForTest(date))), paperTrades: vi.fn(() => of(result)) };
     await TestBed.configureTestingModule({ imports: [PaperNowComponent], providers: [{ provide: TraceApiService, useValue: api }] }).compileComponents();
     const fixture = TestBed.createComponent(PaperNowComponent);
     fixture.componentRef.setInput('date', '2026-09-25'); fixture.detectChanges();
@@ -67,10 +68,34 @@ describe('PaperNowComponent performance and distance shadow', () => {
     expect(text).toContain('-$15.97');
     expect(text).toContain('-$201.67');
     expect(text).toContain('-$900.00');
-    expect(text).toContain('Awaiting the September 28 prospective start');
+    expect(text).toContain('Awaiting the 2026-09-28 prospective start');
     expect(api.paperTrades).toHaveBeenCalledTimes(2);
     fixture.componentRef.setInput('date', '2026-09-28'); fixture.detectChanges();
     expect(api.paperTrades).toHaveBeenCalledWith('2026-09-28', '2026-09-28', expect.objectContaining({ policy_id: 'structure-distance-shadow.v1', limit: '1' }));
     expect(fixture.nativeElement.textContent).toContain('No eligible shadow evidence recorded yet');
+  });
+});
+
+describe('Pipeline-owned paper configuration', () => {
+  it('uses changed catalog IDs and dates without a frontend policy update', async () => {
+    const original = catalogForTest('2026-09-28');
+    const catalog = { ...original, active: { ...original.active!, policy_id: 'fixture-policy.v99', start_date: '2026-09-27' },
+      distance_shadow: { ...original.distance_shadow, start_date: '2026-10-01' } };
+    const api = { paperCatalog: vi.fn(() => of(catalog)), paperTrades: vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] })) };
+    await TestBed.configureTestingModule({ imports: [PaperNowComponent], providers: [{ provide: TraceApiService, useValue: api }] }).compileComponents();
+    const fixture = TestBed.createComponent(PaperNowComponent);
+    fixture.componentRef.setInput('date', '2026-09-28'); fixture.detectChanges();
+    expect(api.paperTrades).toHaveBeenCalledWith('2026-09-27', '2026-09-28', expect.objectContaining({ policy_id: 'fixture-policy.v99' }));
+    expect(api.paperTrades).toHaveBeenCalledTimes(2);
+    expect(fixture.nativeElement.textContent).toContain('Awaiting the 2026-10-01 prospective start');
+  });
+
+  it('does not guess a policy when the catalog is unavailable', async () => {
+    const api = { paperCatalog: vi.fn(() => throwError(() => new Error('offline'))), paperTrades: vi.fn() };
+    await TestBed.configureTestingModule({ imports: [PaperNowComponent], providers: [{ provide: TraceApiService, useValue: api }] }).compileComponents();
+    const fixture = TestBed.createComponent(PaperNowComponent);
+    fixture.componentRef.setInput('date', '2026-09-28'); fixture.detectChanges();
+    expect(api.paperTrades).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Paper configuration unavailable');
   });
 });
