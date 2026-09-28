@@ -10,6 +10,27 @@ async page => {
     await page.reload();
     await page.getByRole('heading', { name: 'TRACE', exact: true }).waitFor();
     await page.getByRole('heading', { name: 'Session timeline', exact: true }).waitFor();
+    const trends = page.locator('app-trace-session-trends');
+    const price = trends.getByRole('img', { name: 'TRACE price, wall, and shelf trends', exact: true });
+    const hiro = trends.getByRole('img', { name: 'TRACE SPX and equities HIRO pressure with spot', exact: true });
+    await price.waitFor();
+    await hiro.waitFor();
+    for (const mode of ['Full range', 'Near price', 'Pressure', 'Change']) {
+      const button = trends.getByRole('button', { name: mode, exact: true });
+      await button.click();
+      if (!(await button.getAttribute('class') || '').split(' ').includes('active')) {
+        throw new Error(`Chart mode did not activate: ${mode}`);
+      }
+      for (const chart of [price, hiro]) {
+        const lines = await chart.locator('polyline').evaluateAll(elements => elements.map(el => el.getAttribute('points')));
+        if (!lines.length || lines.some(points => !points || /NaN|Infinity/.test(points))) {
+          throw new Error(`Invalid trend geometry in ${mode}`);
+        }
+      }
+    }
+    if (await price.locator('.trend-active-line').getAttribute('x1') !== await hiro.locator('.trend-active-line').getAttribute('x1')) {
+      throw new Error('Price and HIRO capture cursors are misaligned');
+    }
     await page.getByRole('tab', { name: 'Paper trading', exact: true }).click();
     const paper = page.locator('#paper-workspace-panel');
     await paper.getByRole('heading', { name: 'Paper trading now', exact: true }).waitFor();
@@ -42,7 +63,7 @@ async page => {
     await ledger.getByText(/matching opportunities · dates/).waitFor();
     if (await ledger.getByRole('alert').count()) throw new Error('Ledger reported unavailable evidence');
     if (errors.length) throw new Error(`Browser errors: ${errors.join('; ')}`);
-    return { status: 'passed', checks: ['trace', 'paper', 'range persistence', 'recorded replay', 'ledger'], from: originalFrom, to };
+    return { status: 'passed', checks: ['trace', 'trend modes and cursors', 'paper', 'range persistence', 'recorded replay', 'ledger'], from: originalFrom, to };
   } finally {
     page.off('pageerror', onPageError);
     page.off('console', onConsole);

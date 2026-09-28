@@ -18,11 +18,11 @@
     </div>
   </header>
 
-  @if (facade.researchStatus?.(); as status) {
+  @if (facade.researchStatus(); as status) {
     <details class="research-evidence-strip" aria-label="TRACE research evidence status">
       <summary><span><span class="trace-eyebrow">TRACE + FlowPatrol research</span><strong>{{ status.study_count }} tracked studies</strong></span><small>Registry as of {{ status.as_of }}@if (status.latest_weekly_review) { · latest review {{ status.latest_weekly_review.week_end }} } · {{ status.scoring_enabled_count }} scoring-enabled · expand for status</small></summary>
       <div class="research-evidence-badges">
-        @for (study of facade.visibleResearchStatuses?.() ?? []; track study.id) {
+        @for (study of facade.visibleResearchStatuses(); track study.id) {
           <span class="research-evidence-badge" [attr.data-status]="study.status">
             <strong>{{ study.label }}</strong>
             <small>{{ study.status.replaceAll('_', ' ') }}@if (study.checkpoint) { · {{ study.checkpoint.completed_sessions }}/{{ study.checkpoint.required_sessions }} }</small>
@@ -41,8 +41,8 @@
         }
       </div>
     </details>
-  } @else if (facade.researchStatusError?.()) {
-    <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError?.() }}</span></div></section>
+  } @else if (facade.researchStatusError()) {
+    <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError() }}</span></div></section>
   }
 
   <section class="trace-control-panel" aria-label="TRACE session controls">

@@ -29,35 +29,35 @@
       <span class="legend--expansion"><i></i>Expansion &minus;</span>
     </div>
 
-    @if (priceHasData) {
+    @if (priceChart.priceHasData) {
       <div class="trend-svg-frame">
         <svg class="trend-svg trend-svg--price" [attr.viewBox]="'0 0 ' + width + ' ' + priceHeight" preserveAspectRatio="none" role="img" aria-label="TRACE price, wall, and shelf trends">
-          @for (tick of priceYTicks; track tick.position) {
+          @for (tick of priceChart.priceYTicks; track tick.position) {
             <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
             <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
           }
-          @for (marker of priceNodeMarkers; track marker.key) {
+          @for (marker of priceChart.priceNodeMarkers; track marker.key) {
             @if (marker.negative) {
               <path class="structure-node structure-node--negative" [ngClass]="marker.cssClass" [attr.d]="marker.path" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></path>
             } @else {
               <circle class="structure-node structure-node--positive" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" [attr.r]="marker.radius" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></circle>
             }
           }
-          @for (series of priceSeries; track series.key) {
+          @for (series of priceChart.priceSeries; track series.key) {
             <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
           }
-          <line class="trend-active-line" [attr.x1]="priceActiveX" y1="20" [attr.x2]="priceActiveX" [attr.y2]="priceHeight - 46" />
-          @for (marker of priceMarkers; track marker.key) {
+          <line class="trend-active-line" [attr.x1]="priceChart.priceActiveX" y1="20" [attr.x2]="priceChart.priceActiveX" [attr.y2]="priceHeight - 46" />
+          @for (marker of priceChart.priceMarkers; track marker.key) {
             <circle class="trend-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="4.5" />
           }
           <g class="marked-price-layer" aria-label="Marked price levels">
-            @for (level of priceLevelMarkers; track level.id) {
+            @for (level of priceChart.priceLevelMarkers; track level.id) {
               <line [class]="'marked-price-line-halo marked-price-line-halo--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
               <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
               <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
             }
           </g>
-          @for (tick of priceXTicks; track tick.position) {
+          @for (tick of priceChart.priceXTicks; track tick.position) {
             <text class="trend-axis-label" [attr.x]="tick.position" [attr.y]="priceHeight - 13" text-anchor="middle">{{ tick.label }}</text>
           }
         </svg>
@@ -90,7 +90,7 @@
 
     <div class="hiro-research-note" role="note">
       <span>Direction, magnitude, and opposing-flow balance are descriptive only, not trade approval. High balance has not established lower movement or direction. Rings mark &ge;750M capture moves.</span>
-      <strong>{{ hiroJumpCount }} large moves</strong>
+      <strong>{{ hiroChart.hiroJumpCount }} large moves</strong>
     </div>
 
     <div class="trend-legend" aria-label="HIRO pressure legend">
@@ -103,51 +103,51 @@
       }
     </div>
 
-    @if (hiroHasData) {
+    @if (hiroChart.hiroHasData) {
       <div class="trend-svg-frame">
         <svg class="trend-svg trend-svg--hiro" [attr.viewBox]="'0 0 ' + width + ' ' + hiroHeight" preserveAspectRatio="none" role="img" aria-label="TRACE SPX and equities HIRO pressure with spot">
-          <rect class="hiro-zone hiro-zone--positive" x="76" y="20" [attr.width]="width - 148" [attr.height]="hiroZeroY - 20" />
-          <rect class="hiro-zone hiro-zone--negative" x="76" [attr.y]="hiroZeroY" [attr.width]="width - 148" [attr.height]="hiroHeight - 46 - hiroZeroY" />
+          <rect class="hiro-zone hiro-zone--positive" x="76" y="20" [attr.width]="width - 148" [attr.height]="hiroChart.hiroZeroY - 20" />
+          <rect class="hiro-zone hiro-zone--negative" x="76" [attr.y]="hiroChart.hiroZeroY" [attr.width]="width - 148" [attr.height]="hiroHeight - 46 - hiroChart.hiroZeroY" />
           <text class="hiro-zone-label hiro-zone-label--positive" x="84" y="35">{{ hiroViewMode === 'change' ? 'HIRO rising' : 'Positive HIRO' }}</text>
           <text class="hiro-zone-label hiro-zone-label--negative" x="84" [attr.y]="hiroHeight - 54">{{ hiroViewMode === 'change' ? 'HIRO falling' : 'Negative HIRO' }}</text>
-          @for (tick of hiroYTicks; track tick.position) {
+          @for (tick of hiroChart.hiroYTicks; track tick.position) {
             <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
             <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
           }
-          @for (tick of spotYTicks; track tick.position) {
+          @for (tick of hiroChart.spotYTicks; track tick.position) {
             <text class="trend-axis-label" [attr.x]="width - 64" [attr.y]="tick.position + 4">{{ tick.label }}</text>
           }
-          @if (hiroJumpLineYPositive !== null) {
-            <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroJumpLineYPositive" [attr.x2]="width - 72" [attr.y2]="hiroJumpLineYPositive" />
+          @if (hiroChart.hiroJumpLineYPositive !== null) {
+            <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroChart.hiroJumpLineYPositive" [attr.x2]="width - 72" [attr.y2]="hiroChart.hiroJumpLineYPositive" />
           }
-          @if (hiroJumpLineYNegative !== null) {
-            <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroJumpLineYNegative" [attr.x2]="width - 72" [attr.y2]="hiroJumpLineYNegative" />
+          @if (hiroChart.hiroJumpLineYNegative !== null) {
+            <line class="hiro-jump-threshold" x1="76" [attr.y1]="hiroChart.hiroJumpLineYNegative" [attr.x2]="width - 72" [attr.y2]="hiroChart.hiroJumpLineYNegative" />
           }
-          <line class="hiro-zero-line" x1="76" [attr.y1]="hiroZeroY" [attr.x2]="width - 72" [attr.y2]="hiroZeroY" />
-          @for (marker of hiroBalanceMarkers; track marker.key) {
+          <line class="hiro-zero-line" x1="76" [attr.y1]="hiroChart.hiroZeroY" [attr.x2]="width - 72" [attr.y2]="hiroChart.hiroZeroY" />
+          @for (marker of hiroChart.hiroBalanceMarkers; track marker.key) {
             <line class="hiro-balance-marker" [attr.x1]="marker.x" y1="20" [attr.x2]="marker.x" [attr.y2]="hiroHeight - 46"><title>{{ marker.title }}</title></line>
           }
-          @for (series of hiroSeries; track series.key) {
+          @for (series of hiroChart.hiroSeries; track series.key) {
             <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
           }
-          @for (marker of hiroDirectionMarkers; track marker.key) {
+          @for (marker of hiroChart.hiroDirectionMarkers; track marker.key) {
             <path class="hiro-direction-marker" [ngClass]="marker.cssClass" [attr.d]="marker.path"><title>{{ marker.title }}</title></path>
           }
-          @for (marker of hiroJumpMarkers; track marker.key) {
+          @for (marker of hiroChart.hiroJumpMarkers; track marker.key) {
             <circle class="hiro-jump-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="6"><title>{{ marker.title }}</title></circle>
           }
-          <line class="trend-active-line" [attr.x1]="hiroActiveX" y1="20" [attr.x2]="hiroActiveX" [attr.y2]="hiroHeight - 46" />
-          @for (marker of hiroMarkers; track marker.key) {
+          <line class="trend-active-line" [attr.x1]="hiroChart.hiroActiveX" y1="20" [attr.x2]="hiroChart.hiroActiveX" [attr.y2]="hiroHeight - 46" />
+          @for (marker of hiroChart.hiroMarkers; track marker.key) {
             <circle class="trend-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="4.5" />
           }
           <g class="marked-price-layer" aria-label="Marked price levels">
-            @for (level of hiroPriceLevelMarkers; track level.id) {
+            @for (level of hiroChart.hiroPriceLevelMarkers; track level.id) {
               <line [class]="'marked-price-line-halo marked-price-line-halo--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
               <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
               <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
             }
           </g>
-          @for (tick of hiroXTicks; track tick.position) {
+          @for (tick of hiroChart.hiroXTicks; track tick.position) {
             <text class="trend-axis-label" [attr.x]="tick.position" [attr.y]="hiroHeight - 13" text-anchor="middle">{{ tick.label }}</text>
           }
         </svg>

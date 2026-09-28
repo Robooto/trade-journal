@@ -58,7 +58,7 @@ See [mini operations](mini-operations.md) for preflight, logs, and rollback.
 ## Browser smoke check
 
 `make smoke` uses pinned `@playwright/cli` 0.1.21 through `npx` and defaults to
-`http://192.168.50.248:8877/trace`. It exercises TRACE loading, paper history,
+`http://192.168.50.248:8877/trace`. It exercises TRACE loading, price/HIRO chart modes and cursor alignment, paper history,
 date-range persistence across tabs, a recorded replay, and the contract ledger.
 It reads evidence and changes only browser form state. It does not submit a
 historical range or any trading action. Browser errors fail the check.
@@ -96,7 +96,15 @@ new session without trades does not prevent a needed service deployment.
   timestamp spacing and gaps. It does not inject the facade or fetch data.
 - `data-access/paper.models.ts`: shared ledger/leg response types used by the
   API client and both paper views; generated summary contracts remain pipeline-owned.
-- `TraceFacade`: session data, API requests, cancellation and response state.
+- `TraceFacade`: session/capture orchestration and market-data requests. Its
+  existing paper-facing methods and signals delegate to its owned
+  `TracePaperState`, which keeps paper ranges, catalogs, replay requests,
+  stale-response guards, and subscription cleanup together.
+- `SessionTrendsComponent`: chart inputs, view modes, and displayed context.
+  `price-chart.ts` and `hiro-chart.ts` build fresh chart geometry from input data;
+  `trend-chart.models.ts` and `trend-chart.utils.ts` hold their shared types and
+  rendering helpers. These functions do not fetch data or alter research policy.
+  Empty sessions clear previous geometry, including ticks and cursors.
 - `PaperNowComponent` and `PaperLedgerComponent`: catalog-driven current paper
   presentation and exact contract evidence, respectively.
 

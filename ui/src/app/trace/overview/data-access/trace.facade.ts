@@ -1,5 +1,3 @@
-import type { PaperCatalog } from './generated/research-contracts';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, OnDestroy, computed, signal } from '@angular/core';
 import {
   BehaviorSubject,
@@ -25,9 +23,6 @@ import {
   TraceContractBase,
   TraceDashboardRow,
   TraceGammaProfileResponse,
-  TracePaperReplayResponse,
-  TracePaperReplayEntriesResponse,
-  TracePaperScorecardResponse,
   TraceRealizedVolatilityRow,
   TraceResearchStatusResponse,
   TraceStudyStatus,
@@ -38,6 +33,8 @@ import {
   TraceSessionsResponse,
 } from '../trace.models';
 import { TraceApiService } from './trace-api.service';
+import { TracePaperState } from './trace-paper.state';
+import { toSafeMessage } from './api-errors';
 
 interface CapturedResource<T> {
   readonly value: T | null;
@@ -50,9 +47,6 @@ export class TraceFacade implements OnDestroy {
   private readonly selectedDateSubject = new BehaviorSubject<string>('');
   private readonly gammaProfileSubject = new Subject<{ date: string; ts: string } | null>();
   private readonly reloadSubject = new Subject<void>();
-  private paperScorecardRequest = 0;
-  private paperReplayRequest = 0;
-  private paperReplayEntriesRequest = 0;
 
   readonly sessions = signal<readonly TraceSessionDescriptor[]>([]);
   readonly researchStatus = signal<TraceResearchStatusResponse | null>(null);
@@ -70,17 +64,17 @@ export class TraceFacade implements OnDestroy {
   readonly charmOverview = signal<CharmOverview | null>(null);
   readonly charmLoading = signal(false);
   readonly charmError = signal<string | null>(null);
-  readonly paperScorecard = signal<TracePaperScorecardResponse | null>(null);
-  readonly paperCatalog = signal<PaperCatalog | null>(null);
-  readonly paperScorecardLoading = signal(false);
-  readonly paperScorecardError = signal<string | null>(null);
-  readonly paperReplay = signal<TracePaperReplayResponse | null>(null);
-  readonly paperReplayLoading = signal(false);
-  readonly paperReplayError = signal<string | null>(null);
-  readonly paperReplayEntries = signal<TracePaperReplayEntriesResponse | null>(null);
-  readonly paperReplayEntriesLoading = signal(false);
-  readonly paperReplayEntriesError = signal<string | null>(null);
-  private paperScorecardRange: { fromDate?: string; toDate?: string } | null = null;
+  private readonly paper: TracePaperState;
+  get paperScorecard() { return this.paper.paperScorecard; }
+  get paperCatalog() { return this.paper.paperCatalog; }
+  get paperScorecardLoading() { return this.paper.paperScorecardLoading; }
+  get paperScorecardError() { return this.paper.paperScorecardError; }
+  get paperReplay() { return this.paper.paperReplay; }
+  get paperReplayLoading() { return this.paper.paperReplayLoading; }
+  get paperReplayError() { return this.paper.paperReplayError; }
+  get paperReplayEntries() { return this.paper.paperReplayEntries; }
+  get paperReplayEntriesLoading() { return this.paper.paperReplayEntriesLoading; }
+  get paperReplayEntriesError() { return this.paper.paperReplayEntriesError; }
 
   readonly selectedSession = computed<TraceSessionDescriptor | null>(() =>
     this.sessions().find(session => session.date === this.selectedDate()) ?? null,
@@ -144,6 +138,7 @@ export class TraceFacade implements OnDestroy {
   });
 
   constructor(private readonly api: TraceApiService, private readonly charmApi: CharmApiService) {
+    this.paper = new TracePaperState(api);
     this.subscriptions.add(
       merge(
         this.selectedDateSubject.pipe(distinctUntilChanged()),
@@ -199,75 +194,16 @@ export class TraceFacade implements OnDestroy {
   }
 
   loadPaperScorecard(fromDate?: string, toDate?: string): void {
-    if (typeof this.api.paperScorecard !== 'function') return;
-    if (fromDate || toDate) this.paperScorecardRange = { fromDate, toDate };
-    else if (this.paperScorecardRange) ({ fromDate, toDate } = this.paperScorecardRange);
-    const requestId = ++this.paperScorecardRequest;
-    this.paperCatalog.set(null);
-    if (toDate && typeof this.api.paperCatalog === 'function') {
-      this.subscriptions.add(this.api.paperCatalog(toDate).subscribe({
-        next: catalog => { if (requestId === this.paperScorecardRequest) this.paperCatalog.set(catalog); },
-        error: () => { if (requestId === this.paperScorecardRequest) this.paperCatalog.set(null); },
-      }));
-    }
-    this.paperScorecardLoading.set(true);
-    this.paperScorecardError.set(null);
-    this.paperScorecard.set(null);
-    const subscription = this.api.paperScorecard(fromDate, toDate).pipe(
-      finalize(() => { if (requestId === this.paperScorecardRequest) this.paperScorecardLoading.set(false); }),
-      catchError(error => {
-        if (requestId === this.paperScorecardRequest) this.paperScorecardError.set(toSafeMessage(error, 'Paper scorecard is unavailable.'));
-        return EMPTY;
-      }),
-    ).subscribe(response => { if (requestId === this.paperScorecardRequest) this.paperScorecard.set(response); });
-    this.subscriptions.add(subscription);
+    this.paper.loadPaperScorecard(fromDate, toDate);
   }
 
   loadPaperReplay(date: string, captureId: string, entryCaptureId?: string, strategyId?: string): void {
-    if (typeof this.api.paperReplay !== 'function') return;
-    const requestId = ++this.paperReplayRequest;
-    this.paperReplayLoading.set(true);
-    this.paperReplayError.set(null);
-    this.paperReplay.set(null);
-    const subscription = this.api.paperReplay(date, captureId, entryCaptureId, strategyId).pipe(
-      finalize(() => { if (requestId === this.paperReplayRequest) this.paperReplayLoading.set(false); }),
-      catchError(error => {
-        if (requestId === this.paperReplayRequest) this.paperReplayError.set(toSafeMessage(error, 'No recorded paper trade is available for this capture.'));
-        return EMPTY;
-      }),
-    ).subscribe(response => { if (requestId === this.paperReplayRequest) this.paperReplay.set(response); });
-    this.subscriptions.add(subscription);
+    this.paper.loadPaperReplay(date, captureId, entryCaptureId, strategyId);
   }
 
-  clearPaperReplay(): void {
-    this.paperReplayRequest += 1;
-    this.paperReplayLoading.set(false);
-    this.paperReplay.set(null);
-    this.paperReplayError.set(null);
-  }
-
-  loadPaperReplayEntries(date: string): void {
-    if (typeof this.api.paperReplayEntries !== 'function') return;
-    const requestId = ++this.paperReplayEntriesRequest;
-    this.paperReplayEntriesLoading.set(true);
-    this.paperReplayEntriesError.set(null);
-    const subscription = this.api.paperReplayEntries(date).pipe(
-      finalize(() => { if (requestId === this.paperReplayEntriesRequest) this.paperReplayEntriesLoading.set(false); }),
-      catchError(error => {
-        if (requestId === this.paperReplayEntriesRequest) this.paperReplayEntriesError.set(toSafeMessage(error, 'Recorded paper entries are unavailable.'));
-        return EMPTY;
-      }),
-    ).subscribe(response => { if (requestId === this.paperReplayEntriesRequest) this.paperReplayEntries.set(response); });
-    this.subscriptions.add(subscription);
-  }
-
-  resetPaperReplay(): void {
-    this.clearPaperReplay();
-    this.paperReplayEntriesRequest += 1;
-    this.paperReplayEntriesLoading.set(false);
-    this.paperReplayEntries.set(null);
-    this.paperReplayEntriesError.set(null);
-  }
+  clearPaperReplay(): void { this.paper.clearPaperReplay(); }
+  loadPaperReplayEntries(date: string): void { this.paper.loadPaperReplayEntries(date); }
+  resetPaperReplay(): void { this.paper.resetPaperReplay(); }
 
   private loadResearchStatus(): void {
     if (typeof this.api.researchStatus !== 'function') return;
@@ -315,17 +251,13 @@ export class TraceFacade implements OnDestroy {
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    this.paper.destroy();
   }
 
   private applySessions(response: TraceSessionsResponse): void {
     this.sessions.set(response.sessions);
     const orderedDates = response.sessions.map(session => session.date).sort();
-    if (orderedDates.length && typeof this.api.paperScorecard === 'function') {
-      this.loadPaperScorecard(
-        this.paperScorecardRange?.fromDate ?? orderedDates[Math.max(0, orderedDates.length - 10)],
-        this.paperScorecardRange?.toDate ?? orderedDates[orderedDates.length - 1],
-      );
-    }
+    this.paper.loadForSessions(orderedDates);
     if (!response.sessions.length) {
       this.selectedDate.set('');
       this.bundle.set(null);
@@ -460,12 +392,4 @@ function resourceStatus(
     status: resource?.status ?? 'unavailable',
     warningCount: resource?.warnings.length ?? (error ? 1 : 0),
   };
-}
-
-function toSafeMessage(error: unknown, fallback: string): string {
-  if (error instanceof HttpErrorResponse) {
-    const detail = error.error?.detail;
-    return typeof detail === 'string' && detail ? detail : fallback;
-  }
-  return fallback;
 }

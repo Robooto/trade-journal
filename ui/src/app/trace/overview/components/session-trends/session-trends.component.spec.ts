@@ -100,26 +100,40 @@ describe('SessionTrendsComponent', () => {
   });
 
   it('keeps both responsive charts aligned to the selected capture', () => {
-    const latestX = component.priceActiveX;
+    const latestX = component.priceChart.priceActiveX;
     component.activeIndex = 4;
     component.ngOnChanges();
     fixture.detectChanges();
 
-    expect(component.priceActiveX).toBeLessThan(latestX);
-    expect(component.hiroActiveX).toBe(component.priceActiveX);
+    expect(component.priceChart.priceActiveX).toBeLessThan(latestX);
+    expect(component.hiroChart.hiroActiveX).toBe(component.priceChart.priceActiveX);
     expect(fixture.nativeElement.querySelector('.trend-svg--price').getAttribute('width')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.trend-svg--price .trend-marker')).toHaveLength(5);
     expect(fixture.nativeElement.querySelectorAll('.trend-svg--hiro .trend-marker')).toHaveLength(3);
   });
 
+  it('clears chart geometry when a new session has too few captures', () => {
+    expect(component.priceChart.priceYTicks.length).toBeGreaterThan(0);
+    expect(component.hiroChart.hiroYTicks.length).toBeGreaterThan(0);
+    fixture.componentRef.setInput('rows', rows.slice(0, 1));
+    fixture.detectChanges();
+    expect(component.priceChart.priceHasData).toBe(false);
+    expect(component.hiroChart.hiroHasData).toBe(false);
+    expect(component.priceChart.priceYTicks).toEqual([]);
+    expect(component.hiroChart.hiroYTicks).toEqual([]);
+    expect(component.priceChart.priceNodeMarkers).toEqual([]);
+    expect(component.hiroChart.hiroMarkers).toEqual([]);
+    expect(fixture.nativeElement.querySelectorAll('polyline')).toHaveLength(0);
+  });
+
   it('changes only the price scale when full range is selected', () => {
-    const nearLabels = component.priceYTicks.map(tick => tick.label);
+    const nearLabels = component.priceChart.priceYTicks.map(tick => tick.label);
     component.setPriceWindowMode('full');
-    const fullLabels = component.priceYTicks.map(tick => tick.label);
+    const fullLabels = component.priceChart.priceYTicks.map(tick => tick.label);
 
     expect(component.priceWindowMode).toBe('full');
     expect(fullLabels).not.toEqual(nearLabels);
-    expect(component.hiroHasData).toBe(true);
+    expect(component.hiroChart.hiroHasData).toBe(true);
   });
 
   it('highlights 750M capture changes as magnitude-only events', () => {
@@ -128,7 +142,7 @@ describe('SessionTrendsComponent', () => {
       : row));
     fixture.detectChanges();
 
-    expect(component.hiroJumpCount).toBeGreaterThan(0);
+    expect(component.hiroChart.hiroJumpCount).toBeGreaterThan(0);
     expect(fixture.nativeElement.querySelectorAll('.hiro-jump-marker').length).toBeGreaterThan(0);
   });
 
