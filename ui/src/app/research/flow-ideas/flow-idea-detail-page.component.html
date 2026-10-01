@@ -62,6 +62,8 @@
     (refreshRequested)="refreshBrokerageReads()"
   ></app-flow-watchlist-control>
 
+  @if (!loading()) { <app-flow-actions [summary]="flowActions()"></app-flow-actions> }
+
   <section class="detail-grid">
     <app-report-history
       [history]="history()"

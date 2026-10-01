@@ -17,6 +17,7 @@
   } @else if (!contracts.rows.length) {
     <p class="detail-state" role="status">No accepted contract evidence is available.</p>
   } @else {
+    <p class="detail-state">SpotGamma model counts: BTO buys to open longs; BTC buys to close shorts; STO sells to open shorts; STC sells to close longs. Counts can repeat across report sections.</p>
     <div class="evidence-groups">
       @for (group of groups; track group.key) {
         <article class="evidence-group">
@@ -24,6 +25,9 @@
           <p>{{ group.rows.length }} {{ group.rows.length === 1 ? 'row' : 'rows' }}</p>
           @for (row of group.rows; track row.source_row_index + '-' + row.source_row_text) {
             <dl class="evidence-row">
+              <div><dt>Contract</dt><dd>{{ row.symbol }} {{ row.expiration || 'Expiration unavailable' }} {{ row.strike ?? 'Strike unavailable' }} {{ row.option_type || 'Type unavailable' }}</dd></div>
+              <div><dt>Bought</dt><dd><span title="Buy to open long options">BTO {{ row.bto == null ? 'Unavailable' : (row.bto | number) }}</span> / <span title="Buy to close short options">BTC {{ row.btc == null ? 'Unavailable' : (row.btc | number) }}</span></dd></div>
+              <div><dt>Sold</dt><dd><span title="Sell to open short options">STO {{ row.sto == null ? 'Unavailable' : (row.sto | number) }}</span> / <span title="Sell to close long options">STC {{ row.stc == null ? 'Unavailable' : (row.stc | number) }}</span></dd></div>
               <div><dt>Report</dt><dd>{{ row.report_date }}</dd></div>
               <div><dt>Trading data</dt><dd>{{ row.trading_date }}</dd></div>
               <div><dt>Section</dt><dd>{{ row.section || 'Unavailable' }}</dd></div>

@@ -1,3 +1,4 @@
+import { FlowActionsComponent } from '../flow-actions/flow-actions.component';
 import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -15,7 +16,7 @@ describe('ReportHistoryComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ReportHistoryComponent],
+      declarations: [ReportHistoryComponent, FlowActionsComponent],
       imports: [
         CommonModule,
         SharedMaterialModule,

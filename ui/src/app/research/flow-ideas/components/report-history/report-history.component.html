@@ -31,6 +31,7 @@
           <a [href]="row.equityhub_url" target="_blank" rel="noopener">
             Source-date EquityHub
           </a>
+          <app-flow-actions [summary]="row.flow_actions" [compact]="true"></app-flow-actions>
           <p>{{ row.reason_text || 'Active FlowPatrol watch.' }}</p>
         </li>
       }

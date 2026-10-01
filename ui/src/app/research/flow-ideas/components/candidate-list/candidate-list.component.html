@@ -64,6 +64,7 @@
                 <span [ngClass]="percentileTone(candidate.vega_percentile)"><small>Vega</small><strong>{{ formatPercentile(candidate.vega_percentile) }}</strong></span>
               </span>
             </span>
+            <app-flow-actions [summary]="candidate.flow_actions" [compact]="true"></app-flow-actions>
             <span class="candidate-tags">
               @for (reason of candidate.reason_codes.slice(0, 4); track reason) {
                 <span [ngClass]="reasonTone(reason)">{{ reason.replaceAll('_', ' ') }}</span>

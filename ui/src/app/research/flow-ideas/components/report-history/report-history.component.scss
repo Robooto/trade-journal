@@ -96,3 +96,5 @@
   .history-footer { align-items: stretch; flex-direction: column; }
   .history-footer button { width: 100%; }
 }
+
+.history-row app-flow-actions { grid-column: 1 / -1; }

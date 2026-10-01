@@ -1,3 +1,4 @@
+import { FlowActionsComponent } from './flow-ideas/components/flow-actions/flow-actions.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
@@ -26,6 +27,7 @@ import { WatchlistResearchPageComponent } from './watchlists/watchlist-research-
     FlowFiltersComponent,
     FlowIdeaInspectorComponent,
     FlowMetricsComponent,
+    FlowActionsComponent,
     CandidateListComponent,
     ReportHistoryComponent,
     ContractEvidenceComponent,

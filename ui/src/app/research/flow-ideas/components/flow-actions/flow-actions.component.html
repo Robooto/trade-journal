@@ -1,0 +1,29 @@
+@if (summary?.counts; as counts) {
+  <div class="actions" [class.compact]="compact" aria-label="Bought and sold option contracts">
+    <div class="action-counts">
+      <span title="Buy to open: add long options">BTO <strong>{{ counts.bto | number:'1.0-0' }}</strong></span>
+      <span title="Buy to close: cover short options">BTC <strong>{{ counts.btc | number:'1.0-0' }}</strong></span>
+      <span title="Sell to open: add short options">STO <strong>{{ counts.sto | number:'1.0-0' }}</strong></span>
+      <span title="Sell to close: reduce long options">STC <strong>{{ counts.stc | number:'1.0-0' }}</strong></span>
+    </div>
+    @if (summary?.bought_share != null) {
+      <span>Bought {{ summary!.bought_share | percent:'1.0-0' }} / Sold {{ 1 - summary!.bought_share! | percent:'1.0-0' }} · Opening {{ summary!.opening_share | percent:'1.0-0' }}</span>
+    } @else { <span>No classified activity</span> }
+    @if (summary?.status === 'partial') { <span>Partial action evidence</span> }
+    @if (!compact) {
+      <p>BTO buys to open long options; BTC buys to close shorts. STO sells to open shorts; STC sells to close longs.</p>
+      @if (summary?.calls; as calls) {
+        <p>Calls: BTO {{ calls.bto | number }} / BTC {{ calls.btc | number }} / STO {{ calls.sto | number }} / STC {{ calls.stc | number }}</p>
+      }
+      @if (summary?.puts; as puts) {
+        <p>Puts: BTO {{ puts.bto | number }} / BTC {{ puts.btc | number }} / STO {{ puts.sto | number }} / STC {{ puts.stc | number }}</p>
+      }
+      <p>SpotGamma model classifications for {{ summary?.contract_count }} distinct contracts shown in this report. Repeated sections count once. Buying puts and buying calls have different directional implications; spread legs need to be read together.</p>
+      @if (summary?.status === 'partial') {
+        <p>{{ summary?.conflicting_contract_count }} contracts with conflicting counts and {{ summary?.incomplete_row_count }} incomplete rows excluded.</p>
+      }
+    }
+  </div>
+} @else {
+  <span class="unavailable">Buy/sell breakdown unavailable</span>
+}

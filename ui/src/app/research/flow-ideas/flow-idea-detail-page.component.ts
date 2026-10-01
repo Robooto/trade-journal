@@ -58,6 +58,9 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
   readonly symbol = signal('');
   readonly history = signal<FlowSymbolHistoryResponse | null>(null);
   readonly contracts = signal<FlowContractsResponse | null>(null);
+  readonly flowActions = computed(() =>
+    this.history()?.rows.find(row => row.trading_date === this.tradingDate())?.flow_actions,
+  );
   readonly historyError = signal<string | null>(null);
   readonly contractsError = signal<string | null>(null);
   readonly loading = signal(true);

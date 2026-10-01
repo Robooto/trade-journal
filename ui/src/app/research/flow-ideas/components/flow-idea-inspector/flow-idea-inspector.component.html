@@ -73,6 +73,8 @@
       ></app-flow-watchlist-control>
     </div>
 
+    <app-flow-actions [summary]="idea.flow_actions"></app-flow-actions>
+
     <app-report-history [history]="history()" [loading]="loading()" [error]="historyError()"></app-report-history>
     <app-contract-evidence [contracts]="contracts()" [loading]="loading()" [error]="contractsError()"></app-contract-evidence>
   } @else {

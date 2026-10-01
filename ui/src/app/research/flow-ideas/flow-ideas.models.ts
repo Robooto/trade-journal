@@ -39,7 +39,29 @@ export interface FlowBrokerageEnrichment {
   readonly warnings: readonly string[];
 }
 
+export interface FlowActionCounts {
+  readonly bto: number;
+  readonly btc: number;
+  readonly sto: number;
+  readonly stc: number;
+}
+
+export interface FlowActionSummary {
+  readonly schema_version: 'flowpatrol-actions.v1';
+  readonly status: 'ready' | 'partial' | 'unavailable';
+  readonly contract_count: number;
+  readonly conflicting_contract_count: number;
+  readonly incomplete_row_count: number;
+  readonly counts: FlowActionCounts | null;
+  readonly calls: FlowActionCounts | null;
+  readonly puts: FlowActionCounts | null;
+  readonly bought_share: number | null;
+  readonly opening_share: number | null;
+  readonly dominant_action: string | null;
+}
+
 export interface FlowCandidate {
+  readonly flow_actions?: FlowActionSummary | null;
   readonly trading_date: string;
   readonly symbol: string;
   readonly research_priority: number | null;
@@ -157,6 +179,7 @@ export interface FlowBrokerageContext {
 }
 
 export interface FlowHistoryRow {
+  readonly flow_actions?: FlowActionSummary | null;
   readonly trading_date: string;
   readonly symbol: string;
   readonly research_priority: number | null;
@@ -180,6 +203,13 @@ export interface FlowSymbolHistoryResponse {
 }
 
 export interface FlowContractEvidenceRow {
+  readonly expiration?: string | null;
+  readonly strike?: number | null;
+  readonly option_type?: string | null;
+  readonly bto?: number | null;
+  readonly btc?: number | null;
+  readonly sto?: number | null;
+  readonly stc?: number | null;
   readonly report_date: string;
   readonly trading_date: string;
   readonly symbol: string;
