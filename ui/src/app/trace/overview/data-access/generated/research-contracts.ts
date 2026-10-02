@@ -84,6 +84,23 @@ export type PaperSummary = {
   readonly mean_return_on_max_risk?: number | null;
 };
 
+export type PrimaryResearchTest = {
+  readonly scope: "week" | "cumulative";
+  readonly through: string;
+  readonly protocol_id: string;
+  readonly role: string;
+  readonly horizon: string;
+  readonly validation_status: string;
+  readonly coverage_ready: boolean;
+  readonly observations: number;
+  readonly sessions: number;
+  readonly effect: number | null;
+  readonly interval_low: number | null;
+  readonly interval_high: number | null;
+  readonly unit: "pp" | "SPX points";
+  readonly expected_direction?: string | null;
+};
+
 export type PublishedEvidence = {
   readonly id: string;
   readonly title: string;
@@ -108,9 +125,11 @@ export type ResearchStudy = {
   readonly label: string;
   readonly status: string;
   readonly scoring_enabled: boolean;
+  readonly research_priority?: "high" | "normal" | "low" | null;
   readonly data_readiness: "ready" | "collecting" | "unavailable";
   readonly validation_status: string;
   readonly evidence_tables?: ReadonlyArray<PublishedEvidence>;
+  readonly primary_tests?: ReadonlyArray<PrimaryResearchTest>;
 };
 
 export type StrategySummary = {

@@ -20,6 +20,7 @@ import { TraceApiService } from './data-access/trace-api.service';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
+import { TraceResearchStatusResponse, TraceStudyStatus } from './trace.models';
 import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.component';
 import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
@@ -58,9 +59,9 @@ class TraceApiStub {
 }
 class TraceFacadeStub {
   readonly sessions = signal([]);
-  readonly researchStatus = signal(null);
+  readonly researchStatus = signal<TraceResearchStatusResponse | null>(null);
   readonly researchStatusError = signal<string | null>(null);
-  readonly visibleResearchStatuses = signal([]);
+  readonly visibleResearchStatuses = signal<readonly TraceStudyStatus[]>([]);
   readonly paperCatalog = signal(null);
   readonly sessionsLoading = signal(false);
   readonly sessionsError = signal<string | null>(null);
@@ -125,6 +126,41 @@ describe('TracePageComponent', () => {
 
     fixture = TestBed.createComponent(TracePageComponent);
     fixture.detectChanges();
+  });
+
+  it('keeps research priority separate from scope validation and missing fresh-flow evidence', () => {
+    const studies: readonly TraceStudyStatus[] = [
+      { id: 'signed-gex-interaction', label: 'Signed GEX', status: 'research', scoring_enabled: false,
+        research_priority: 'high', data_readiness: 'unavailable', validation_status: 'not_assessed',
+        primary_tests: [
+          { scope: 'week', through: '2026-10-02', protocol_id: 'signed-gex-negative-breach-v1', role: 'primary',
+            horizon: 'H30 (30 minutes)', validation_status: 'collecting', coverage_ready: false,
+            observations: 13, sessions: 5, effect: 30.8, interval_low: 7.7, interval_high: 70,
+            unit: 'pp', expected_direction: 'positive' },
+          { scope: 'cumulative', through: '2026-10-02', protocol_id: 'signed-gex-negative-breach-v1', role: 'primary',
+            horizon: 'H30 (30 minutes)', validation_status: 'supported', coverage_ready: true,
+            observations: 342, sessions: 90, effect: 9.9, interval_low: 2.7, interval_high: 16.9,
+            unit: 'pp', expected_direction: 'positive' },
+        ] },
+      { id: 'charm-delta-pressure', label: 'Charm pressure', status: 'not_replicated', scoring_enabled: false,
+        research_priority: 'low', data_readiness: 'ready', validation_status: 'not_replicated' },
+      { id: 'flowpatrol-longitudinal', label: 'FlowPatrol watch retention', status: 'collecting', scoring_enabled: false },
+    ];
+    facade.researchStatus.set({schema_version: 'trace-study-registry.v1', as_of: '2026-10-02',
+      evidence_version: 'week-end-2026-10-02', study_count: 3, scoring_enabled_count: 0, studies});
+    facade.visibleResearchStatuses.set(studies);
+    fixture.detectChanges();
+    const badges = fixture.nativeElement.querySelectorAll('.research-evidence-badge');
+    expect(badges[0].textContent).toContain('Research priority: high');
+    expect(badges[0].textContent).toContain('Weekly primary');
+    expect(badges[0].textContent).toContain('Cumulative primary');
+    expect(badges[0].textContent).toContain('342 matched observations');
+    expect(badges[0].textContent).not.toContain('Validation: not assessed');
+    expect(badges[1].textContent).toContain('Research priority: low');
+    expect(badges[1].textContent).toContain('sample floor met');
+    expect(badges[1].textContent).toContain('Validation: not replicated');
+    expect(badges[2].textContent).toContain('Fresh qualifying counts unavailable');
+    expect(badges[2].textContent).toContain('Watch retention includes carried watches');
   });
 
   it('loads one operational dashboard without migration scaffolding', () => {

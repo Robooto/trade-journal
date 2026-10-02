@@ -1,4 +1,4 @@
-import type { PublishedEvidence } from './data-access/generated/research-contracts';
+import type { PrimaryResearchTest, PublishedEvidence } from './data-access/generated/research-contracts';
 export type TraceContractStatus = 'ready' | 'partial' | 'missing';
 export type TraceSessionRelation =
   | 'historical'
@@ -297,11 +297,13 @@ export interface TraceStudyStatus {
   readonly label: string;
   readonly status: TraceStudyDisposition;
   readonly scoring_enabled: boolean;
+  readonly research_priority?: 'high' | 'normal' | 'low' | null;
   readonly note?: string;
   readonly checkpoint?: TraceStudyCheckpoint;
   readonly data_readiness?: 'ready' | 'collecting' | 'unavailable';
   readonly validation_status?: string;
   readonly evidence_tables?: readonly PublishedEvidence[];
+  readonly primary_tests?: readonly PrimaryResearchTest[];
   readonly weekly_coverage?: {
     readonly source: string;
     readonly requested_range: readonly string[];
