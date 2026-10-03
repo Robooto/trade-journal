@@ -166,7 +166,8 @@ describe('SessionTrendsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('1.90B combined');
     expect(fixture.nativeElement.textContent).toContain('Positive gamma');
     expect(fixture.nativeElement.textContent).toContain('has not established lower movement or direction');
-    expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(0);
+    expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(1);
+    expect(fixture.nativeElement.textContent).toContain('High opposing balance');
 
     const changeButton = Array.from<HTMLButtonElement>(
       fixture.nativeElement.querySelectorAll('.trend-segment button'),
@@ -174,7 +175,6 @@ describe('SessionTrendsComponent', () => {
     changeButton?.click();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(1);
-    expect(fixture.nativeElement.textContent).toContain('High opposing balance');
+    expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(0);
   });
 });
