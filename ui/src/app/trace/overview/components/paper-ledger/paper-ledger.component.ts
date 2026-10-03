@@ -54,7 +54,9 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
   archiveChanged(): void {
     const catalog = this.catalog();
     if (!catalog) return;
-    this.policy = this.includeArchived ? catalog.archive_default_policy_id : catalog.active?.policy_id ?? '';
+    const trial = catalog.forward_experiment;
+    const preferred = trial?.start_date && this.toDate >= trial.start_date ? trial.id : catalog.active?.policy_id;
+    this.policy = this.includeArchived ? catalog.archive_default_policy_id : preferred ?? '';
     this.width = this.includeArchived ? '' : String(catalog.active?.width_points ?? '');
     this.load(true);
   }

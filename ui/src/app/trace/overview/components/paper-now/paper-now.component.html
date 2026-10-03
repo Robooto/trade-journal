@@ -5,7 +5,7 @@
   </header>
   <div class="strategy-grid" aria-label="Paper strategies">
     <article>
-      <strong>Directional verticals</strong>
+      <strong>Directional verticals · collection control</strong>
       <p>{{ catalog()?.active?.width_points }}-point SPX spreads using our existing directional entry hierarchy. Fresh qualifying signals can open additional trades while earlier trades remain open. No hierarchy-change exits.</p>
     </article>
     <article>
@@ -18,7 +18,66 @@
     <p>Cohort from {{ active.start_date }} · minimum entry credit {{ active.minimum_entry_credit_dollars | currency }} per one-lot vertical or whole iron condor. Lower-credit quotes are skipped, not counted as losses.</p>
   }
   @if (catalogError()) { <p role="alert">Paper configuration unavailable. No default policy was substituted.</p> }
-  <h3>Strategy comparison · cohort from {{ cohortStart }}</h3>
+  @if (catalog()?.forward_experiment; as experiment) {
+    <section class="distance-shadow" aria-label="Forward paper trial">
+      <h3>Next paper strategy · distance filter + one position</h3>
+      <p>One open directional spread across both directions. Exclude the stored fragile distance band; retain and flag missing distance. Keep the $50 minimum credit, 50% target, 2× buyback-debit stop and regular close. A fresh signal must arrive after the previous known exit; skipped signals are not queued.</p>
+      <p>Forward evidence starts {{ experiment.start_date }}. Earlier replay results are development data. Baseline and distance-only controls continue collecting.</p>
+      @if (experiment.start_date && date < experiment.start_date) { <p>Scheduled for {{ experiment.start_date }}; no forward outcomes yet.</p> }
+      @else if (trialError() || trial()?.status === 'unavailable') { <p role="alert">Forward trial evidence unavailable; missing outcomes are not zero returns.</p> }
+      @else if (trial()?.forward_experiment; as test) {
+        <p>Review progress: {{ test.complete_eligible_sessions }}/{{ test.required_sessions }} complete eligible sessions · {{ test.eligible_trial_closes }}/{{ test.required_trial_closes }} trial closes. Review only; no automatic promotion.</p>
+        <div class="strategy-grid">
+          @for (arm of [{label: 'One-position trial', result: test.trial}, {label: 'Same-date distance-only control', result: test.control}]; track arm.label) {
+            <article><strong>{{ arm.label }}</strong>
+              <p>{{ arm.result.closed }} closed · {{ arm.result.open }} open · {{ arm.result.unevaluable }} unevaluable · {{ arm.result.skipped }} skipped</p>
+              <dl class="performance-metrics">
+                <div><dt>After assumed costs</dt><dd>{{ money(arm.result.cost_scenario_pnl_dollars) }}</dd></div>
+                <div><dt>Net scenario / close</dt><dd>{{ money(arm.result.cost_scenario_expectancy_dollars) }}</dd></div>
+                <div><dt>Average win / loss</dt><dd>{{ money(arm.result.average_win_dollars) }} / {{ money(arm.result.average_loss_dollars) }}</dd></div>
+                <div><dt>Observed / break-even win rate</dt><dd>{{ arm.result.gross_win_rate == null ? 'Not available' : (arm.result.gross_win_rate | percent:'1.1-1') }} / {{ arm.result.empirical_break_even_win_rate == null ? 'Not available' : (arm.result.empirical_break_even_win_rate | percent:'1.1-1') }}</dd></div>
+                <div><dt>Completed paths</dt><dd>{{ arm.result.completed_path_coverage == null ? 'Not available' : (arm.result.completed_path_coverage | percent:'1.1-1') }} · {{ arm.result.completed_path_denominator }} admitted</dd></div>
+              </dl>
+            </article>
+          }
+        </div>
+        <p>Complete-session mean after assumed costs: {{ money(test.mean_session_net_scenario) }}. Same-session mean difference vs control: {{ money(test.mean_session_difference) }}.</p>
+        @if (test.mean_session_net_interval_95; as interval) { <p>95% session bootstrap interval: {{ money(interval[0]) }} to {{ money(interval[1]) }}. Small samples do not establish profitability.</p> }
+        <small>Opportunity totals above include partial sessions. Session means and review progress require complete source clocks and outcomes; complete no-entry sessions count as zero, unavailable sessions do not.</small>
+        <details><summary>Daily comparison and skipped signals</summary>
+          @for (day of test.daily; track day.date) { <p>{{ day.date }} · {{ day.complete ? 'complete' : 'incomplete — excluded from session means' }} · trial {{ money(day.trial_net_scenario) }} · control {{ money(day.control_net_scenario) }}</p> }
+          @for (reason of test.skip_reasons | keyvalue; track reason.key) { <p>{{ reason.key.replaceAll('_', ' ') }}: {{ reason.value }}</p> }
+          <p>Missing distance retained: {{ test.missing_distance_retained }}</p>
+        </details>
+      } @else { <p>No forward evidence recorded yet.</p> }
+      @if (experiment.start_date && date >= experiment.start_date) {
+        <h4>Trial session trades · {{ date }}</h4>
+        @if (trialSessionError() || trialSession()?.status === 'unavailable') { <p role="alert">Trial session evidence unavailable.</p> }
+        @else {
+          @for (trade of trialTrades(); track trade.evaluation_id) {
+            <details><summary>{{ trade.trade_type.replaceAll('_', ' ') }} · {{ trade.onset_ts | date:'shortTime' }} · {{ trade.status }} · {{ money(trade.gross_pnl_dollars) }} gross</summary>
+              <p>{{ trade.reason.replaceAll('_', ' ') }} · entry {{ money(trade.entry_credit_dollars) }} · exit {{ money(trade.exit_debit_dollars) }}</p>
+              @for (leg of trade.legs; track leg.symbol) { <p>{{ leg.side }} {{ leg.quantity }} {{ leg.symbol }}</p> }
+            </details>
+          } @empty { <p>No admitted trial trades available yet.</p> }
+        }
+      }
+    </section>
+  }
+  @if (catalog()?.quote_pilot; as config) {
+    <section class="distance-shadow" aria-label="Minute quote-quality pilot">
+      <h3>Minute quote-quality pilot · {{ config.start_date }}–{{ config.end_date }}</h3>
+      <p>Separate observations of admitted baseline positions. Existing trade exits stay on their ten-minute definition while we measure coverage, freshness and gaps.</p>
+      @if (pilotError() || pilot()?.status === 'unavailable') { <p role="alert">Quote pilot evidence unavailable.</p> }
+      @else if (pilot(); as audit) {
+        <p>{{ audit.recorded_minutes }}/{{ audit.expected_minutes }} minute records · {{ audit.missing_minutes.length }} missing minutes · {{ audit.valid_observations }} valid / {{ audit.unavailable_observations }} unavailable position observations.</p>
+        <p>{{ audit.repeated_timestamp_observations }} observations repeat provider timestamps. Maximum valid quote age {{ audit.maximum_quote_age_seconds ?? 'unavailable' }} seconds; leg skew {{ audit.maximum_leg_skew_seconds ?? 'unavailable' }} seconds.</p>
+        @if (audit.authentication_blocked) { <p role="alert">Sampling stopped for this session because brokerage authorization is unavailable.</p> }
+        <details><summary>Sample states</summary>@for (state of audit.sample_states | keyvalue; track state.key) { <p>{{ state.key.replaceAll('_', ' ') }}: {{ state.value }}</p> }</details>
+      } @else { <p>Collection is scheduled for the pilot dates. No minute-path results have been measured yet.</p> }
+    </section>
+  }
+  <h3>Collection controls · cohort from {{ cohortStart }}</h3>
   @if (comparisonError() || comparison()?.status === 'unavailable') { <p role="alert">Comparison evidence unavailable. Missing data is not zero profit.</p> }
   @else if (comparison(); as data) {
     <div class="strategy-grid">
@@ -29,6 +88,9 @@
           <p>Gross P/L: {{ strategy.summary.gross_pnl_dollars == null ? 'Not available' : (strategy.summary.gross_pnl_dollars | currency) }}</p>
           <p>After assumed costs: {{ strategy.summary.cost_scenario_pnl_dollars == null ? 'Not available' : (strategy.summary.cost_scenario_pnl_dollars | currency) }}</p>
           <dl class="performance-metrics">
+            <div><dt>Net scenario / close</dt><dd>{{ money(strategy.summary.cost_scenario_expectancy_dollars) }}</dd></div>
+            <div><dt>Break-even win rate after assumed costs</dt><dd>{{ strategy.summary.empirical_break_even_win_rate == null ? 'Not available' : (strategy.summary.empirical_break_even_win_rate | percent:'1.1-1') }}</dd></div>
+            <div><dt>Completed paths</dt><dd>{{ strategy.summary.completed_path_coverage == null ? 'Not available' : (strategy.summary.completed_path_coverage | percent:'1.1-1') }} · {{ strategy.summary.completed_path_denominator ?? 'unavailable' }} admitted</dd></div>
             <div><dt>Gross expectancy / close</dt><dd>{{ money(strategy.summary.gross_expectancy_dollars) }}</dd></div>
             <div><dt>Average winning close</dt><dd>{{ money(strategy.summary.average_win_dollars) }}</dd></div>
             <div><dt>Average losing close</dt><dd>{{ money(strategy.summary.average_loss_dollars) }}</dd></div>
@@ -70,7 +132,7 @@
     @else { <p role="status">Loading shadow evidence…</p> }
   </section>
   <div class="session-trades">
-    <h3>Session trades <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
+    <h3>Session trades · collection controls <small>@if (date) {as of {{ date }} · latest TRACE session}</small></h3>
     @if (!catalog()?.active) { <p>The focused setup begins {{ catalog()?.focused_start_date || 'when configuration is available' }}. Older trades remain in the archive below.</p> }
     @else if (loading()) { <p role="status">Checking recorded trades…</p> }
     @else if (error() || response()?.status === 'unavailable') { <p role="alert">Session trade evidence is unavailable.</p> }

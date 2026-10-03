@@ -98,3 +98,19 @@ run `PRAGMA integrity_check` before restart.
 
 The retired Raspberry Pi is only a stopped, write-disabled recovery snapshot.
 Do not deploy to it. See `raspberry-pi-operations.md` for the retirement guard.
+
+## Paper trial and quote-quality pilot
+
+From October 5, the paper tab foregrounds the pipeline-owned distance-filter /
+one-position trial. The existing overlapping baseline and distance-only control
+continue collecting. The API catalog supplies dates and IDs; no UI policy defaults
+substitute for unavailable configuration. Trial results exclude all earlier
+replay data and surface payoff math plus completed-path coverage.
+
+The pipeline's isolated minute sampler runs October 5–9 and uses only
+`POST /v1/broker/option-quote-snapshots`. This route now preserves throttling as
+429 with a bounded Retry-After, authorization failure as 403, and other temporary
+request failures as 503. It never retries login or calls order endpoints. Pipeline
+owns the pilot timer, independent research store, quality audit and backups; see
+`../market-data-pipeline/docs/operations/paper-forward-trial-2026-10-05.md` in the
+workspace for installation, observation gates and rollback.

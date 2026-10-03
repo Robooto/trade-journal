@@ -57,3 +57,18 @@ async def test_option_quote_preserves_provider_timestamp(client, monkeypatch, ti
     })
     assert response.status_code == 200
     assert response.json()["observations"][0]["quoted_at"] == "2026-09-04T15:00:00Z"
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('upstream, expected, hint', [(429, 429, '900'), (401, 403, None), (503, 503, '900')])
+async def test_quote_retry_status_preserves_throttling_and_stops_auth(client, monkeypatch, upstream, expected, hint):
+    import requests
+    monkeypatch.setattr(broker.tastytrade, 'get_active_token', lambda db: 'Bearer FAKE')
+    def failure(*args):
+        response = requests.Response(); response.status_code = upstream
+        response.headers['Retry-After'] = '99999'
+        raise requests.HTTPError('private upstream body', response=response)
+    monkeypatch.setattr(broker.tastytrade, 'fetch_market_data', failure)
+    response = await client.post('/v1/broker/option-quote-snapshots', json={'underlying_symbol':'SPX', 'option_symbols':['OPTION']})
+    assert response.status_code == expected
+    assert response.headers.get('retry-after') == hint
+    assert 'private upstream body' not in response.text

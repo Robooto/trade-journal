@@ -29,6 +29,8 @@ export type PaperCatalog = {
   readonly policies: ReadonlyArray<PaperPolicy>;
   readonly distance_shadow: PaperPolicy;
   readonly cost_label: string;
+  readonly forward_experiment?: PaperPolicy | null;
+  readonly quote_pilot?: QuotePilotConfig | null;
 };
 
 export type PaperCohort = {
@@ -52,6 +54,7 @@ export type PaperLedgerContract = {
   readonly sessions: ReadonlyArray<string>;
   readonly strategy_summaries?: ReadonlyArray<StrategySummary>;
   readonly distance_shadow?: DistanceShadow | null;
+  readonly forward_experiment?: Readonly<Record<string, unknown>> | null;
 };
 
 export type PaperPolicy = {
@@ -82,6 +85,11 @@ export type PaperSummary = {
   readonly closed_sessions?: number | null;
   readonly cost_scenario_pnl_dollars?: number | null;
   readonly mean_return_on_max_risk?: number | null;
+  readonly cost_scenario_expectancy_dollars?: number | null;
+  readonly empirical_break_even_win_rate?: number | null;
+  readonly completed_path_coverage?: number | null;
+  readonly completed_path_denominator?: number | null;
+  readonly scenario_cost_per_close_dollars?: number | null;
 };
 
 export type PrimaryResearchTest = {
@@ -109,6 +117,19 @@ export type PublishedEvidence = {
   readonly scope: "week" | "cumulative";
   readonly week_end: string;
   readonly source: string;
+};
+
+export type QuotePilotConfig = {
+  readonly id: string;
+  readonly start_date: string;
+  readonly end_date: string;
+  readonly interval_seconds: number;
+  readonly maximum_symbols: number;
+  readonly maximum_quote_age_seconds: number;
+  readonly maximum_leg_skew_seconds: number;
+  readonly maximum_consecutive_failures: number;
+  readonly exit_evaluation_enabled: boolean;
+  readonly order_submission_enabled: boolean;
 };
 
 export type ResearchStatusContract = {

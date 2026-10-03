@@ -99,3 +99,33 @@ describe('Pipeline-owned paper configuration', () => {
     expect(fixture.nativeElement.textContent).toContain('Paper configuration unavailable');
   });
 });
+
+describe('Forward paper trial', () => {
+  it('requests only future trial evidence and distinguishes completed paths from entry coverage', async () => {
+    const summary = { closed: 2, open: 0, unevaluable: 1, skipped: 3, wins: 1, losses: 1,
+      gross_pnl_dollars: -50, cost_scenario_pnl_dollars: -75.2,
+      cost_scenario_expectancy_dollars: -37.6, average_win_dollars: 50, average_loss_dollars: -100,
+      gross_win_rate: .5, empirical_break_even_win_rate: 112.6/150,
+      completed_path_coverage: 2/3, completed_path_denominator: 3 };
+    const evidence = { status: 'available', rows: [], total: 0, cohorts: [], sessions: [],
+      forward_experiment: { start_date: '2026-10-05', required_sessions: 20, required_trial_closes: 100,
+        complete_eligible_sessions: 0, eligible_trial_closes: 0, trial: summary, control: summary,
+        mean_session_net_scenario: null, mean_session_difference: null, mean_session_net_interval_95: null,
+        skip_reasons: {position_occupied_or_same_capture_exit: 3}, missing_distance_retained: 0, daily: [] } };
+    const api = { paperCatalog: vi.fn((date: string) => of(catalogForTest(date))), paperTrades: vi.fn(() => of(evidence)),
+      paperQuotePilot: vi.fn(() => of({status:'no_evidence', recorded_minutes:0, expected_minutes:10, missing_minutes: Array(10).fill('missing'),
+        valid_observations:0, unavailable_observations:0, repeated_timestamp_observations:0, sample_states:{}, authentication_blocked:false})) };
+    await TestBed.configureTestingModule({imports:[PaperNowComponent], providers:[{provide:TraceApiService,useValue:api}]}).compileComponents();
+    const fixture = TestBed.createComponent(PaperNowComponent);
+    fixture.componentRef.setInput('date','2026-10-02'); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Scheduled for 2026-10-05');
+    expect(api.paperTrades.mock.calls.some(call => (call as unknown as [string,string,{policy_id:string}])[2]?.policy_id === 'paper-distance-one-position.v1')).toBe(false);
+    fixture.componentRef.setInput('date','2026-10-05'); fixture.detectChanges();
+    expect(api.paperTrades).toHaveBeenCalledWith('2026-10-05','2026-10-05',expect.objectContaining({policy_id:'paper-distance-one-position.v1',limit:'1'}));
+    expect(api.paperQuotePilot).toHaveBeenCalledWith('2026-10-05');
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('66.7%'); expect(text).toContain('75.1%'); expect(text).toContain('-$37.60');
+    expect(text).toContain('0/20 complete eligible sessions');
+    expect(text).toContain('Complete-session mean after assumed costs: Not available');
+  });
+});

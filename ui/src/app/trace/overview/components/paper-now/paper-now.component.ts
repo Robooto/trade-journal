@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
-import type { PaperLedgerResponse, PaperLedgerRow } from '../../data-access/paper.models';
+import type { PaperLedgerResponse, PaperLedgerRow, QuotePilotStatus } from '../../data-access/paper.models';
 
 @Component({
   selector: 'app-paper-now',
@@ -25,6 +25,15 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   readonly shadowError = signal(false);
   readonly catalog = signal<PaperCatalog | null>(null);
   readonly catalogError = signal(false);
+  readonly trial = signal<PaperLedgerResponse | null>(null);
+  readonly trialSession = signal<PaperLedgerResponse | null>(null);
+  readonly trialError = signal(false);
+  readonly trialSessionError = signal(false);
+  readonly pilot = signal<QuotePilotStatus | null>(null);
+  readonly pilotError = signal(false);
+  private trialRequest?: Subscription;
+  private trialSessionRequest?: Subscription;
+  private pilotRequest?: Subscription;
   private catalogRequest?: Subscription;
   private shadowRequest?: Subscription;
   private request?: Subscription;
@@ -36,6 +45,9 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   get policyId(): string { return this.catalog()?.active?.policy_id ?? ''; }
 
   ngOnChanges(): void {
+    this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe();
+    this.trial.set(null); this.trialSession.set(null); this.trialError.set(false); this.trialSessionError.set(false);
+    this.pilot.set(null); this.pilotError.set(false);
     this.catalogRequest?.unsubscribe();
     this.catalog.set(null);
     this.catalogError.set(false);
@@ -78,6 +90,22 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
         error: () => this.shadowError.set(true),
       });
     }
+    const experiment = catalog.forward_experiment;
+    if (experiment?.start_date && this.date >= experiment.start_date) {
+      const filters = { policy_id: experiment.id, strategy_id: 'spx-directional-vertical.v1', width_points: width, active_only: 'true' };
+      this.trialRequest = this.api.paperTrades(experiment.start_date, this.date, { ...filters, limit: '1' }).subscribe({
+        next: response => this.trial.set(response), error: () => this.trialError.set(true),
+      });
+      this.trialSessionRequest = this.api.paperTrades(this.date, this.date, { ...filters, limit: '200' }).subscribe({
+        next: response => this.trialSession.set(response), error: () => this.trialSessionError.set(true),
+      });
+    }
+    const pilot = catalog.quote_pilot;
+    if (pilot && this.date >= pilot.start_date && this.date <= pilot.end_date) {
+      this.pilotRequest = this.api.paperQuotePilot(this.date).subscribe({
+        next: response => this.pilot.set(response), error: () => this.pilotError.set(true),
+      });
+    }
     this.comparisonRequest = this.api.paperTrades(this.cohortStart, this.date, {
       policy_id: this.policyId, width_points: width, active_only: 'true', limit: '1',
     }).subscribe({
@@ -86,10 +114,14 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
 
   money(value: number | null | undefined): string {
     return value == null ? 'Not available' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+  }
+
+  trialTrades(): PaperLedgerRow[] {
+    return (this.trialSession()?.rows || []).filter(row => row.status !== 'skipped');
   }
 
   trades(strategyId: string): PaperLedgerRow[] {

@@ -106,6 +106,15 @@ const base: PaperCatalog = {
       "kind": "shadow",
       "timing_policy": "regular-close.v2",
       "width_points": 10
+    },
+    {
+      "id": "paper-distance-one-position.v1",
+      "label": "Forward paper trial \u00b7 distance filter and one position",
+      "start_date": "2026-10-05",
+      "shadow_of": "credit-risk-to-close.v4",
+      "kind": "shadow",
+      "timing_policy": "regular-close.v2",
+      "width_points": 10
     }
   ],
   "distance_shadow": {
@@ -117,7 +126,28 @@ const base: PaperCatalog = {
     "timing_policy": "regular-close.v2",
     "width_points": 10
   },
-  "cost_label": "Scenario: $0.65 per contract-side plus $10 round-trip slippage"
+  "cost_label": "Scenario: $0.65 per contract-side plus $10 round-trip slippage",
+  "forward_experiment": {
+    "id": "paper-distance-one-position.v1",
+    "label": "Forward paper trial \u00b7 distance filter and one position",
+    "start_date": "2026-10-05",
+    "shadow_of": "credit-risk-to-close.v4",
+    "kind": "shadow",
+    "timing_policy": "regular-close.v2",
+    "width_points": 10
+  },
+  "quote_pilot": {
+    "id": "paper-minute-quotes.v1",
+    "start_date": "2026-10-05",
+    "end_date": "2026-10-09",
+    "interval_seconds": 60,
+    "maximum_symbols": 100,
+    "maximum_quote_age_seconds": 60,
+    "maximum_leg_skew_seconds": 5,
+    "maximum_consecutive_failures": 8,
+    "exit_evaluation_enabled": false,
+    "order_submission_enabled": false
+  }
 };
 const cohorts: Record<string, PaperCohort | null> = {
   "2026-09-18": null,
@@ -155,4 +185,4 @@ const cohorts: Record<string, PaperCohort | null> = {
     "entry_end_local": "12:50"
   }
 };
-export const catalogForTest = (date: string): PaperCatalog => ({ ...base, as_of: date, active: cohorts[date] });
+export const catalogForTest = (date: string): PaperCatalog => ({ ...base, as_of: date, active: date in cohorts ? cohorts[date] : date >= '2026-09-22' ? base.active : null });

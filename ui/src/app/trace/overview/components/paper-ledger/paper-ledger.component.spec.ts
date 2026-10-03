@@ -29,6 +29,11 @@ describe('PaperLedgerComponent', () => {
     fixture.componentRef.setInput('fromDate', '2026-09-21'); fixture.componentRef.setInput('toDate', '2026-09-21');
     fixture.detectChanges();
   });
+  it('defaults to the forward trial only from its prospective start', () => {
+    fixture.componentRef.setInput('toDate', '2026-10-05'); fixture.detectChanges();
+    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-10-05', expect.objectContaining({ policy_id: 'paper-distance-one-position.v1' }));
+    expect(fixture.componentInstance.policies.some(p => p.id === 'credit-risk-to-close.v4')).toBe(true);
+  });
   it('renders all four stored symbols and buy/sell labels without treating a condor as a vertical', () => {
     const text = fixture.nativeElement.textContent;
     for (const symbol of ['SPXW 985P', 'SPXW 990P', 'SPXW 1025C', 'SPXW 1030C']) expect(text).toContain(symbol);

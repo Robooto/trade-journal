@@ -28,6 +28,7 @@
       <details class="trade">
         <summary>{{ trade.onset_ts }} · {{ trade.trade_type }} · {{ trade.width_points }}-point wings · {{ trade.status }} · {{ money(trade.gross_pnl_dollars) }} gross</summary>
         <p>Entry: {{ trade.entry_status }} · {{ trade.reason }} · Exit: {{ trade.exit_ts || 'Not recorded' }}</p>
+        @if (trade.excluded_control_outcome; as control) { <p>Skipped signal’s distance-only control: {{ control.status }} · {{ control.reason }} · {{ money(control.gross_pnl_dollars) }} gross. This is a control outcome, not a trial trade.</p> }
         @if (trade.excluded_baseline_outcome; as baseline) { <p>Excluded opportunity's baseline: {{ baseline.status }} · {{ baseline.reason }} · {{ money(baseline.gross_pnl_dollars) }} gross. This outcome belongs to the baseline.</p> }
         @if (trade.distance_filter === 'missing_distance_retained') { <p>Entry distance unavailable; retained in both arms.</p> }
         <p>Credit {{ money(trade.entry_credit_dollars) }} · Debit {{ money(trade.exit_debit_dollars) }} · Expiration max risk {{ money(trade.max_risk_dollars) }}</p>

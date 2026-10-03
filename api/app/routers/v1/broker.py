@@ -347,8 +347,21 @@ def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Sess
     try:
         market_rows = tastytrade.fetch_market_data(token, [], symbols, [], [])
     except requests.RequestException as exc:
-        logging.exception("Fetching option quote snapshot failed for %s.", underlying)
-        raise HTTPException(status_code=502, detail="Brokerage option quotes are unavailable.") from exc
+        response = getattr(exc, 'response', None)
+        upstream_status = response.status_code if response is not None else None
+        if upstream_status in (401, 403):
+            raise HTTPException(status_code=403, detail="Brokerage quote authorization is unavailable.") from exc
+        # Keep rate-limit status visible at the brokerage boundary. Bound retry
+        # hints and never expose upstream bodies or credentials to consumers.
+        retry_after = 60
+        if response is not None:
+            try:
+                retry_after = min(900, max(1, int(response.headers.get('Retry-After', 60))))
+            except (ValueError, TypeError):
+                pass
+        raise HTTPException(status_code=429 if upstream_status == 429 else 503,
+                            detail="Brokerage option quotes are temporarily unavailable.",
+                            headers={"Retry-After": str(retry_after)}) from exc
     observations = [OptionQuoteObservationV1(
         symbol=row.symbol,
         quoted_at=row.updated_at or getattr(row, "updatedAt", None),
