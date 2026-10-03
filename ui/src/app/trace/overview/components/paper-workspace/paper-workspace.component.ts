@@ -15,8 +15,8 @@ export class PaperWorkspaceComponent {
   paperFromDate = '';
   paperToDate = '';
   selectedReplayEntry = '';
+  ledgerFromDate = ''; ledgerToDate = '';
   ledgerExpanded = false;
-  paperResearchExpanded = false;
   private scorecardRangeInitialized = false;
   readonly latestPaperDate = computed(() => this.facade.sessions().map(session => session.date).sort().at(-1) ?? '');
 
@@ -33,7 +33,7 @@ export class PaperWorkspaceComponent {
     effect(() => {
       const entries = this.facade.paperReplayEntries()?.entries ?? [];
       const cutoff = this.facade.selectedCapture()?.ts;
-      const eligible = cutoff ? entries.filter(entry => entry.ts <= cutoff) : [];
+      const eligible = cutoff ? entries.filter(entry => entry.strategy_id !== 'spx-structure-iron-condor.v1' && entry.ts <= cutoff) : [];
       this.selectedReplayEntry = eligible.some(entry => this.replayEntryKey(entry) === this.selectedReplayEntry)
         ? this.selectedReplayEntry
         : (eligible.length ? this.replayEntryKey(eligible[eligible.length - 1]) : '');
@@ -61,7 +61,7 @@ export class PaperWorkspaceComponent {
 
   eligibleReplayEntries() {
     const cutoff = this.facade.selectedCapture()?.ts;
-    return (this.facade.paperReplayEntries()?.entries ?? []).filter(entry => !cutoff || entry.ts <= cutoff);
+    return (this.facade.paperReplayEntries()?.entries ?? []).filter(entry => entry.strategy_id !== 'spx-structure-iron-condor.v1' && (!cutoff || entry.ts <= cutoff));
   }
 
   selectReplayEntry(value: string): void {

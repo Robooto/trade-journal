@@ -65,10 +65,11 @@ describe('PaperLedgerComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('-$160.00');
     expect(fixture.nativeElement.querySelector('details.trade summary').textContent).toContain('Unavailable gross');
   });
-  it('defaults to the focused cohort and only exposes older setups when requested', () => {
-    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ active_only: 'true', width_points: '10' }));
+  it('shows only the trial and its current controls', () => {
+    fixture.componentRef.setInput('toDate', '2026-10-05'); fixture.detectChanges();
     const c = fixture.componentInstance;
-    c.includeArchived = true; c.archiveChanged();
-    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ active_only: 'false', width_points: '', policy_id: 'baseline-one-position.v1' }));
+    expect(c.policies.map(p => p.id).sort()).toEqual(['credit-risk-to-close.v4', 'paper-distance-one-position.v1', 'structure-distance-shadow.v1'].sort());
+    expect(fixture.nativeElement.textContent).not.toContain('Include archived setups');
+    expect(fixture.nativeElement.textContent).not.toContain('Structure iron condor');
   });
 });

@@ -114,3 +114,15 @@ request failures as 503. It never retries login or calls order endpoints. Pipeli
 owns the pilot timer, independent research store, quality audit and backups; see
 `../market-data-pipeline/docs/operations/paper-forward-trial-2026-10-05.md` in the
 workspace for installation, observation gates and rollback.
+
+### Paper dashboard layout
+
+The paper tab now foregrounds one current strategy: schedule/rules, the selected
+capture's signal and reasons, open trades, closed outcomes, skips and payoff
+results. Signal readiness is separate from admission, and unavailable position
+state is never shown as flat. Times are formatted explicitly in Pacific time.
+Comparison controls and quote diagnostics remain in supporting detail. Retired
+policy cards, archive switches and the duplicate prospective-research panel are
+removed from this UI; the pipeline retains all study data and frozen policies.
+The trade ledger offers the current trial and its two controls. Quote-path replay
+remains available for collected directional entries.

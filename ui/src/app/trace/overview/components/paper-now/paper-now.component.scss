@@ -25,3 +25,14 @@ h3 small { font-size: .72rem; font-weight: normal; }
 .performance-metrics dt { color: #b5c4d7; font-size: .8rem; }
 .performance-metrics dd { margin: .25rem 0 0; font-size: 1.05rem; font-weight: 650; }
 .distance-shadow { margin-top: 1rem; padding: 1rem; border: 1px solid #42516a; border-radius: .75rem; }
+.strategy-overview, .signal-panel, .collection-status { padding: 1rem; border: 1px solid #42516a; border-radius: .75rem; }
+.strategy-heading { display: flex; justify-content: space-between; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.status-badge { padding: .3rem .6rem; background: #183b58; border-radius: .4rem; font-size: .8rem; }
+.rule-list, .reason-list { display: flex; flex-wrap: wrap; gap: .5rem; }
+.rule-list span, .reason-list span { padding: .4rem .6rem; border-radius: .4rem; background: rgba(148,163,184,.12); font-size: .8rem; }
+.status-note { color: #c9ddff; font-weight: 600; }
+.signal-headline { color: #d7e7ff; }
+.trade-card { padding: .85rem; border: 1px solid rgba(148,163,184,.3); border-radius: .6rem; }
+.trade-card p { margin: .5rem 0; }
+.supporting-data summary { cursor: pointer; color: #bed5fb; }
+@media (max-width: 600px) { .paper-now { padding: .85rem; } header { flex-direction: column; } .performance-metrics { grid-template-columns: 1fr; } }

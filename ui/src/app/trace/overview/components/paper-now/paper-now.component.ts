@@ -15,7 +15,12 @@ import type { PaperLedgerResponse, PaperLedgerRow, QuotePilotStatus } from '../.
 })
 export class PaperNowComponent implements OnChanges, OnDestroy {
   @Input() date = '';
+  @Input() captureTs = '';
   @Input() refreshAt: Date | null = null;
+  readonly decision = signal<import('../decision-journal/decision-journal.models').Spx0DteDecisionJournalResponse | null>(null);
+  readonly decisionLoading = signal(false);
+  readonly decisionError = signal(false);
+  private decisionRequest?: Subscription;
   readonly response = signal<PaperLedgerResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal(false);
@@ -45,6 +50,14 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   get policyId(): string { return this.catalog()?.active?.policy_id ?? ''; }
 
   ngOnChanges(): void {
+    this.decisionRequest?.unsubscribe(); this.decision.set(null); this.decisionError.set(false); this.decisionLoading.set(false);
+    if (this.date && this.captureTs) {
+      this.decisionLoading.set(true);
+      this.decisionRequest = this.api.decisionJournal(this.date, this.captureTs).subscribe({
+        next: value => { this.decision.set(value); this.decisionLoading.set(false); },
+        error: () => { this.decisionError.set(true); this.decisionLoading.set(false); },
+      });
+    }
     this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe();
     this.trial.set(null); this.trialSession.set(null); this.trialError.set(false); this.trialSessionError.set(false);
     this.pilot.set(null); this.pilotError.set(false);
@@ -74,7 +87,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     if (!catalog?.active) { this.loading.set(false); return; }
     const width = String(catalog.active.width_points);
     this.request = this.api.paperTrades(this.date, this.date, {
-      policy_id: this.policyId,
+      policy_id: this.policyId, strategy_id: 'spx-directional-vertical.v1',
       offset: '0', limit: '200',
       width_points: width, active_only: 'true',
     }).subscribe({
@@ -107,28 +120,54 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
       });
     }
     this.comparisonRequest = this.api.paperTrades(this.cohortStart, this.date, {
-      policy_id: this.policyId, width_points: width, active_only: 'true', limit: '1',
+      policy_id: this.policyId, strategy_id: 'spx-directional-vertical.v1', width_points: width, active_only: 'true', limit: '1',
     }).subscribe({
       next: response => this.comparison.set(response),
       error: () => this.comparisonError.set(true),
     });
   }
 
-  ngOnDestroy(): void { this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+
+  time(value: string | null | undefined): string {
+    if (!value) return 'Not available';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Not available' : new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric', minute: '2-digit', timeZone: 'America/Los_Angeles',
+    }).format(date);
+  }
 
   money(value: number | null | undefined): string {
     return value == null ? 'Not available' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   }
 
-  trialTrades(): PaperLedgerRow[] {
-    return (this.trialSession()?.rows || []).filter(row => row.status !== 'skipped');
+  get trialStarted(): boolean {
+    const start = this.catalog()?.forward_experiment?.start_date;
+    return !!start && this.date >= start;
   }
 
-  trades(strategyId: string): PaperLedgerRow[] {
-    return (this.response()?.rows || []).filter(row => row.strategy_id === strategyId && row.entry_status === 'recorded');
+  get currentSession(): PaperLedgerResponse | null {
+    return this.trialStarted ? this.trialSession() : this.response();
   }
 
-  skipped(strategyId: string): number {
-    return (this.response()?.rows || []).filter(row => row.strategy_id === strategyId && row.status === 'skipped').length;
+  get sessionUnavailable(): boolean {
+    return (this.trialStarted ? this.trialSessionError() : this.error()) || this.currentSession?.status === 'unavailable';
+  }
+
+  sessionTrades(status: string): PaperLedgerRow[] {
+    return (this.currentSession?.rows || []).filter(row => row.strategy_id === 'spx-directional-vertical.v1' && row.status === status);
+  }
+
+  label(reason: string): string {
+    const labels: Record<string, string> = {
+      bull_put_credit: 'Bull put spread', bear_call_credit: 'Bear call spread',
+      profit_target: 'Profit target reached', two_times_entry_credit_stop: 'Stop reached',
+      forced_exit_close: 'Closed at market close', fragile_structure_distance: 'Too close to the frozen structure',
+      position_occupied_or_same_capture_exit: 'Position already open or just closed',
+      position_state_unknown: 'Earlier position could not be evaluated', entry_credit_below_minimum: 'Credit below minimum',
+      missing_path_quote: 'Quote missing along the trade path', capture_gap: 'Gap in captured data',
+      awaiting_exit: 'Waiting for target, stop or market close',
+    };
+    return labels[reason] ?? reason.replaceAll('_', ' ');
   }
 }

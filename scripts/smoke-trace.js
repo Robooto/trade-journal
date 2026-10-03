@@ -34,7 +34,9 @@ async page => {
     await page.getByRole('tab', { name: 'Paper trading', exact: true }).click();
     const paper = page.locator('#paper-workspace-panel');
     await paper.getByRole('heading', { name: 'Paper trading now', exact: true }).waitFor();
-    await paper.getByText('Historical policies and session detail', { exact: true }).click();
+    await paper.getByRole('heading', { name: 'Entry signal', exact: false }).waitFor();
+    if (await paper.locator('.paper-research-disclosure').count()) throw new Error('Retired prospective-research panel is still present');
+    await paper.locator('.paper-ledger-disclosure > summary').click();
     const from = paper.getByRole('textbox', { name: 'From', exact: true });
     const originalFrom = await from.inputValue();
     const to = await paper.getByRole('textbox', { name: 'To', exact: true }).inputValue();
@@ -46,6 +48,7 @@ async page => {
     if (await from.inputValue() !== to) throw new Error('Paper range lost across tab switch');
     await from.fill(originalFrom);
 
+    await paper.getByText('Inspect recorded quote paths', { exact: true }).click();
     const replayButton = paper.getByRole('button', { name: 'Replay through selected capture', exact: true });
     // An absent sample must not be reported as a successful replay check.
     await page.waitForFunction(() => {
@@ -58,7 +61,6 @@ async page => {
     await chart.waitFor();
     if (await chart.locator('polyline').count() === 0) throw new Error('Replay has no drawable recorded path');
 
-    await paper.locator('.paper-ledger-disclosure > summary').click();
     const ledger = paper.locator('app-paper-ledger');
     await ledger.getByText(/matching opportunities · dates/).waitFor();
     if (await ledger.getByRole('alert').count()) throw new Error('Ledger reported unavailable evidence');

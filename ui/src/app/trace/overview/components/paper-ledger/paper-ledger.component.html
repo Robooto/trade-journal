@@ -1,20 +1,13 @@
 <section class="ledger" aria-labelledby="paper-ledger-title">
   <h2 id="paper-ledger-title">Exact contracts & admission ledger</h2>
-  <p>Independent overlapping positions on fresh qualifying signals. Recorded opportunities are not necessarily admitted trades. Quotes are sampled indications, not broker fills; fees and extra slippage are untracked.</p>
+  <p>Recorded signals and exact contracts for the current trial and its comparison controls.</p>
   <form (ngSubmit)="load(true)" class="filters">
-    <label><input type="checkbox" name="archived" [(ngModel)]="includeArchived" (ngModelChange)="archiveChanged()" /> Include archived setups</label>
-    <label>Strategy<select name="strategy" [(ngModel)]="strategy"><option value="">All paper strategies</option><option value="spx-directional-vertical.v1">Directional verticals</option><option value="spx-structure-iron-condor.v1">Structure iron condor</option></select></label>
-    @if (includeArchived) {
-      <label>Vertical policy<select name="policy" [(ngModel)]="policy">@for (item of policies; track item.id) { <option [value]="item.id">{{ item.label }}@if (item.start_date) { · from {{ item.start_date }} }</option> }</select></label>
-      <label>Wing width<select name="width" [(ngModel)]="width"><option value="">Both</option><option value="5">5 points</option><option value="10">10 points</option></select></label>
-    } @else {
-      <label>Vertical policy<select name="policy" [(ngModel)]="policy">@for (item of policies; track item.id) { <option [value]="item.id">{{ item.label }}@if (item.start_date) { · from {{ item.start_date }} }</option> }</select></label>
-    }
+    <label>Trial or control<select name="policy" [(ngModel)]="policy">@for (item of policies; track item.id) { <option [value]="item.id">{{ item.label }}</option> }</select></label>
     <label>Outcome<select name="status" [(ngModel)]="status"><option value="">All outcomes</option><option>closed</option><option>open</option><option>skipped</option><option>unevaluable</option></select></label>
     <label>Contract / date / reason<input name="search" [(ngModel)]="search" maxlength="100" /></label>
     <button type="submit" [disabled]="loading()">Apply filters / refresh</button>
   </form>
-  <p>Policy choices come from the pipeline catalog. Archived setups retain their original rules.</p>
+  <p>Skipped signals are opportunities, not entered trial trades.</p>
   @if (loading()) { <p role="status">Loading exact contracts…</p> }
   @if (error()) { <p role="alert">{{ error() }}</p> }
   @if (response(); as data) {

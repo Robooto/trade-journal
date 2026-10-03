@@ -1,3 +1,4 @@
+import { catalogForTest } from './data-access/paper-catalog.fixture';
 import { By } from '@angular/platform-browser';
 import { PaperWorkspaceComponent } from './components/paper-workspace/paper-workspace.component';
 import { PaperReplayChartComponent } from './components/paper-replay-chart/paper-replay-chart.component';
@@ -36,6 +37,8 @@ class CharmApiStub {
   }));
 }
 class TraceApiStub {
+  readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
+  readonly paperQuotePilot = vi.fn(() => of({ status: 'no_evidence' }));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
   readonly decisionJournal = vi.fn(() => of({
     schema_version: 'spx-0dte-decision.v1',
@@ -184,7 +187,7 @@ describe('TracePageComponent', () => {
     expect(paperPanel.hidden).toBe(true);
     expect(tracePanel.querySelector('.price-level-panel')).not.toBeNull();
     expect(tracePanel.querySelector('.paper-scorecard-panel')).toBeNull();
-    expect(paperPanel.querySelector('.paper-scorecard-panel')).not.toBeNull();
+    expect(paperPanel.querySelector('.paper-scorecard-panel')).toBeNull();
 
     paperTab.click();
     fixture.detectChanges();
@@ -219,7 +222,7 @@ describe('TracePageComponent', () => {
     expect(facade.loadPaperReplay).toHaveBeenCalledWith('2026-09-22', 'later', 'entry', 'spx-directional-vertical.v1');
   });
 
-  it('keeps paper research and the ledger collapsed below replay without capture-decision controls', () => {
+  it('shows signal context directly and keeps supporting records collapsed', () => {
     facade.selectedDate.set('2026-09-04');
     facade.selectedCapture.set({ ts: '2026-09-04T08:10:00-07:00', capture_id: 'exit' });
     fixture.componentInstance.activeWorkspaceTab = 'paper';
@@ -230,13 +233,9 @@ describe('TracePageComponent', () => {
     expect(panel.querySelector('app-decision-journal')).toBeNull();
     expect(ledger.open).toBe(false);
     expect(panel.querySelector('app-paper-ledger')).toBeNull();
-    const research = panel.querySelector('.paper-research-disclosure') as HTMLDetailsElement;
-    research.open = true;
-    research.dispatchEvent(new Event('toggle'));
-    fixture.detectChanges();
-    expect(panel.textContent).toContain('Paper outcomes · gross only');
+    expect(panel.querySelector('.paper-research-disclosure')).toBeNull();
+    expect(panel.textContent).toContain('Entry signal');
     expect(panel.textContent).not.toContain('Your capture decision');
-    expect((TestBed.inject(TraceApiService) as unknown as TraceApiStub).human0DteDecision).not.toHaveBeenCalled();
     ledger.open = true;
     ledger.dispatchEvent(new Event('toggle'));
     fixture.detectChanges();
@@ -524,41 +523,4 @@ describe('TracePageComponent', () => {
     ]);
   });
 
-  it('selects and renders a four-leg condor replay alongside a vertical at the same capture', () => {
-    const date = '2026-09-22';
-    const ts = `${date}T07:50:00-07:00`;
-    facade.selectedDate.set(date);
-    facade.selectedCapture.set({ capture_id: 'entry', ts });
-    facade.paperReplayEntries.set({ entries: [
-      { capture_id: 'entry', ts, trade_type: 'bear_call_credit', strategy_id: 'spx-directional-vertical.v1' },
-      { capture_id: 'entry', ts, trade_type: 'iron_condor', strategy_id: 'spx-structure-iron-condor.v1' },
-    ] });
-    fixture.componentInstance.activeWorkspaceTab = 'paper';
-    fixture.detectChanges();
-    const component = fixture.debugElement.query(By.directive(PaperWorkspaceComponent)).componentInstance as PaperWorkspaceComponent;
-    const condorKey = 'spx-structure-iron-condor.v1:entry';
-    component.selectReplayEntry(condorKey);
-    component.replaySelectedTrade();
-    expect(facade.loadPaperReplay).toHaveBeenCalledWith(date, 'entry', 'entry', 'spx-structure-iron-condor.v1');
-    facade.paperReplay.set({
-      date, as_of: ts, entry_capture_id: 'entry',
-      trade: { onset_ts: ts, trade_type: 'iron_condor', strategy_id: 'spx-structure-iron-condor.v1',
-        status: 'closed', reason: 'half_credit_target', entry_credit_dollars: 330,
-        exit_debit_dollars: 165, gross_pnl_dollars: 165,
-        structures: { support: { level: 7750 }, resistance: { level: 7777.5 } },
-        legs: [
-          { side: 'buy', quantity: 1, option_type: 'put', strike: 7740, symbol: 'SPXW  P7740' },
-          { side: 'sell', quantity: 1, option_type: 'put', strike: 7750, symbol: 'SPXW  P7750' },
-          { side: 'sell', quantity: 1, option_type: 'call', strike: 7780, symbol: 'SPXW  C7780' },
-          { side: 'buy', quantity: 1, option_type: 'call', strike: 7790, symbol: 'SPXW  C7790' },
-        ] },
-      levels: [], path: [{ ts, capture_id: 'entry', spot: 7765, gap: false }], hierarchy_events: [],
-    });
-    fixture.detectChanges();
-    const panel = fixture.nativeElement.querySelector('#paper-workspace-panel') as HTMLElement;
-    expect(panel.textContent).toContain('Frozen support 7750');
-    expect(panel.textContent).toContain('Frozen resistance 7777.5');
-    for (const strike of ['P7740', 'P7750', 'C7780', 'C7790']) expect(panel.textContent).toContain(strike);
-    expect(panel.textContent).toContain('Gross P/L $165');
-  });
 });
