@@ -26,7 +26,7 @@ export class SessionTrendsComponent implements OnChanges {
   priceWindowMode: PriceWindowMode = 'near';
   priceChart = emptyPriceChart();
 
-  hiroViewMode: HiroViewMode = 'change';
+  hiroViewMode: HiroViewMode = 'level';
   hiroChart = emptyHiroChart();
 
   ngOnChanges(): void {

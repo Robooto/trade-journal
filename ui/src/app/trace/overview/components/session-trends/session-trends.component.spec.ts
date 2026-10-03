@@ -53,24 +53,23 @@ describe('SessionTrendsComponent', () => {
     expect(fixture.nativeElement.querySelector('.trend-line--equities-hiro')).not.toBeNull();
   });
 
-  it('defaults to HIRO change while preserving pressure direction detail', () => {
+  it('defaults to HIRO pressure while preserving the change view', () => {
     expect(fixture.nativeElement.textContent).toContain('Containment +');
     expect(fixture.nativeElement.textContent).toContain('Expansion');
     expect(fixture.nativeElement.querySelectorAll('.structure-node--positive')).toHaveLength(1);
     expect(fixture.nativeElement.querySelectorAll('.structure-node--negative')).toHaveLength(1);
-    expect(component.hiroViewMode).toBe('change');
-    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(0);
+    expect(component.hiroViewMode).toBe('level');
+    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(24);
     expect(fixture.nativeElement.textContent).toContain('not trade approval');
 
-    const pressureButton = Array.from<HTMLButtonElement>(
+    const changeButton = Array.from<HTMLButtonElement>(
       fixture.nativeElement.querySelectorAll('.trend-segment button'),
-    ).find(button => button.textContent?.trim() === 'Pressure');
-    pressureButton?.click();
+    ).find(button => button.textContent?.trim() === 'Change');
+    changeButton?.click();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(24);
-    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker--up')).toHaveLength(12);
-    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker--down')).toHaveLength(12);
+    expect(component.hiroViewMode).toBe('change');
+    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(0);
     expect(fixture.nativeElement.textContent).toContain('Strong Buying Increasing');
     expect(fixture.nativeElement.textContent).toContain('Selling Increasing');
   });
@@ -169,10 +168,10 @@ describe('SessionTrendsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('has not established lower movement or direction');
     expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(0);
 
-    const pressureButton = Array.from<HTMLButtonElement>(
+    const changeButton = Array.from<HTMLButtonElement>(
       fixture.nativeElement.querySelectorAll('.trend-segment button'),
-    ).find(button => button.textContent?.trim() === 'Pressure');
-    pressureButton?.click();
+    ).find(button => button.textContent?.trim() === 'Change');
+    changeButton?.click();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(1);
