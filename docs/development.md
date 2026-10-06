@@ -108,6 +108,12 @@ new session without trades does not prevent a needed service deployment.
 - `PaperNowComponent` and `PaperLedgerComponent`: catalog-driven current paper
   presentation and exact contract evidence, respectively.
 
+Current session trade cards display recorded short/long option strikes for both
+open and closed trial trades. Quote-path replay lists recorded baseline entries,
+including those skipped by the current strategy; its labels identify this scope.
+See [the October 5 reconciliation](paper-session-reconciliation-2026-10-05.md)
+for a concrete five-baseline-entry versus two-trial-close example.
+
 Scoped styles live with their components. `_workspace-common.scss` contains
 only the presentation rules shared by the page and paper workspace. Add future
 paper controls to the paper workspace rather than the TRACE navigation page;

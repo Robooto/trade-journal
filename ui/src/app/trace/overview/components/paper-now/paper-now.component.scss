@@ -34,5 +34,7 @@ h3 small { font-size: .72rem; font-weight: normal; }
 .signal-headline { color: #d7e7ff; }
 .trade-card { padding: .85rem; border: 1px solid rgba(148,163,184,.3); border-radius: .6rem; }
 .trade-card p { margin: .5rem 0; }
+.trade-strikes { display: flex; flex-wrap: wrap; gap: .4rem .75rem; margin-top: .5rem; color: #d7e7ff; font-size: .85rem; }
+.trade-strikes > span { color: #a2b3c9; }
 .supporting-data summary { cursor: pointer; color: #bed5fb; }
 @media (max-width: 600px) { .paper-now { padding: .85rem; } header { flex-direction: column; } .performance-metrics { grid-template-columns: 1fr; } }

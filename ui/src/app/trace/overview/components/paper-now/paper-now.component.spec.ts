@@ -2,17 +2,22 @@ import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { catalogForTest } from '../../data-access/paper-catalog.fixture';
 import { TraceApiService } from '../../data-access/trace-api.service';
+import type { PaperLeg } from '../../data-access/paper.models';
 import { PaperNowComponent } from './paper-now.component';
 
 const summary = { closed: 1, open: 1, skipped: 1, unevaluable: 1, wins: 1, losses: 0,
   cost_scenario_pnl_dollars: 37.4, cost_scenario_expectancy_dollars: 37.4,
   average_win_dollars: 50, average_loss_dollars: null, gross_win_rate: 1,
   empirical_break_even_win_rate: null, completed_path_coverage: 1/3, completed_path_denominator: 3 };
+function putLegs(shortStrike: number, longStrike: number): PaperLeg[] {
+  return [{symbol:`short-${shortStrike}`,side:'sell',strike:shortStrike}, {symbol:`long-${longStrike}`,side:'buy',strike:longStrike}]
+    .map(leg => ({...leg,option_type:'put',quantity:1,expiration:'2026-10-05',entry_quote:null,exit_quote:null}));
+}
 const row = { strategy_id:'spx-directional-vertical.v1', trade_type:'bull_put_credit', onset_ts:'2026-10-05T08:00:00-07:00',
-  entry_credit_dollars:100, max_risk_dollars:900, legs:[], gross_pnl_dollars:null };
+  entry_credit_dollars:100, max_risk_dollars:900, legs:putLegs(7715,7705), gross_pnl_dollars:null };
 const response = { status:'available', total:4, rows:[
   {...row, evaluation_id:'open', status:'open', reason:'awaiting_exit'},
-  {...row, evaluation_id:'closed', status:'closed', reason:'profit_target', gross_pnl_dollars:50, exit_ts:'2026-10-05T08:10:00-07:00', cost_scenarios:[{net_scenario_dollars:37.4}]},
+  {...row, evaluation_id:'closed', legs:putLegs(7745,7735), status:'closed', reason:'profit_target', gross_pnl_dollars:50, exit_ts:'2026-10-05T08:10:00-07:00', cost_scenarios:[{net_scenario_dollars:37.4}]},
   {...row, evaluation_id:'skip', status:'skipped', reason:'position_occupied_or_same_capture_exit'},
   {...row, evaluation_id:'missing', status:'unevaluable', reason:'missing_path_quote'},
 ], strategy_summaries:[], forward_experiment:{trial:summary, control:summary, required_sessions:20, required_trial_closes:100,
@@ -55,6 +60,22 @@ describe('PaperNowComponent current strategy overview', () => {
     expect(fixture.nativeElement.textContent).toContain('Wait · entry conditions not met');
     expect(fixture.nativeElement.textContent).toContain('entry score or gate failed');
     expect(fixture.nativeElement.querySelector('[aria-label="Selected capture signal"]').closest('details')).toBeNull();
+  });
+  it('shows each open and closed trade’s recorded short and long strikes',()=> {
+    const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');fixture.detectChanges();
+    const open=fixture.nativeElement.querySelector('[aria-label="Open paper trade"] [aria-label="Option strikes"]').textContent;
+    const closed=fixture.nativeElement.querySelector('[aria-label="Closed paper trade"] [aria-label="Option strikes"]').textContent;
+    expect(open).toContain('Short 7,715 put');expect(open).toContain('Long 7,705 put');
+    expect(closed).toContain('Short 7,745 put');expect(closed).toContain('Long 7,735 put');
+    expect(open).toContain('1 contract');expect(closed).toContain('1 contract');
+    expect(closed).not.toContain('7,715');
+  });
+  it('identifies unavailable strikes in both trade sections',()=> {
+    api.paperTrades.mockReturnValue(of({...response,rows:response.rows.map(trade=>({...trade,legs:[]}))}));
+    const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');fixture.detectChanges();
+    const strikes=fixture.nativeElement.querySelectorAll('[aria-label="Option strikes"]');
+    expect(strikes.length).toBe(2);
+    for (const element of strikes) expect(element.textContent).toContain('Unavailable');
   });
   it('keeps unavailable session state distinct from no open position',()=> {
     api.paperTrades.mockReturnValue(throwError(()=>new Error('offline')));

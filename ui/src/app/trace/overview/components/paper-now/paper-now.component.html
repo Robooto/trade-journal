@@ -42,15 +42,16 @@
       @else if (currentSession.status === 'no_evidence') { <p>No session evidence recorded yet.</p> }
       @else {
         @for (trade of sessionTrades('open'); track trade.evaluation_id) {
-          <article class="trade-card"><strong>{{ label(trade.trade_type) }} · opened {{ time(trade.onset_ts) }}</strong>
+          <article class="trade-card" aria-label="Open paper trade"><strong>{{ label(trade.trade_type) }} · opened {{ time(trade.onset_ts) }}</strong>
+            <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
             <p>Entry credit {{ money(trade.entry_credit_dollars) }} · maximum entry risk {{ money(trade.max_risk_dollars) }}</p>
             <p>{{ label(trade.reason) }}</p>
-            <div class="reason-list">@for (leg of trade.legs; track leg.symbol) { <span>{{ leg.side | uppercase }} {{ leg.quantity }} {{ leg.option_type }} {{ leg.strike }}</span> }</div>
           </article>
         } @empty { <p>No evaluable open trade. {{ sessionTrades('unevaluable').length }} opportunities have unavailable outcomes.</p> }
         <h3>Closed trades · {{ sessionTrades('closed').length }}</h3>
         @for (trade of sessionTrades('closed'); track trade.evaluation_id) {
-          <article class="trade-card"><strong>{{ label(trade.trade_type) }} · {{ time(trade.onset_ts) }} → {{ time(trade.exit_ts) }}</strong>
+          <article class="trade-card" aria-label="Closed paper trade"><strong>{{ label(trade.trade_type) }} · {{ time(trade.onset_ts) }} → {{ time(trade.exit_ts) }}</strong>
+            <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
             <p>{{ label(trade.reason) }} · {{ money(trade.gross_pnl_dollars) }} gross @if (trade.cost_scenarios?.length) { · {{ money(trade.cost_scenarios![0].net_scenario_dollars) }} after assumed costs }</p>
             <small>Entry credit {{ money(trade.entry_credit_dollars) }} · exit debit {{ money(trade.exit_debit_dollars) }}</small>
           </article>
@@ -106,3 +107,12 @@
     @if (pilot(); as audit) { <p>{{ audit.repeated_timestamp_observations }} observations repeated provider timestamps.</p>@for (state of audit.sample_states | keyvalue; track state.key) { <p>{{ state.key.replaceAll('_', ' ') }}: {{ state.value }}</p> } }
   </details>
 </section>
+
+<ng-template #contractStrikes let-trade>
+  <div class="trade-strikes" aria-label="Option strikes">
+    <span>Strikes</span>
+    @for (leg of trade.legs; track leg.symbol) {
+      <strong>{{ leg.side === 'sell' ? 'Short' : leg.side === 'buy' ? 'Long' : leg.side }} {{ leg.strike | number:'1.0-2' }} {{ leg.option_type }} · {{ leg.quantity }} contract{{ leg.quantity === 1 ? '' : 's' }}</strong>
+    } @empty { <strong>Unavailable</strong> }
+  </div>
+</ng-template>
