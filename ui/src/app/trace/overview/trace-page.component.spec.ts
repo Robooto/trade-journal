@@ -174,6 +174,20 @@ describe('TracePageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
     expect(fixture.nativeElement.textContent).not.toContain('Legacy TRACE');
   });
+  it('distinguishes changed report definitions from comparable frozen tests', () => {
+    const studies: readonly TraceStudyStatus[] = [{id:'signed-gex-interaction',label:'Signed GEX',status:'research',scoring_enabled:false,
+      comparisons:[{scope:'week',status:'suppressed',reason:'study_definition_changed',previous_week_start:'2026-09-28',previous_week_end:'2026-10-02'}],
+      primary_tests:[{scope:'week',through:'2026-10-09',protocol_id:'signed-gex-negative-breach-v1',role:'primary',horizon:'H30',
+        validation_status:'collecting',coverage_ready:false,observations:17,sessions:5,effect:17.6,interval_low:-12.5,interval_high:38.9,
+        unit:'pp',expected_direction:'positive',comparison:{scope:'week',status:'comparable',reason:null,previous_week_start:'2026-09-28',previous_week_end:'2026-10-02'}}]}];
+    facade.researchStatus.set({schema_version:'trace-study-registry.v1',as_of:'2026-10-02',evidence_version:'week-end-2026-10-02',study_count:1,scoring_enabled_count:0,studies});
+    facade.visibleResearchStatuses.set(studies);fixture.detectChanges();
+    const text=fixture.nativeElement.textContent;
+    expect(text).toContain('Weekly report: Study definition changed; prior comparison withheld');
+    expect(text).toContain('Frozen test: Comparable with prior period');
+    expect(text).toContain('through 2026-10-09');
+    expect(text).toContain('Cumulative support does not establish independent weekly replication');
+  });
 
   it('keeps paper trading in its own tab and opens TRACE by default', () => {
     const traceTab = fixture.nativeElement.querySelector('#trace-workspace-tab') as HTMLButtonElement;

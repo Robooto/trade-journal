@@ -83,4 +83,23 @@ describe('PaperNowComponent current strategy overview', () => {
     expect(fixture.nativeElement.textContent).toContain('Missing data is not a flat position');
     expect(fixture.nativeElement.textContent).not.toContain('No evaluable open trade');
   });
+  it('shows collection exclusions independently of a ready signal and retained trade returns',()=> {
+    api.paperTrades.mockReturnValue(of({...response, session_coverage:[{
+      date:'2026-10-05', source_status:'incomplete', primary_status:'excluded',
+      reasons:['capture_gap','outcome_unevaluable'], observed_cycles:32,
+      first_capture_at:row.onset_ts,last_capture_at:row.onset_ts,largest_gap_seconds:3000,
+      unknown_position_state:true,
+    }]} as typeof response));
+    const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');fixture.componentRef.setInput('captureTs',row.onset_ts);fixture.detectChanges();
+    const text=fixture.nativeElement.textContent;
+    expect(text).toContain('Excluded from primary results');
+    expect(text).toContain('Gap exceeds 12 minutes');
+    expect(text).toContain('One or more trade paths cannot be evaluated');
+    expect(text).toContain('$37.40 after assumed costs');
+    expect(text).toContain('Wait · entry conditions not met');
+  });
+  it('keeps unpublished coverage explicit instead of inferring complete collection',()=> {
+    const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Paper session coverage has not been published for this date');
+  });
 });

@@ -1,4 +1,4 @@
-import type { DistanceShadow, StrategySummary, PaperSummary } from './generated/research-contracts';
+import type { DistanceShadow, StrategySummary, PaperSummary, PaperSessionCoverage } from './generated/research-contracts';
 
 export interface PaperLeg {
   symbol: string; side: string; option_type: string; strike: number; expiration: string; quantity: number;
@@ -18,6 +18,7 @@ export interface PaperLedgerRow {
   path: { ts: string; spot: number | null; quote_status: string; prices: unknown }[];
 }
 export interface PaperLedgerResponse {
+  session_coverage?: readonly PaperSessionCoverage[];
   forward_experiment?: ForwardExperiment | null;
   distance_shadow?: DistanceShadow | null;
   strategy_summaries?: readonly StrategySummary[];
@@ -34,7 +35,7 @@ export interface ForwardExperiment {
   missing_distance_retained: number;
   mean_session_net_scenario: number | null; mean_session_net_interval_95: number[] | null;
   mean_session_difference: number | null;
-  daily: { date: string; complete: boolean; trial_net_scenario: number | null; control_net_scenario: number | null; net_scenario_difference: number | null }[];
+  daily: { date: string; complete: boolean; collection?: PaperSessionCoverage; trial_net_scenario: number | null; control_net_scenario: number | null; net_scenario_difference: number | null }[];
 }
 export interface QuotePilotStatus {
   status: string; date: string; expected_minutes: number; recorded_minutes: number;

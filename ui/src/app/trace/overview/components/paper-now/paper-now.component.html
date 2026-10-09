@@ -82,10 +82,25 @@
 
   <section class="collection-status" aria-label="Data collection status">
     <h3>Data collection</h3>
+    @if (sessionUnavailable) { <p role="alert">Paper collection evidence unavailable for {{ date }}.</p> }
+    @else if (sessionCoverage; as coverage) {
+      <div class="paper-coverage" [attr.data-status]="coverage.primary_status" aria-label="Paper session coverage">
+        <p><strong>Paper source: {{ coverageLabel(coverage.source_status) }}</strong> · {{ coverageLabel(coverage.primary_status) }}</p>
+        <p>{{ coverage.observed_cycles }} recorded paper cycles · first {{ time(coverage.first_capture_at) }} · latest {{ time(coverage.last_capture_at) }} Pacific
+          @if (coverage.largest_gap_seconds !== null) { · largest gap {{ coverage.largest_gap_seconds / 60 | number:'1.0-1' }} min }
+        </p>
+        @if (coverage.primary_status === 'excluded') { <p role="status">This session is excluded from complete-session means. Closed trade totals remain separate.</p> }
+        @if (coverage.unknown_position_state) { <p role="alert">Position state unknown. Later entries stay blocked for this session.</p> }
+        <ul>@for (reason of coverage.reasons; track reason) { <li>{{ coverageLabel(reason) }}</li> }</ul>
+        <small>A fresh TRACE signal does not establish paper coverage. This readout uses recorded paper cycles and trade paths.</small>
+      </div>
+    } @else if (trialStarted && !currentSession) { <p role="status">Loading paper collection evidence…</p> }
+    @else { <p>Paper session coverage has not been published for this date.</p> }
     @if (catalog()?.quote_pilot; as config) {
       @if (pilotError() || pilot()?.status === 'unavailable') { <p role="alert">Minute quote collection evidence unavailable.</p> }
       @else if (pilot(); as audit) {
-        <p>Minute quote pilot: {{ audit.recorded_minutes }}/{{ audit.expected_minutes }} minute records · {{ audit.missing_minutes.length }} missing · {{ audit.valid_observations }} valid / {{ audit.unavailable_observations }} unavailable position observations.</p>
+        <p>Minute quote pilot: {{ audit.recorded_minutes }}/{{ audit.expected_minutes }} minute receipts · {{ audit.missing_minutes.length }} missing receipts · {{ audit.valid_observations }} valid / {{ audit.unavailable_observations }} unavailable position observations.</p>
+        <small>Receipts include idle, waiting and failed requests; they do not guarantee uninterrupted valid quotes.</small>
         @if (audit.authentication_blocked) { <p role="alert">Quote sampling stopped for this session because brokerage authorization is unavailable.</p> }
       } @else if (date > config.end_date) { <p>Minute quote pilot ended {{ config.end_date }}. Recorded pilot evidence remains available in trade records.</p> }
       @else { <p>Minute quotes scheduled {{ config.start_date }}–{{ config.end_date }}. Trade exits continue using ten-minute observations.</p> }
@@ -97,7 +112,10 @@
     <p>The original baseline and distance-only control keep collecting so we can compare the current trial with the same opportunities. They are supporting evidence.</p>
     @if (trial()?.forward_experiment; as test) {
       <p>Same-date distance-only control: {{ money(test.control.cost_scenario_pnl_dollars) }} after assumed costs. Mean complete-session difference: {{ money(test.mean_session_difference) }}.</p>
-      @for (day of test.daily; track day.date) { <p>{{ day.date }} · {{ day.complete ? 'complete' : 'incomplete; excluded from session means' }} · trial {{ money(day.trial_net_scenario) }} · control {{ money(day.control_net_scenario) }}</p> }
+      @for (day of test.daily; track day.date) {
+        <p>{{ day.date }} · {{ day.collection ? coverageLabel(day.collection.primary_status) : day.complete ? 'complete' : 'incomplete; excluded from session means' }} · trial {{ money(day.trial_net_scenario) }} · control {{ money(day.control_net_scenario) }}</p>
+        @if (day.collection?.reasons?.length) { <small>@for (reason of day.collection!.reasons; track reason) { {{ coverageLabel(reason) }}@if (!$last) { · } }</small> }
+      }
       <small>Complete no-entry sessions count as zero. Missing source records or outcomes do not.</small>
     } @else {
       @if (comparisonError() || comparison()?.status === 'unavailable') { <p role="alert">Comparison evidence unavailable.</p> }

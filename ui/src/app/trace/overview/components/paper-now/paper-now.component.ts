@@ -154,6 +154,25 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     return (this.trialStarted ? this.trialSessionError() : this.error()) || this.currentSession?.status === 'unavailable';
   }
 
+  get sessionCoverage() {
+    return this.currentSession?.session_coverage?.find(day => day.date === this.date) ?? null;
+  }
+
+  coverageLabel(value: string): string {
+    const labels: Record<string, string> = {
+      complete: 'Complete', in_progress: 'Session in progress', incomplete: 'Incomplete',
+      excluded: 'Excluded from primary results', scheduled: 'Session not started', no_evidence: 'No paper cycles recorded',
+      no_paper_cycles: 'No paper cycles recorded', missing_open_capture: 'Opening paper capture missing',
+      missing_close_capture: 'Closing paper capture missing', capture_gap: 'Gap exceeds 12 minutes',
+      non_increasing_capture_clock: 'Capture timestamps are inconsistent', future_capture: 'Capture timestamp is in the future',
+      source_definition_mismatch: 'Paper source definitions do not match', decision_unavailable: 'Entry decision data missing',
+      paper_source_stale: 'Latest paper cycle is over 12 minutes old', entry_onsets_unreconciled: 'Signal onset records do not reconcile',
+      outcome_unevaluable: 'One or more trade paths cannot be evaluated', outcome_still_open: 'Exit outcome missing after close',
+      position_state_unknown: 'Earlier position state is unknown',
+    };
+    return labels[value] ?? value.replaceAll('_', ' ');
+  }
+
   sessionTrades(status: string): PaperLedgerRow[] {
     return (this.currentSession?.rows || []).filter(row => row.strategy_id === 'spx-directional-vertical.v1' && row.status === status);
   }

@@ -37,4 +37,9 @@ h3 small { font-size: .72rem; font-weight: normal; }
 .trade-strikes { display: flex; flex-wrap: wrap; gap: .4rem .75rem; margin-top: .5rem; color: #d7e7ff; font-size: .85rem; }
 .trade-strikes > span { color: #a2b3c9; }
 .supporting-data summary { cursor: pointer; color: #bed5fb; }
+.paper-coverage { margin-top: .75rem; padding: .75rem; border-left: 3px solid #759bc9; background: rgba(8,12,18,.32); }
+.paper-coverage[data-status='excluded'] { border-left-color: #fbbf24; }
+.paper-coverage[data-status='complete'] { border-left-color: #6ee7b7; }
+.paper-coverage p { margin: .25rem 0 .5rem; }
+.paper-coverage ul { padding-left: 1.25rem; margin: .5rem 0; color: #c8d6e8; font-size: .85rem; }
 @media (max-width: 600px) { .paper-now { padding: .85rem; } header { flex-direction: column; } .performance-metrics { grid-template-columns: 1fr; } }

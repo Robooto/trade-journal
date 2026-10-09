@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, computed, effect, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import type { ResearchComparison } from './data-access/generated/research-contracts';
 
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus } from './trace.models';
@@ -23,6 +24,18 @@ const TRACE_REFRESH_DELAY_MINUTES = 1;
   standalone: false,
 })
 export class TracePageComponent implements OnInit, OnDestroy {
+  comparisonLabel(comparison: ResearchComparison): string {
+    if (comparison.status === 'comparable') return 'Comparable with prior period';
+    const reasons: Record<string, string> = {
+      study_definition_changed: 'Study definition changed; prior comparison withheld',
+      previous_evidence_unavailable: 'Prior evidence unavailable',
+      previous_period_invalid: 'Prior period overlaps or does not match',
+      report_missing_or_unverified: 'Source evidence missing or could not be verified',
+      definition_provenance_unavailable: 'Study definition evidence unavailable',
+    };
+    return comparison.reason ? reasons[comparison.reason] ?? 'Comparison unavailable' : 'Comparison unavailable';
+  }
+
   activeWorkspaceTab: 'trace' | 'paper' = 'trace';
   priceLevelPrice: number | null = null;
   editingPriceLevelId: string | null = null;

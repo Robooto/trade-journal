@@ -55,6 +55,7 @@ export type PaperLedgerContract = {
   readonly strategy_summaries?: ReadonlyArray<StrategySummary>;
   readonly distance_shadow?: DistanceShadow | null;
   readonly forward_experiment?: Readonly<Record<string, unknown>> | null;
+  readonly session_coverage?: ReadonlyArray<PaperSessionCoverage>;
 };
 
 export type PaperPolicy = {
@@ -65,6 +66,21 @@ export type PaperPolicy = {
   readonly kind: "baseline" | "shadow" | "archive";
   readonly timing_policy: string;
   readonly width_points?: number | null;
+};
+
+export type PaperSessionCoverage = {
+  readonly date: string;
+  readonly source_status: "scheduled" | "no_evidence" | "complete" | "incomplete" | "in_progress";
+  readonly primary_status: "scheduled" | "complete" | "excluded" | "in_progress";
+  readonly reasons: ReadonlyArray<string>;
+  readonly observed_cycles: number;
+  readonly first_capture_at: string | null;
+  readonly last_capture_at: string | null;
+  readonly largest_gap_seconds: number | null;
+  readonly last_capture_age_seconds: number | null;
+  readonly entry_onsets_reconciled: boolean;
+  readonly unknown_position_state: boolean;
+  readonly trial_outcomes: Readonly<Record<string, number>>;
 };
 
 export type PaperSummary = {
@@ -107,6 +123,7 @@ export type PrimaryResearchTest = {
   readonly interval_high: number | null;
   readonly unit: "pp" | "SPX points";
   readonly expected_direction?: string | null;
+  readonly comparison?: ResearchComparison | null;
 };
 
 export type PublishedEvidence = {
@@ -132,6 +149,14 @@ export type QuotePilotConfig = {
   readonly order_submission_enabled: boolean;
 };
 
+export type ResearchComparison = {
+  readonly scope: "week" | "cumulative";
+  readonly status: "comparable" | "suppressed" | "unavailable";
+  readonly reason: string | null;
+  readonly previous_week_start: string | null;
+  readonly previous_week_end: string | null;
+};
+
 export type ResearchStatusContract = {
   readonly schema_version: "trace-study-registry.v1";
   readonly as_of: string;
@@ -151,6 +176,7 @@ export type ResearchStudy = {
   readonly validation_status: string;
   readonly evidence_tables?: ReadonlyArray<PublishedEvidence>;
   readonly primary_tests?: ReadonlyArray<PrimaryResearchTest>;
+  readonly comparisons?: ReadonlyArray<ResearchComparison>;
 };
 
 export type StrategySummary = {
