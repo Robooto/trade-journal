@@ -44,3 +44,24 @@ export interface QuotePilotStatus {
   maximum_quote_age_seconds: number | null; maximum_leg_skew_seconds: number | null;
   maximum_response_seconds: number | null; authentication_blocked: boolean;
 }
+export interface PaperResearchScorecard {
+  readonly schema_version: 'paper-research-scorecard.v1';
+  readonly date: string;
+  readonly as_of: string;
+  readonly status: 'not_scheduled' | 'scheduled' | 'collecting' | 'attention' | 'complete';
+  readonly attention_reasons: readonly string[];
+  readonly paired_common_entries: number;
+  readonly capacity_gap_count: number;
+  readonly source_signal_coverage: { readonly expected_elapsed_slots: number; readonly missing_slots: number; readonly invalid_slots: number; readonly complete_session: boolean };
+  readonly runtime: { readonly last_tick_started_at: string | null; readonly maximum_tick_seconds: number | null };
+  readonly requests: { readonly used: number; readonly maximum_daily_requests: number; readonly failed: number; readonly pending: number; readonly maximum_duration_seconds: number | null; readonly maximum_quote_symbols: number | null; readonly blocked_reasons: readonly string[] };
+  readonly widths: readonly {
+    readonly width_points: number; readonly opportunities: number; readonly valid_entries: number;
+    readonly unavailable_entries: number; readonly pending_entries: number;
+    readonly expected_quote_minutes: number; readonly valid_quote_minutes: number;
+    readonly invalid_quote_minutes: number; readonly missing_quote_minutes: number;
+    readonly entry_failure_reasons: Readonly<Record<string, number>>;
+    readonly quote_failure_reasons: Readonly<Record<string, number>>;
+    readonly maximum_quote_age_seconds: number | null;
+  }[];
+}

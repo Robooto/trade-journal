@@ -40,6 +40,10 @@ export class TraceApiService {
     return this.http.get<import('./paper.models').QuotePilotStatus>(`${this.baseUrl}/paper-quote-pilot`, { params: { date } });
   }
 
+  paperResearchScorecard(date: string): Observable<import('./paper.models').PaperResearchScorecard> {
+    return this.http.get<import('./paper.models').PaperResearchScorecard>(`${this.baseUrl}/paper-research-scorecard`, { params: { date } });
+  }
+
   paperCatalog(date: string): Observable<PaperCatalog> {
     return this.http.get<PaperCatalog>(`${this.baseUrl}/paper-catalog`, { params: { as_of: date } });
   }

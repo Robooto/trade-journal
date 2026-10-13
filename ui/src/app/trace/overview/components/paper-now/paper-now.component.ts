@@ -36,6 +36,9 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   readonly trialSessionError = signal(false);
   readonly pilot = signal<QuotePilotStatus | null>(null);
   readonly pilotError = signal(false);
+  readonly researchHealth = signal<import('../../data-access/paper.models').PaperResearchScorecard | null>(null);
+  readonly researchHealthError = signal(false);
+  private researchHealthRequest?: Subscription;
   private trialRequest?: Subscription;
   private trialSessionRequest?: Subscription;
   private pilotRequest?: Subscription;
@@ -50,6 +53,12 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   get policyId(): string { return this.catalog()?.active?.policy_id ?? ''; }
 
   ngOnChanges(): void {
+    this.researchHealthRequest?.unsubscribe(); this.researchHealth.set(null); this.researchHealthError.set(false);
+    if (this.date && typeof this.api.paperResearchScorecard === 'function') {
+      this.researchHealthRequest = this.api.paperResearchScorecard(this.date).subscribe({
+        next: value => this.researchHealth.set(value), error: () => this.researchHealthError.set(true),
+      });
+    }
     this.decisionRequest?.unsubscribe(); this.decision.set(null); this.decisionError.set(false); this.decisionLoading.set(false);
     if (this.date && this.captureTs) {
       this.decisionLoading.set(true);
@@ -127,7 +136,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.researchHealthRequest?.unsubscribe(); this.decisionRequest?.unsubscribe(); this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
 
   time(value: string | null | undefined): string {
     if (!value) return 'Not available';

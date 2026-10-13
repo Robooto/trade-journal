@@ -59,3 +59,11 @@ curl --fail http://127.0.0.1:8877/research-api/api/flowpatrol/dates
 Stopping or blocking the market-data API should make the latter two fail
 without changing the first result. Research availability is intentionally not
 part of the Trade Journal container health check.
+
+## Spread research collection health
+
+The Paper view reads `/research-api/api/trace/paper-research-scorecard?date=YYYY-MM-DD`
+from the pipeline. This shows per-width collection integrity separately from P/L.
+Missing/unreadable evidence is explicit. The existing proxy needs no changes,
+and this read makes no brokerage calls. Pipeline owns the definitions and daily
+report timer; see the workspace API contracts and spread research review plan.
