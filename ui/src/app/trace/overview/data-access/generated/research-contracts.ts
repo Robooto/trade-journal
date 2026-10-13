@@ -68,6 +68,27 @@ export type PaperPolicy = {
   readonly width_points?: number | null;
 };
 
+export type PaperResearchScorecard = {
+  readonly schema_version: "paper-research-scorecard.v1";
+  readonly date: string;
+  readonly as_of: string;
+  readonly status: "not_scheduled" | "scheduled" | "collecting" | "attention" | "complete";
+  readonly attention_reasons: ReadonlyArray<string>;
+  readonly session_ended: boolean;
+  readonly sources: Readonly<Record<string, "available" | "missing_store" | "missing_table" | "restore_quarantined">>;
+  readonly source_signal_coverage: ResearchSignalCoverage;
+  readonly paired_common_entries: number;
+  readonly widths: ReadonlyArray<ResearchWidthCoverage>;
+  readonly capacity_gap_count: number;
+  readonly runtime: ResearchRuntimeHealth;
+  readonly requests: ResearchRequestHealth;
+  readonly config_sha256: string;
+  readonly input_rows_sha256: string;
+  readonly automatic_promotion: false;
+  readonly order_submission_enabled: false;
+  readonly health_definition: string;
+};
+
 export type PaperSessionCoverage = {
   readonly date: string;
   readonly source_status: "scheduled" | "no_evidence" | "complete" | "incomplete" | "in_progress";
@@ -157,6 +178,28 @@ export type ResearchComparison = {
   readonly previous_week_end: string | null;
 };
 
+export type ResearchRequestHealth = {
+  readonly used: number;
+  readonly maximum_daily_requests: number;
+  readonly failed: number;
+  readonly pending: number;
+  readonly maximum_duration_seconds: number | null;
+  readonly maximum_quote_symbols: number | null;
+  readonly blocked_reasons: ReadonlyArray<string>;
+};
+
+export type ResearchRuntimeHealth = {
+  readonly last_tick_started_at: string | null;
+  readonly maximum_tick_seconds: number | null;
+};
+
+export type ResearchSignalCoverage = {
+  readonly expected_elapsed_slots: number;
+  readonly missing_slots: number;
+  readonly invalid_slots: number;
+  readonly complete_session: boolean;
+};
+
 export type ResearchStatusContract = {
   readonly schema_version: "trace-study-registry.v1";
   readonly as_of: string;
@@ -177,6 +220,22 @@ export type ResearchStudy = {
   readonly evidence_tables?: ReadonlyArray<PublishedEvidence>;
   readonly primary_tests?: ReadonlyArray<PrimaryResearchTest>;
   readonly comparisons?: ReadonlyArray<ResearchComparison>;
+};
+
+export type ResearchWidthCoverage = {
+  readonly width_points: number;
+  readonly opportunities: number;
+  readonly valid_entries: number;
+  readonly unavailable_entries: number;
+  readonly pending_entries: number;
+  readonly entry_failure_reasons: Readonly<Record<string, number>>;
+  readonly expected_quote_minutes: number;
+  readonly valid_quote_minutes: number;
+  readonly invalid_quote_minutes: number;
+  readonly missing_quote_minutes: number;
+  readonly quote_failure_reasons: Readonly<Record<string, number>>;
+  readonly maximum_quote_age_seconds: number | null;
+  readonly last_quote_received_at: string | null;
 };
 
 export type StrategySummary = {

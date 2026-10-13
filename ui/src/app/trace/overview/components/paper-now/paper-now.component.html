@@ -135,31 +135,4 @@
   </div>
 </ng-template>
 
-@if (researchHealthError()) {
-  <section class="width-health" role="status">Spread research collection status unavailable.</section>
-} @else if (researchHealth(); as health) {
-  @if (health.status !== 'not_scheduled') {
-    <section class="width-health" [attr.data-status]="health.status" aria-labelledby="width-health-title">
-      <header><h3 id="width-health-title">Spread research collection · {{ health.date }}</h3><span>{{ health.status.replaceAll('_', ' ') }}</span></header>
-      <p>{{ health.paired_common_entries }} common valid entries across all widths · {{ health.requests.used }}/{{ health.requests.maximum_daily_requests }} requests · {{ health.capacity_gap_count }} capacity gaps.</p>
-      <p>Signal slots: {{ health.source_signal_coverage.expected_elapsed_slots - health.source_signal_coverage.missing_slots - health.source_signal_coverage.invalid_slots }}/{{ health.source_signal_coverage.expected_elapsed_slots }} valid so far. Longest collection tick: {{ health.runtime.maximum_tick_seconds == null ? 'Unavailable' : (health.runtime.maximum_tick_seconds | number:'1.1-1') + ' s' }}.</p>
-      @if (health.attention_reasons.length) {
-        <p role="status">Needs attention: @for (reason of health.attention_reasons; track reason) { {{ reason.replaceAll('_', ' ') }}@if (!$last) { · } }</p>
-      }
-      <div class="width-table-scroll"><table>
-        <caption>Recorded quote coverage through close, independent of simulated exits</caption>
-        <thead><tr><th>Width</th><th>Valid entries</th><th>Unavailable</th><th>Valid minutes</th><th>Invalid</th><th>Missing</th></tr></thead>
-        <tbody>@for (row of health.widths; track row.width_points) {
-          <tr><th>{{ row.width_points }}</th><td>{{ row.valid_entries }}/{{ row.opportunities }}</td><td>{{ row.unavailable_entries }}</td><td>{{ row.valid_quote_minutes }}/{{ row.expected_quote_minutes }}</td><td>{{ row.invalid_quote_minutes }}</td><td>{{ row.missing_quote_minutes }}</td></tr>
-        }</tbody>
-      </table></div>
-      <details><summary>Entry and quote failure reasons</summary>
-        @for (row of health.widths; track row.width_points) {
-          @for (reason of row.entry_failure_reasons | keyvalue; track reason.key) { <p>{{ row.width_points }} wide · entry {{ reason.key.replaceAll('_', ' ') }}: {{ reason.value }}</p> }
-          @for (reason of row.quote_failure_reasons | keyvalue; track reason.key) { <p>{{ row.width_points }} wide · quote {{ reason.key.replaceAll('_', ' ') }}: {{ reason.value }}</p> }
-        }
-      </details>
-      <small>Collection health measures data integrity. Trading profits and losses do not change this status.</small>
-    </section>
-  }
-}
+<app-paper-research-health [date]="date" [refreshAt]="refreshAt" />

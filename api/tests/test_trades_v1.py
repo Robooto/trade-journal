@@ -1,6 +1,17 @@
 import pytest
 
 
+def spy_option_market(token, eq, eq_opt, future, future_opt):
+    assert eq == ["SPY"]
+    assert eq_opt == ["SPY_C"]
+    assert future == []
+    assert future_opt == []
+    return [
+        {"symbol": "SPY_C", "mark": "10", "close": "9"},
+        {"symbol": "SPY", "beta": "1"},
+    ]
+
+
 @pytest.mark.asyncio
 async def test_trades_grouped(client, monkeypatch):
     """Verify /v1/trades groups positions and skips equity-only accounts."""
@@ -332,15 +343,7 @@ async def test_approximate_pl_long(client, monkeypatch):
             "implied-volatility-index-5-day-change": "0.005",
         }]
 
-    def fake_market(token, eq, eq_opt, future, future_opt):
-        assert eq == ["SPY"]
-        assert eq_opt == ["SPY_C"]
-        assert future == []
-        assert future_opt == []
-        return [
-            {"symbol": "SPY_C", "mark": "10", "close": "9"},
-            {"symbol": "SPY", "beta": "1"},
-        ]
+    fake_market = spy_option_market
 
     def fake_balance(token, acct):
         return {
@@ -659,15 +662,7 @@ async def test_percent_used_bp(client, monkeypatch):
     def fake_vol(token, symbols):
         return []
 
-    def fake_market(token, eq, eq_opt, future, future_opt):
-        assert eq == ["SPY"]
-        assert eq_opt == ["SPY_C"]
-        assert future == []
-        assert future_opt == []
-        return [
-            {"symbol": "SPY_C", "mark": "10", "close": "9"},
-            {"symbol": "SPY", "beta": "1"},
-        ]
+    fake_market = spy_option_market
 
     def fake_balance(token, acct):
         return {

@@ -40,8 +40,8 @@ export class TraceApiService {
     return this.http.get<import('./paper.models').QuotePilotStatus>(`${this.baseUrl}/paper-quote-pilot`, { params: { date } });
   }
 
-  paperResearchScorecard(date: string): Observable<import('./paper.models').PaperResearchScorecard> {
-    return this.http.get<import('./paper.models').PaperResearchScorecard>(`${this.baseUrl}/paper-research-scorecard`, { params: { date } });
+  paperResearchScorecard(date: string): Observable<import('./generated/research-contracts').PaperResearchScorecard> {
+    return this.http.get<import('./generated/research-contracts').PaperResearchScorecard>(`${this.baseUrl}/paper-research-scorecard`, { params: { date } });
   }
 
   paperCatalog(date: string): Observable<PaperCatalog> {

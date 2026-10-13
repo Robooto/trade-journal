@@ -1,3 +1,4 @@
+import { researchScorecardForTest } from '../../data-access/paper-research-scorecard.fixture';
 import { TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { catalogForTest } from '../../data-access/paper-catalog.fixture';
@@ -24,7 +25,7 @@ const response = { status:'available', total:4, rows:[
   complete_eligible_sessions:0, eligible_trial_closes:0, mean_session_net_scenario:null, mean_session_net_interval_95:null, daily:[]} };
 
 function apiFixture() {
-  return { paperResearchScorecard:vi.fn<(...args: unknown[]) => import('rxjs').Observable<unknown>>(()=>of({schema_version:'paper-research-scorecard.v1',status:'not_scheduled'})), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
+  return { paperResearchScorecard:vi.fn((date: string) => of(researchScorecardForTest(date))), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
     paperQuotePilot:vi.fn(()=>of({status:'no_evidence',recorded_minutes:0,expected_minutes:0,missing_minutes:[],valid_observations:0,unavailable_observations:0,sample_states:{}})),
     decisionJournal:vi.fn(()=>of({decision_status:'ready',decision:'pass',trade_type:null,grade:'D',quality_score:25,reason_codes:['entry_score_or_gate_failed']})) };
 }
@@ -102,28 +103,20 @@ describe('PaperNowComponent current strategy overview', () => {
     const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Paper session coverage has not been published for this date');
   });
-  it('shows width gaps separately from trading performance',()=> {
-    api.paperResearchScorecard.mockReturnValue(of({
-      schema_version:'paper-research-scorecard.v1',date:'2026-10-13',status:'attention',
-      attention_reasons:['width_evidence_incomplete'],paired_common_entries:0,capacity_gap_count:2,
-      requests:{used:20,maximum_daily_requests:500},runtime:{maximum_tick_seconds:8},
-      source_signal_coverage:{expected_elapsed_slots:6,missing_slots:1,invalid_slots:0},
-      widths:[{width_points:20,opportunities:2,valid_entries:1,unavailable_entries:1,expected_quote_minutes:30,
-        valid_quote_minutes:25,invalid_quote_minutes:2,missing_quote_minutes:3,entry_failure_reasons:{chain_not_cached_at_onset:1},quote_failure_reasons:{stale_quote:2}}],
-    }));
-    const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-13');fixture.detectChanges();
-    const health=fixture.nativeElement.querySelector('.width-health');
-    expect(health.textContent).toContain('0 common valid entries');
-    expect(health.textContent).toContain('width evidence incomplete');
-    expect(health.textContent).toContain('chain not cached at onset');
-    expect(health.textContent).toContain('Trading profits and losses do not change this status');
-    expect(health.querySelectorAll('tbody tr').length).toBe(1);
+  it('refreshes daily health for date and refresh changes without reloading it for capture selection', () => {
+    const fixture = TestBed.createComponent(PaperNowComponent);
+    fixture.componentRef.setInput('date', '2026-10-13');
+    fixture.detectChanges();
+    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(1);
+    fixture.componentRef.setInput('captureTs', '2026-10-13T08:10:00-07:00');
+    fixture.detectChanges();
+    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(1);
+    fixture.componentRef.setInput('refreshAt', new Date());
+    fixture.detectChanges();
+    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(2);
+    fixture.componentRef.setInput('date', '2026-10-14');
+    fixture.detectChanges();
+    expect(api.paperResearchScorecard).toHaveBeenLastCalledWith('2026-10-14');
+    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(3);
   });
-  it('reports a failed health request without showing healthy zero counts',()=> {
-    api.paperResearchScorecard.mockReturnValue(throwError(()=>new Error('offline')));
-    const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-13');fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.width-health').textContent).toContain('status unavailable');
-    expect(fixture.nativeElement.querySelector('.width-health table')).toBeNull();
-  });
-
 });

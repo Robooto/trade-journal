@@ -1,0 +1,12 @@
+:host { display: block; min-width: 0; }
+.width-health { margin-top: 1rem; padding: 1rem; border: 1px solid #42516a; border-radius: .75rem; color: #eef4ff; background: #101b2b; }
+.width-health[data-status='attention'] { border-color: #fbbf24; }
+.width-table-scroll { overflow-x: auto; }
+.width-health table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.width-health th, .width-health td { padding: .55rem; text-align: right; border-bottom: 1px solid #42516a; }
+.width-health caption { text-align: left; color: #a2b3c9; margin-bottom: .5rem; }
+.width-health details { margin: .75rem 0; }
+header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
+h3 { margin: 0; font-size: 1rem; }
+header span, small, p { color: #a2b3c9; }
+header span { font-size: .72rem; }
