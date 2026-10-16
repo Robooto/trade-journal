@@ -19,3 +19,5 @@ tr[data-net='gain'] .net { color: #6ee7b7; }
 @media (max-width: 600px) { header { flex-direction: column; } }
 th, td { padding: .45rem .4rem; }
 .progress { width: 2.25rem; }
+.status { margin-left: .4rem; padding: .1rem .35rem; border-radius: .3rem; font-size: .7rem; background: #183b58; }
+.status[data-status='ready_for_review'] { background: rgba(250,204,21,.18); color: #fde68a; }

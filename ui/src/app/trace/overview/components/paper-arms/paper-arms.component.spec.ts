@@ -40,9 +40,9 @@ describe('PaperArmsComponent', () => {
     expect(rows.length).toBe(3);
     expect(rows[0].textContent).toContain('−$4,665.60');
     expect(rows[0].textContent).toContain('Comparison base');
-    expect(rows[0].textContent).toContain('Control');
     expect(rows[1].textContent).toContain('74/100 · 15/20');
     expect(rows[1].getAttribute('data-net')).toBe('loss');
+    expect(rows[1].querySelector('.status')).toBeNull();
     expect(rows[2].textContent).toContain('10-12–11-06');
     expect(rows[2].getAttribute('data-net')).toBe('gain');
   });

@@ -8,14 +8,13 @@
     </header>
     <p>Each row trades its own signals and rules, so compare profit per trade, not totals. A review floor triggers a review, never an automatic change.</p>
     <div class="table-scroll"><table>
-      <thead><tr><th>Strategy</th><th>Since</th><th>Trades</th><th>Net</th><th>Per trade</th><th>Win rate</th><th>Review: trades · sessions</th><th>Status</th></tr></thead>
+      <thead><tr><th>Strategy</th><th>Since</th><th>Trades</th><th>Net</th><th>Per trade</th><th>Win rate</th><th>Review: trades · sessions</th></tr></thead>
       <tbody>@for (arm of card.arms; track arm.arm_id) {
         <tr [attr.data-kind]="arm.kind" [attr.data-net]="arm.net_dollars < 0 ? 'loss' : arm.net_dollars > 0 ? 'gain' : 'flat'">
           <th>{{ arm.label }}</th><td>{{ arm.start_date.slice(5) }}@if (arm.end_date) {–{{ arm.end_date.slice(5) }} }</td>
           <td>{{ arm.closes }}</td><td class="net">{{ money(arm.net_dollars) }}</td><td class="net">{{ money(arm.net_per_close) }}</td>
           <td>{{ arm.win_rate === null || arm.win_rate === undefined ? '—' : (arm.win_rate | percent:'1.0-0') }}</td>
-          <td><span class="progress" [style.--fill]="fraction(arm)"></span>{{ progress(arm) }}</td>
-          <td>{{ status(arm) }}</td>
+          <td><span class="progress" [style.--fill]="fraction(arm)"></span>{{ progress(arm) }}@if (arm.status === 'ready_for_review' || arm.status === 'ended') { <strong class="status" [attr.data-status]="arm.status">{{ status(arm) }}</strong> }</td>
         </tr>
       }</tbody>
     </table></div>
