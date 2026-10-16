@@ -56,6 +56,22 @@
         <em>Research context · not scored</em>
       </article>
 
+      <article class="snapshot-card snapshot-card--charm" [class.snapshot-card--close-window]="charm?.close_window">
+        <span class="snapshot-label">Charm at Market</span>
+        <small>Charm research was retired October 16 after it failed to replicate. Shown as raw market data only.</small>
+        @if (charm; as point) {
+          <strong [attr.data-tone]="valueTone(point.charm_at_market)">{{ formatCompact(point.charm_at_market, true) }}</strong>
+          <small><b>Flip</b> {{ formatSpot(point.nearest_flip) }} · spot {{ formatSignedPoints(point.spot_minus_flip) }} pts from flip</small>
+          <small><b>Interval</b> {{ formatDuration(point.interval_minutes * 60) }} · source age {{ formatDuration(point.source_age_seconds) }}</small>
+          @if (point.close_window) { <small class="snapshot-warning">Close window · expiry effects can dominate</small> }
+          <em>Experimental · {{ charmOverview?.quality?.usable_percent | number:'1.1-1' }}% usable · not scored</em>
+        } @else if (charmLoading) {
+          <strong>Loading</strong><small>Matching the Charm capture.</small>
+        } @else {
+          <strong>Unavailable</strong><small>{{ charmError || 'No matched Charm capture for this session.' }}</small><em>Experimental · not scored</em>
+        }
+      </article>
+
       <article class="snapshot-card snapshot-card--structure">
         <span class="snapshot-label">Price Structure</span>
         <small>Distance is research context. Expand candidate evidence below for sample sizes and uncertainty; buffered underlying-price survival is not option profitability.</small>
@@ -85,21 +101,6 @@
         </div>
       </article>
 
-      <article class="snapshot-card snapshot-card--charm" [class.snapshot-card--close-window]="charm?.close_window">
-        <span class="snapshot-label">Charm at Market</span>
-        <small>Charm research was retired October 16 after it failed to replicate. Shown as raw market data only.</small>
-        @if (charm; as point) {
-          <strong [attr.data-tone]="valueTone(point.charm_at_market)">{{ formatCompact(point.charm_at_market, true) }}</strong>
-          <small><b>Flip</b> {{ formatSpot(point.nearest_flip) }} · spot {{ formatSignedPoints(point.spot_minus_flip) }} pts from flip</small>
-          <small><b>Interval</b> {{ formatDuration(point.interval_minutes * 60) }} · source age {{ formatDuration(point.source_age_seconds) }}</small>
-          @if (point.close_window) { <small class="snapshot-warning">Close window · expiry effects can dominate</small> }
-          <em>Experimental · {{ charmOverview?.quality?.usable_percent | number:'1.1-1' }}% usable · not scored</em>
-        } @else if (charmLoading) {
-          <strong>Loading</strong><small>Matching the Charm capture.</small>
-        } @else {
-          <strong>Unavailable</strong><small>{{ charmError || 'No matched Charm capture for this session.' }}</small><em>Experimental · not scored</em>
-        }
-      </article>
 
       <article class="snapshot-card snapshot-card--nodes">
         <span class="snapshot-label">Signed GEX Nodes</span>

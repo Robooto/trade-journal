@@ -27,6 +27,7 @@ import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.compone
 import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
 import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
+import { TradeReadComponent } from './components/trade-read/trade-read.component';
 
 class CharmApiStub {
   readonly surface = vi.fn(() => of({
@@ -124,6 +125,7 @@ describe('TracePageComponent', () => {
         PaperLedgerComponent,
         PaperNowComponent,
         ResearchSummaryComponent,
+        TradeReadComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,

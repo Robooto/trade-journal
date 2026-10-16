@@ -19,7 +19,7 @@
 
   <div class="gex-research-caution" role="note">
     <mat-icon>science</mat-icon>
-    <span>Research context only: negative-node breaches showed more follow-through in the current sample, but the effect changes across 3-, 5-, and 8-point touch definitions. Negative GEX is not support, resistance, a target, or a pass-through signal.</span>
+    <span>Supported research (Oct 16): price breaks through negative nodes within 30 minutes about 10 points more often than through comparable levels (372 pairs, 100 days). Treat a negative node as a weaker barrier, not a target or a trade signal; it is untested on option P/L.</span>
   </div>
 
   @if (activeNodes.length) {
@@ -47,6 +47,9 @@
           <line class="gex-grid" x1="58" [attr.y1]="tick.position" [attr.x2]="mapWidth - 36" [attr.y2]="tick.position" />
           <text class="gex-axis-label" x="50" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
         }
+        <defs><clipPath id="gex-plot-clip"><rect x="0" y="18" [attr.width]="mapWidth" [attr.height]="mapHeight - 62" /></clipPath></defs>
+        <!-- Near-price mode zooms on recent prices; earlier price and nodes are clipped at the top and bottom of the plot. -->
+        <g clip-path="url(#gex-plot-clip)">
         @for (node of renderNodes; track node.key) {
           @if (node.negative) {
             <path [attr.class]="node.cssClass" [attr.d]="node.path" [attr.opacity]="node.opacity"><title>{{ node.title }}</title></path>
@@ -55,6 +58,7 @@
           }
         }
         <polyline class="gex-spot-line" [attr.points]="spotPoints" />
+        </g>
         <line class="gex-active-line" [attr.x1]="activeX" y1="18" [attr.x2]="activeX" [attr.y2]="mapHeight - 44" />
         <circle class="gex-active-spot" [attr.cx]="activeX" [attr.cy]="activeY" r="5" />
         <g class="marked-price-layer" aria-label="Marked price levels">

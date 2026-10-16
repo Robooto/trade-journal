@@ -5,15 +5,24 @@
 @tailwind utilities;
 
 /* TRACE's page stylesheet is budgeted separately; these disclosure rules are scoped here. */
-.trace-page .research-evidence-strip > summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; list-style: none; }
-.trace-page .research-evidence-strip > summary::-webkit-details-marker { display: none; }
-.trace-page .research-evidence-strip > summary::after { content: '⌄'; color: #8db5ff; font-size: 1.2rem; }
-.trace-page .research-evidence-strip[open] > summary::after { content: '⌃'; }
-.trace-page .research-evidence-strip > summary > span { display: grid; gap: .1rem; }
-.trace-page .research-evidence-strip > summary small { color: #91a3ba; font-size: .74rem; }
+.trace-page .price-level-disclosure,
+.trace-page .retired-disclosure { border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 1rem; background: rgba(22, 27, 34, 0.92); }
+.trace-page .price-level-disclosure > summary,
+.trace-page .retired-disclosure > summary { display: flex; align-items: baseline; gap: .75rem; padding: .85rem 1rem; cursor: pointer; list-style: none; color: #eef4ff; }
+.trace-page .price-level-disclosure > summary::-webkit-details-marker,
+.trace-page .retired-disclosure > summary::-webkit-details-marker { display: none; }
+.trace-page .price-level-disclosure > summary::before,
+.trace-page .retired-disclosure > summary::before { content: '▸'; color: #8db5ff; }
+.trace-page .price-level-disclosure[open] > summary::before,
+.trace-page .retired-disclosure[open] > summary::before { content: '▾'; }
+.trace-page .price-level-disclosure > summary small,
+.trace-page .retired-disclosure > summary small { color: #91a3ba; font-size: .74rem; }
+.trace-page .price-level-panel--embedded { border: 0; border-radius: 0 0 1rem 1rem; background: transparent; padding-top: 0; }
+.trace-page .retired-disclosure[open] { padding-bottom: .5rem; }
 
 html {
-  color-scheme: light dark;
+  /* The app is dark-only; Material must not follow a light OS preference onto dark surfaces. */
+  color-scheme: dark;
   @include mat.theme((
     color: mat.$azure-palette,
     typography: Roboto,

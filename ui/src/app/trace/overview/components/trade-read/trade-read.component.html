@@ -1,0 +1,55 @@
+<section class="trade-read" aria-labelledby="trade-read-title" [attr.data-decision]="decision()?.decision_status === 'ready' ? decision()?.decision : 'none'">
+  <header>
+    <div><p class="eyebrow">Trade read · {{ time(captureTs) }} Pacific</p><h2 id="trade-read-title">What this capture says</h2></div>
+    <span>Paper only · not an order</span>
+  </header>
+
+  @if (loading()) { <p role="status">Reading the bot's decision…</p> }
+  @else if (error()) { <p role="alert">The bot's decision is unavailable for this capture.</p> }
+  @else if (decision(); as d) {
+    <p class="verdict">
+      @if (d.decision_status === 'ineligible') { <strong>Outside the entry window.</strong> No new trades from this capture. }
+      @else if (d.decision_status === 'unavailable') { <strong>Waiting for complete data.</strong> }
+      @else if (d.decision === 'take') { <strong class="take">Bot takes a {{ side(d.trade_type) }}</strong> · grade {{ d.grade }} · {{ d.quality_score }}/100 }
+      @else {
+        <strong class="pass">Bot passes</strong>@if (d.trade_type) { on a {{ side(d.trade_type) }} setup } · grade {{ d.grade }} · {{ d.quality_score }}/100
+        @if (failedGates(d).length) { <span class="gates">Blocked because {{ failedGates(d).join('; ') }}.</span> }
+      }
+    </p>
+
+    @if (d.frozen_structure && d.trade_type) {
+      <div class="facts">
+        <article>
+          <span class="label">Distance to structure</span>
+          <strong>{{ d.frozen_structure.distance_points_at_freeze | number:'1.1-1' }} pts · {{ bandLabel(d.frozen_structure.distance_band) }}</strong>
+          @if (bandEvidence(d.frozen_structure.distance_band); as evidence) {
+            <small>{{ evidence.rate }} of strikes in this band held 60 minutes ({{ evidence.signals }} past signals).</small>
+          } @else { <small>Band history unavailable.</small> }
+        </article>
+        <article>
+          <span class="label">Likely short strike</span>
+          <strong>{{ shortStrike() }} {{ d.trade_type === 'bull_put_credit' ? 'put' : 'call' }}</strong>
+          <small>5+ pts beyond the {{ d.frozen_structure.type.replaceAll('_', ' ') }} at {{ d.frozen_structure.level | number:'1.0-1' }}.</small>
+        </article>
+        <article [attr.data-tone]="negativeNodesInPath().length ? 'warn' : 'ok'">
+          <span class="label">Negative GEX in the way</span>
+          @if (negativeNodesInPath()[0]; as node) {
+            <strong>Yes · {{ node.center_strike | number:'1.0-1' }}</strong>
+            <small>A weaker barrier: price breaks negative nodes ~10 pts more often (supported).</small>
+          } @else {
+            <strong>None</strong>
+            <small>No active negative node between spot and the strike.</small>
+          }
+        </article>
+        @if (minutesLeft(); as minutes) {
+          <article>
+            <span class="label">Time to 13:00 close</span>
+            <strong>{{ duration(minutes) }}</strong>
+            <small>Less time means better odds of surviving to the close, and a smaller credit.</small>
+          </article>
+        }
+      </div>
+    }
+    <small class="footnote">Distance and time are already priced into the credit. Supported research is context, not an edge.</small>
+  } @else { <p>Select a capture to read it.</p> }
+</section>

@@ -11,11 +11,16 @@ header span, .hint, small { color: #a2b3c9; font-size: .75rem; }
 .group[data-tier='replicating'] { border-left-color: #fbbf24; }
 .group[data-tier='diagnostic'] { border-left-color: #759bc9; }
 .group[data-tier='retired'] { border-left-color: #64748b; }
-summary { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
-summary span { padding: .05rem .45rem; border-radius: .6rem; background: rgba(148,163,184,.16); font-size: .72rem; }
+.group > summary { display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+.group > summary span { padding: .05rem .45rem; border-radius: .6rem; background: rgba(148,163,184,.16); font-size: .72rem; }
 .hint { margin: .45rem 0 .25rem; }
 ul { display: grid; gap: .55rem; margin: .4rem 0 0; padding: 0; list-style: none; }
 li { display: grid; gap: .15rem; font-size: .84rem; line-height: 1.45; }
 li span { color: #c8d6e8; }
 .footnote { font-size: .72rem; }
 @media (max-width: 600px) { header { flex-direction: column; } }
+.research-summary > summary { display: grid; gap: .5rem; cursor: pointer; list-style: none; }
+.research-summary > summary::-webkit-details-marker { display: none; }
+.toggle { color: #8db5ff; font-size: .78rem; }
+.toggle::before { content: '▸ '; }
+.research-summary[open] .toggle::before { content: '▾ '; }

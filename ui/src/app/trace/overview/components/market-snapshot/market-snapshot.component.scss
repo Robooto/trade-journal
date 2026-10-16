@@ -23,7 +23,8 @@
 .snapshot-card b[data-hiro-shock='shock-negative'] { color:#fda4af; border-color:rgba(251,113,133,.38); background:rgba(251,113,133,.14); }
 .snapshot-card b[data-hiro-shock='extreme-positive'] { color:#dcfce7; border-color:rgba(134,239,172,.75); background:rgba(34,197,94,.32); box-shadow:0 0 10px rgba(74,222,128,.22); }
 .snapshot-card b[data-hiro-shock='extreme-negative'] { color:#ffe4e6; border-color:rgba(253,164,175,.75); background:rgba(225,29,72,.34); box-shadow:0 0 10px rgba(251,113,133,.22); }
-.snapshot-card--spot{grid-column:span 2}.snapshot-card--hiro{grid-column:span 3}.snapshot-card--pressure{grid-column:span 2}.snapshot-card--gamma{grid-column:span 2}.snapshot-card--volatility{grid-column:span 3}.snapshot-card--structure{grid-column:span 4}.snapshot-card--charm{grid-column:span 3}.snapshot-card--nodes{grid-column:span 5}
+/* Each row sums to 12 columns: spot+HIRO+pressure+gamma / volatility+Charm+structure / nodes. */
+.snapshot-card--spot{grid-column:span 2}.snapshot-card--hiro{grid-column:span 4}.snapshot-card--pressure{grid-column:span 3}.snapshot-card--gamma{grid-column:span 3}.snapshot-card--volatility{grid-column:span 3}.snapshot-card--charm{grid-column:span 3}.snapshot-card--structure{grid-column:span 6}.snapshot-card--nodes{grid-column:span 12}
 .snapshot-spot { margin:auto 0 .2rem; font-size:clamp(1.7rem,2.3vw,2.35rem)!important; letter-spacing:-.045em; }
 .snapshot-split { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); flex:1; gap:.65rem; }
 .snapshot-split>div { display:flex; min-width:0; flex-direction:column; gap:.28rem; }
@@ -40,7 +41,8 @@
 .snapshot-node>strong { font-size:.7rem; }.snapshot-node>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.snapshot-node>small{font-size:.62rem}
 .snapshot-node--negative { border-left-color:#b69cff; background:rgba(168,85,247,.08); }.snapshot-node--negative>b{color:#d5b5ff}.snapshot-node:not(.snapshot-node--negative)>b{color:#55d8ff}
 .snapshot-node--strengthening{box-shadow:inset 0 0 0 1px rgba(52,211,153,.35)}.snapshot-node--weakening{box-shadow:inset 0 0 0 1px rgba(251,191,36,.35)}.snapshot-node--forming{box-shadow:inset 0 0 0 1px rgba(216,180,254,.3)}.snapshot-node--migrating{box-shadow:inset 0 0 0 1px rgba(34,211,238,.3)}.snapshot-node--collapsing,.snapshot-node--collapsed,.snapshot-node--faded{opacity:.65}
-@media(max-width:1280px){.snapshot-card--spot,.snapshot-card--pressure,.snapshot-card--gamma{grid-column:span 4}.snapshot-card--hiro,.snapshot-card--volatility{grid-column:span 6}.snapshot-card--structure,.snapshot-card--charm{grid-column:span 6}.snapshot-card--nodes{grid-column:span 12}}
+/* Rows: spot+HIRO+pressure / gamma+volatility+Charm / structure / nodes. */
+@media(max-width:1280px){.snapshot-card--spot{grid-column:span 3}.snapshot-card--hiro{grid-column:span 5}.snapshot-card--pressure,.snapshot-card--gamma,.snapshot-card--volatility,.snapshot-card--charm{grid-column:span 4}.snapshot-card--structure,.snapshot-card--nodes{grid-column:span 12}}
 @media(max-width:760px){.snapshot-header{align-items:flex-start;flex-direction:column}.snapshot-grid{grid-template-columns:1fr}.snapshot-card{grid-column:1!important}.snapshot-split,.snapshot-node-groups{grid-template-columns:1fr}.snapshot-split>div+div{padding-left:0;padding-top:.6rem;border-left:0;border-top:1px solid rgba(148,163,184,.16)}}
 
 .candidate-evidence { margin-top: 1rem; padding: 1rem; border: 1px solid #42516a; border-radius: .75rem; }

@@ -1,9 +1,12 @@
-<section class="research-summary" aria-labelledby="research-summary-title">
-  <header>
-    <div><p class="eyebrow">TRACE research</p><h2 id="research-summary-title">What the research says</h2></div>
-    <span>{{ status.study_count }} active studies@if (status.latest_weekly_review) { · reviewed {{ status.latest_weekly_review.week_end }} }</span>
-  </header>
-  @if (status.headline) { <p class="headline">{{ status.headline }}</p> }
+<details class="research-summary">
+  <summary>
+    <header>
+      <div><p class="eyebrow">TRACE research</p><h2 id="research-summary-title">What the research says</h2></div>
+      <span>{{ studies('supported').length }} supported · {{ studies('replicating').length }} re-testing · {{ status.retired_studies?.length ?? 0 }} retired@if (status.latest_weekly_review) { · reviewed {{ status.latest_weekly_review.week_end }} }</span>
+    </header>
+    @if (status.headline) { <p class="headline">{{ status.headline }}</p> }
+    <span class="toggle">Evidence by study</span>
+  </summary>
   <div class="groups">
     @for (group of groups; track group.tier) {
       @if (studies(group.tier).length) {
@@ -35,4 +38,4 @@
     }
   </div>
   <small class="footnote">Research describes SPX price paths, not option profit. Nothing here places or authorizes trades.</small>
-</section>
+</details>
