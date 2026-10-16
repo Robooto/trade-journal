@@ -56,6 +56,8 @@ class TastyMarketData(TastyModel):
     vega: Optional[str | int | float] = None
     gamma: Optional[str | int | float] = None
     rho: Optional[str | int | float] = None
+    volatility: Optional[str | int | float] = None
+    theo_price: Optional[str | int | float] = Field(None, alias="theo-price")
 
 
 class TastyVolatilityMetric(TastyModel):
@@ -65,6 +67,17 @@ class TastyVolatilityMetric(TastyModel):
     )
     implied_volatility_index_5_day_change: Optional[str | int | float] = Field(
         None, alias="implied-volatility-index-5-day-change"
+    )
+    implied_volatility_index: Optional[str | int | float] = Field(None, alias="implied-volatility-index")
+    implied_volatility_percentile: Optional[str | int | float] = Field(None, alias="implied-volatility-percentile")
+    implied_volatility_30_day: Optional[str | int | float] = Field(None, alias="implied-volatility-30-day")
+    historical_volatility_30_day: Optional[str | int | float] = Field(None, alias="historical-volatility-30-day")
+    historical_volatility_60_day: Optional[str | int | float] = Field(None, alias="historical-volatility-60-day")
+    historical_volatility_90_day: Optional[str | int | float] = Field(None, alias="historical-volatility-90-day")
+    iv_hv_30_day_difference: Optional[str | int | float] = Field(None, alias="iv-hv-30-day-difference")
+    implied_volatility_updated_at: Optional[str] = Field(None, alias="implied-volatility-updated-at")
+    option_expiration_implied_volatilities: Optional[list[dict[str, Any]]] = Field(
+        None, alias="option-expiration-implied-volatilities"
     )
 
 

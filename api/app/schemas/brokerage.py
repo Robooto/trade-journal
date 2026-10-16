@@ -451,6 +451,7 @@ class OptionChainMetadataV1(BaseModel):
 class OptionQuoteSnapshotRequestV1(BaseModel):
     underlying_symbol: str = Field(min_length=1, max_length=32, pattern=r"^[A-Za-z0-9.^/-]+$")
     option_symbols: list[str] = Field(min_length=1, max_length=100)
+    include_model_values: bool = False
 
     model_config = {"extra": "forbid"}
 
@@ -469,6 +470,9 @@ class OptionQuoteObservationV1(BaseModel):
     gamma: Optional[float] = None
     theta: Optional[float] = None
     vega: Optional[float] = None
+    rho: Optional[float] = None
+    implied_volatility: Optional[float] = None
+    theo_price: Optional[float] = None
 
     model_config = {"extra": "forbid"}
 
@@ -482,5 +486,43 @@ class OptionQuoteSnapshotV1(BaseModel):
     missing_option_symbols: list[str] = Field(default_factory=list)
     source: SourceMetadataV1
     warnings: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class ExpirationImpliedVolatilityV1(BaseModel):
+    expiration_date: date
+    settlement_type: Optional[str] = None
+    option_chain_type: Optional[str] = None
+    implied_volatility: Optional[float] = None
+
+    model_config = {"extra": "forbid"}
+
+
+class MarketMetricV1(BaseModel):
+    symbol: str
+    implied_volatility_index: Optional[float] = None
+    implied_volatility_index_rank: Optional[float] = None
+    implied_volatility_percentile: Optional[float] = None
+    implied_volatility_index_5_day_change: Optional[float] = None
+    implied_volatility_30_day: Optional[float] = None
+    historical_volatility_30_day: Optional[float] = None
+    historical_volatility_60_day: Optional[float] = None
+    historical_volatility_90_day: Optional[float] = None
+    iv_hv_30_day_difference: Optional[float] = None
+    implied_volatility_updated_at: Optional[datetime] = None
+    expiration_implied_volatilities: list[ExpirationImpliedVolatilityV1] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class MarketMetricsV1(BaseModel):
+    schema_version: Literal["market-metrics.v1"] = "market-metrics.v1"
+    generated_at: datetime
+    requested_symbols: list[str]
+    metrics: list[MarketMetricV1]
+    missing_symbols: list[str] = Field(default_factory=list)
+    source: SourceMetadataV1
+    cached: bool = False
 
     model_config = {"extra": "forbid"}

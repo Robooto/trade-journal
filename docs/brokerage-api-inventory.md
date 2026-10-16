@@ -85,6 +85,8 @@ GET /v1/broker/orders
 GET /v1/broker/trades
 GET /v1/broker/quotes?symbols=SPY,QQQ
 GET /v1/broker/options/{symbol}/chain
+POST /v1/broker/option-quote-snapshots  (include_model_values: IV, theo price, rho)
+GET /v1/broker/market-metrics?symbols=SPX
 ```
 
 ## Wave 1 Foundation Status

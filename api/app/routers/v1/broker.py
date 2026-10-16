@@ -26,7 +26,10 @@ from app.schemas.brokerage import (
     BrokerWatchlistListV1,
     BrokerWatchlistResearchV1,
     BrokerWatchlistSummaryV1,
+    ExpirationImpliedVolatilityV1,
     HoldingSnapshotV1,
+    MarketMetricsV1,
+    MarketMetricV1,
     OptionChainMetadataV1,
     OptionQuoteObservationV1,
     OptionQuoteSnapshotRequestV1,
@@ -369,6 +372,9 @@ def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Sess
         bid_size=_number(row.bid_size), ask_size=_number(row.ask_size),
         volume=_number(row.volume), open_interest=_number(row.open_interest),
         delta=_number(row.delta), gamma=_number(row.gamma), theta=_number(row.theta), vega=_number(row.vega),
+        # Model values are opt-in so existing collectors receive byte-identical responses.
+        **({'rho': _number(row.rho), 'implied_volatility': _number(row.volatility),
+            'theo_price': _number(row.theo_price)} if request.include_model_values else {}),
     ) for row in market_rows]
     returned = {row.symbol for row in observations}
     missing = [symbol for symbol in symbols if symbol not in returned]
@@ -381,6 +387,70 @@ def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Sess
                 "fetched_at": generated_at, "status": "partial" if missing else "ok",
                 "missing_fields": missing},
     )
+
+
+_MARKET_METRICS_CACHE: dict[tuple[str, ...], tuple[datetime, MarketMetricsV1]] = {}
+_MARKET_METRICS_TTL = timedelta(seconds=60)
+
+
+@router.get(
+    "/market-metrics",
+    summary="Read implied and historical volatility metrics, including IV by expiration",
+    response_model=MarketMetricsV1,
+    response_model_exclude_none=True,
+)
+def get_market_metrics(symbols: str = Query(..., min_length=1, max_length=200), db: Session = Depends(get_db)):
+    requested = tuple(dict.fromkeys(s.strip().upper() for s in symbols.split(",") if s.strip()))
+    if not requested or len(requested) > 20:
+        raise HTTPException(status_code=422, detail="Request between one and twenty symbols.")
+    now = datetime.now(timezone.utc)
+    cached = _MARKET_METRICS_CACHE.get(requested)
+    if cached and now - cached[0] < _MARKET_METRICS_TTL:
+        return cached[1].model_copy(update={"cached": True})
+    token = _token_or_403(db)
+    try:
+        rows = tastytrade.fetch_volatility_data(token, list(requested))
+    except requests.RequestException as exc:
+        response = getattr(exc, "response", None)
+        status = response.status_code if response is not None else None
+        if status in (401, 403):
+            raise HTTPException(status_code=403, detail="Brokerage market metrics authorization is unavailable.") from exc
+        raise HTTPException(status_code=429 if status == 429 else 503,
+                            detail="Brokerage market metrics are temporarily unavailable.",
+                            headers={"Retry-After": "60"}) from exc
+    metrics = []
+    for row in rows:
+        expirations = []
+        for item in row.option_expiration_implied_volatilities or []:
+            try:
+                expiry = date.fromisoformat(str(item.get("expiration-date")))
+            except ValueError:
+                continue
+            expirations.append(ExpirationImpliedVolatilityV1(
+                expiration_date=expiry, settlement_type=item.get("settlement-type"),
+                option_chain_type=item.get("option-chain-type"),
+                implied_volatility=_number(item.get("implied-volatility"))))
+        metrics.append(MarketMetricV1(
+            symbol=row.symbol.upper(),
+            implied_volatility_index=_number(row.implied_volatility_index),
+            implied_volatility_index_rank=_number(row.implied_volatility_index_rank),
+            implied_volatility_percentile=_number(row.implied_volatility_percentile),
+            implied_volatility_index_5_day_change=_number(row.implied_volatility_index_5_day_change),
+            implied_volatility_30_day=_number(row.implied_volatility_30_day),
+            historical_volatility_30_day=_number(row.historical_volatility_30_day),
+            historical_volatility_60_day=_number(row.historical_volatility_60_day),
+            historical_volatility_90_day=_number(row.historical_volatility_90_day),
+            iv_hv_30_day_difference=_number(row.iv_hv_30_day_difference),
+            implied_volatility_updated_at=row.implied_volatility_updated_at,
+            expiration_implied_volatilities=expirations))
+    returned = {m.symbol for m in metrics}
+    missing = [symbol for symbol in requested if symbol not in returned]
+    payload = MarketMetricsV1(
+        generated_at=now, requested_symbols=list(requested), metrics=metrics, missing_symbols=missing,
+        source={"source": "tastytrade", "endpoint": "/market-metrics", "fetched_at": now,
+                "status": "partial" if missing else "ok", "missing_fields": missing})
+    _MARKET_METRICS_CACHE[requested] = (now, payload)
+    return payload
 
 
 @router.get(
