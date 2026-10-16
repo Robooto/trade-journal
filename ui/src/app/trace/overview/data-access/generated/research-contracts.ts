@@ -20,6 +20,87 @@ export type EvidenceTable = {
   readonly rows: ReadonlyArray<ReadonlyArray<string>>;
 };
 
+export type NegativePocketPolicyResult = {
+  readonly policy_id: string;
+  readonly cost_per_round_trip_dollars: number;
+  readonly entries: number;
+  readonly closed: number;
+  readonly net_dollars: number;
+  readonly net_per_close: number | null;
+  readonly win_rate: number | null;
+  readonly average_win: number | null;
+  readonly average_loss: number | null;
+};
+
+export type NegativePocketPrimary = {
+  readonly sessions: number;
+  readonly shadow_closes: number;
+  readonly baseline_closes: number;
+  readonly difference_per_close: number | null;
+  readonly interval_low: number | null;
+  readonly interval_high: number | null;
+  readonly interpretation: "insufficient_evidence" | "gamma_gate_not_demonstrably_protecting_pnl" | "gamma_gate_supported";
+  readonly interpretation_floor_dollars: number;
+  readonly required_sessions: number;
+  readonly required_closes: number;
+  readonly required_weeks: number;
+};
+
+export type NegativePocketReview = {
+  readonly schema_version: "negative-pocket-review.v1";
+  readonly policy_id: "negative-pocket-shadow.v1";
+  readonly start_date: string;
+  readonly from_date: string;
+  readonly to_date: string;
+  readonly as_of: string;
+  readonly status: "not_started" | "collecting" | "review_floor_reached";
+  readonly candidate_statuses: Readonly<Record<string, number>>;
+  readonly unavailable_reasons: Readonly<Record<string, number>>;
+  readonly sample_statuses: Readonly<Record<string, number>>;
+  readonly sessions_with_closes: number;
+  readonly primary: NegativePocketPrimary;
+  readonly policies: ReadonlyArray<NegativePocketPolicyResult>;
+  readonly baseline_closed: number;
+  readonly baseline_net_dollars: number;
+  readonly baseline_net_per_close: number | null;
+  readonly splits: ReadonlyArray<NegativePocketSplit>;
+  readonly trades: ReadonlyArray<NegativePocketTrade>;
+  readonly gex_context_review_date: string | null;
+  readonly automatic_promotion: false;
+  readonly order_submission_enabled: false;
+};
+
+export type NegativePocketSplit = {
+  readonly split: string;
+  readonly with_closed: number;
+  readonly with_net_per_close: number | null;
+  readonly without_closed: number;
+  readonly without_net_per_close: number | null;
+};
+
+export type NegativePocketTrade = {
+  readonly entry_id: string;
+  readonly date: string;
+  readonly signal_ts: string;
+  readonly trade_type: "bull_put_credit" | "bear_call_credit";
+  readonly quality_score: number | null;
+  readonly distance_band: string | null;
+  readonly short_strike: number | null;
+  readonly long_strike: number | null;
+  readonly entry_status: "pending" | "recorded" | "unavailable";
+  readonly entry_reason: string | null;
+  readonly entry_credit_dollars: number | null;
+  readonly entry_at: string | null;
+  readonly exit_at: string | null;
+  readonly status: "open" | "closed" | "skipped" | "unevaluable";
+  readonly exit_reason: string | null;
+  readonly net_pnl_dollars: number | null;
+  readonly variant_net_pnl_dollars: Readonly<Record<string, number | null>>;
+  readonly strike_gex: "negative" | "flat" | "positive" | null;
+  readonly path_gex_all_expiry: "negative" | "flat" | "positive" | null;
+  readonly gex_context_status: "available" | "missing_profile" | "unavailable";
+};
+
 export type PaperCatalog = {
   readonly schema_version?: "paper-catalog.v1";
   readonly as_of: string;

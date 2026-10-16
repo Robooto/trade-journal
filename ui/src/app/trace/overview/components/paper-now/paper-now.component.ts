@@ -1,5 +1,6 @@
 import type { PaperCatalog } from '../../data-access/generated/research-contracts';
 import { PaperResearchHealthComponent } from '../paper-research-health/paper-research-health.component';
+import { PaperNegativePocketComponent } from '../paper-negative-pocket/paper-negative-pocket.component';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
@@ -9,7 +10,7 @@ import type { PaperLedgerResponse, PaperLedgerRow, QuotePilotStatus } from '../.
 @Component({
   selector: 'app-paper-now',
   standalone: true,
-  imports: [CommonModule, PaperResearchHealthComponent],
+  imports: [CommonModule, PaperResearchHealthComponent, PaperNegativePocketComponent],
   templateUrl: './paper-now.component.html',
   styleUrl: './paper-now.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

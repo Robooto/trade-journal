@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
-import { of } from 'rxjs';
+import { NEVER, of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -39,6 +39,7 @@ class CharmApiStub {
 }
 class TraceApiStub {
   readonly paperResearchScorecard = vi.fn((date: string) => of(researchScorecardForTest(date)));
+  readonly paperNegativePocket = vi.fn(() => NEVER);
   readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
   readonly paperQuotePilot = vi.fn(() => of({ status: 'no_evidence' }));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));

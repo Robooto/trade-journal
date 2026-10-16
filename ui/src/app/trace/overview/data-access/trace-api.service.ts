@@ -44,6 +44,10 @@ export class TraceApiService {
     return this.http.get<import('./generated/research-contracts').PaperResearchScorecard>(`${this.baseUrl}/paper-research-scorecard`, { params: { date } });
   }
 
+  paperNegativePocket(toDate: string): Observable<import('./generated/research-contracts').NegativePocketReview> {
+    return this.http.get<import('./generated/research-contracts').NegativePocketReview>(`${this.baseUrl}/paper-negative-pocket`, { params: { to_date: toDate } });
+  }
+
   paperCatalog(date: string): Observable<PaperCatalog> {
     return this.http.get<PaperCatalog>(`${this.baseUrl}/paper-catalog`, { params: { as_of: date } });
   }
