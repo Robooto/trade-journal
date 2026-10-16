@@ -101,6 +101,34 @@ export type NegativePocketTrade = {
   readonly gex_context_status: "available" | "missing_profile" | "unavailable";
 };
 
+export type PaperArm = {
+  readonly arm_id: string;
+  readonly policy_id: string;
+  readonly label: string;
+  readonly kind: "baseline" | "shadow" | "condor" | "rotation";
+  readonly start_date: string;
+  readonly end_date: string | null;
+  readonly closes: number;
+  readonly sessions: number;
+  readonly net_dollars: number;
+  readonly net_per_close: number | null;
+  readonly win_rate: number | null;
+  readonly required_sessions: number | null;
+  readonly required_closes: number | null;
+  readonly status: "control" | "collecting" | "ready_for_review" | "ended";
+};
+
+export type PaperArmScorecard = {
+  readonly schema_version: "paper-arm-scorecard.v1";
+  readonly from_date: string;
+  readonly to_date: string;
+  readonly as_of: string;
+  readonly cost_per_close_dollars: number;
+  readonly arms: ReadonlyArray<PaperArm>;
+  readonly automatic_promotion: false;
+  readonly order_submission_enabled: false;
+};
+
 export type PaperCatalog = {
   readonly schema_version?: "paper-catalog.v1";
   readonly as_of: string;
@@ -288,6 +316,8 @@ export type ResearchStatusContract = {
   readonly study_count: number;
   readonly scoring_enabled_count: number;
   readonly studies: ReadonlyArray<ResearchStudy>;
+  readonly retired_studies?: ReadonlyArray<RetiredStudy>;
+  readonly headline?: string | null;
 };
 
 export type ResearchStudy = {
@@ -301,6 +331,8 @@ export type ResearchStudy = {
   readonly evidence_tables?: ReadonlyArray<PublishedEvidence>;
   readonly primary_tests?: ReadonlyArray<PrimaryResearchTest>;
   readonly comparisons?: ReadonlyArray<ResearchComparison>;
+  readonly evidence_tier?: "supported" | "replicating" | "diagnostic" | null;
+  readonly summary?: string | null;
 };
 
 export type ResearchWidthCoverage = {
@@ -317,6 +349,13 @@ export type ResearchWidthCoverage = {
   readonly quote_failure_reasons: Readonly<Record<string, number>>;
   readonly maximum_quote_age_seconds: number | null;
   readonly last_quote_received_at: string | null;
+};
+
+export type RetiredStudy = {
+  readonly id: string;
+  readonly label: string;
+  readonly retired_on: string;
+  readonly reason: string;
 };
 
 export type StrategySummary = {

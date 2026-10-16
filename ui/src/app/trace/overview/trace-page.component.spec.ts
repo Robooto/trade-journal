@@ -26,6 +26,7 @@ import { TraceResearchStatusResponse, TraceStudyStatus } from './trace.models';
 import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.component';
 import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
+import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
 
 class CharmApiStub {
   readonly surface = vi.fn(() => of({
@@ -40,6 +41,7 @@ class CharmApiStub {
 class TraceApiStub {
   readonly paperResearchScorecard = vi.fn((date: string) => of(researchScorecardForTest(date)));
   readonly paperNegativePocket = vi.fn(() => NEVER);
+  readonly paperArms = vi.fn(() => NEVER);
   readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
   readonly paperQuotePilot = vi.fn(() => of({ status: 'no_evidence' }));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
@@ -67,7 +69,6 @@ class TraceFacadeStub {
   readonly sessions = signal([]);
   readonly researchStatus = signal<TraceResearchStatusResponse | null>(null);
   readonly researchStatusError = signal<string | null>(null);
-  readonly visibleResearchStatuses = signal<readonly TraceStudyStatus[]>([]);
   readonly paperCatalog = signal(null);
   readonly sessionsLoading = signal(false);
   readonly sessionsError = signal<string | null>(null);
@@ -122,6 +123,7 @@ describe('TracePageComponent', () => {
         PaperReplayChartComponent,
         PaperLedgerComponent,
         PaperNowComponent,
+        ResearchSummaryComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,
@@ -134,62 +136,39 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
   });
 
-  it('keeps research priority separate from scope validation and missing fresh-flow evidence', () => {
+  it('summarizes research by evidence tier with locked-test results and retired reasons', () => {
     const studies: readonly TraceStudyStatus[] = [
-      { id: 'signed-gex-interaction', label: 'Signed GEX', status: 'research', scoring_enabled: false,
-        research_priority: 'high', data_readiness: 'unavailable', validation_status: 'not_assessed',
+      { id: 'preregistered-robustness', label: 'GEX + slope robustness', status: 'collecting', scoring_enabled: false,
+        evidence_tier: 'supported', summary: 'Price breaks negative-GEX nodes more often.',
         primary_tests: [
-          { scope: 'week', through: '2026-10-02', protocol_id: 'signed-gex-negative-breach-v1', role: 'primary',
-            horizon: 'H30 (30 minutes)', validation_status: 'collecting', coverage_ready: false,
-            observations: 13, sessions: 5, effect: 30.8, interval_low: 7.7, interval_high: 70,
-            unit: 'pp', expected_direction: 'positive' },
-          { scope: 'cumulative', through: '2026-10-02', protocol_id: 'signed-gex-negative-breach-v1', role: 'primary',
+          { scope: 'cumulative', through: '2026-10-16', protocol_id: 'signed-gex-negative-breach-v1', role: 'primary',
             horizon: 'H30 (30 minutes)', validation_status: 'supported', coverage_ready: true,
-            observations: 342, sessions: 90, effect: 9.9, interval_low: 2.7, interval_high: 16.9,
+            observations: 372, sessions: 100, effect: 9.9, interval_low: 2.7, interval_high: 16.8,
             unit: 'pp', expected_direction: 'positive' },
         ] },
-      { id: 'charm-delta-pressure', label: 'Charm pressure', status: 'not_replicated', scoring_enabled: false,
-        research_priority: 'low', data_readiness: 'ready', validation_status: 'not_replicated' },
-      { id: 'flowpatrol-longitudinal', label: 'FlowPatrol watch retention', status: 'collecting', scoring_enabled: false },
+      { id: 'dealer-gex-path', label: 'Dealer gamma path', status: 'preregistered', scoring_enabled: false,
+        evidence_tier: 'replicating', summary: 'Needs confirmation from October 16.' },
+      { id: 'paper-strategy-comparison', label: 'Paper comparison', status: 'collecting', scoring_enabled: false,
+        evidence_tier: 'diagnostic', summary: 'Paper results.' },
     ];
-    facade.researchStatus.set({schema_version: 'trace-study-registry.v1', as_of: '2026-10-02',
-      evidence_version: 'week-end-2026-10-02', study_count: 3, scoring_enabled_count: 0, studies});
-    facade.visibleResearchStatuses.set(studies);
+    facade.researchStatus.set({schema_version: 'trace-study-registry.v1', as_of: '2026-10-16',
+      evidence_version: 'week-end-2026-10-16', study_count: 3, scoring_enabled_count: 0, studies,
+      headline: 'Distance and time left carry the signal.',
+      latest_weekly_review: { week_start: '2026-10-12', week_end: '2026-10-16', run_status: 'complete' },
+      retired_studies: [{ id: 'gamma-slope', label: 'Gamma slope', retired_on: '2026-10-16', reason: 'No movement difference.' }]});
     fixture.detectChanges();
-    const badges = fixture.nativeElement.querySelectorAll('.research-evidence-badge');
-    expect(badges[0].textContent).toContain('Research priority: high');
-    expect(badges[0].textContent).toContain('Weekly primary');
-    expect(badges[0].textContent).toContain('Cumulative primary');
-    expect(badges[0].textContent).toContain('342 matched observations');
-    expect(badges[0].textContent).not.toContain('Validation: not assessed');
-    expect(badges[1].textContent).toContain('Research priority: low');
-    expect(badges[1].textContent).toContain('sample floor met');
-    expect(badges[1].textContent).toContain('Validation: not replicated');
-    expect(badges[2].textContent).toContain('Fresh qualifying counts unavailable');
-    expect(badges[2].textContent).toContain('Watch retention includes carried watches');
-  });
 
-  it('loads one operational dashboard without migration scaffolding', () => {
-    expect(facade.loadSessions).toHaveBeenCalledOnce();
-    expect(fixture.nativeElement.textContent).toContain('Charm pressure');
-    expect(fixture.nativeElement.textContent).not.toContain('Source readiness');
-    expect(fixture.nativeElement.textContent).not.toContain('Thin frontend boundary');
-    expect(fixture.nativeElement.textContent).not.toContain('Migration foundation');
-    expect(fixture.nativeElement.textContent).not.toContain('Legacy TRACE');
-  });
-  it('distinguishes changed report definitions from comparable frozen tests', () => {
-    const studies: readonly TraceStudyStatus[] = [{id:'signed-gex-interaction',label:'Signed GEX',status:'research',scoring_enabled:false,
-      comparisons:[{scope:'week',status:'suppressed',reason:'study_definition_changed',previous_week_start:'2026-09-28',previous_week_end:'2026-10-02'}],
-      primary_tests:[{scope:'week',through:'2026-10-09',protocol_id:'signed-gex-negative-breach-v1',role:'primary',horizon:'H30',
-        validation_status:'collecting',coverage_ready:false,observations:17,sessions:5,effect:17.6,interval_low:-12.5,interval_high:38.9,
-        unit:'pp',expected_direction:'positive',comparison:{scope:'week',status:'comparable',reason:null,previous_week_start:'2026-09-28',previous_week_end:'2026-10-02'}}]}];
-    facade.researchStatus.set({schema_version:'trace-study-registry.v1',as_of:'2026-10-02',evidence_version:'week-end-2026-10-02',study_count:1,scoring_enabled_count:0,studies});
-    facade.visibleResearchStatuses.set(studies);fixture.detectChanges();
-    const text=fixture.nativeElement.textContent;
-    expect(text).toContain('Weekly report: Study definition changed; prior comparison withheld');
-    expect(text).toContain('Frozen test: Comparable with prior period');
-    expect(text).toContain('through 2026-10-09');
-    expect(text).toContain('Cumulative support does not establish independent weekly replication');
+    const summary = fixture.nativeElement.querySelector('app-research-summary');
+    expect(summary.textContent).toContain('Distance and time left carry the signal.');
+    expect(summary.textContent).toContain('reviewed 2026-10-16');
+    const supported = summary.querySelector('[data-tier="supported"]');
+    expect(supported.hasAttribute('open')).toBe(true);
+    expect(supported.textContent).toContain('Latest locked test: +9.9 pts [+2.7, +16.8] · 372 observations · 100 days · supported');
+    expect(summary.querySelector('[data-tier="replicating"]').textContent).toContain('Needs confirmation from October 16.');
+    expect(summary.querySelector('[data-tier="diagnostic"]').hasAttribute('open')).toBe(false);
+    expect(summary.querySelector('[data-tier="retired"]').textContent).toContain('Gamma slope');
+    expect(summary.querySelector('[data-tier="retired"]').textContent).toContain('No movement difference.');
+    expect(fixture.nativeElement.querySelector('.research-evidence-badge')).toBeNull();
   });
 
   it('keeps paper trading in its own tab and opens TRACE by default', () => {

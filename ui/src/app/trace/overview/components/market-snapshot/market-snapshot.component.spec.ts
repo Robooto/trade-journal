@@ -83,24 +83,15 @@ describe('MarketSnapshotComponent', () => {
     expect(text).toContain('hedge 98 pts away');
     expect(text).toContain('Charm at Market');
     expect(text).toContain('+327.0M');
-    expect(text).toContain('Research validation: not assessed');
-    expect(text).toContain('Bull-put research qualifier');
+    expect(text).toContain('Charm research was retired October 16');
+    expect(text).not.toContain('Bull-put research qualifier');
     expect(text).toContain('1 positive · 1 negative');
     expect(fixture.nativeElement.querySelector('.snapshot-spot').textContent).toContain('7412');
     expect(fixture.nativeElement.querySelector('[data-card-tone="warning"]')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('[data-hiro-shock="extreme-positive"]')).not.toBeNull();
   });
 
-  it('limits the Charm qualifier to positive Charm', () => {
-    expect(component.charmBullPutQualifier()).toBe(true);
-    component.charmOverview = {
-      ...charm,
-      series: [{ ...charm.series[0], charm_at_market: -1, bull_put_research_qualifier: false }],
-    } as unknown as CharmOverview;
-    expect(component.charmBullPutQualifier()).toBe(false);
-  });
-
-  it('shows the gamma slope research badge after three positive steepening captures', () => {
+  it('never shows retired gamma-slope or Charm qualifiers, even when their old triggers are met', () => {
     fixture.componentRef.setInput('gammaContextRows', [10, 20, 30, 40].map((slope, index) => ({
       ...gammaRows[0],
       ts: `2026-07-24T12:${index + 2}0:05-07:00`,
@@ -109,14 +100,8 @@ describe('MarketSnapshotComponent', () => {
     })) as TraceGammaContextRow[]);
     fixture.detectChanges();
 
-    expect(component.persistentPositiveSteepeningWatch).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Gamma slope watch · bearish research context');
-    expect(fixture.nativeElement.querySelector('.snapshot-qualifier--gamma')).not.toBeNull();
-  });
-
-  it('hides the gamma slope research badge without a persistent steepening sequence', () => {
-    expect(component.persistentPositiveSteepeningWatch).toBe(false);
-    expect(fixture.nativeElement.querySelector('.snapshot-qualifier--gamma')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Gamma slope watch');
+    expect(fixture.nativeElement.querySelector('.snapshot-qualifier')).toBeNull();
   });
 
   it('uses the study thresholds only for large SPX HIRO changes', () => {

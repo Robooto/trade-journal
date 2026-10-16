@@ -57,22 +57,8 @@ describe('CharmWidgetComponent', () => {
     expect(api.surface).toHaveBeenLastCalledWith('2026-07-24', point.ts, 60);
     expect(fixture.nativeElement.textContent).toContain('Charm pressure');
     expect(fixture.nativeElement.textContent).toContain('+237.00M');
-    expect(fixture.nativeElement.textContent).toContain('Bull-put research qualifier');
+    expect(fixture.nativeElement.textContent).not.toContain('Bull-put research qualifier');
     expect(fixture.nativeElement.querySelectorAll('.chart-card')).toHaveLength(2);
-  });
-
-  it('does not show the bull-put qualifier when Charm is not positive', () => {
-    const negativePoint = {
-      ...point, charm_at_market: -1, bull_put_research_qualifier: false,
-    };
-    fixture.componentRef.setInput('captureTs', negativePoint.ts);
-    fixture.componentRef.setInput('overview', {
-      ...overview, latest: negativePoint, series: [negativePoint],
-    });
-    fixture.detectChanges();
-
-    expect(component.isBullPutQualifier()).toBe(false);
-    expect(fixture.nativeElement.querySelector('.research-qualifier')).toBeNull();
   });
 
   it('notifies Angular when an asynchronous surface request finishes', () => {

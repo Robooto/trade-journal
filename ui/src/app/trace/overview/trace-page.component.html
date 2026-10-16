@@ -19,46 +19,7 @@
   </header>
 
   @if (facade.researchStatus(); as status) {
-    <details class="research-evidence-strip" aria-label="TRACE research evidence status">
-      <summary><span><span class="trace-eyebrow">TRACE + FlowPatrol research</span><strong>{{ status.study_count }} tracked studies</strong></span><small>Registry as of {{ status.as_of }}@if (status.latest_weekly_review) { · latest review {{ status.latest_weekly_review.week_end }} } · {{ status.scoring_enabled_count }} scoring-enabled · expand for status</small></summary>
-      <p class="research-scope-note">Weekly observations are included in cumulative results. Cumulative support does not establish independent weekly replication. Registry dates describe research settings; review dates describe the published evidence.</p>
-      <div class="research-evidence-badges">
-        @for (study of facade.visibleResearchStatuses(); track study.id) {
-          <span class="research-evidence-badge" [attr.data-status]="study.status">
-            <strong>{{ study.label }}</strong>
-            @if (study.research_priority) { <small>Research priority: {{ study.research_priority }}</small> }
-            @if (study.note) { <small>{{ study.note }}</small> }
-            <small>{{ study.status.replaceAll('_', ' ') }}@if (study.checkpoint) { · {{ study.checkpoint.completed_sessions }}/{{ study.checkpoint.required_sessions }} }</small>
-            <small>@if (study.primary_tests?.length) { Data gates and validation by scope below · {{ study.scoring_enabled ? 'scoring enabled' : 'not scored' }} } @else { Data gate: {{ study.data_readiness === 'ready' ? 'sample floor met' : study.data_readiness === 'collecting' ? 'collecting' : 'not assessed' }} }</small>
-            @if (!study.primary_tests?.length) { <small>Validation: {{ (study.validation_status || 'not_assessed').replaceAll('_', ' ') }} · {{ study.scoring_enabled ? 'scoring enabled' : 'not scored' }}</small> }
-            @for (comparison of study.comparisons ?? []; track comparison.scope) {
-              <small class="research-comparison" [attr.data-status]="comparison.status">{{ comparison.scope === 'week' ? 'Weekly' : 'Cumulative' }} report: {{ comparisonLabel(comparison) }}@if (comparison.previous_week_start && comparison.previous_week_end) { · prior {{ comparison.previous_week_start }}–{{ comparison.previous_week_end }} }</small>
-            }
-            @for (test of study.primary_tests ?? []; track test.scope + test.role) {
-              <small>{{ test.scope === 'week' ? 'Weekly' : 'Cumulative' }} {{ test.role }} · through {{ test.through }} · {{ test.horizon }} · {{ test.validation_status.replaceAll('_', ' ') }}</small>
-              <small>{{ test.observations }} matched observations · {{ test.sessions }} event dates · {{ test.coverage_ready ? 'sample floor met' : 'collecting' }}</small>
-              <small>Effect: {{ test.effect === null ? 'unavailable' : (test.effect | number:'1.1-2') }} {{ test.unit }} · 95% interval [{{ test.interval_low === null ? 'unavailable' : (test.interval_low | number:'1.1-2') }}, {{ test.interval_high === null ? 'unavailable' : (test.interval_high | number:'1.1-2') }}] · expected {{ test.expected_direction }}</small>
-              @if (test.comparison; as comparison) { <small class="research-comparison" [attr.data-status]="comparison.status">Frozen test: {{ comparisonLabel(comparison) }}@if (comparison.previous_week_start && comparison.previous_week_end) { · prior {{ comparison.previous_week_start }}–{{ comparison.previous_week_end }} }</small> }
-            }
-            @if (study.id === 'flowpatrol-longitudinal') {
-              @for (table of study.evidence_tables ?? []; track table.scope + table.id) {
-                <small>{{ table.scope === 'week' ? 'Weekly' : 'Cumulative' }} through {{ table.week_end }}</small>
-                @for (row of table.rows; track $index) { <small>{{ row[0] }}: {{ row[2] }} · eligible {{ row[1] }}</small> }
-              } @empty { <small>Fresh qualifying counts unavailable in this published run. Watch retention includes carried watches.</small> }
-            }
-            @if (study.weekly_coverage; as coverage) {
-              <small>Week data: @if (coverage.eligible_dates) { {{ coverage.eligible_dates.length }} eligible source dates@if (coverage.excluded_dates?.length) { · {{ coverage.excluded_dates?.length }} excluded } } @else if (coverage.observed_dates) { {{ coverage.observed_dates.length }} dates with observations · exclusions unknown } @else { exact dates unavailable }@if (coverage.latest_trading_date) { · latest {{ coverage.latest_trading_date }} }</small>
-              @if (coverage.denominator; as denominator) { <small>{{ denominator.name }}: {{ denominator.value }}</small> }
-              @if (coverage.latest_report_date) { <small>Latest report: {{ coverage.latest_report_date }}</small> }
-              @if (coverage.last_observation_at) { <small>Last study observation: {{ coverage.last_observation_at }}</small> }
-              @if (coverage.excluded_dates?.length) {
-                <small>Excluded: @for (excluded of coverage.excluded_dates; track excluded.trading_date) { {{ excluded.trading_date }} ({{ excluded.reason?.replaceAll('_', ' ') }}) }</small>
-              }
-            }
-          </span>
-        }
-      </div>
-    </details>
+    <app-research-summary [status]="status" />
   } @else if (facade.researchStatusError()) {
     <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError() }}</span></div></section>
   }

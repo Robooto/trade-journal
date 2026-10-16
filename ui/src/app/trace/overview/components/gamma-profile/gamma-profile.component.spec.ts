@@ -78,7 +78,7 @@ describe('GammaProfileComponent', () => {
     expect(selected).toBe(gammaHistory[0].ts);
   });
 
-  it('shows a non-scoring bearish watch after three positive steepening captures', () => {
+  it('does not show the retired gamma slope watch after three positive steepening captures', () => {
     fixture.componentRef.setInput('gammaContextRows', [10, 20, 30, 40].map((slope, index) => ({
       ...gammaHistory[1],
       ts: `2026-07-24T13:${index}0:05-07:00`,
@@ -93,9 +93,8 @@ describe('GammaProfileComponent', () => {
     fixture.componentRef.setInput('captureTs', '2026-07-24T13:30:05-07:00');
     fixture.detectChanges();
 
-    expect(component.persistentPositiveSteepeningWatch).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Bearish research context');
-    expect(fixture.nativeElement.textContent).toContain('Non-scoring');
+    expect(fixture.nativeElement.textContent).not.toContain('Bearish research context');
+    expect(fixture.nativeElement.querySelector('.slope-watch')).toBeNull();
   });
 
   it('renders shared marked levels on the hypothetical SPX axis', () => {

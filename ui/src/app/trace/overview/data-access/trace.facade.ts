@@ -25,7 +25,6 @@ import {
   TraceGammaProfileResponse,
   TraceRealizedVolatilityRow,
   TraceResearchStatusResponse,
-  TraceStudyStatus,
   TraceResourceStatus,
   TraceSessionBundle,
   TraceSessionDescriptor,
@@ -120,24 +119,6 @@ export class TraceFacade implements OnDestroy {
   readonly availableResourceCount = computed(() =>
     this.resourceStatuses().filter(resource => resource.status !== 'unavailable').length,
   );
-
-  readonly visibleResearchStatuses = computed<readonly TraceStudyStatus[]>(() => {
-    const ids = new Set([
-      'structure-iron-condor',
-      'structure-distance-short-strike',
-      'credit-spread-confirmation-quality',
-      'credit-spread-entry-timing',
-      'hiro-jump-structure',
-      'gamma-slope-transitions',
-      'signed-gex-interaction',
-      'hiro-cancellation-strength',
-      'hiro-divergence-lifecycle',
-      'charm-delta-pressure',
-      'flowpatrol-longitudinal',
-      'flowpatrol-next-report-outcomes',
-    ]);
-    return (this.researchStatus()?.studies ?? []).filter(study => ids.has(study.id));
-  });
 
   constructor(private readonly api: TraceApiService, private readonly charmApi: CharmApiService) {
     this.paper = new TracePaperState(api);

@@ -41,9 +41,7 @@
         <span class="snapshot-label">Gamma Structure</span>
         <strong>{{ gammaLabel() }}</strong>
         <small>{{ labelize(row.local_gamma_setup) }} · at spot {{ formatCompact(gammaContext?.nearest_total_gamma, true) }} · slope {{ formatCompact(gammaContext?.cross_spot_slope, true) }}/pt</small>
-        @if (persistentPositiveSteepeningWatch) { <small class="snapshot-qualifier snapshot-qualifier--gamma">Gamma slope watch &middot; bearish research context</small> }
-        <em>Research context · not a forecast</em>
-        <small>September 18 review: the tested transition to positive slope did not support a bullish advantage. No score boost or opposite trade is implied.</small>
+        <em>Market context · not a forecast</em>
       </article>
 
       <article class="snapshot-card snapshot-card--volatility" [attr.data-card-tone]="volatilityTone()">
@@ -89,11 +87,10 @@
 
       <article class="snapshot-card snapshot-card--charm" [class.snapshot-card--close-window]="charm?.close_window">
         <span class="snapshot-label">Charm at Market</span>
-        <small>Research validation: {{ charmValidation }} · a completed data gate does not validate the signal.</small>
+        <small>Charm research was retired October 16 after it failed to replicate. Shown as raw market data only.</small>
         @if (charm; as point) {
           <strong [attr.data-tone]="valueTone(point.charm_at_market)">{{ formatCompact(point.charm_at_market, true) }}</strong>
           <small><b>Flip</b> {{ formatSpot(point.nearest_flip) }} · spot {{ formatSignedPoints(point.spot_minus_flip) }} pts from flip</small>
-          @if (charmBullPutQualifier()) { <small class="snapshot-qualifier">Bull-put research qualifier &middot; positive Charm</small> }
           <small><b>Interval</b> {{ formatDuration(point.interval_minutes * 60) }} · source age {{ formatDuration(point.source_age_seconds) }}</small>
           @if (point.close_window) { <small class="snapshot-warning">Close window · expiry effects can dominate</small> }
           <em>Experimental · {{ charmOverview?.quality?.usable_percent | number:'1.1-1' }}% usable · not scored</em>
@@ -127,8 +124,8 @@
       </article>
     </div>
     <section class="candidate-evidence" aria-label="Candidate distance and confirmation evidence">
-      <h3>Candidate evidence · distance and confirmation</h3>
-      <p>Distance and candidate quality describe different parts of the setup. H6 is six subsequent captures, roughly 60 minutes. Waiting selects surviving signals and enters later; compare skipped signals, movement paid and the same confirmed opportunities before interpreting survival.</p>
+      <h3>Candidate evidence · distance to structure</h3>
+      <p>How often a short strike five points beyond the frozen structure survived the next six captures (about 60 minutes), by distance band. Distance is the strongest supported signal and is also priced into credit.</p>
       @for (study of candidateStudies; track study.id) {
         <details>
           <summary>{{ study.label }} · samples and results</summary>

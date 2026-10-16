@@ -1,0 +1,38 @@
+<section class="research-summary" aria-labelledby="research-summary-title">
+  <header>
+    <div><p class="eyebrow">TRACE research</p><h2 id="research-summary-title">What the research says</h2></div>
+    <span>{{ status.study_count }} active studies@if (status.latest_weekly_review) { · reviewed {{ status.latest_weekly_review.week_end }} }</span>
+  </header>
+  @if (status.headline) { <p class="headline">{{ status.headline }}</p> }
+  <div class="groups">
+    @for (group of groups; track group.tier) {
+      @if (studies(group.tier).length) {
+        <details class="group" [attr.data-tier]="group.tier" [open]="group.tier !== 'diagnostic'">
+          <summary><strong>{{ group.title }}</strong><span>{{ studies(group.tier).length }}</span></summary>
+          <p class="hint">{{ group.hint }}</p>
+          <ul>
+            @for (study of studies(group.tier); track study.id) {
+              <li>
+                <strong>{{ study.label }}</strong>
+                <span>{{ study.summary || 'No summary yet.' }}</span>
+                @if (primaryLine(study); as line) { <small>{{ line }}</small> }
+              </li>
+            }
+          </ul>
+        </details>
+      }
+    }
+    @if (status.retired_studies?.length) {
+      <details class="group" data-tier="retired">
+        <summary><strong>Retired</strong><span>{{ status.retired_studies?.length }}</span></summary>
+        <p class="hint">No reliable signal after 100+ sessions, failed a locked test, or overlapped another study. Code and history are kept.</p>
+        <ul>
+          @for (study of status.retired_studies; track study.id) {
+            <li><strong>{{ study.label }}</strong><span>{{ study.reason }}</span><small>Retired {{ study.retired_on }}</small></li>
+          }
+        </ul>
+      </details>
+    }
+  </div>
+  <small class="footnote">Research describes SPX price paths, not option profit. Nothing here places or authorizes trades.</small>
+</section>

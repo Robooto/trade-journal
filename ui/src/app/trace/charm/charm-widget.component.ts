@@ -146,10 +146,6 @@ export class CharmWidgetComponent implements OnChanges, OnDestroy {
     );
   }
 
-  isBullPutQualifier(point: CharmSeriesPoint | null = this.selectedPoint): boolean {
-    return point?.bull_put_research_qualifier === true;
-  }
-
   formatPressure(value: number | null | undefined): string {
     if (value == null) return 'Unavailable';
     const absolute = Math.abs(value);

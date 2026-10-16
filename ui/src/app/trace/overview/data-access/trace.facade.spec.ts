@@ -226,9 +226,9 @@ describe('TraceFacade', () => {
 
     facade.researchStatus.set(researchStatus);
 
-    expect(facade.visibleResearchStatuses().map(study => study.id))
-      .toEqual(['hiro-cancellation-strength']);
-    expect(facade.visibleResearchStatuses()[0].checkpoint?.required_sessions).toBe(40);
+    // Grouping by evidence tier happens in the research summary; the facade exposes every study.
+    expect(facade.researchStatus()?.studies.map(study => study.id)).toEqual(['hiro-cancellation-strength', 'unrelated-study']);
+    expect(facade.researchStatus()?.studies[0].checkpoint?.required_sessions).toBe(40);
     facade.ngOnDestroy();
   });
 

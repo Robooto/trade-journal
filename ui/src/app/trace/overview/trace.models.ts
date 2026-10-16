@@ -305,6 +305,8 @@ export interface TraceStudyStatus {
   readonly evidence_tables?: readonly PublishedEvidence[];
   readonly primary_tests?: readonly PrimaryResearchTest[];
   readonly comparisons?: readonly ResearchComparison[];
+  readonly evidence_tier?: 'supported' | 'replicating' | 'diagnostic' | null;
+  readonly summary?: string | null;
   readonly weekly_coverage?: {
     readonly source: string;
     readonly requested_range: readonly string[];
@@ -332,6 +334,8 @@ export interface TraceResearchStatusResponse {
     readonly run_status: string;
   } | null;
   readonly studies: readonly TraceStudyStatus[];
+  readonly retired_studies?: readonly { readonly id: string; readonly label: string; readonly retired_on: string; readonly reason: string }[];
+  readonly headline?: string | null;
 }
 
 export interface TracePaperScorecardDaily {

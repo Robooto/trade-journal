@@ -1,3 +1,4 @@
+import { ResearchSummaryComponent } from './overview/components/research-summary/research-summary.component';
 import { PaperWorkspaceComponent } from './overview/components/paper-workspace/paper-workspace.component';
 import { PaperReplayChartComponent } from './overview/components/paper-replay-chart/paper-replay-chart.component';
 import { CommonModule } from '@angular/common';
@@ -29,6 +30,6 @@ import { PaperNowComponent } from './overview/components/paper-now/paper-now.com
     SignedGexMapComponent,
     CharmWidgetComponent,
   ],
-  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent],
+  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent],
 })
 export class TraceModule {}

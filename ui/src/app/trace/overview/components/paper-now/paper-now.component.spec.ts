@@ -25,7 +25,7 @@ const response = { status:'available', total:4, rows:[
   complete_eligible_sessions:0, eligible_trial_closes:0, mean_session_net_scenario:null, mean_session_net_interval_95:null, daily:[]} };
 
 function apiFixture() {
-  return { paperResearchScorecard:vi.fn((date: string) => of(researchScorecardForTest(date))), paperNegativePocket:vi.fn(() => NEVER), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
+  return { paperResearchScorecard:vi.fn((date: string) => of(researchScorecardForTest(date))), paperNegativePocket:vi.fn(() => NEVER), paperArms:vi.fn(() => NEVER), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
     paperQuotePilot:vi.fn(()=>of({status:'no_evidence',recorded_minutes:0,expected_minutes:0,missing_minutes:[],valid_observations:0,unavailable_observations:0,sample_states:{}})),
     decisionJournal:vi.fn(()=>of({decision_status:'ready',decision:'pass',trade_type:null,grade:'D',quality_score:25,reason_codes:['entry_score_or_gate_failed']})) };
 }
