@@ -26,13 +26,16 @@ export class PositionsPageComponent implements OnInit {
     'percent',
     'delta',
     'betadelta',
+    'theta',
     'ivrank',
     'ivchange',
     'rules',
-    'positions',
+    'legs',
   ];
   positionCols = ['symbol', 'qty', 'type', 'plpos', 'cdelta', 'bo'];
   expandedChartStates: Map<string, PositionGroup | null> = new Map();
+  /** Position groups whose legs (and chart, when requested) are shown in a full-width detail row. */
+  expandedGroups = new Set<PositionGroup>();
 
   constructor(private api: PositionsApiService, private dialog: MatDialog) {}
 
@@ -46,6 +49,8 @@ export class PositionsPageComponent implements OnInit {
     this.api.getAll().pipe(finalize(() => (this.loading = false))).subscribe({
       next: response => {
         this.accounts = response.accounts;
+        this.expandedGroups.clear();
+        this.expandedChartStates.clear();
         this.accounts.forEach(account => {
           account.groups.forEach(group => {
             group.rules = evaluateRules(group);
@@ -101,21 +106,65 @@ export class PositionsPageComponent implements OnInit {
     return labels[account.buying_power_zone ?? 'unavailable'];
   }
 
-  expirationLabel(group: PositionGroup): string {
-    const dates = group.expiration_dates ?? [];
-    if (dates.length < 2) {
-      return new Date(group.expires_at).toLocaleDateString(
-        undefined,
-        { month: 'short', day: 'numeric', year: 'numeric' }
-      );
-    }
-    return dates
-      .map(value => new Date(`${value}T12:00:00`).toLocaleDateString(
-        undefined,
-        { month: 'short', day: 'numeric', year: 'numeric' }
-      ))
-      .join(' / ');
+  expirationLabel(group: PositionGroup, today = new Date()): string {
+    const dates = (group.expiration_dates?.length ? group.expiration_dates : [group.expires_at])
+      .map(value => this.expirationDate(value))
+      .filter((value): value is Date => value !== null);
+    if (!dates.length) return '—';
+    return dates.map(date => date.toLocaleDateString(undefined, date.getFullYear() === today.getFullYear()
+      ? { month: 'short', day: 'numeric' }
+      : { month: 'short', day: 'numeric', year: 'numeric' })).join(' / ');
   }
+
+  /** Calendar days until the nearest expiration; 0 on expiration day. */
+  daysToExpiry(group: PositionGroup, today = new Date()): number | null {
+    const dates = (group.expiration_dates?.length ? group.expiration_dates : [group.expires_at])
+      .map(value => this.expirationDate(value))
+      .filter((value): value is Date => value !== null);
+    if (!dates.length) return null;
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const nearest = Math.min(...dates.map(date => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()));
+    return Math.max(0, Math.round((nearest - start.getTime()) / 86_400_000));
+  }
+
+  private expirationDate(value: string | null | undefined): Date | null {
+    if (!value) return null;
+    const date = new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  /** Totals across accounts; a missing value is excluded and flagged rather than counted as zero. */
+  get portfolioTotals(): { label: string; value: number | null; partial: boolean; currency: boolean }[] {
+    const sum = (pick: (account: AccountPositions) => number | null | undefined) => {
+      const values = this.accounts.map(pick);
+      const present = values.filter((value): value is number => value !== null && value !== undefined && Number.isFinite(value));
+      return { value: present.length ? present.reduce((a, b) => a + b, 0) : null, partial: present.length < values.length };
+    };
+    return [
+      { label: 'Net liquidity', ...sum(a => a.net_liquidating_value_dollars), currency: true },
+      { label: 'Available BP', ...sum(a => a.derivative_buying_power_dollars), currency: true },
+      { label: 'Theta / day', ...sum(a => a.theta_dollars_per_day ?? a.total_theta), currency: true },
+      { label: '+1 vol point', ...sum(a => a.vega_plus_one_point_dollars), currency: true },
+      { label: 'Delta shares', ...sum(a => a.delta_shares ?? a.total_position_delta), currency: false },
+      { label: 'Beta Δ shares', ...sum(a => a.total_beta_delta_shares ?? a.total_beta_delta), currency: false },
+    ];
+  }
+
+  get positionGroupCount(): number {
+    return this.accounts.reduce((total, account) => total + account.groups.length, 0);
+  }
+
+  isExpanded(group: PositionGroup): boolean {
+    return this.expandedGroups.has(group);
+  }
+
+  toggleExpanded(group: PositionGroup): void {
+    if (this.expandedGroups.has(group)) this.expandedGroups.delete(group);
+    else this.expandedGroups.add(group);
+  }
+
+  /** Detail rows render only when expanded, so hidden leg tables never take layout width. */
+  readonly isDetailRow = (_index: number, group: PositionGroup) => this.expandedGroups.has(group);
 
   strategyLabel(group: PositionGroup): string {
     return (group.strategy_label || '').replaceAll('_', ' ');
@@ -149,6 +198,7 @@ export class PositionsPageComponent implements OnInit {
     const accountKey = account.account_number;
     const currentExpanded = this.expandedChartStates.get(accountKey);
     this.expandedChartStates.set(accountKey, currentExpanded === group ? null : group);
+    if (currentExpanded !== group) this.expandedGroups.add(group);
   }
 
   isValidChartSymbol(symbol: string): boolean {
@@ -157,10 +207,6 @@ export class PositionsPageComponent implements OnInit {
 
   isChartExpanded(group: PositionGroup, account: AccountPositions): boolean {
     return this.expandedChartStates.get(account.account_number) === group;
-  }
-
-  getExpandedChartForAccount(account: AccountPositions): PositionGroup | null {
-    return this.expandedChartStates.get(account.account_number) || null;
   }
 
   openBracketOrder(position: Record<string, any>, account: AccountPositions): void {

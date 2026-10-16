@@ -89,4 +89,40 @@ describe('PositionsPageComponent', () => {
     expect(component.buyingPowerTooltip(account)).toContain('not brokerage rules');
     expect(component.concentrationTooltip(account)).toContain('not capital or notional concentration');
   });
+
+  it('labels expirations compactly and counts calendar days to the nearest one', () => {
+    const today = new Date(2026, 9, 16, 15, 0);
+    const group = { underlying_symbol: 'SPY', expires_at: '2026-11-20', total_credit_received: 0, current_group_p_l: 0,
+      percent_credit_received: null, positions: [] } as PositionGroup;
+    expect(component.expirationLabel(group, today)).toBe(new Date(2026, 10, 20).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+    expect(component.daysToExpiry(group, today)).toBe(35);
+    expect(component.daysToExpiry({ ...group, expiration_dates: ['2026-12-18', '2026-10-16'] }, today)).toBe(0);
+    expect(component.expirationLabel({ ...group, expires_at: '2027-01-15' }, today)).toContain('2027');
+    expect(component.daysToExpiry({ ...group, expires_at: '' }, today)).toBeNull();
+  });
+
+  it('totals accounts without counting a missing value as zero', () => {
+    component.accounts = [
+      { account_number: '1', groups: [], net_liquidating_value_dollars: 100, theta_dollars_per_day: 5, delta_shares: 2 },
+      { account_number: '2', groups: [], net_liquidating_value_dollars: 50, theta_dollars_per_day: null, total_theta: 3 },
+    ] as AccountPositions[];
+    const totals = Object.fromEntries(component.portfolioTotals.map(total => [total.label, total]));
+    expect(totals['Net liquidity']).toMatchObject({ value: 150, partial: false, currency: true });
+    expect(totals['Theta / day']).toMatchObject({ value: 8, partial: false });
+    expect(totals['Delta shares']).toMatchObject({ value: 2, partial: true, currency: false });
+    expect(totals['Available BP']).toMatchObject({ value: null, partial: true });
+  });
+
+  it('expands a group into a detail row and opening its chart expands it too', () => {
+    const group = { underlying_symbol: 'SPY', expires_at: '2026-11-20', total_credit_received: 0, current_group_p_l: 0,
+      percent_credit_received: null, positions: [] } as PositionGroup;
+    const account = { account_number: '1', groups: [group] } as AccountPositions;
+    expect(component.isDetailRow(0, group)).toBe(false);
+    component.toggleExpanded(group);
+    expect(component.isExpanded(group) && component.isDetailRow(0, group)).toBe(true);
+    component.toggleExpanded(group);
+    expect(component.isExpanded(group)).toBe(false);
+    component.onUnderlyingClick(group, new Event('click'), account);
+    expect(component.isChartExpanded(group, account) && component.isExpanded(group)).toBe(true);
+  });
 });

@@ -46,6 +46,19 @@
         <button mat-button type="button" (click)="attentionOnly = true">Review them</button>
       }
     </section>
+    @if (accounts.length > 1) {
+      <section class="portfolio-totals" aria-label="Totals across accounts">
+        <p class="eyebrow">All accounts · {{ accounts.length }} accounts · {{ positionGroupCount }} position groups</p>
+        <div class="totals-grid">
+          @for (total of portfolioTotals; track total.label) {
+            <div class="metric" [matTooltip]="total.partial ? 'At least one account did not report this value; it is excluded, not counted as zero.' : ''">
+              <span>{{ total.label }}@if (total.partial) { * }</span>
+              <strong>@if (total.value === null) { — } @else if (total.currency) { {{ total.value | currency:'USD':'symbol':'1.0-0' }} } @else { {{ total.value | number:'1.0-1' }} }</strong>
+            </div>
+          }
+        </div>
+      </section>
+    }
   }
 
   @for (account of accounts; track account) {
@@ -109,7 +122,7 @@
       </div>
       @if (visibleGroups(account).length) {
         <div class="table-shell">
-          <table mat-table [dataSource]="visibleGroups(account)" class="positions-table">
+          <table mat-table [dataSource]="visibleGroups(account)" multiTemplateDataRows class="positions-table">
             <ng-container matColumnDef="underlying">
               <th mat-header-cell *matHeaderCellDef>Underlying</th>
               <td mat-cell *matCellDef="let group" class="underlying-cell">
@@ -126,23 +139,22 @@
                     <mat-icon>{{ isChartExpanded(group, account) ? 'expand_less' : 'show_chart' }}</mat-icon>
                   </button>
                 } @else {
-                  {{ group.underlying_symbol }}
+                  <strong class="plain-symbol">{{ group.underlying_symbol }}</strong>
+                }
+                @if (group.strategy_label && group.strategy_label !== 'unknown') {
+                  <small class="strategy-label">{{ strategyLabel(group) }}</small>
                 }
               </td>
             </ng-container>
             <ng-container matColumnDef="expires">
               <th mat-header-cell *matHeaderCellDef>Expires</th>
-              <td mat-cell *matCellDef="let group">
-                <span>{{ expirationLabel(group) }}</span>
-                @if (group.strategy_label && group.strategy_label !== 'unknown') {
-                  <small class="strategy-label">
-                    {{ strategyLabel(group) }}
-                  </small>
-                }
+              <td mat-cell *matCellDef="let group" class="nowrap">
+                {{ expirationLabel(group) }}
+                @if (daysToExpiry(group); as days) { <small class="dte">· {{ days }}d</small> } @else if (daysToExpiry(group) === 0) { <small class="dte dte--today">· today</small> }
               </td>
             </ng-container>
             <ng-container matColumnDef="credit">
-              <th mat-header-cell *matHeaderCellDef>Opening credit</th>
+              <th mat-header-cell *matHeaderCellDef>Credit</th>
               <td mat-cell *matCellDef="let group">{{ group.total_credit_received | currency:'USD':'symbol':'1.0-0' }}</td>
             </ng-container>
             <ng-container matColumnDef="price">
@@ -152,16 +164,22 @@
               </td>
             </ng-container>
             <ng-container matColumnDef="percent">
-              <th mat-header-cell *matHeaderCellDef>Credit captured</th>
+              <th mat-header-cell *matHeaderCellDef matTooltip="Share of the opening credit captured so far">Captured</th>
               <td mat-cell *matCellDef="let group">{{ group.percent_credit_received | number:'1.0-0' }}%</td>
             </ng-container>
             <ng-container matColumnDef="delta">
-              <th mat-header-cell *matHeaderCellDef>Delta shares</th>
+              <th mat-header-cell *matHeaderCellDef matTooltip="Share-equivalent delta">Δ shares</th>
               <td mat-cell *matCellDef="let group">{{ (group.delta_shares ?? group.total_position_delta) | number:'1.0-1' }}</td>
             </ng-container>
             <ng-container matColumnDef="betadelta">
-              <th mat-header-cell *matHeaderCellDef>Beta Δ shares</th>
+              <th mat-header-cell *matHeaderCellDef matTooltip="Share-equivalent delta adjusted by beta">β-Δ shares</th>
               <td mat-cell *matCellDef="let group">{{ (group.beta_delta_shares ?? group.beta_delta) | number:'1.0-1' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="theta">
+              <th mat-header-cell *matHeaderCellDef matTooltip="Estimated theta per day; a Greek estimate, not guaranteed income">Θ / day</th>
+              <td mat-cell *matCellDef="let group" [ngClass]="{ positive: (group.theta_dollars_per_day ?? group.total_theta) > 0, negative: (group.theta_dollars_per_day ?? group.total_theta) < 0 }">
+                {{ (group.theta_dollars_per_day ?? group.total_theta) | currency:'USD':'symbol':'1.0-0' }}
+              </td>
             </ng-container>
             <ng-container matColumnDef="ivrank">
               <th mat-header-cell *matHeaderCellDef>IV rank</th>
@@ -188,61 +206,67 @@
                 </div>
               </td>
             </ng-container>
-            <ng-container matColumnDef="positions">
-              <th mat-header-cell *matHeaderCellDef>Legs</th>
-              <td mat-cell *matCellDef="let group">
-                <mat-expansion-panel class="legs-panel">
-                  <mat-expansion-panel-header>
-                    <mat-panel-title>{{ group.positions.length }} {{ group.positions.length === 1 ? 'leg' : 'legs' }}</mat-panel-title>
-                  </mat-expansion-panel-header>
-                  <div class="nested-table-shell">
-                    <table mat-table [dataSource]="group.positions" class="nested-table">
-                      <ng-container matColumnDef="symbol">
-                        <th mat-header-cell *matHeaderCellDef>Symbol</th>
-                        <td mat-cell *matCellDef="let position">{{ position['symbol'] || position['instrument-symbol'] }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="qty">
-                        <th mat-header-cell *matHeaderCellDef>Qty</th>
-                        <td mat-cell *matCellDef="let position">{{ position['quantity'] }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="type">
-                        <th mat-header-cell *matHeaderCellDef>Type</th>
-                        <td mat-cell *matCellDef="let position">{{ position['instrument-type'] }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="plpos">
-                        <th mat-header-cell *matHeaderCellDef>P/L</th>
-                        <td mat-cell *matCellDef="let position">{{ position['approximate-p-l'] | currency:'USD':'symbol':'1.0-0' }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="cdelta">
-                        <th mat-header-cell *matHeaderCellDef>Delta shares</th>
-                        <td mat-cell *matCellDef="let position">{{ position['market_data']?.computed_position_delta | number:'1.0-1' }}</td>
-                      </ng-container>
-                      <ng-container matColumnDef="bo">
-                        <th mat-header-cell *matHeaderCellDef>Exit</th>
-                        <td mat-cell *matCellDef="let position">
-                          <button mat-stroked-button color="primary" type="button" (click)="openBracketOrder(position, account)">
-                            Manage exit
-                          </button>
-                        </td>
-                      </ng-container>
-                      <tr mat-header-row *matHeaderRowDef="positionCols"></tr>
-                      <tr mat-row *matRowDef="let row; columns: positionCols"></tr>
-                    </table>
+            <ng-container matColumnDef="legs">
+              <th mat-header-cell *matHeaderCellDef><span class="sr-only">Legs</span></th>
+              <td mat-cell *matCellDef="let group" class="legs-cell">
+                <button mat-stroked-button type="button" class="legs-toggle" [attr.aria-expanded]="isExpanded(group)" (click)="toggleExpanded(group)">
+                  {{ group.positions.length }} {{ group.positions.length === 1 ? 'leg' : 'legs' }}
+                  <mat-icon iconPositionEnd>{{ isExpanded(group) ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="detail">
+              <td mat-cell *matCellDef="let group" [attr.colspan]="groupCols.length" class="detail-cell">
+                @if (isExpanded(group)) {
+                <div class="nested-table-shell">
+                  <table mat-table [dataSource]="group.positions" class="nested-table">
+                    <ng-container matColumnDef="symbol">
+                      <th mat-header-cell *matHeaderCellDef>Symbol</th>
+                      <td mat-cell *matCellDef="let position" class="nowrap">{{ position['symbol'] || position['instrument-symbol'] }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="qty">
+                      <th mat-header-cell *matHeaderCellDef>Qty</th>
+                      <td mat-cell *matCellDef="let position">{{ position['quantity'] }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="type">
+                      <th mat-header-cell *matHeaderCellDef>Type</th>
+                      <td mat-cell *matCellDef="let position">{{ position['instrument-type'] }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="plpos">
+                      <th mat-header-cell *matHeaderCellDef>P/L</th>
+                      <td mat-cell *matCellDef="let position" [ngClass]="{ positive: position['approximate-p-l'] > 0, negative: position['approximate-p-l'] < 0 }">{{ position['approximate-p-l'] | currency:'USD':'symbol':'1.0-0' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="cdelta">
+                      <th mat-header-cell *matHeaderCellDef>Δ shares</th>
+                      <td mat-cell *matCellDef="let position">{{ position['market_data']?.computed_position_delta | number:'1.0-1' }}</td>
+                    </ng-container>
+                    <ng-container matColumnDef="bo">
+                      <th mat-header-cell *matHeaderCellDef>Exit</th>
+                      <td mat-cell *matCellDef="let position">
+                        <button mat-stroked-button color="primary" type="button" (click)="openBracketOrder(position, account)">
+                          Manage exit
+                        </button>
+                      </td>
+                    </ng-container>
+                    <tr mat-header-row *matHeaderRowDef="positionCols"></tr>
+                    <tr mat-row *matRowDef="let row; columns: positionCols"></tr>
+                  </table>
+                </div>
+                @if (isChartExpanded(group, account)) {
+                  <div class="chart-expansion">
+                    <app-option-chart [positionGroup]="group"></app-option-chart>
                   </div>
-                </mat-expansion-panel>
+                }
+                }
               </td>
             </ng-container>
             <tr mat-header-row *matHeaderRowDef="groupCols"></tr>
-            <tr mat-row *matRowDef="let row; columns: groupCols" [ngClass]="getRuleClass(row)"></tr>
+            <tr mat-row *matRowDef="let row; columns: groupCols" class="group-row" [ngClass]="getRuleClass(row)" [class.expanded]="isExpanded(row)"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['detail']" class="detail-row" [class.collapsed]="!isExpanded(row)"></tr>
           </table>
         </div>
       } @else {
         <div class="state-panel compact">No position groups match the current filter.</div>
-      }
-      @if (getExpandedChartForAccount(account)) {
-        <div class="chart-expansion">
-          <app-option-chart [positionGroup]="getExpandedChartForAccount(account)!"></app-option-chart>
-        </div>
       }
     </section>
   }
