@@ -17,3 +17,5 @@ tr[data-net='gain'] .net { color: #6ee7b7; }
 .progress { display: inline-block; width: 3rem; height: .4rem; margin-right: .45rem; border-radius: .2rem; vertical-align: middle;
   background: linear-gradient(90deg, #759bc9 calc(var(--fill, 0) * 100%), rgba(148,163,184,.2) 0); }
 @media (max-width: 600px) { header { flex-direction: column; } }
+th, td { padding: .45rem .4rem; }
+.progress { width: 2.25rem; }

@@ -46,8 +46,8 @@ export class PaperArmsComponent implements OnChanges, OnDestroy {
   status(arm: PaperArm): string { return STATUS[arm.status]; }
 
   progress(arm: PaperArm): string {
-    if (arm.required_closes === null || arm.required_sessions === null) return 'No floor (comparison base)';
-    return `${Math.min(arm.closes, arm.required_closes)}/${arm.required_closes} trades · ${Math.min(arm.sessions, arm.required_sessions)}/${arm.required_sessions} sessions`;
+    if (arm.required_closes === null || arm.required_sessions === null) return 'Comparison base';
+    return `${Math.min(arm.closes, arm.required_closes)}/${arm.required_closes} · ${Math.min(arm.sessions, arm.required_sessions)}/${arm.required_sessions}`;
   }
 
   fraction(arm: PaperArm): number {

@@ -39,18 +39,18 @@ describe('PaperArmsComponent', () => {
     expect(api.paperArms).toHaveBeenCalledWith('2026-10-16');
     expect(rows.length).toBe(3);
     expect(rows[0].textContent).toContain('−$4,665.60');
-    expect(rows[0].textContent).toContain('No floor (comparison base)');
+    expect(rows[0].textContent).toContain('Comparison base');
     expect(rows[0].textContent).toContain('Control');
-    expect(rows[1].textContent).toContain('74/100 trades · 15/20 sessions');
+    expect(rows[1].textContent).toContain('74/100 · 15/20');
     expect(rows[1].getAttribute('data-net')).toBe('loss');
-    expect(rows[2].textContent).toContain('10-12 – 11-06');
+    expect(rows[2].textContent).toContain('10-12–11-06');
     expect(rows[2].getAttribute('data-net')).toBe('gain');
   });
 
   it('caps progress at the floor and reports unavailable data without numbers', () => {
     const component = TestBed.createComponent(PaperArmsComponent).componentInstance;
     expect(component.fraction(arm({ closes: 107, sessions: 16 }))).toBeCloseTo(0.8);
-    expect(component.progress(arm({ closes: 107, sessions: 16 }))).toBe('100/100 trades · 16/20 sessions');
+    expect(component.progress(arm({ closes: 107, sessions: 16 }))).toBe('100/100 · 16/20');
     api.paperArms.mockReturnValue(throwError(() => new Error('offline')));
     const element = render();
     expect(element.textContent).toContain('Paper strategy scorecard unavailable');
