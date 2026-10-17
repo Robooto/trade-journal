@@ -391,22 +391,26 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
       }
 
       // Create the chart
+      // autoSize fills the container (sized in CSS) and follows resizes; colors match the dark app shell.
       this.chart = createChart(this.chartContainer.nativeElement, {
-        width: this.chartContainer.nativeElement.clientWidth,
-        height: 400,
+        autoSize: true,
         layout: {
-          background: { color: '#ffffff' },
-          textColor: '#333',
+          background: { color: '#11151c' },
+          textColor: '#a2b3c9',
         },
         grid: {
-          vertLines: { color: '#f0f0f0' },
-          horzLines: { color: '#f0f0f0' },
+          vertLines: { color: 'rgba(148, 163, 184, 0.08)' },
+          horzLines: { color: 'rgba(148, 163, 184, 0.08)' },
+        },
+        crosshair: {
+          vertLine: { color: 'rgba(141, 181, 255, 0.45)', labelBackgroundColor: '#1e3a5f' },
+          horzLine: { color: 'rgba(141, 181, 255, 0.45)', labelBackgroundColor: '#1e3a5f' },
         },
         rightPriceScale: {
-          borderColor: '#cccccc',
+          borderColor: 'rgba(148, 163, 184, 0.2)',
         },
         timeScale: {
-          borderColor: '#cccccc',
+          borderColor: 'rgba(148, 163, 184, 0.2)',
           timeVisible: true,
           secondsVisible: false,
         },
@@ -414,12 +418,12 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
 
       // Add candlestick series (v5.x API)
       this.candlestickSeries = this.chart.addSeries(CandlestickSeries, {
-        upColor: '#4caf50',
-        downColor: '#f44336',
-        borderDownColor: '#f44336',
-        borderUpColor: '#4caf50',
-        wickDownColor: '#f44336',
-        wickUpColor: '#4caf50',
+        upColor: '#34d399',
+        downColor: '#f87171',
+        borderDownColor: '#f87171',
+        borderUpColor: '#34d399',
+        wickDownColor: '#f87171',
+        wickUpColor: '#34d399',
       });
 
       // Convert bars to candlestick data
@@ -533,14 +537,6 @@ export class ChartsPageComponent implements OnInit, OnDestroy {
     return 'pl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
-  // Handle window resize
-  onResize() {
-    if (this.chart && this.chartContainer) {
-      this.chart.applyOptions({
-        width: this.chartContainer.nativeElement.clientWidth
-      });
-    }
-  }
 
   private toNumber(value: MarketDataValue): number | null {
     if (value === null || value === undefined || typeof value === 'boolean') {
