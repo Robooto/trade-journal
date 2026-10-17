@@ -27,14 +27,16 @@ def load_open_execution_groups(
     *,
     fetched_at: datetime | None = None,
     cache: InMemoryCache | None = None,
+    refresh: bool = False,
 ) -> OpenExecutionGroupCollectionV1:
+    """Opening executions in the window, cached for 15 minutes; ``refresh`` rescans now."""
     fetched_at = fetched_at or datetime.now(UTC)
     cache = cache or get_cache()
     cache_key = (
         f"open-executions:{account_number}:{start_date.isoformat()}:"
         f"{end_date.isoformat()}"
     )
-    cached = cache.get(cache_key)
+    cached = None if refresh else cache.get(cache_key)
     if cached is not None:
         return cached
 

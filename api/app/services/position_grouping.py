@@ -2,16 +2,20 @@
 from collections import defaultdict
 
 from app.services import position_math
+from app.services.position_provenance import EXECUTION_GROUP_FIELD, EXECUTION_SOURCE_FIELD
 from app.services.strategy_classifier import classify_strategy
 from app.services.values import to_float
 
 
-def _position_group_fill_id(position: dict) -> str:
-    return str(
-        position.get("ext-group-fill-id")
-        or position.get("group-fill-id")
-        or ""
-    ).strip()
+def _position_group_key(position: dict) -> str:
+    """Explicit grouping key: a broker group fill on the position, else its opening execution."""
+    group_fill = str(position.get("ext-group-fill-id") or position.get("group-fill-id") or "").strip()
+    if group_fill:
+        return f"group-fill:{group_fill}"
+    execution = str(position.get(EXECUTION_GROUP_FIELD) or "").strip()
+    if execution:
+        return f"execution-{position.get(EXECUTION_SOURCE_FIELD) or 'order'}:{execution}"
+    return ""
 
 
 def _position_quantity(position: dict) -> float:
@@ -106,14 +110,14 @@ def _position_strategy_groups(
         explicit: dict[str, list[dict]] = defaultdict(list)
         remaining = []
         for position in underlying_positions:
-            group_fill_id = _position_group_fill_id(position)
-            if group_fill_id:
-                explicit[group_fill_id].append(position)
+            group_key = _position_group_key(position)
+            if group_key:
+                explicit[group_key].append(position)
             else:
                 remaining.append(position)
         result.extend(
-            ((underlying, f"group-fill:{group_id}"), legs)
-            for group_id, legs in explicit.items()
+            ((underlying, group_key), legs)
+            for group_key, legs in explicit.items()
         )
 
         calendars, remaining = _pair_unambiguous_cross_expiration_legs(
@@ -282,7 +286,9 @@ def group_positions_and_compute_totals(
             strategy = classify_strategy(plist)
             grouping_source = (
                 "broker_group_fill"
-                if grouping_key.startswith("group-fill:")
+                if grouping_key.startswith(("group-fill:", "execution-group_fill:"))
+                else "broker_order"
+                if grouping_key.startswith("execution-order:")
                 else "inferred"
                 if grouping_key.startswith(("calendar:", "diagonal:"))
                 else "expiration"

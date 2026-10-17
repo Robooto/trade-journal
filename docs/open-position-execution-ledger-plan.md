@@ -1,9 +1,12 @@
 # Open-position execution ledger plan
 
-Status (2026-10-17): the ledger is built and tested in
-`api/app/services/open_execution_ledger_service.py` (cached transaction scan,
-provenance grouping), but position grouping does not call it yet; positions still
-group by expiration as described below.
+Status (2026-10-17): in use. `load_positions` reads each account's opening
+executions (two-year scan, cached 15 minutes, rescanned once when an open leg has no
+opening order and the scan is over two minutes old), and
+`api/app/services/position_provenance.py` stamps legs with their opening order when
+unambiguous. Groups report `grouping_source` `broker_group_fill` or `broker_order`;
+ambiguous legs (a contract netted across two open trades) and unavailable history
+keep the expiration grouping.
 
 ## Outcome of the live spike
 

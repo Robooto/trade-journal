@@ -1,7 +1,7 @@
 """Load tastytrade accounts and positions and enrich them with market, volatility and balance data."""
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.orm import Session
 
@@ -9,6 +9,8 @@ from app import tastytrade
 from app.services import position_grouping, position_math
 from app.services.trades_errors import TastytradeAuthError, TastytradeFetchError
 from app.services.concurrency import Outcome, gather, map_concurrently
+from app.services.open_execution_ledger_service import load_open_execution_groups
+from app.services.position_provenance import EXECUTION_GROUP_FIELD, EXECUTION_SOURCE_FIELD, stamp_execution_groups
 from app.services.values import tasty_dict, to_float
 
 
@@ -331,6 +333,50 @@ def apply_balance(token: str, accounts_data: list[dict], balances: dict[str, Out
         })
 
 
+# Opening orders this far back can still hold open legs (LEAPS, long-dated condors).
+EXECUTION_LOOKBACK_DAYS = 730
+# A leg with no opening order in a scan older than this triggers one rescan (a new trade).
+EXECUTION_RESCAN_AFTER_SECONDS = 120
+
+
+def fetch_execution_groups(token: str, account_numbers: list[str]) -> dict[str, Outcome]:
+    """Every account's opening executions, read in parallel; failures are kept per account."""
+    today = datetime.now(UTC).date()
+    start = today - timedelta(days=EXECUTION_LOOKBACK_DAYS)
+    return gather({
+        number: (lambda number=number: load_open_execution_groups(token, number, start, today))
+        for number in account_numbers
+    })
+
+
+def apply_execution_provenance(token: str, positions_by_account: list[dict], executions: dict[str, Outcome]) -> None:
+    """Tag open legs with their opening order so separate trades on one expiration stay separate."""
+    for acct in positions_by_account:
+        number = acct["account_number"]
+        outcome = executions.get(number)
+        if outcome is None:
+            continue
+        try:
+            collection = outcome.unwrap()
+        except Exception as e:
+            logging.error(f"Execution history unavailable for account {number}: {e}")
+            continue
+        uncovered = stamp_execution_groups(acct["positions"], collection.groups)
+        age = (datetime.now(UTC) - collection.generated_at).total_seconds()
+        if uncovered and age > EXECUTION_RESCAN_AFTER_SECONDS:
+            try:
+                collection = load_open_execution_groups(
+                    token, number, collection.start_date, datetime.now(UTC).date(), refresh=True
+                )
+            except Exception as e:
+                logging.error(f"Execution history rescan failed for account {number}: {e}")
+                continue
+            for position in acct["positions"]:
+                position.pop(EXECUTION_GROUP_FIELD, None)
+                position.pop(EXECUTION_SOURCE_FIELD, None)
+            stamp_execution_groups(acct["positions"], collection.groups)
+
+
 def load_positions(db: Session) -> list[dict]:
     """Every account's option positions, grouped into strategies with market, volatility and balance context.
 
@@ -339,8 +385,10 @@ def load_positions(db: Session) -> list[dict]:
     """
     token = acquire_token(db)
     accounts = fetch_accounts(token)
-    with ThreadPoolExecutor(max_workers=2) as background:
-        balances = background.submit(fetch_balances, token, [acct.get("account_number") for acct in accounts])
+    account_numbers = [acct.get("account_number") for acct in accounts]
+    with ThreadPoolExecutor(max_workers=3) as background:
+        balances = background.submit(fetch_balances, token, account_numbers)
+        executions = background.submit(fetch_execution_groups, token, account_numbers)
         (
             positions_by_account,
             equity_option_syms,
@@ -358,6 +406,7 @@ def load_positions(db: Session) -> list[dict]:
             future_underlyings,
         )
         augment_positions_with_market_data(positions_by_account, market_map, beta_map)
+        apply_execution_provenance(token, positions_by_account, executions.result())
         accounts_data = position_grouping.group_positions_and_compute_totals(positions_by_account, beta_map)
         apply_volatility(token, accounts_data, volatility.result())
         apply_balance(token, accounts_data, balances.result())

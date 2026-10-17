@@ -17,6 +17,18 @@ from app.main import app  # noqa: E402
 
 
 @pytest.fixture(autouse=True)
+def no_real_tastytrade(monkeypatch):
+    """Tests must stub tastytrade; a real HTTP call fails loudly instead of reaching the network."""
+    from app import tastytrade
+
+    class RefusingSession:
+        def request(self, method, url, **kwargs):
+            raise AssertionError(f"test attempted a real tastytrade request: {method} {url}")
+
+    monkeypatch.setattr(tastytrade, "_session", RefusingSession)
+
+
+@pytest.fixture(autouse=True)
 def reset_tastytrade_caches():
     """The client caches the access token and account list in-process; keep tests independent."""
     from app import tastytrade

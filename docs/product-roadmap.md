@@ -125,9 +125,10 @@ trading plan.
 
 Current:
 
-- Positions grouped by account and expiration. Calendars and diagonals are
-  inferred only when each expiration contains a single leg; existing multi-leg
-  expiration groups stay intact.
+- Positions grouped by the order that opened them (tastytrade group-fill or order
+  ID), so separate trades on one expiration stay separate; legs without clear
+  provenance fall back to account and expiration. Calendars and diagonals are
+  inferred only when each expiration contains a single leg.
 - Multi-leg brokerage activity can be previewed and attached to a journal entry as one spread.
 - Marks, approximate P/L, credit progress, delta/beta-delta, IV rank, and IV
   change where available.
@@ -150,9 +151,8 @@ Next:
 4. Strategy fit by VIX regime.
 5. Versioned rule results and whether warnings were followed.
 6. Position/account history rather than current snapshot only.
-7. Use the open-position execution ledger (built and tested, not yet wired in)
-   in position grouping so multiple spreads sharing an expiration stay separate
-   after partial closes, rolls, and contract reuse; see
+7. Done: positions group by opening order (execution ledger), so spreads
+   sharing an expiration stay separate; see
    `docs/open-position-execution-ledger-plan.md`.
 
 ### All-account portfolio and holdings

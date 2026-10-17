@@ -10,7 +10,7 @@ export interface PositionGroup {
   expiration_dates?: string[];
   strategy_label?: string | null;
   strategy_confidence?: string | null;
-  grouping_source?: 'broker_group_fill' | 'inferred' | 'expiration' | null;
+  grouping_source?: 'broker_group_fill' | 'broker_order' | 'inferred' | 'expiration' | null;
   current_group_p_l: number;
   percent_credit_received: number | null;
   total_delta?: number | null;

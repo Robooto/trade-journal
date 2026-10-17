@@ -148,6 +148,13 @@ def test_load_positions_overlaps_reads_and_matches_the_step_by_step_pipeline(mon
                         lambda token, roots: volatility_calls.append(roots) or volatility)
     monkeypatch.setattr(trades_service.tastytrade, "fetch_account_balance", lambda *args: balance)
     monkeypatch.setattr(trades_service, "acquire_token", lambda db: "FAKE")
+    from app.services.cache_service import InMemoryCache
+    from app.tastytrade import TastyPage
+
+    monkeypatch.setattr("app.services.open_execution_ledger_service.get_cache", InMemoryCache)
+    monkeypatch.setattr("app.services.open_execution_ledger_service.tastytrade.fetch_transactions",
+                        lambda *args, **kwargs: TastyPage(items=[], page_offset=0, per_page=2000,
+                                                          total_items=0, total_pages=1, has_more=False))
 
     loaded = trades_service.load_positions(db=None)
 

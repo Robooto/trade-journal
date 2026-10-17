@@ -147,8 +147,7 @@ def test_active_token_comes_from_memory_then_database_then_login(monkeypatch):
 
 
 def test_only_reads_retry_on_throttling_and_gateway_errors():
-    adapter = tastytrade._session().get_adapter("https://api.tastyworks.com")
-    retry = adapter.max_retries
+    retry = tastytrade._RETRY  # the shared session's adapter is built with this policy
     assert retry.allowed_methods == frozenset({"GET"})
     assert set(retry.status_forcelist) == {429, 502, 503, 504}
     assert retry.read == 0
