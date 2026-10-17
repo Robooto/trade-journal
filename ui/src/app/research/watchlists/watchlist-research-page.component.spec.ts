@@ -101,6 +101,12 @@ describe('WatchlistResearchPageComponent', () => {
     ]);
   });
 
+  it('flags IV rank above the provider 52-week range', () => {
+    expect(component.isAboveRankRange(117.2)).toBe(true);
+    expect(component.isAboveRankRange(100)).toBe(false);
+    expect(component.isAboveRankRange(null)).toBe(false);
+  });
+
   it('filters by private list and builds both current Equity Hub links', () => {
     component.selectedWatchlist = 'Momentum';
 

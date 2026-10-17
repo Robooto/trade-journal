@@ -1,4 +1,4 @@
-:host { display: block; }
+:host { display: block; container: watchlist-page / inline-size; }
 
 .watchlist-page {
   display: grid;
@@ -236,7 +236,7 @@
 .table-header,
 .watchlist-row {
   display: grid;
-  grid-template-columns: minmax(150px, .7fr) minmax(125px, .65fr) minmax(390px, 1.65fr) minmax(250px, 1fr) 174px;
+  grid-template-columns: minmax(150px, .7fr) minmax(125px, .65fr) minmax(390px, 1.65fr) minmax(250px, 1fr) 190px;
   gap: 14px;
 }
 
@@ -331,6 +331,7 @@
 
 .ivr-block span { color: var(--mat-sys-on-surface-variant); font-size: .62rem; }
 .ivr-block strong { font-size: 1.05rem; }
+.ivr-block small { color: #fbbf24; font-size: .6rem; font-weight: 700; line-height: 1.2; }
 .ivr-block[data-tone='elevated'] { border-color: color-mix(in srgb, #fbbf24 44%, transparent); }
 .ivr-block[data-tone='low'] { border-color: color-mix(in srgb, #60a5fa 40%, transparent); }
 
@@ -378,6 +379,7 @@
 }
 
 .action-cell mat-icon { width: 16px; height: 16px; font-size: 16px; }
+.action-cell a { white-space: nowrap; }
 
 .empty-state {
   display: flex;
@@ -403,7 +405,8 @@
   line-height: 1.5;
 }
 
-@media (max-width: 1320px) {
+/* Five table columns plus gaps and padding need ~1,280px of page width, sidebar open or not. */
+@container watchlist-page (max-width: 1280px) {
   .table-header { display: none; }
 
   .watchlist-table {
@@ -415,7 +418,7 @@
   }
 
   .watchlist-row {
-    grid-template-columns: minmax(150px, .75fr) minmax(130px, .65fr) minmax(360px, 1.6fr) 174px;
+    grid-template-columns: minmax(150px, .75fr) minmax(130px, .65fr) minmax(360px, 1.6fr) 190px;
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 12px;
   }
@@ -424,7 +427,7 @@
   .action-cell { grid-column: -2; grid-row: 1 / span 2; }
 }
 
-@media (max-width: 900px) {
+@container watchlist-page (max-width: 900px) {
   .summary-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
   .filter-grid,
   .add-symbol-form { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
@@ -448,7 +451,7 @@
   .action-cell a { flex: 1 1 0; }
 }
 
-@media (max-width: 680px) {
+@container watchlist-page (max-width: 680px) {
   .watchlist-page { gap: 14px; padding: 18px 14px 32px; }
   .page-header,
   .add-symbol-heading,

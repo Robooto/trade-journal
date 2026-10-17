@@ -1,4 +1,4 @@
-:host { display: block; }
+:host { display: block; container: flow-page / inline-size; }
 
 .research-page { box-sizing: border-box; }
 
@@ -147,7 +147,8 @@
   white-space: nowrap;
 }
 
-@media (max-width: 1420px) {
+/* Queue (720px) + inspector (520px) + gap need ~1,300px of page width, sidebar open or not. */
+@container flow-page (max-width: 1320px) {
   .flow-workspace {
     grid-template-columns: 1fr;
   }

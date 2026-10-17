@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import {
   Subject,
@@ -26,6 +26,7 @@ import { FlowUploadState } from './components/report-upload/report-upload.compon
   standalone: false,
 })
 export class FlowIdeasPageComponent implements OnDestroy {
+  private readonly host = inject(ElementRef);
   private readonly subscriptions = new Subscription();
   private readonly symbolInput = new Subject<string>();
 
@@ -108,6 +109,18 @@ export class FlowIdeasPageComponent implements OnDestroy {
   selectCandidate(candidate: FlowCandidate): void {
     this.facade.selectCandidate(candidate.symbol);
     this.facade.loadWatchlists();
+    this.revealStackedInspector();
+  }
+
+  /** In the single-column layout the inspector sits below the whole queue; bring it into view. */
+  private revealStackedInspector(): void {
+    const host: HTMLElement = this.host.nativeElement;
+    const list = host.querySelector<HTMLElement>('app-flow-candidate-list');
+    const inspector = host.querySelector<HTMLElement>('app-flow-idea-inspector');
+    if (!list || !inspector || inspector.offsetTop <= list.offsetTop) {
+      return;
+    }
+    inspector.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
   }
 
   onWatchlistChanged(): void {

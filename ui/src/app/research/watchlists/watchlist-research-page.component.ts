@@ -194,6 +194,11 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
     return value > 0 ? 'positive' : 'negative';
   }
 
+  /** tastytrade ranks IV against a lagged 52-week range, so a fresh IV high can exceed 100%. */
+  isAboveRankRange(value: number | null | undefined): boolean {
+    return value != null && value > 100;
+  }
+
   ivRankTone(value: number | null | undefined): string {
     if (value == null) {
       return 'unavailable';

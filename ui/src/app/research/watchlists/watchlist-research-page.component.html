@@ -240,6 +240,9 @@
               <div class="ivr-block" [attr.data-tone]="ivRankTone(item.volatility.iv_rank_percent)">
                 <span>IV rank</span>
                 <strong>{{ formatPercent(item.volatility.iv_rank_percent) }}</strong>
+                @if (isAboveRankRange(item.volatility.iv_rank_percent)) {
+                  <small title="tastytrade ranks IV against a lagged 52-week range, so a fresh high reads above 100%.">Above 52-wk range</small>
+                }
               </div>
               <dl>
                 <div>
