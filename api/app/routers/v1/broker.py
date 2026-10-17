@@ -61,6 +61,7 @@ from app.services.tasty_activity_history_service import (
     sync_tastytrade_activity_history,
 )
 from app.services.trades_errors import TastytradeFetchError
+from app.services.values import to_float
 
 
 router = APIRouter(prefix="/v1/broker", tags=["v1 - broker"])
@@ -302,13 +303,6 @@ def add_watchlist_symbol(
     )
 
 
-def _number(value):
-    try:
-        return None if value is None else float(value)
-    except (TypeError, ValueError):
-        return None
-
-
 @router.get(
     "/option-chains/{symbol}/nested",
     summary="Get nested option-chain metadata for research capture",
@@ -368,13 +362,13 @@ def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Sess
     observations = [OptionQuoteObservationV1(
         symbol=row.symbol,
         quoted_at=row.updated_at or getattr(row, "updatedAt", None),
-        mark=_number(row.mark), bid=_number(row.bid), ask=_number(row.ask),
-        bid_size=_number(row.bid_size), ask_size=_number(row.ask_size),
-        volume=_number(row.volume), open_interest=_number(row.open_interest),
-        delta=_number(row.delta), gamma=_number(row.gamma), theta=_number(row.theta), vega=_number(row.vega),
+        mark=to_float(row.mark), bid=to_float(row.bid), ask=to_float(row.ask),
+        bid_size=to_float(row.bid_size), ask_size=to_float(row.ask_size),
+        volume=to_float(row.volume), open_interest=to_float(row.open_interest),
+        delta=to_float(row.delta), gamma=to_float(row.gamma), theta=to_float(row.theta), vega=to_float(row.vega),
         # Model values are opt-in so existing collectors receive byte-identical responses.
-        **({'rho': _number(row.rho), 'implied_volatility': _number(row.volatility),
-            'theo_price': _number(row.theo_price)} if request.include_model_values else {}),
+        **({'rho': to_float(row.rho), 'implied_volatility': to_float(row.volatility),
+            'theo_price': to_float(row.theo_price)} if request.include_model_values else {}),
     ) for row in market_rows]
     returned = {row.symbol for row in observations}
     missing = [symbol for symbol in symbols if symbol not in returned]
@@ -429,18 +423,18 @@ def get_market_metrics(symbols: str = Query(..., min_length=1, max_length=200), 
             expirations.append(ExpirationImpliedVolatilityV1(
                 expiration_date=expiry, settlement_type=item.get("settlement-type"),
                 option_chain_type=item.get("option-chain-type"),
-                implied_volatility=_number(item.get("implied-volatility"))))
+                implied_volatility=to_float(item.get("implied-volatility"))))
         metrics.append(MarketMetricV1(
             symbol=row.symbol.upper(),
-            implied_volatility_index=_number(row.implied_volatility_index),
-            implied_volatility_index_rank=_number(row.implied_volatility_index_rank),
-            implied_volatility_percentile=_number(row.implied_volatility_percentile),
-            implied_volatility_index_5_day_change=_number(row.implied_volatility_index_5_day_change),
-            implied_volatility_30_day=_number(row.implied_volatility_30_day),
-            historical_volatility_30_day=_number(row.historical_volatility_30_day),
-            historical_volatility_60_day=_number(row.historical_volatility_60_day),
-            historical_volatility_90_day=_number(row.historical_volatility_90_day),
-            iv_hv_30_day_difference=_number(row.iv_hv_30_day_difference),
+            implied_volatility_index=to_float(row.implied_volatility_index),
+            implied_volatility_index_rank=to_float(row.implied_volatility_index_rank),
+            implied_volatility_percentile=to_float(row.implied_volatility_percentile),
+            implied_volatility_index_5_day_change=to_float(row.implied_volatility_index_5_day_change),
+            implied_volatility_30_day=to_float(row.implied_volatility_30_day),
+            historical_volatility_30_day=to_float(row.historical_volatility_30_day),
+            historical_volatility_60_day=to_float(row.historical_volatility_60_day),
+            historical_volatility_90_day=to_float(row.historical_volatility_90_day),
+            iv_hv_30_day_difference=to_float(row.iv_hv_30_day_difference),
             implied_volatility_updated_at=row.implied_volatility_updated_at,
             expiration_implied_volatilities=expirations))
     returned = {m.symbol for m in metrics}

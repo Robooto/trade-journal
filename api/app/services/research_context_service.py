@@ -19,6 +19,7 @@ from app.tastytrade_schema import (
     TastyVolatilityMetric,
     TastyWatchlist,
 )
+from app.services.values import fraction_to_percent, to_float
 
 
 def _as_dict(value) -> dict:
@@ -27,20 +28,6 @@ def _as_dict(value) -> dict:
     if isinstance(value, Mapping):
         return dict(value)
     raise TypeError(f"Unsupported broker value: {type(value)!r}")
-
-
-def _number(value) -> float | None:
-    if value in (None, ""):
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def _percent(value) -> float | None:
-    number = _number(value)
-    return round(number * 100, 2) if number is not None else None
 
 
 def _normalize_symbols(symbols: Sequence[str]) -> list[str]:
@@ -219,8 +206,8 @@ def build_research_symbol_context(
             ),
         )
 
-        mark = _number(market.get("mark")) if market else None
-        previous_close = _number(market.get("close")) if market else None
+        mark = to_float(market.get("mark")) if market else None
+        previous_close = to_float(market.get("close")) if market else None
         day_change = None
         if mark is not None and previous_close:
             day_change = round((mark / previous_close - 1) * 100, 2)
@@ -283,21 +270,21 @@ def build_research_symbol_context(
                     as_of=fetched_at if market else None,
                 ),
                 volatility=VolatilityContextV1(
-                    iv_index_percent=_percent(
+                    iv_index_percent=fraction_to_percent(
                         volatility.get("implied-volatility-index")
                     ) if volatility else None,
-                    iv_rank_percent=_percent(
+                    iv_rank_percent=fraction_to_percent(
                         volatility.get("implied-volatility-index-rank")
                     ) if volatility else None,
-                    iv_percentile_percent=_percent(
+                    iv_percentile_percent=fraction_to_percent(
                         volatility.get("implied-volatility-percentile")
                     ) if volatility else None,
-                    iv_index_5_day_change_percent=_percent(
+                    iv_index_5_day_change_percent=fraction_to_percent(
                         volatility.get(
                             "implied-volatility-index-5-day-change"
                         )
                     ) if volatility else None,
-                    liquidity_rating=_number(
+                    liquidity_rating=to_float(
                         volatility.get("liquidity-rating")
                     ) if volatility else None,
                     as_of=fetched_at if volatility else None,

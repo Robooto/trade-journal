@@ -133,3 +133,17 @@ def test_transaction_source_failure_returns_unavailable_collection(monkeypatch):
     assert result.groups == []
     assert result.source.status.value == "unavailable"
     assert result.warnings == ["Brokerage transaction history is unavailable."]
+
+
+def test_cache_sweeps_expired_entries_on_write(monkeypatch):
+    import app.services.cache_service as cache_module
+
+    now = [1_000.0]
+    monkeypatch.setattr(cache_module.time, "time", lambda: now[0])
+    cache = InMemoryCache()
+    cache.set("chart:SPY:1m:1:2", "old", ttl=60)
+    now[0] += 61
+    cache.set("chart:SPY:1m:3:4", "new", ttl=60)
+
+    assert cache.size() == 1
+    assert cache.get("chart:SPY:1m:3:4") == "new"

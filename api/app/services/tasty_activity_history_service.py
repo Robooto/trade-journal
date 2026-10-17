@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from collections import defaultdict, deque
 from datetime import date, datetime, timezone
@@ -11,6 +12,7 @@ from app import tastytrade
 from app.models import ImportedSpreadTradeORM
 from app.services.tasty_activity_csv_service import _normalize_vertical, _position_signature
 from app.tastytrade_schema import TastyOrder, TastyTransaction
+from app.services.values import to_float
 
 
 OPTION_SYMBOL_RE = re.compile(r"(?P<expiry>\d{6})(?P<right>[CP])(?P<strike>\d{8})$")
@@ -57,7 +59,8 @@ def sync_tastytrade_activity_history(
                 tastytrade.fetch_transactions, token, account_number,
                 start_date=start_date.isoformat(), end_date=end_date.isoformat(), per_page=2000,
             )
-        except Exception as exc:
+        except Exception:
+            logging.exception("Failed to fetch broker history for account %s.", account_number)
             warnings.append(f"Broker history was unavailable for account {account_number}.")
             continue
         if orders_truncated or transactions_truncated:
@@ -155,7 +158,7 @@ def _broker_fill_orders(
                 continue
             leg_key = (str(transaction.symbol), action)
             leg = grouped_legs.setdefault(leg_key, {**parsed, "action": action, "qty": 0})
-            leg["qty"] += int(round(abs(_number(transaction.quantity) or 0)))
+            leg["qty"] += int(round(abs(to_float(transaction.quantity) or 0)))
         legs = list(grouped_legs.values())
         if not legs:
             continue
@@ -170,8 +173,8 @@ def _broker_fill_orders(
             cashflow = gross_value / 100 / quantity
             price = abs(cashflow)
             side = "cr" if cashflow > 0 else "db"
-        elif broker_order is not None and _number(broker_order.price) is not None:
-            price = abs(_number(broker_order.price) or 0)
+        elif broker_order is not None and to_float(broker_order.price) is not None:
+            price = abs(to_float(broker_order.price) or 0)
             side = "cr" if str(broker_order.price_effect or "").lower() == "credit" else "db"
             cashflow = price if side == "cr" else -price
         else:
@@ -239,15 +242,8 @@ def _action_code(value: str | None) -> str | None:
     return ACTION_CODES.get(str(value or "").strip().lower())
 
 
-def _number(value: Any) -> float | None:
-    try:
-        return None if value is None else float(value)
-    except (TypeError, ValueError):
-        return None
-
-
 def _signed_value(value: Any, effect: str | None) -> float:
-    number = abs(_number(value) or 0)
+    number = abs(to_float(value) or 0)
     normalized_effect = str(effect or "").lower()
     if normalized_effect == "credit":
         return number

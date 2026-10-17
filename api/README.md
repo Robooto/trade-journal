@@ -26,7 +26,7 @@ uvicorn app.main:app \
   --reload \
   --host 0.0.0.0 \
   --port 8876 \
-  --env-file /home/boots/code/trade-journal/.env
+  --env-file ../.env
 ```
 
 ```

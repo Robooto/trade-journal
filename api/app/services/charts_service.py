@@ -109,17 +109,17 @@ def get_chart_history(
             raise HTTPException(
                 status_code=404,
                 detail=f"Symbol '{symbol}' not found. Please check the symbol and try again."
-            )
+            ) from e
         elif "Too Many Requests" in str(e) or "429" in str(e):
             raise HTTPException(
                 status_code=429,
                 detail="Too many requests. Please wait a moment and try again."
-            )
+            ) from e
         else:
             raise HTTPException(
                 status_code=500,
                 detail="Failed to fetch chart data. Please try again later."
-            )
+            ) from e
 
 
 def _build_bars_from_dataframe(df) -> List[Bar]:

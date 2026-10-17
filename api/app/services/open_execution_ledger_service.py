@@ -11,6 +11,7 @@ from app.schemas.brokerage import (
     SourceMetadataV1,
 )
 from app.services.cache_service import InMemoryCache, get_cache
+from app.services.values import to_float
 
 
 MAX_TRANSACTION_PAGES = 20
@@ -153,8 +154,8 @@ def _execution_group(
                 symbol=str(transaction.symbol),
                 underlying_symbol=transaction.underlying_symbol,
                 action=transaction.action or transaction.transaction_sub_type,
-                quantity=_number(transaction.quantity),
-                price=_number(transaction.price),
+                quantity=to_float(transaction.quantity),
+                price=to_float(transaction.price),
                 executed_at=_occurred_at(transaction),
             )
             for transaction in transactions
@@ -177,8 +178,3 @@ def _occurred_at(transaction) -> datetime:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
 
 
-def _number(value) -> float | None:
-    try:
-        return float(value) if value is not None else None
-    except (TypeError, ValueError):
-        return None

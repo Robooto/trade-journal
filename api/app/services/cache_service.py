@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional, Any
 from dataclasses import dataclass
 from threading import Lock
 
@@ -60,6 +60,8 @@ class InMemoryCache:
             ttl: Time to live in seconds (default: 5 minutes)
         """
         with self._lock:
+            # Chart keys embed time ranges and are rarely read twice; sweep on write so they don't accumulate.
+            self._remove_expired()
             self._cache[key] = CacheEntry(
                 data=value,
                 timestamp=time.time(),
@@ -81,20 +83,20 @@ class InMemoryCache:
             Number of entries removed
         """
         with self._lock:
-            current_time = time.time()
-            expired_keys = []
-            
-            for key, entry in self._cache.items():
-                if current_time - entry.timestamp > entry.ttl:
-                    expired_keys.append(key)
-            
-            for key in expired_keys:
-                del self._cache[key]
-            
-            if expired_keys:
-                logger.info(f"Cleaned up {len(expired_keys)} expired cache entries")
-            
-            return len(expired_keys)
+            return self._remove_expired()
+
+    def _remove_expired(self) -> int:
+        """Drop expired entries; the caller holds the lock."""
+        current_time = time.time()
+        expired_keys = [
+            key for key, entry in self._cache.items()
+            if current_time - entry.timestamp > entry.ttl
+        ]
+        for key in expired_keys:
+            del self._cache[key]
+        if expired_keys:
+            logger.debug("Removed %d expired cache entries", len(expired_keys))
+        return len(expired_keys)
     
     def size(self) -> int:
         """Get current cache size."""

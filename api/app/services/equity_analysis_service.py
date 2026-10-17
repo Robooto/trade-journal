@@ -16,6 +16,7 @@ from app.schemas.charts import (
     VolatilitySnapshot,
     VolatilityTermPoint,
 )
+from app.services.values import fraction_to_percent, to_float
 
 
 ANALYSIS_PROFILE = """Analyze this single-stock options setup using the supplied data.
@@ -64,20 +65,6 @@ def build_equity_hub_url(symbol: str, as_of_date: str) -> str:
     return f"https://dashboard.spotgamma.com/equityhub?{query}"
 
 
-def percent(value: Any) -> Optional[float]:
-    number = number_or_none(value)
-    return round(number * 100, 2) if number is not None else None
-
-
-def number_or_none(value: Any) -> Optional[float]:
-    if value is None or value == "":
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-
 def tasty_dict(value: Any) -> dict[str, Any]:
     if hasattr(value, "model_dump"):
         return value.model_dump(by_alias=True, exclude_none=True)
@@ -108,7 +95,7 @@ def normalize_market(raw: Any) -> dict[str, Any]:
             if value:
                 normalized[target] = str(value)
         else:
-            parsed = number_or_none(value)
+            parsed = to_float(value)
             if parsed is not None:
                 normalized[target] = parsed
     return normalized
@@ -120,18 +107,18 @@ def normalize_volatility(raw: Any) -> VolatilitySnapshot:
     for point in item.get("option-expiration-implied-volatilities", []) or []:
         term.append(VolatilityTermPoint(
             expiration_date=str(point.get("expiration-date", "")),
-            implied_volatility_percent=percent(point.get("implied-volatility")),
+            implied_volatility_percent=fraction_to_percent(point.get("implied-volatility")),
             option_chain_type=point.get("option-chain-type"),
             settlement_type=point.get("settlement-type"),
         ))
     return VolatilitySnapshot(
-        current_iv_percent=percent(item.get("implied-volatility-index")),
-        iv_15_day_percent=percent(item.get("implied-volatility-index-15-day")),
-        iv_rank_percent=percent(item.get("implied-volatility-index-rank")),
-        iv_percentile_percent=percent(item.get("implied-volatility-percentile")),
-        iv_5_day_change_percent=percent(item.get("implied-volatility-index-5-day-change")),
-        corr_spy_3_month=number_or_none(item.get("corr-spy-3month")),
-        liquidity_rating=number_or_none(item.get("liquidity-rating")),
+        current_iv_percent=fraction_to_percent(item.get("implied-volatility-index")),
+        iv_15_day_percent=fraction_to_percent(item.get("implied-volatility-index-15-day")),
+        iv_rank_percent=fraction_to_percent(item.get("implied-volatility-index-rank")),
+        iv_percentile_percent=fraction_to_percent(item.get("implied-volatility-percentile")),
+        iv_5_day_change_percent=fraction_to_percent(item.get("implied-volatility-index-5-day-change")),
+        corr_spy_3_month=to_float(item.get("corr-spy-3month")),
+        liquidity_rating=to_float(item.get("liquidity-rating")),
         term_structure=term,
     )
 
@@ -170,9 +157,9 @@ def find_portfolio_exposure(accounts: Iterable[dict], symbol: str) -> PortfolioE
             if underlying == symbol:
                 matches.append(group)
     percent_used_values = [
-        number_or_none(account.get("percent_used_bp"))
+        to_float(account.get("percent_used_bp"))
         for account in accounts
-        if number_or_none(account.get("percent_used_bp")) is not None
+        if to_float(account.get("percent_used_bp")) is not None
     ]
     account_percent_used_bp = (
         round(max(percent_used_values), 2) if percent_used_values else None
@@ -185,7 +172,7 @@ def find_portfolio_exposure(accounts: Iterable[dict], symbol: str) -> PortfolioE
         )
 
     buying_power = sum(
-        number_or_none(
+        to_float(
             group.get("buying_power_effect_dollars")
             or group.get("buying-power-effect-dollars")
             or group.get("buying_power_effect")
@@ -194,7 +181,7 @@ def find_portfolio_exposure(accounts: Iterable[dict], symbol: str) -> PortfolioE
         for group in matches
     )
     beta_delta = sum(
-        number_or_none(group.get("beta_delta") or group.get("beta-delta")) or 0
+        to_float(group.get("beta_delta") or group.get("beta-delta")) or 0
         for group in matches
     )
     return PortfolioExposure(

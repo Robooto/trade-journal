@@ -15,6 +15,7 @@ from app.schemas.brokerage import (
 from app.services.brokerage_normalizer import normalize_activity_event
 from app.services.trades_errors import TastytradeFetchError
 from app.tastytrade_schema import TastyOrder, TastyTransaction
+from app.services.values import to_float
 
 
 MAX_PAGES_PER_SOURCE = 20
@@ -72,7 +73,7 @@ def fetch_activity_inbox(
                 warnings.append(
                     f"Order history was truncated for account {account_number}."
                 )
-        except Exception as exc:
+        except Exception:
             logging.exception(
                 "Failed to fetch orders for activity account %s.",
                 account_number,
@@ -105,7 +106,7 @@ def fetch_activity_inbox(
                     "Transaction history was truncated for account "
                     f"{account_number}."
                 )
-        except Exception as exc:
+        except Exception:
             logging.exception(
                 "Failed to fetch transactions for activity account %s.",
                 account_number,
@@ -246,7 +247,7 @@ def _review_event(
         order_ids=order_ids,
         order_status=order.status if order else None,
         order_type=order.order_type if order else None,
-        order_price=_number(order.price) if order else None,
+        order_price=to_float(order.price) if order else None,
         order_price_effect=order.price_effect if order else None,
         leg_count=len(legs),
         legs=legs,
@@ -376,8 +377,3 @@ def _sum_optional(values) -> float | None:
     return round(sum(numbers), 4) if numbers else None
 
 
-def _number(value) -> float | None:
-    try:
-        return float(value) if value is not None else None
-    except (TypeError, ValueError):
-        return None

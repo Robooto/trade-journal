@@ -781,7 +781,6 @@ def apply_volatility(token: str, accounts_data: List[dict]) -> None:
     """Augment groups with implied volatility information."""
 
     for acct in accounts_data:
-        acct_num = acct["account_number"]
         groups_list = acct["groups"]
 
         unique_roots = sorted({_root_symbol(g["underlying_symbol"]) for g in groups_list if g["underlying_symbol"]})

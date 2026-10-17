@@ -12,6 +12,7 @@ from app.schemas.brokerage import (
     SourceMetadataV1,
 )
 from app.tastytrade_schema import TastyAccount, TastyPosition, TastyTransaction
+from app.services.values import to_float
 
 
 INSTRUMENT_ASSET_CLASSES = {
@@ -31,15 +32,6 @@ def _as_dict(value) -> dict:
     if isinstance(value, Mapping):
         return dict(value)
     raise TypeError(f"Unsupported broker value: {type(value)!r}")
-
-
-def _number(value) -> float | None:
-    if value in (None, ""):
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
 
 
 def _datetime(value) -> datetime | None:
@@ -84,13 +76,13 @@ def normalize_holding(
     instrument_type = str(raw.get("instrument-type") or "Unknown")
     symbol = str(raw.get("symbol") or "").strip()
     underlying = str(raw.get("underlying-symbol") or symbol).strip()
-    quantity = abs(_number(raw.get("quantity")) or 0.0)
+    quantity = abs(to_float(raw.get("quantity")) or 0.0)
     direction = _quantity_direction(raw.get("quantity-direction"))
     signed_quantity = _signed_quantity(quantity, direction)
-    multiplier = _number(raw.get("multiplier")) or 1.0
-    average_open = _number(raw.get("average-open-price"))
-    mark = _number(raw.get("mark"))
-    close_price = _number(raw.get("close-price"))
+    multiplier = to_float(raw.get("multiplier")) or 1.0
+    average_open = to_float(raw.get("average-open-price"))
+    mark = to_float(raw.get("mark"))
+    close_price = to_float(raw.get("close-price"))
     if mark is None:
         mark = close_price
 
@@ -214,7 +206,7 @@ def build_holding_snapshot(
 
 
 def _signed_money(value, effect: str | None) -> float | None:
-    number = _number(value)
+    number = to_float(value)
     if number is None:
         return None
     normalized_effect = (effect or "").strip().lower()
@@ -264,16 +256,16 @@ def normalize_activity_event(
         missing_fields.append("occurred_at")
 
     fees = [
-        _number(raw.get("commission")),
-        _number(raw.get("clearing-fees")),
-        _number(raw.get("regulatory-fees")),
-        _number(raw.get("proprietary-index-option-fees")),
-        _number(raw.get("other-charge")),
+        to_float(raw.get("commission")),
+        to_float(raw.get("clearing-fees")),
+        to_float(raw.get("regulatory-fees")),
+        to_float(raw.get("proprietary-index-option-fees")),
+        to_float(raw.get("other-charge")),
     ]
     fee_total = round(sum(abs(value) for value in fees if value is not None), 4)
     group_fill_id = raw.get("ext-group-fill-id")
     order_id = raw.get("order-id")
-    leg_count = int(_number(raw.get("leg-count")) or 0)
+    leg_count = int(to_float(raw.get("leg-count")) or 0)
     if group_fill_id or order_id is not None:
         grouping_status = "explicit"
     elif leg_count > 1:
@@ -313,8 +305,8 @@ def normalize_activity_event(
         underlying_symbol=raw.get("underlying-symbol"),
         instrument_type=raw.get("instrument-type"),
         action=raw.get("action"),
-        quantity=_number(raw.get("quantity")),
-        price=_number(raw.get("price")),
+        quantity=to_float(raw.get("quantity")),
+        price=to_float(raw.get("price")),
         value_dollars=_signed_money(
             raw.get("value"), raw.get("value-effect")
         ),
