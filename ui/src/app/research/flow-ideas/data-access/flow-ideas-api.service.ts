@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import {
   FlowCandidatesResponse,
-  FlowContractsResponse,
+  FlowSymbolLedgerResponse,
   FlowDatesResponse,
   FlowIdeasServerFilters,
   FlowSymbolHistoryResponse,
@@ -55,10 +55,10 @@ export class FlowIdeasApiService {
     );
   }
 
-  contracts(tradingDate: string, symbol: string): Observable<FlowContractsResponse> {
-    return this.http.get<FlowContractsResponse>(
+  ledger(tradingDate: string, symbol: string): Observable<FlowSymbolLedgerResponse> {
+    return this.http.get<FlowSymbolLedgerResponse>(
       this.baseUrl + '/' + encodeURIComponent(tradingDate) + '/symbols/' +
-        encodeURIComponent(normalizeSymbol(symbol)) + '/contracts',
+        encodeURIComponent(normalizeSymbol(symbol)) + '/ledger',
     );
   }
 

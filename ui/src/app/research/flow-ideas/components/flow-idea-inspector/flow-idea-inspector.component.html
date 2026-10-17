@@ -53,6 +53,13 @@
       </div>
     }
 
+    <app-contract-evidence [ledger]="ledger()" [loading]="loading()" [error]="contractsError()"></app-contract-evidence>
+    @if (!loading() && !ledger()?.ledger?.summary) {
+      <app-flow-actions [summary]="idea.flow_actions"></app-flow-actions>
+    }
+
+    <app-report-history [history]="history()" [loading]="loading()" [error]="historyError()"></app-report-history>
+
     <div class="inspector-context-grid">
       <app-brokerage-context
         [context]="idea.brokerage_context"
@@ -73,10 +80,6 @@
       ></app-flow-watchlist-control>
     </div>
 
-    <app-flow-actions [summary]="idea.flow_actions"></app-flow-actions>
-
-    <app-report-history [history]="history()" [loading]="loading()" [error]="historyError()"></app-report-history>
-    <app-contract-evidence [contracts]="contracts()" [loading]="loading()" [error]="contractsError()"></app-contract-evidence>
   } @else {
     <div class="inspector-empty">
       <mat-icon>ads_click</mat-icon>

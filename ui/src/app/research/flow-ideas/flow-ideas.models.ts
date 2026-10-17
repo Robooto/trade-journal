@@ -202,39 +202,103 @@ export interface FlowSymbolHistoryResponse {
   readonly rows: readonly FlowHistoryRow[];
 }
 
-export interface FlowContractEvidenceRow {
-  readonly expiration?: string | null;
-  readonly strike?: number | null;
-  readonly option_type?: string | null;
-  readonly bto?: number | null;
-  readonly btc?: number | null;
-  readonly sto?: number | null;
-  readonly stc?: number | null;
-  readonly report_date: string;
-  readonly trading_date: string;
-  readonly symbol: string;
-  readonly spread_id: string | null;
-  readonly section: string | null;
-  readonly source_page: number | null;
-  readonly source_row_index: number | null;
-  readonly measure_name: string | null;
-  readonly measure_value_usd: number | null;
-  readonly source_row_text: string | null;
-  readonly review_status: string | null;
+export interface FlowActionCounts {
+  readonly bto: number;
+  readonly btc: number;
+  readonly sto: number;
+  readonly stc: number;
 }
 
-export interface FlowContractsResponse {
-  readonly schema_version: 'flowpatrol-contracts.v1';
+export interface FlowLedgerTotals extends FlowActionCounts {
+  readonly opened: number;
+  readonly closed: number;
+  readonly bought: number;
+  readonly sold: number;
+  readonly contract_count: number;
+}
+
+export interface FlowLedgerSummary extends FlowLedgerTotals {
+  readonly total: number;
+  readonly opening_share: number | null;
+  readonly bought_share: number | null;
+  readonly calls: FlowLedgerTotals;
+  readonly puts: FlowLedgerTotals;
+  readonly total_premium_usd: number | null;
+}
+
+export interface FlowLedgerSource {
+  readonly section: string | null;
+  readonly source_page: number | null;
+  readonly source_row_text: string | null;
+}
+
+export interface FlowLedgerContract {
+  readonly key: string;
+  readonly status: 'ready' | 'conflicting_counts';
+  readonly symbol: string;
+  readonly expiration: string;
+  readonly strike: number;
+  readonly option_type: 'call' | 'put';
+  readonly days_to_expiration: number | null;
+  readonly moneyness_pct: number | null;
+  readonly counts: FlowActionCounts | null;
+  readonly opened: number | null;
+  readonly closed: number | null;
+  readonly bought: number | null;
+  readonly sold: number | null;
+  readonly total: number | null;
+  readonly opening_share: number | null;
+  readonly bought_share: number | null;
+  readonly dominant_action: 'BTO' | 'BTC' | 'STO' | 'STC' | null;
+  readonly read: string;
+  readonly sections: readonly string[];
+  readonly spread_ids: readonly string[];
+  readonly structure_labels: readonly string[];
+  readonly total_premium_usd: number | null;
+  readonly open_interest: number | null;
+  readonly implied_volatility: number | null;
+  readonly stock_price: number | null;
+  readonly sources: readonly FlowLedgerSource[];
+}
+
+export type FlowSpreadPattern =
+  | 'roll'
+  | 'vertical'
+  | 'calendar_or_diagonal'
+  | 'calls_and_puts'
+  | 'multi_leg'
+  | 'single_leg_shown'
+  | 'source_named';
+
+export interface FlowLedgerSpread {
+  readonly spread_id: string | null;
+  readonly source_label: string | null;
+  readonly leg_keys: readonly string[];
+  readonly pattern: FlowSpreadPattern;
+  readonly total_premium_usd: number | null;
+}
+
+export interface FlowContractLedger {
+  readonly schema_version: 'flowpatrol-contract-ledger.v1';
+  readonly status: 'ready' | 'partial' | 'unavailable';
+  readonly summary: FlowLedgerSummary | null;
+  readonly excluded_row_count: number;
+  readonly conflicting_contract_count: number;
+  readonly contracts: readonly FlowLedgerContract[];
+  readonly spreads: readonly FlowLedgerSpread[];
+}
+
+export interface FlowSymbolLedgerResponse {
+  readonly schema_version: 'flowpatrol-symbol-ledger.v1';
   readonly trading_date: string;
   readonly symbol: string;
   readonly status: FlowReportStatus;
-  readonly rows: readonly FlowContractEvidenceRow[];
-}
-
-export interface FlowContractEvidenceGroup {
-  readonly key: string;
-  readonly label: string;
-  readonly rows: readonly FlowContractEvidenceRow[];
+  readonly ledger: FlowContractLedger;
+  readonly links: {
+    readonly equityhub_url: string;
+    readonly equityhub_oi_model_url: string;
+    readonly equityhub_history_url: string;
+  };
 }
 
 export interface FlowUploadResponse {

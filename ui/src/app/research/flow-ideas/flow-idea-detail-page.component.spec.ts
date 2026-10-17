@@ -1,3 +1,4 @@
+import { ledgerResponse } from './components/contract-evidence/contract-evidence.testing';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { of } from 'rxjs';
@@ -16,14 +17,8 @@ describe('FlowIdeaDetailPageComponent', () => {
           rows: [],
         }),
       ),
-      contracts: vi.fn(() =>
-        of({
-          schema_version: 'flowpatrol-contracts.v1' as const,
-          trading_date: '2026-07-09',
-          symbol: 'AAPL',
-          status: 'partial' as const,
-          rows: [],
-        }),
+      ledger: vi.fn(() =>
+        of({ ...ledgerResponse([], []), trading_date: '2026-07-09', symbol: 'AAPL', status: 'partial' as const }),
       ),
       candidates: vi.fn(() =>
         of({

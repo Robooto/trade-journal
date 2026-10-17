@@ -15,7 +15,7 @@ import { EMPTY, Subscription, catchError, finalize, forkJoin, of } from 'rxjs';
 import {
   FlowApiErrorBody,
   FlowCandidate,
-  FlowContractsResponse,
+  FlowSymbolLedgerResponse,
   FlowSymbolHistoryResponse,
   FlowWatchlistAddResponse,
   FlowWatchlistsResponse,
@@ -44,7 +44,7 @@ export class FlowIdeaInspectorComponent implements OnChanges, OnDestroy {
   private readonly subscriptions = new Subscription();
 
   readonly history = signal<FlowSymbolHistoryResponse | null>(null);
-  readonly contracts = signal<FlowContractsResponse | null>(null);
+  readonly ledger = signal<FlowSymbolLedgerResponse | null>(null);
   readonly historyError = signal<string | null>(null);
   readonly contractsError = signal<string | null>(null);
   readonly loading = signal(false);
@@ -108,7 +108,7 @@ export class FlowIdeaInspectorComponent implements OnChanges, OnDestroy {
   private loadEvidence(): void {
     this.loadSubscription?.unsubscribe();
     this.history.set(null);
-    this.contracts.set(null);
+    this.ledger.set(null);
     this.historyError.set(null);
     this.contractsError.set(null);
     this.watchlistResult.set(null);
@@ -128,7 +128,7 @@ export class FlowIdeaInspectorComponent implements OnChanges, OnDestroy {
           return of(null);
         }),
       ),
-      contracts: this.api.contracts(tradingDate, symbol).pipe(
+      ledger: this.api.ledger(tradingDate, symbol).pipe(
         catchError(error => {
           this.contractsError.set(toSafeMessage(error));
           return of(null);
@@ -136,7 +136,7 @@ export class FlowIdeaInspectorComponent implements OnChanges, OnDestroy {
       ),
     }).pipe(finalize(() => this.loading.set(false))).subscribe(result => {
       this.history.set(result.history);
-      this.contracts.set(result.contracts);
+      this.ledger.set(result.ledger);
     });
   }
 }

@@ -25,7 +25,7 @@ import {
   FlowApiErrorBody,
   FlowBrokerageContext,
   FlowCandidatesResponse,
-  FlowContractsResponse,
+  FlowSymbolLedgerResponse,
   FlowSymbolHistoryResponse,
   FlowWatchlistAddResponse,
   FlowWatchlistsResponse,
@@ -57,7 +57,7 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
   readonly tradingDate = signal('');
   readonly symbol = signal('');
   readonly history = signal<FlowSymbolHistoryResponse | null>(null);
-  readonly contracts = signal<FlowContractsResponse | null>(null);
+  readonly ledger = signal<FlowSymbolLedgerResponse | null>(null);
   readonly flowActions = computed(() =>
     this.history()?.rows.find(row => row.trading_date === this.tradingDate())?.flow_actions,
   );
@@ -98,8 +98,8 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
           switchMap(detail =>
             forkJoin({
               history: this.asResult(this.api.history(detail.symbol)),
-              contracts: this.asResult(
-                this.api.contracts(detail.tradingDate, detail.symbol),
+              ledger: this.asResult(
+                this.api.ledger(detail.tradingDate, detail.symbol),
               ),
               candidate: this.asResult(this.candidateRequest(detail)),
               watchlists: this.asResult(this.api.watchlists()),
@@ -109,8 +109,8 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
         .subscribe(result => {
           this.history.set(result.history.value);
           this.historyError.set(result.history.error);
-          this.contracts.set(result.contracts.value);
-          this.contractsError.set(result.contracts.error);
+          this.ledger.set(result.ledger.value);
+          this.contractsError.set(result.ledger.error);
           this.applyBrokerageContext(
             result.candidate.value,
             result.candidate.error,
@@ -155,7 +155,7 @@ export class FlowIdeaDetailPageComponent implements OnDestroy {
     this.tradingDate.set(detail.tradingDate);
     this.symbol.set(detail.symbol);
     this.history.set(null);
-    this.contracts.set(null);
+    this.ledger.set(null);
     this.historyError.set(null);
     this.contractsError.set(null);
     this.loading.set(true);

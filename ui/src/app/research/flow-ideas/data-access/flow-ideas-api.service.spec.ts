@@ -79,17 +79,17 @@ describe('FlowIdeasApiService', () => {
   });
 
 
-  it('uses typed ticker history and dated contract evidence routes', () => {
+  it('uses typed ticker history and dated contract ledger routes', () => {
     api.history('aapl').subscribe(response => expect(response.symbol).toBe('AAPL'));
     api
-      .contracts('2026-07-09', 'aapl')
+      .ledger('2026-07-09', 'aapl')
       .subscribe(response => expect(response.symbol).toBe('AAPL'));
 
     const history = http.expectOne(
       '/research-api/api/flowpatrol/symbols/AAPL/history',
     );
     const contracts = http.expectOne(
-      '/research-api/api/flowpatrol/2026-07-09/symbols/AAPL/contracts',
+      '/research-api/api/flowpatrol/2026-07-09/symbols/AAPL/ledger',
     );
 
     history.flush({
@@ -98,11 +98,12 @@ describe('FlowIdeasApiService', () => {
       rows: [],
     });
     contracts.flush({
-      schema_version: 'flowpatrol-contracts.v1',
+      schema_version: 'flowpatrol-symbol-ledger.v1',
       trading_date: '2026-07-09',
       symbol: 'AAPL',
       status: 'ready',
-      rows: [],
+      ledger: { status: 'unavailable', summary: null, contracts: [], spreads: [] },
+      links: {},
     });
   });
 

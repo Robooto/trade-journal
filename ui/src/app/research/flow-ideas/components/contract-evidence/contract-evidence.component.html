@@ -1,47 +1,135 @@
 <section class="detail-panel" aria-labelledby="contract-evidence-heading">
   <div class="panel-heading">
     <div>
-      <p class="eyebrow">Source evidence</p>
-      <h2 id="contract-evidence-heading">Contract evidence</h2>
+      <p class="eyebrow">Contract flow</p>
+      <h2 id="contract-evidence-heading">Opened vs closed</h2>
     </div>
+    @if (ledger?.links; as links) {
+      <nav class="sg-links" aria-label="SpotGamma Equity Hub on the report's trading date">
+        <span>Equity Hub · {{ ledger!.trading_date }}</span>
+        <a [href]="links.equityhub_url" target="_blank" rel="noopener">Synthetic</a>
+        <a [href]="links.equityhub_oi_model_url" target="_blank" rel="noopener">OI Model</a>
+        <a [href]="links.equityhub_history_url" target="_blank" rel="noopener">History</a>
+      </nav>
+    }
   </div>
 
   @if (loading) {
-    <p class="detail-state" role="status">Loading complete contract evidence...</p>
+    <p class="detail-state" role="status">Loading contract flow...</p>
   } @else if (error) {
     <p class="detail-state detail-state-error" role="alert">{{ error }}</p>
-  } @else if (!contracts) {
-    <p class="detail-state" role="status">
-      Contract evidence is unavailable for this direct link.
-    </p>
-  } @else if (!contracts.rows.length) {
-    <p class="detail-state" role="status">No accepted contract evidence is available.</p>
+  } @else if (!ledger || !ledger.ledger.summary) {
+    <p class="detail-state" role="status">No classified contract flow is available for this report.</p>
   } @else {
-    <p class="detail-state">SpotGamma model counts: BTO buys to open longs; BTC buys to close shorts; STO sells to open shorts; STC sells to close longs. Counts can repeat across report sections.</p>
-    <div class="evidence-groups">
-      @for (group of groups; track group.key) {
-        <article class="evidence-group">
-          <h3>{{ group.label }}</h3>
-          <p>{{ group.rows.length }} {{ group.rows.length === 1 ? 'row' : 'rows' }}</p>
-          @for (row of group.rows; track row.source_row_index + '-' + row.source_row_text) {
-            <dl class="evidence-row">
-              <div><dt>Contract</dt><dd>{{ row.symbol }} {{ row.expiration || 'Expiration unavailable' }} {{ row.strike ?? 'Strike unavailable' }} {{ row.option_type || 'Type unavailable' }}</dd></div>
-              <div><dt>Bought</dt><dd><span title="Buy to open long options">BTO {{ row.bto == null ? 'Unavailable' : (row.bto | number) }}</span> / <span title="Buy to close short options">BTC {{ row.btc == null ? 'Unavailable' : (row.btc | number) }}</span></dd></div>
-              <div><dt>Sold</dt><dd><span title="Sell to open short options">STO {{ row.sto == null ? 'Unavailable' : (row.sto | number) }}</span> / <span title="Sell to close long options">STC {{ row.stc == null ? 'Unavailable' : (row.stc | number) }}</span></dd></div>
-              <div><dt>Report</dt><dd>{{ row.report_date }}</dd></div>
-              <div><dt>Trading data</dt><dd>{{ row.trading_date }}</dd></div>
-              <div><dt>Section</dt><dd>{{ row.section || 'Unavailable' }}</dd></div>
-              <div><dt>Page</dt><dd>{{ row.source_page ?? 'Unavailable' }}</dd></div>
-              <div><dt>Measure</dt><dd>{{ formatMeasure(row) }}</dd></div>
-              <div><dt>Review</dt><dd>{{ row.review_status || 'Unavailable' }}</dd></div>
-              <div class="raw-evidence">
-                <dt>Raw evidence</dt>
-                <dd>{{ row.source_row_text || 'Unavailable' }}</dd>
-              </div>
-            </dl>
-          }
-        </article>
+    @let summary = ledger.ledger.summary!;
+    <table class="flow-matrix" aria-label="Contracts by action, calls and puts">
+      <thead>
+        <tr>
+          <th scope="col"></th>
+          <th scope="col" class="open" title="Buy to open: new long options">BTO</th>
+          <th scope="col" class="open" title="Sell to open: new short options">STO</th>
+          <th scope="col" class="close" title="Buy to close: covering short options">BTC</th>
+          <th scope="col" class="close" title="Sell to close: exiting long options">STC</th>
+          <th scope="col" class="total">Opened</th>
+          <th scope="col" class="total">Closed</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of [{ label: 'Calls', t: summary.calls }, { label: 'Puts', t: summary.puts }]; track row.label) {
+          <tr [class.empty]="!row.t.contract_count">
+            <th scope="row">{{ row.label }}</th>
+            <td>{{ row.t.bto | number }}</td>
+            <td>{{ row.t.sto | number }}</td>
+            <td>{{ row.t.btc | number }}</td>
+            <td>{{ row.t.stc | number }}</td>
+            <td class="total">{{ row.t.opened | number }}</td>
+            <td class="total">{{ row.t.closed | number }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p class="flow-lean">
+      <strong>{{ summary.opening_share | percent:'1.0-0' }} opening</strong>
+      · {{ summary.bought_share | percent:'1.0-0' }} bought / {{ 1 - (summary.bought_share ?? 0) | percent:'1.0-0' }} sold
+      · {{ summary.contract_count }} {{ summary.contract_count === 1 ? 'contract' : 'contracts' }}
+      @if (summary.total_premium_usd) { · {{ compactUsd(summary.total_premium_usd) }} premium }
+    </p>
+    @if (ledger.ledger.status === 'partial') {
+      <p class="detail-state">
+        Partial: {{ ledger.ledger.conflicting_contract_count }} contracts with conflicting counts and
+        {{ ledger.ledger.excluded_row_count }} unusable rows are left out of the totals.
+      </p>
+    }
+
+    @if (spreads.length) {
+      <div class="spreads">
+        <h3>Linked legs</h3>
+        @for (spread of spreads; track spread.key) {
+          <article class="spread">
+            <header>
+              <strong>{{ spread.title }}</strong>
+              <span>{{ spread.reference }}</span>
+              @if (spread.premium) { <span class="premium">{{ compactUsd(spread.premium) }}</span> }
+            </header>
+            @if (spread.description) { <p class="spread-description">{{ spread.description }}</p> }
+            <ul>
+              @for (leg of spread.legs; track leg.key) {
+                <li>
+                  <span class="read" [attr.data-tone]="readTone(leg)">{{ leg.read }}</span>
+                  <span class="contract-name">{{ contractLabel(leg) }}</span>
+                  <span class="muted">{{ leg.total | number }} contracts</span>
+                </li>
+              }
+            </ul>
+          </article>
+        }
+      </div>
+    }
+
+    <div class="contracts" role="list" aria-label="Contracts, most traded first">
+      <div class="contract-head" aria-hidden="true">
+        <span>Contract</span><span>Read</span><span>BTO</span><span>STO</span><span>BTC</span><span>STC</span><span>Premium</span>
+      </div>
+      @for (contract of ledger.ledger.contracts; track contract.key) {
+        <details class="contract" role="listitem">
+          <summary>
+            <span class="contract-name">
+              <strong>{{ contractLabel(contract) }}</strong>
+              <small>
+                @if (contract.days_to_expiration != null) { {{ contract.days_to_expiration }}d }
+                @if (moneynessLabel(contract); as m) { · {{ m }} }
+              </small>
+            </span>
+            <span class="read" [attr.data-tone]="readTone(contract)">{{ contract.read }}</span>
+            @if (contract.counts; as c) {
+              <span class="count" data-label="BTO">{{ c.bto | number }}</span>
+              <span class="count" data-label="STO">{{ c.sto | number }}</span>
+              <span class="count" data-label="BTC">{{ c.btc | number }}</span>
+              <span class="count" data-label="STC">{{ c.stc | number }}</span>
+            } @else {
+              <span class="count conflict">Counts disagree across sections</span>
+            }
+            <span class="count premium" data-label="Premium">{{ compactUsd(contract.total_premium_usd) }}</span>
+          </summary>
+          <dl class="contract-detail">
+            <div><dt>Open interest</dt><dd>{{ contract.open_interest == null ? '–' : (contract.open_interest | number) }}</dd></div>
+            <div><dt>IV</dt><dd>{{ contract.implied_volatility == null ? '–' : (contract.implied_volatility | percent:'1.1-1') }}</dd></div>
+            <div><dt>Report sections</dt><dd>{{ contract.sections.join(', ') }}</dd></div>
+            @if (contract.spread_ids.length || contract.structure_labels.length) {
+              <div><dt>Spread</dt><dd>{{ contract.spread_ids.length ? contract.spread_ids.join(', ') : contract.structure_labels.join(', ') }}</dd></div>
+            }
+          </dl>
+          <ul class="sources" aria-label="Source rows">
+            @for (source of contract.sources; track $index) {
+              <li><span>{{ source.section }} · p{{ source.source_page }}</span><code>{{ source.source_row_text }}</code></li>
+            }
+          </ul>
+        </details>
       }
     </div>
+    <p class="detail-state footnote">
+      SpotGamma model counts. Opening = BTO + STO; closing = BTC + STC. Buying puts and buying calls point opposite
+      ways, so read linked legs together.
+    </p>
   }
 </section>

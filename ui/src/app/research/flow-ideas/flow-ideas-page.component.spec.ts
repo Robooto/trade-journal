@@ -1,3 +1,4 @@
+import { ledgerResponse } from './components/contract-evidence/contract-evidence.testing';
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
@@ -85,12 +86,10 @@ describe('FlowIdeasPageComponent', () => {
               symbol,
               rows: [],
             }),
-            contracts: (tradingDate: string, symbol: string) => of({
-              schema_version: 'flowpatrol-contracts.v1',
+            ledger: (tradingDate: string, symbol: string) => of({
+              ...ledgerResponse([], []),
               trading_date: tradingDate,
               symbol,
-              status: 'ready',
-              rows: [],
             }),
             watchlists: () => of({
               schema_version: 'research-watchlists.v1',
@@ -147,12 +146,10 @@ describe('FlowIdeasPageComponent', () => {
               symbol,
               rows: [],
             }),
-            contracts: (tradingDate: string, symbol: string) => of({
-              schema_version: 'flowpatrol-contracts.v1',
+            ledger: (tradingDate: string, symbol: string) => of({
+              ...ledgerResponse([], []),
               trading_date: tradingDate,
               symbol,
-              status: 'ready',
-              rows: [],
             }),
             watchlists: () => of({
               schema_version: 'research-watchlists.v1',

@@ -1,5 +1,6 @@
 :host {
   display: block;
+  container: flow-detail / inline-size;
 }
 
 .detail-page {
@@ -51,15 +52,15 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
-.detail-grid {
+.detail-context {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
 
-@media (max-width: 900px) {
-  .detail-grid {
+@container flow-detail (max-width: 900px) {
+  .detail-context {
     grid-template-columns: 1fr;
   }
 }

@@ -44,37 +44,39 @@
     </section>
   }
 
-  <app-brokerage-context
-    [context]="brokerageContext()"
-    [unavailableMessage]="brokerageContextMessage()"
-  ></app-brokerage-context>
+  <app-contract-evidence
+    [ledger]="ledger()"
+    [loading]="loading()"
+    [error]="contractsError()"
+  ></app-contract-evidence>
 
-  <app-flow-watchlist-control
-    [watchlists]="watchlists()"
-    [symbol]="symbol()"
-    [context]="brokerageContext()"
-    [loading]="watchlistsLoading()"
-    [error]="watchlistsError()"
-    [adding]="watchlistAdding()"
-    [result]="watchlistResult()"
-    [resultError]="watchlistResultError()"
-    (addRequested)="addToWatchlist($event)"
-    (refreshRequested)="refreshBrokerageReads()"
-  ></app-flow-watchlist-control>
+  @if (!loading() && !ledger()?.ledger?.summary) {
+    <app-flow-actions [summary]="flowActions()"></app-flow-actions>
+  }
 
-  @if (!loading()) { <app-flow-actions [summary]="flowActions()"></app-flow-actions> }
+  <app-report-history
+    [history]="history()"
+    [loading]="loading()"
+    [error]="historyError()"
+  ></app-report-history>
 
-  <section class="detail-grid">
-    <app-report-history
-      [history]="history()"
-      [loading]="loading()"
-      [error]="historyError()"
-    ></app-report-history>
+  <section class="detail-context">
+    <app-brokerage-context
+      [context]="brokerageContext()"
+      [unavailableMessage]="brokerageContextMessage()"
+    ></app-brokerage-context>
 
-    <app-contract-evidence
-      [contracts]="contracts()"
-      [loading]="loading()"
-      [error]="contractsError()"
-    ></app-contract-evidence>
+    <app-flow-watchlist-control
+      [watchlists]="watchlists()"
+      [symbol]="symbol()"
+      [context]="brokerageContext()"
+      [loading]="watchlistsLoading()"
+      [error]="watchlistsError()"
+      [adding]="watchlistAdding()"
+      [result]="watchlistResult()"
+      [resultError]="watchlistResultError()"
+      (addRequested)="addToWatchlist($event)"
+      (refreshRequested)="refreshBrokerageReads()"
+    ></app-flow-watchlist-control>
   </section>
 </main>

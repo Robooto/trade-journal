@@ -3,12 +3,12 @@ import { TestBed } from '@angular/core/testing';
 
 import {
   FlowCandidate,
-  FlowContractEvidenceRow,
   FlowIdeasDisplayFilters,
   FlowReportDate,
   FlowWatchlistsResponse,
 } from './flow-ideas.models';
-import { groupContractEvidence } from './components/contract-evidence/contract-evidence.component';
+import { buildSpreadViews } from './components/contract-evidence/contract-evidence.component';
+import { ledgerContract, ledgerResponse } from './components/contract-evidence/contract-evidence.testing';
 import { FlowIdeasApiService } from './data-access/flow-ideas-api.service';
 import { currentEquityHubUrl } from './utilities/equity-hub-url';
 import { filterFlowCandidates } from './utilities/filter-flow-candidates';
@@ -109,22 +109,13 @@ describe('Flow Ideas RF-07 deterministic parity gate', () => {
     const historyDates = ['2026-07-09', '2026-07-10'];
     expect(historyDates).toEqual(['2026-07-09', '2026-07-10']);
 
-    const evidence = [1, 2].map(sourceRowIndex => ({
-      report_date: '2026-07-10',
-      trading_date: '2026-07-10',
-      symbol: 'AAPL',
-      spread_id: 'spread-42',
-      section: 'Spreads',
-      source_page: 9,
-      source_row_index: sourceRowIndex,
-      measure_name: 'Premium',
-      measure_value_usd: sourceRowIndex * 1_000_000,
-      source_row_text: 'leg ' + sourceRowIndex,
-      review_status: 'accepted',
-    } satisfies FlowContractEvidenceRow));
-    const groups = groupContractEvidence(evidence);
+    const first = ledgerContract({ key: 'leg-1' });
+    const second = ledgerContract({ key: 'leg-2', strike: 1000 });
+    const groups = buildSpreadViews(ledgerResponse([first, second], [
+      { spread_id: '42', source_label: null, pattern: 'vertical', total_premium_usd: null, leg_keys: ['leg-1', 'leg-2'] },
+    ]));
     expect(groups).toHaveLength(1);
-    expect(groups[0].rows.map(row => row.source_row_index)).toEqual([1, 2]);
+    expect(groups[0].legs.map(leg => leg.key)).toEqual(['leg-1', 'leg-2']);
 
     const url = currentEquityHubUrl('aapl', new Date('2026-07-18T15:00:00Z'));
     expect(url).toContain('sym=AAPL');
