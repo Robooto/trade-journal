@@ -5,6 +5,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy.orm import Session
 
 from app import tastytrade
+from app.services.concurrency import gather
 from app.schemas.brokerage import (
     DataStatus,
     HoldingSnapshotV1,
@@ -155,49 +156,49 @@ def fetch_research_symbol_context(
         raise ValueError("At least one non-empty symbol is required.")
 
     source_failures: set[str] = set()
+
+    def market_data_batches() -> list:
+        return [row for batch in _batches(requested) for row in tastytrade.fetch_market_data(token, batch, [], [], [])]
+
+    def volatility_batches() -> list:
+        return [row for batch in _batches(requested) for row in tastytrade.fetch_volatility_data(token, batch)]
+
+    # The four sources are independent, so they load at the same time.
+    calls = {
+        "market_data": market_data_batches,
+        "volatility": volatility_batches,
+        "holdings": lambda: fetch_holding_snapshot(token, fetched_at=fetched_at),
+    }
+    if watchlists_override is None:
+        calls["watchlists"] = lambda: tastytrade.fetch_watchlists(token)
+    fetched = gather(calls)
+
     if watchlists_override is not None:
         watchlists = watchlists_override
     else:
         try:
-            watchlists = tastytrade.fetch_watchlists(token)
+            watchlists = fetched["watchlists"].unwrap()
         except Exception:
             logging.exception("Failed to fetch brokerage watchlists.")
             watchlists = []
             source_failures.add("/watchlists")
 
     try:
-        market_data = []
-        for batch in _batches(requested):
-            market_data.extend(
-                tastytrade.fetch_market_data(
-                    token,
-                    batch,
-                    [],
-                    [],
-                    [],
-                )
-            )
+        market_data = fetched["market_data"].unwrap()
     except Exception:
         logging.exception("Failed to fetch brokerage market data.")
         market_data = []
         source_failures.add("/market-data/by-type")
 
     try:
-        volatility_metrics = []
-        for batch in _batches(requested):
-            volatility_metrics.extend(
-                tastytrade.fetch_volatility_data(token, batch)
-            )
+        volatility_metrics = fetched["volatility"].unwrap()
     except Exception:
         logging.exception("Failed to fetch brokerage volatility metrics.")
         volatility_metrics = []
         source_failures.add("/market-metrics")
 
     try:
-        holding_snapshot = fetch_holding_snapshot(
-            token,
-            fetched_at=fetched_at,
-        )
+        holding_snapshot = fetched["holdings"].unwrap()
     except Exception:
         logging.exception("Failed to fetch brokerage holding context.")
         holding_snapshot = _empty_holding_snapshot(fetched_at)

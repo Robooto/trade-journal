@@ -1,5 +1,6 @@
 """Load tastytrade accounts and positions and enrich them with market, volatility and balance data."""
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 
 from sqlalchemy.orm import Session
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 from app import tastytrade
 from app.services import position_grouping, position_math
 from app.services.trades_errors import TastytradeAuthError, TastytradeFetchError
+from app.services.concurrency import Outcome, gather, map_concurrently
 from app.services.values import tasty_dict, to_float
 
 
@@ -41,11 +43,10 @@ def collect_positions_and_symbols(
     equity_underlyings: set[str] = set()
     future_underlyings: set[str] = set()
 
-    for acct in accounts:
+    def account_positions(acct: dict) -> list[dict]:
         acct_num = acct.get("account_number")
-        nickname = acct.get("nickname", "")
         try:
-            raw_positions = [
+            return [
                 tasty_dict(position)
                 for position in tastytrade.fetch_positions(token, acct_num)
             ]
@@ -55,6 +56,9 @@ def collect_positions_and_symbols(
                 f"Failed to fetch positions for account {acct_num}: {e}"
             ) from e
 
+    for acct, raw_positions in zip(accounts, map_concurrently(account_positions, accounts), strict=True):
+        acct_num = acct.get("account_number")
+        nickname = acct.get("nickname", "")
         filtered = [p for p in raw_positions if p.get("instrument-type", "") != "Equity"]
         if not filtered:
             continue
@@ -214,45 +218,66 @@ def augment_positions_with_market_data(
                     p["option-type"] = option_type
 
 
-def apply_volatility(token: str, accounts_data: list[dict]) -> None:
+VolatilityMaps = tuple[dict[str, float | None], dict[str, float | None]]
+
+
+def fetch_volatility_maps(token: str, roots: list[str]) -> VolatilityMaps:
+    """IV rank and 5-day IV change (percent) per root symbol, in one request for every account."""
+    vol_rank_map: dict[str, float | None] = {}
+    vol_change_map: dict[str, float | None] = {}
+    if not roots:
+        return vol_rank_map, vol_change_map
+    try:
+        vol_data = tastytrade.fetch_volatility_data(token, roots)
+        for raw_item in vol_data:
+            item = tasty_dict(raw_item)
+            sym = item.get("symbol")
+            iv = item.get("implied-volatility-index-rank")
+            change = item.get("implied-volatility-index-5-day-change")
+            if sym is not None:
+                if iv is not None:
+                    try:
+                        vol_rank_map[sym] = round(float(iv) * 100, 1)
+                    except (ValueError, TypeError):
+                        vol_rank_map[sym] = None
+                if change is not None:
+                    try:
+                        vol_change_map[sym] = round(float(change) * 100, 2)
+                    except (ValueError, TypeError):
+                        vol_change_map[sym] = None
+    except Exception as e:
+        logging.error(f"Failed to fetch volatility data: {e}")
+    return vol_rank_map, vol_change_map
+
+
+def apply_volatility(token: str, accounts_data: list[dict], volatility: VolatilityMaps | None = None) -> None:
     """Augment groups with implied volatility information."""
-
+    if volatility is None:
+        roots = sorted({
+            position_math.root_symbol(g["underlying_symbol"])
+            for acct in accounts_data for g in acct["groups"] if g["underlying_symbol"]
+        })
+        volatility = fetch_volatility_maps(token, roots)
+    vol_rank_map, vol_change_map = volatility
     for acct in accounts_data:
-        groups_list = acct["groups"]
-
-        unique_roots = sorted({position_math.root_symbol(g["underlying_symbol"]) for g in groups_list if g["underlying_symbol"]})
-        vol_rank_map: dict[str, float] = {}
-        vol_change_map: dict[str, float] = {}
-        if unique_roots:
-            try:
-                vol_data = tastytrade.fetch_volatility_data(token, unique_roots)
-                for raw_item in vol_data:
-                    item = tasty_dict(raw_item)
-                    sym = item.get("symbol")
-                    iv = item.get("implied-volatility-index-rank")
-                    change = item.get("implied-volatility-index-5-day-change")
-                    if sym is not None:
-                        if iv is not None:
-                            try:
-                                vol_rank_map[sym] = round(float(iv) * 100, 1)
-                            except (ValueError, TypeError):
-                                vol_rank_map[sym] = None
-                        if change is not None:
-                            try:
-                                vol_change_map[sym] = round(float(change) * 100, 2)
-                            except (ValueError, TypeError):
-                                vol_change_map[sym] = None
-            except Exception as e:
-                logging.error(f"Failed to fetch volatility data: {e}")
-
-        for g in groups_list:
+        for g in acct["groups"]:
             root = position_math.root_symbol(g["underlying_symbol"])
             g["iv_rank"] = vol_rank_map.get(root)
             g["iv_5d_change"] = vol_change_map.get(root)
 
 
-def apply_balance(token: str, accounts_data: list[dict]) -> None:
+def fetch_balances(token: str, account_numbers: list[str]) -> dict[str, Outcome]:
+    """Every account's balance fetched in parallel; failures are kept per account."""
+    return gather({
+        number: (lambda number=number: tastytrade.fetch_account_balance(token, number))
+        for number in account_numbers
+    })
+
+
+def apply_balance(token: str, accounts_data: list[dict], balances: dict[str, Outcome] | None = None) -> None:
     """Attach normalized balance, utilization, and Greek risk context to each account."""
+    if balances is None:
+        balances = fetch_balances(token, [acct["account_number"] for acct in accounts_data])
 
     for acct in accounts_data:
         acct_num = acct["account_number"]
@@ -267,7 +292,7 @@ def apply_balance(token: str, accounts_data: list[dict]) -> None:
         }
 
         try:
-            bal = tasty_dict(tastytrade.fetch_account_balance(token, acct_num))
+            bal = tasty_dict(balances[acct_num].unwrap())
             values["margin_equity_dollars"] = to_float(bal.get("margin-equity"))
             values["net_liquidating_value_dollars"] = to_float(bal.get("net-liquidating-value")) or values["margin_equity_dollars"]
             values["used_derivative_buying_power_dollars"] = to_float(bal.get("used-derivative-buying-power"))
@@ -307,25 +332,33 @@ def apply_balance(token: str, accounts_data: list[dict]) -> None:
 
 
 def load_positions(db: Session) -> list[dict]:
-    """Every account's option positions, grouped into strategies with market, volatility and balance context."""
+    """Every account's option positions, grouped into strategies with market, volatility and balance context.
+
+    Independent tastytrade reads overlap: balances start as soon as the account list is
+    known, positions load for all accounts at once, and volatility runs beside market data.
+    """
     token = acquire_token(db)
     accounts = fetch_accounts(token)
-    (
-        positions_by_account,
-        equity_option_syms,
-        future_option_syms,
-        equity_underlyings,
-        future_underlyings,
-    ) = collect_positions_and_symbols(token, accounts)
-    market_map, beta_map = fetch_market_and_beta_data(
-        token,
-        equity_option_syms,
-        future_option_syms,
-        equity_underlyings,
-        future_underlyings,
-    )
-    augment_positions_with_market_data(positions_by_account, market_map, beta_map)
-    accounts_data = position_grouping.group_positions_and_compute_totals(positions_by_account, beta_map)
-    apply_volatility(token, accounts_data)
-    apply_balance(token, accounts_data)
+    with ThreadPoolExecutor(max_workers=2) as background:
+        balances = background.submit(fetch_balances, token, [acct.get("account_number") for acct in accounts])
+        (
+            positions_by_account,
+            equity_option_syms,
+            future_option_syms,
+            equity_underlyings,
+            future_underlyings,
+        ) = collect_positions_and_symbols(token, accounts)
+        roots = sorted({position_math.root_symbol(symbol) for symbol in equity_underlyings | future_underlyings})
+        volatility = background.submit(fetch_volatility_maps, token, roots)
+        market_map, beta_map = fetch_market_and_beta_data(
+            token,
+            equity_option_syms,
+            future_option_syms,
+            equity_underlyings,
+            future_underlyings,
+        )
+        augment_positions_with_market_data(positions_by_account, market_map, beta_map)
+        accounts_data = position_grouping.group_positions_and_compute_totals(positions_by_account, beta_map)
+        apply_volatility(token, accounts_data, volatility.result())
+        apply_balance(token, accounts_data, balances.result())
     return accounts_data

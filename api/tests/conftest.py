@@ -16,6 +16,16 @@ if os.path.exists(TEST_DB_PATH):
 from app.main import app  # noqa: E402
 
 
+@pytest.fixture(autouse=True)
+def reset_tastytrade_caches():
+    """The client caches the access token and account list in-process; keep tests independent."""
+    from app import tastytrade
+
+    tastytrade.reset_caches()
+    yield
+    tastytrade.reset_caches()
+
+
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_db():
     """Delete the temporary test database once the test session is over."""

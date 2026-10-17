@@ -4,6 +4,7 @@ from datetime import datetime, UTC
 from app import tastytrade
 from app.schemas.brokerage import HoldingSnapshotV1
 from app.services.brokerage_normalizer import build_holding_snapshot
+from app.services.concurrency import gather
 from app.services.trades_errors import TastytradeFetchError
 
 
@@ -21,14 +22,16 @@ def fetch_holding_snapshot(
             "Unable to fetch brokerage accounts."
         ) from exc
 
+    fetched = gather({
+        account.account_number: (lambda number=account.account_number: tastytrade.fetch_positions(token, number))
+        for account in accounts
+    })
     positions_by_account = {}
     account_errors = {}
     for account in accounts:
         account_number = account.account_number
         try:
-            positions_by_account[account_number] = tastytrade.fetch_positions(
-                token, account_number
-            )
+            positions_by_account[account_number] = fetched[account_number].unwrap()
         except Exception as exc:
             logging.exception(
                 "Failed to fetch brokerage positions for account %s.",

@@ -151,6 +151,26 @@ Current IV rank and the broker's five-day IV-index change remain separate
 observations. Upcoming earnings remain explicitly unavailable until a verified
 forward-looking source is added.
 
+## Client Behavior
+
+`api/app/tastytrade.py` is the only module that talks to tastytrade.
+
+- **Connections:** one shared `requests.Session` with a keep-alive pool (16
+  connections), so calls reuse warm TLS connections instead of a new handshake each.
+- **Retries:** GET requests retry up to twice (0.3 s, 0.6 s backoff) on 429, 502, 503
+  and 504, and on connection failures before anything is sent. Nothing is re-sent
+  after a request reaches tastytrade, and writes never retry on a status code.
+- **Access token:** cached in memory, then the `session_tokens` row, then a fresh
+  OAuth refresh; a lock makes concurrent requests share one refresh. If tastytrade
+  answers 401 for a token before its recorded expiry, the client refreshes once and
+  repeats the request (a 401 means nothing executed); a second 401 is returned.
+- **Accounts:** `/customers/me/accounts` is cached per token for five minutes.
+- **Parallel reads:** independent per-account reads run concurrently (at most six at a
+  time): positions, balances, orders and transactions. Positions overlap balances and
+  volatility with market data, and volatility is one request for every account.
+  Research symbol context loads watchlists, market data, volatility and holdings at
+  the same time. Per-source failures are reported exactly as before.
+
 ## Safety Rules
 
 - Start read-only.

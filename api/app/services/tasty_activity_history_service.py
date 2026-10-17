@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from app import tastytrade
 from app.models import ImportedSpreadTradeORM
+from app.services.concurrency import gather
 from app.services.tasty_activity_csv_service import _normalize_vertical, _position_signature
 from app.tastytrade_schema import TastyOrder, TastyTransaction
 from app.services.values import to_float
@@ -49,17 +50,24 @@ def sync_tastytrade_activity_history(
     normalized_orders: list[dict[str, Any]] = []
     source_rows = 0
     warnings: list[str] = []
+    window = {"start_date": start_date.isoformat(), "end_date": end_date.isoformat()}
+    # Every account's orders and transactions load at once; failures are reported per account below.
+    fetched = gather({
+        f"{account.account_number}:{kind}": (
+            lambda number=account.account_number, fetcher=fetcher, per_page=per_page:
+                _fetch_pages(fetcher, token, number, per_page=per_page, **window)
+        )
+        for account in accounts
+        for kind, fetcher, per_page in (
+            ("orders", tastytrade.fetch_orders, 100),
+            ("transactions", tastytrade.fetch_transactions, 2000),
+        )
+    })
     for account in accounts:
         account_number = account.account_number
         try:
-            orders, orders_truncated = _fetch_pages(
-                tastytrade.fetch_orders, token, account_number,
-                start_date=start_date.isoformat(), end_date=end_date.isoformat(), per_page=100,
-            )
-            transactions, transactions_truncated = _fetch_pages(
-                tastytrade.fetch_transactions, token, account_number,
-                start_date=start_date.isoformat(), end_date=end_date.isoformat(), per_page=2000,
-            )
+            orders, orders_truncated = fetched[f"{account_number}:orders"].unwrap()
+            transactions, transactions_truncated = fetched[f"{account_number}:transactions"].unwrap()
         except Exception:
             logging.exception("Failed to fetch broker history for account %s.", account_number)
             warnings.append(f"Broker history was unavailable for account {account_number}.")

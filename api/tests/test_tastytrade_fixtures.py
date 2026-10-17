@@ -130,3 +130,37 @@ def test_llm_positions_summary_from_sanitized_tastytrade_fixtures(monkeypatch):
     assert account.groups[0].strategy.label == "jade_lizard"
     assert any(strategy.label == "calendar" for strategy in account.underlying_strategies)
     assert any(group.iv_rank_percent == 19.1 for group in account.groups)
+
+
+def test_load_positions_overlaps_reads_and_matches_the_step_by_step_pipeline(monkeypatch):
+    accounts = [TastyAccount.model_validate(item["account"]) for item in fixture_items("accounts.json")]
+    accounts.append(accounts[0].model_copy(update={"account_number": "SIM456", "nickname": "Second"}))
+    positions = [TastyPosition.model_validate(item) for item in fixture_items("positions_SIM123.json")]
+    market_data = [TastyMarketData.model_validate(item) for item in fixture_items("market_data.json")]
+    volatility = [TastyVolatilityMetric.model_validate(item) for item in fixture_items("volatility.json")]
+    balance = TastyAccountBalance.model_validate(load_fixture("balance_SIM123.json")["data"])
+    volatility_calls = []
+
+    monkeypatch.setattr(trades_service.tastytrade, "fetch_accounts", lambda token: accounts)
+    monkeypatch.setattr(trades_service.tastytrade, "fetch_positions", lambda token, account: positions)
+    monkeypatch.setattr(trades_service.tastytrade, "fetch_market_data", lambda *args: market_data)
+    monkeypatch.setattr(trades_service.tastytrade, "fetch_volatility_data",
+                        lambda token, roots: volatility_calls.append(roots) or volatility)
+    monkeypatch.setattr(trades_service.tastytrade, "fetch_account_balance", lambda *args: balance)
+    monkeypatch.setattr(trades_service, "acquire_token", lambda db: "FAKE")
+
+    loaded = trades_service.load_positions(db=None)
+
+    account_dicts = fetch_accounts("FAKE")
+    positions_by_account, eq_opts, fut_opts, eq_unds, fut_unds = collect_positions_and_symbols("FAKE", account_dicts)
+    market_map, beta_map = fetch_market_and_beta_data("FAKE", eq_opts, fut_opts, eq_unds, fut_unds)
+    augment_positions_with_market_data(positions_by_account, market_map, beta_map)
+    expected = group_positions_and_compute_totals(positions_by_account, beta_map)
+    apply_volatility("FAKE", expected)
+    apply_balance("FAKE", expected)
+
+    strip = lambda rows: [{k: v for k, v in row.items() if k != "balance_fetched_at"} for row in rows]  # noqa: E731
+    assert strip(loaded) == strip(expected)
+    assert [row["account_number"] for row in loaded] == ["SIM123", "SIM456"]
+    # One volatility request covers both accounts (it used to be one per account).
+    assert len(volatility_calls) == 2 and volatility_calls[0] == volatility_calls[1]

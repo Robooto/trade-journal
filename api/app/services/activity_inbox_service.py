@@ -13,6 +13,7 @@ from app.schemas.brokerage import (
     SourceMetadataV1,
 )
 from app.services.brokerage_normalizer import normalize_activity_event
+from app.services.concurrency import gather
 from app.services.trades_errors import TastytradeFetchError
 from app.tastytrade_schema import TastyOrder, TastyTransaction
 from app.services.values import to_float
@@ -47,6 +48,18 @@ def fetch_activity_inbox(
     ]
     warnings: list[str] = []
     review_events: list[BrokerActivityReviewEventV1] = []
+    # Every account's orders and transactions load at once; the loop below reports each result.
+    fetched = gather({
+        f"{account.account_number}:{kind}": (
+            lambda number=account.account_number, fetcher=fetcher, per_page=per_page:
+                _fetch_pages(fetcher, token, number, date_text, per_page=per_page)
+        )
+        for account in accounts
+        for kind, fetcher, per_page in (
+            ("orders", tastytrade.fetch_orders, 100),
+            ("transactions", tastytrade.fetch_transactions, 2000),
+        )
+    })
 
     for account in accounts:
         account_number = account.account_number
@@ -54,13 +67,7 @@ def fetch_activity_inbox(
         transactions: list[TastyTransaction] = []
 
         try:
-            orders, truncated = _fetch_pages(
-                tastytrade.fetch_orders,
-                token,
-                account_number,
-                date_text,
-                per_page=100,
-            )
+            orders, truncated = fetched[f"{account_number}:orders"].unwrap()
             source_status.append(
                 _source_status(
                     account_number,
@@ -86,13 +93,7 @@ def fetch_activity_inbox(
             )
 
         try:
-            transactions, truncated = _fetch_pages(
-                tastytrade.fetch_transactions,
-                token,
-                account_number,
-                date_text,
-                per_page=2000,
-            )
+            transactions, truncated = fetched[f"{account_number}:transactions"].unwrap()
             source_status.append(
                 _source_status(
                     account_number,

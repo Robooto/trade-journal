@@ -1,10 +1,16 @@
+import logging
 import os
-import requests
+import threading
+import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, UTC
-from sqlalchemy.orm import Session
+from datetime import UTC, datetime, timedelta
 from typing import Generic, TypeVar
 from urllib.parse import quote
+
+import requests
+from requests.adapters import HTTPAdapter
+from sqlalchemy.orm import Session
+from urllib3.util.retry import Retry
 
 from app import crud
 from app.settings import settings
@@ -26,6 +32,55 @@ from app.tastytrade_schema import (
 BASE_URL = settings.tastytrade_url
 REQUEST_TIMEOUT_SECONDS = settings.tastytrade_timeout_seconds
 USER_AGENT = settings.tastytrade_user_agent
+ACCOUNTS_TTL_SECONDS = 300
+
+logger = logging.getLogger(__name__)
+
+# Reads retry briefly on throttling and gateway errors. Nothing is re-sent once a
+# request reached tastytrade (read=0), and non-GET requests never retry on status.
+_RETRY = Retry(
+    total=2,
+    connect=2,
+    read=0,
+    status=2,
+    backoff_factor=0.3,
+    status_forcelist=(429, 502, 503, 504),
+    allowed_methods=frozenset({"GET"}),
+    respect_retry_after_header=False,
+    raise_on_status=False,
+)
+_session_lock = threading.Lock()
+_shared_session: requests.Session | None = None
+
+_token_lock = threading.Lock()
+_token_cache: tuple[str, datetime] | None = None
+_accounts_cache: dict[str, tuple[float, list[TastyAccount]]] = {}
+
+
+def _session() -> requests.Session:
+    """One keep-alive session shared by every thread, so calls reuse warm TLS connections.
+
+    urllib3's connection pool is thread-safe; the pool is sized for the parallel
+    per-account reads plus concurrent API requests.
+    """
+    global _shared_session
+    if _shared_session is None:
+        with _session_lock:
+            if _shared_session is None:
+                session = requests.Session()
+                adapter = HTTPAdapter(pool_connections=2, pool_maxsize=16, max_retries=_RETRY)
+                session.mount("https://", adapter)
+                session.mount("http://", adapter)
+                _shared_session = session
+    return _shared_session
+
+
+def reset_caches() -> None:
+    """Forget the cached access token and account list (tests, credential changes)."""
+    global _token_cache
+    with _token_lock:
+        _token_cache = None
+    _accounts_cache.clear()
 
 
 def _headers(token: str | None = None, *, content_type: str | None = None) -> dict[str, str]:
@@ -40,13 +95,25 @@ def _headers(token: str | None = None, *, content_type: str | None = None) -> di
     return headers
 
 
-def _request_json(method: str, path: str, **kwargs) -> dict:
-    response = requests.request(
+def _send(method: str, path: str, **kwargs) -> requests.Response:
+    return _session().request(
         method,
         f"{BASE_URL}{path}",
         timeout=REQUEST_TIMEOUT_SECONDS,
         **kwargs,
     )
+
+
+def _request_json(method: str, path: str, **kwargs) -> dict:
+    response = _send(method, path, **kwargs)
+    headers = kwargs.get("headers") or {}
+    rejected = headers.get("Authorization")
+    if response.status_code == 401 and rejected:
+        # A 401 means nothing was executed, so one retry with a fresh token is safe for any method.
+        fresh = _replace_rejected_token(rejected)
+        if fresh:
+            kwargs["headers"] = {**headers, "Authorization": fresh}
+            response = _send(method, path, **kwargs)
     response.raise_for_status()
     return response.json()
 
@@ -88,18 +155,48 @@ def login_to_tastytrade() -> tuple[str, datetime]:
 
 def get_active_token(db: Session) -> str:
     """
-    Retrieve a valid access token, using a cached token if possible or logging in if needed.
-    This function checks the token stored in the database and refreshes it if expired.
+    Return a valid access token: from memory, then the database, else a fresh login.
+    The lock makes concurrent requests share one refresh instead of each logging in.
     """
-    token_entry = crud.get_session_token(db)
+    global _token_cache
+    with _token_lock:
+        now = datetime.now(UTC)
+        if _token_cache and _token_cache[1] > now:
+            return _token_cache[0]
+        token_entry = crud.get_session_token(db)
+        if token_entry:
+            expiration = token_entry.expiration.replace(tzinfo=UTC)
+            if expiration > now:
+                _token_cache = (token_entry.token, expiration)
+                return token_entry.token
+        return _login_and_store(db)
 
-    if token_entry:
-        if token_entry.expiration.replace(tzinfo=UTC) > datetime.now(UTC):
-            return token_entry.token
-    # If no token found or it's expired, log in again to get a new token
+
+def _login_and_store(db: Session) -> str:
+    """Log in and persist the token; the caller holds ``_token_lock``."""
+    global _token_cache
     new_token, new_expiration = login_to_tastytrade()
     crud.save_session_token(db, new_token, new_expiration)
+    _token_cache = (new_token, new_expiration)
     return new_token
+
+
+def _replace_rejected_token(rejected: str) -> str | None:
+    """tastytrade refused a token before its recorded expiry: refresh once, shared by concurrent callers."""
+    with _token_lock:
+        if _token_cache and _token_cache[0] != rejected and _token_cache[1] > datetime.now(UTC):
+            return _token_cache[0]
+        from app.db import SessionLocal
+
+        db = SessionLocal()
+        try:
+            logger.warning("Tastytrade rejected the cached access token; refreshing it.")
+            return _login_and_store(db)
+        except Exception:
+            logger.exception("Tastytrade token refresh after a 401 failed.")
+            return None
+        finally:
+            db.close()
 
 def _items_from_response(data: dict) -> list[dict]:
     return data.get("data", {}).get("items", [])
@@ -109,15 +206,21 @@ def fetch_accounts(token: str) -> list[TastyAccount]:
     """
     Fetch all accounts for the logged-in user via the Tastytrade API.
 
-    Returns typed account models with account_number and nickname fields.
+    Returns typed account models with account_number and nickname fields. The list
+    rarely changes, so it is cached per token for a few minutes.
     """
+    cached = _accounts_cache.get(token)
+    if cached and time.monotonic() - cached[0] < ACCOUNTS_TTL_SECONDS:
+        return list(cached[1])
     data = _request_json("GET", "/customers/me/accounts", headers=_headers(token))
 
     accounts: list[TastyAccount] = []
     for item in _items_from_response(data):
         acct = item.get("account", {})
         accounts.append(TastyAccount.model_validate(acct))
-    return accounts
+    _accounts_cache.clear()
+    _accounts_cache[token] = (time.monotonic(), accounts)
+    return list(accounts)
 
 def fetch_positions(token: str, account_number: str) -> list[TastyPosition]:
     """
