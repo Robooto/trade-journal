@@ -17,6 +17,40 @@
     </div>
   </header>
 
+  <section class="desk-strip" aria-labelledby="desk-title">
+    <div class="desk-heading">
+      <div>
+        <p class="eyebrow">SPX paper desk · week of {{ weekFrom | date:'MMM d' }}</p>
+        <h2 id="desk-title">What TRACE research and the paper bot say</h2>
+      </div>
+      <a mat-stroked-button routerLink="/trace">
+        <mat-icon>monitoring</mat-icon>
+        Open TRACE
+      </a>
+    </div>
+    @if (researchHeadline) { <p class="desk-headline">{{ researchHeadline }}</p> }
+    @if (deskStatus === 'loading') {
+      <p class="desk-note">Loading paper results…</p>
+    } @else if (deskStatus === 'unavailable') {
+      <p class="desk-note">Paper results are unavailable right now.</p>
+    } @else {
+      <div class="desk-arms">
+        @for (arm of deskArms; track arm.arm_id) {
+          <div class="desk-arm">
+            <span>{{ arm.label }}</span>
+            <strong [class.positive]="arm.net_dollars > 0" [class.negative]="arm.net_dollars < 0">{{ arm.net_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
+            <small>{{ arm.closes }} {{ arm.closes === 1 ? 'trade' : 'trades' }} this week@if (arm.net_per_close !== null && arm.net_per_close !== undefined) { · {{ arm.net_per_close | currency:'USD':'symbol':'1.0-0' }} each }</small>
+          </div>
+        }
+        <a class="desk-arm desk-link" routerLink="/trace">
+          <span>All paper strategies</span>
+          <strong>{{ deskTrackedCount }}</strong>
+          <small>tracked · net after assumed costs</small>
+        </a>
+      </div>
+    }
+  </section>
+
   <section class="workflow-grid">
     <article class="workflow-card research-step">
       <div class="step-heading">
@@ -93,7 +127,12 @@
             @for (entry of recentEntries; track entry) {
               <a routerLink="/journal" class="recent-entry">
                 <span>
-                  <strong>{{ entry.date | date:'mediumDate' }}</strong>
+                  <strong>
+                    {{ entry.date | date:'mediumDate' }}
+                    <span class="lean" [class.up]="entry.marketDirection === 'up'" [class.down]="entry.marketDirection === 'down'">{{ entry.marketDirection === 'up' ? '▲' : '▼' }}</span>
+                    @if (entry.esPrice) { <small>ES {{ entry.esPrice | number:'1.0-2' }}</small> }
+                  </strong>
+                  @if (notePreview(entry)) { <small class="note-preview">{{ notePreview(entry) }}</small> }
                   @if (entry.tickers?.length) { <small>{{ entry.tickers?.join(', ') }}</small> }
                 </span>
                 <mat-icon>chevron_right</mat-icon>
@@ -119,13 +158,18 @@
 
   <section class="guideline-grid">
     <article class="guideline-card">
-      <p class="eyebrow">Before the open</p>
+      <p class="eyebrow">Before the open · {{ checkedCount }}/{{ dailyGuidelines.length }} done</p>
       <h2>Daily checklist</h2>
       <ul>
-        @for (rule of dailyGuidelines; track rule) {
-          <li><mat-icon>check_circle_outline</mat-icon><span>{{ rule }}</span></li>
+        @for (rule of dailyGuidelines; track rule; let i = $index) {
+          <li>
+            <button type="button" class="check-item" role="checkbox" [attr.aria-checked]="isChecked(i)" [class.done]="isChecked(i)" (click)="toggleCheck(i)">
+              <mat-icon>{{ isChecked(i) ? 'check_circle' : 'radio_button_unchecked' }}</mat-icon><span>{{ rule }}</span>
+            </button>
+          </li>
         }
       </ul>
+      <small class="checklist-note">Saved in this browser for today; resets each day.</small>
     </article>
     <article class="guideline-card">
       <p class="eyebrow">Always</p>

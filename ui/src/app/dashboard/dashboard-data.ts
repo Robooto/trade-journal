@@ -15,10 +15,10 @@ export const tradeGuidelines: string[] = [
 export const dailyGuidelines: string[] = [
   'Read the SpotGamma Founders Note',
   'Look at any news that may impact the market',
-  'Look at spotgamma dashboard',
+  'Look at the SpotGamma dashboard',
   'Look at TradingView ES1!',
   'Look at the SpotGamma Tools',
-  'Has the marco environment changed?',
+  'Has the macro environment changed?',
   'Open Tastytrade and look over the trades you have on',
 ];
 
