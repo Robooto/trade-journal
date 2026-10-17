@@ -510,9 +510,10 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     const order = Array.from(fixture.nativeElement.querySelectorAll(
-      'app-signed-gex-map, app-trace-session-trends, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
-    )).map((element: any) => element.tagName.toLowerCase());
+      '.price-level-disclosure, app-signed-gex-map, app-trace-session-trends, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
+    )).map((element: any) => element.classList.contains('price-level-disclosure') ? 'annotations' : element.tagName.toLowerCase());
     expect(order).toEqual([
+      'annotations',
       'app-signed-gex-map',
       'app-trace-session-trends',
       'app-trace-gamma-profile',

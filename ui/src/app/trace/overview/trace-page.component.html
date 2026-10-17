@@ -164,15 +164,6 @@
       [charmError]="facade.charmError()"
     />
   }
-  @if (facade.bundle()?.histogram; as histogram) {
-    <app-signed-gex-map
-      [rows]="facade.captureRows()"
-      [nodes]="histogram.rows"
-      [activeIndex]="facade.selectedCaptureIndex()"
-      [priceLevels]="displayedPriceLevels()"
-    />
-  }
-
   <details class="price-level-disclosure" [open]="priceLevels.levels().length > 0">
     <summary><strong>Marked price levels</strong><small>{{ priceLevels.levels().length }} saved · shown on every TRACE chart</small></summary>
   <section class="price-level-panel price-level-panel--embedded" aria-labelledby="price-level-title">
@@ -239,6 +230,15 @@
     }
   </section>
   </details>
+
+  @if (facade.bundle()?.histogram; as histogram) {
+    <app-signed-gex-map
+      [rows]="facade.captureRows()"
+      [nodes]="histogram.rows"
+      [activeIndex]="facade.selectedCaptureIndex()"
+      [priceLevels]="displayedPriceLevels()"
+    />
+  }
 
   @if (facade.captureRows().length) {
     <app-trace-session-trends
