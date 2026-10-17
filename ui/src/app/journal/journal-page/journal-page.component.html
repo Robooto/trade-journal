@@ -15,7 +15,7 @@
     <header class="activity-heading">
       <div>
         <p class="eyebrow">Review before planning</p>
-        <h2 id="previous-session-heading">Previous session activity</h2>
+        <h2 id="previous-session-heading">Latest session activity</h2>
         @if (activityInbox) {
           <span>{{ activityInbox.session_date | date:'EEE, MMM d':'UTC' }}</span>
           <span>{{ completedActivityCount }} of {{ activityInbox.events.length }} complete</span>

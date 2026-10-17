@@ -458,7 +458,7 @@ async def test_post_research_context_rejects_empty_symbols(
 
 
 @pytest.mark.asyncio
-async def test_get_activity_inbox_defaults_to_previous_market_session(
+async def test_get_activity_inbox_defaults_to_latest_completed_market_session(
     client,
     monkeypatch,
 ):
@@ -467,7 +467,7 @@ async def test_get_activity_inbox_defaults_to_previous_market_session(
     )
     monkeypatch.setattr(
         broker,
-        "previous_us_equity_market_session",
+        "latest_completed_us_equity_market_session",
         lambda: date(2026, 7, 15),
     )
 

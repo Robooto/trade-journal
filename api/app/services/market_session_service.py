@@ -116,3 +116,23 @@ def previous_us_equity_market_session(
             return candidate
         candidate -= timedelta(days=1)
     raise RuntimeError("Unable to resolve the previous U.S. equity market session.")
+
+
+REGULAR_CLOSE_EASTERN = (16, 0)
+
+
+def latest_completed_us_equity_market_session(
+    as_of: datetime | None = None,
+) -> date:
+    """The session that most recently closed: today after 16:00 ET on a session day, else the previous one.
+
+    Morning review therefore still shows the prior session, while after the close the
+    session that just ended is shown instead of the one before it.
+    """
+    now = as_of or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        raise ValueError("as_of datetime must include a timezone")
+    local = now.astimezone(EASTERN)
+    if is_us_equity_market_session(local.date()) and (local.hour, local.minute) >= REGULAR_CLOSE_EASTERN:
+        return local.date()
+    return previous_us_equity_market_session(local)

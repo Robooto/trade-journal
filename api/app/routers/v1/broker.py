@@ -48,7 +48,7 @@ from app.services.activity_market_context_service import (
     enrich_activity_market_context,
 )
 from app.services.market_session_service import (
-    previous_us_equity_market_session,
+    latest_completed_us_equity_market_session,
 )
 from app.services.brokerage_service import fetch_holding_snapshot
 from app.services.research_context_orchestration import (
@@ -464,7 +464,7 @@ def get_activity_inbox(
     db: Session = Depends(get_db),
 ):
     token = _token_or_403(db)
-    session_date = session_date or previous_us_equity_market_session()
+    session_date = session_date or latest_completed_us_equity_market_session()
     try:
         inbox = fetch_activity_inbox(token, session_date)
         inbox = apply_activity_dispositions(db, inbox)

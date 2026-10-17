@@ -46,3 +46,18 @@ def test_session_predicate_covers_regular_and_holiday_dates():
     assert is_us_equity_market_session(date(2026, 7, 2))
     assert not is_us_equity_market_session(date(2026, 7, 3))
     assert not is_us_equity_market_session(date(2026, 7, 4))
+
+
+def test_latest_completed_session_switches_to_today_after_the_close():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    from app.services.market_session_service import latest_completed_us_equity_market_session
+
+    eastern = ZoneInfo("America/New_York")
+    friday = date(2026, 10, 16)
+    assert latest_completed_us_equity_market_session(datetime(2026, 10, 16, 9, 0, tzinfo=eastern)) == date(2026, 10, 15)
+    assert latest_completed_us_equity_market_session(datetime(2026, 10, 16, 15, 59, tzinfo=eastern)) == date(2026, 10, 15)
+    assert latest_completed_us_equity_market_session(datetime(2026, 10, 16, 16, 0, tzinfo=eastern)) == friday
+    assert latest_completed_us_equity_market_session(datetime(2026, 10, 17, 11, 0, tzinfo=eastern)) == friday  # Saturday
+    assert latest_completed_us_equity_market_session(datetime(2026, 10, 19, 8, 0, tzinfo=eastern)) == friday  # Monday pre-open
+    assert latest_completed_us_equity_market_session(datetime(2026, 11, 26, 18, 0, tzinfo=eastern)) == date(2026, 11, 25)  # Thanksgiving

@@ -75,17 +75,16 @@
             </div>
           }
         </div>
-        <!-- Entry Footer -->
-        <div class="entry-footer">
-          <div class="entry-stats">
-            @if (entry.events && entry.events.length > 0) {
+        @if (entry.events && entry.events.length > 0) {
+          <div class="entry-footer">
+            <div class="entry-stats">
               <span>
                 <mat-icon>timeline</mat-icon>
                 {{ entry.events.length }} {{ entry.events.length === 1 ? 'update' : 'updates' }}
               </span>
-            }
+            </div>
           </div>
-        </div>
+        }
       </div>
     }
   </div>
