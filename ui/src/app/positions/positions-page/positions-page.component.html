@@ -72,14 +72,6 @@
           }
         </div>
         <div class="account-metrics">
-          <div class="metric" matTooltip="Share-equivalent portfolio delta adjusted by each underlying beta.">
-            <span>Beta Δ shares</span>
-            <strong>{{ (account.total_beta_delta_shares ?? account.total_beta_delta) | number:'1.0-1' }}</strong>
-          </div>
-          <div class="metric" matTooltip="Share-equivalent directional delta across the account.">
-            <span>Delta shares</span>
-            <strong>{{ (account.delta_shares ?? account.total_position_delta) | number:'1.0-1' }}</strong>
-          </div>
           <div class="metric" matTooltip="Brokerage net liquidating value. Margin equity is used only when net liquidating value is unavailable.">
             <span>Net liquidity</span>
             <strong>{{ account.net_liquidating_value_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
@@ -102,6 +94,14 @@
             <span>+1 vol point</span>
             <strong>{{ account.vega_plus_one_point_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
             <small>{{ account.vega_plus_one_point_percent_of_net_liq | number:'1.0-3' }}% of net liq</small>
+          </div>
+          <div class="metric" matTooltip="Share-equivalent directional delta across the account.">
+            <span>Delta shares</span>
+            <strong>{{ (account.delta_shares ?? account.total_position_delta) | number:'1.0-1' }}</strong>
+          </div>
+          <div class="metric" matTooltip="Share-equivalent portfolio delta adjusted by each underlying beta.">
+            <span>Beta Δ shares</span>
+            <strong>{{ (account.total_beta_delta_shares ?? account.total_beta_delta) | number:'1.0-1' }}</strong>
           </div>
           <div class="metric" [matTooltip]="concentrationTooltip(account)">
             <span>Top Greek exposure</span>
