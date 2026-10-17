@@ -1,14 +1,14 @@
 # Research proxy operations
 
-Last reviewed: 2026-08-30
+Last reviewed: 2026-10-17
 
 The Trade Journal UI exposes market-data research through the same browser
 origin while keeping backend ownership and processes separate on the mini:
 
 ```text
-/research-api/api/flowpatrol/*
+/research-api/api/*            (TRACE, paper research, FlowPatrol)
   -> UI Nginx
-  -> RESEARCH_BACKEND_URL/api/flowpatrol/*
+  -> RESEARCH_BACKEND_URL/api/*
 ```
 
 The mini deployment uses

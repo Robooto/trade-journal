@@ -1,6 +1,6 @@
 # Trade Journal Product Roadmap
 
-Last reviewed: 2026-08-23
+Last reviewed: 2026-10-17
 
 ## Product goals
 
@@ -17,8 +17,9 @@ Current:
 - Optional normalized ticker tags plus note/ticker search.
 - Optional context links back to positions, FlowPatrol ideas, or other research.
 - Morning dashboard handoff directly into today's editor and recent entries.
-- Previous-session activity assistant across all brokerage accounts. The API
-  resolves the prior U.S. equity-market session or accepts an explicit date;
+- Latest-session activity assistant across all brokerage accounts. The API
+  resolves the latest completed U.S. equity-market session (today after the
+  close, otherwise the previous one) or accepts an explicit date;
   broker-supplied fill groups join to order metadata while ambiguous activity
   remains ungrouped.
 - Compact journal inbox with **Add to journal**, merging factual legs, ticker,
@@ -26,8 +27,6 @@ Current:
 
 Next:
 
-- Persist **Reviewed** and **Skip** dispositions so the inbox tracks morning
-  review progress without creating journal busywork.
 - Add structured thesis/plan/management/outcome fields without making quick
   notes cumbersome.
 - Add context-aware entry points such as **Journal this FlowPatrol idea** and
@@ -37,7 +36,7 @@ Next:
   stable backend identifiers beyond the current optional context link.
 - Add weekly summaries and rule-adherence review.
 
-### Previous-session journal assistant
+### Latest-session journal assistant
 
 Goal: make the normal 5:20–5:40 a.m. journal useful without requiring the user
 to reconstruct the prior trading session by hand. Because equity options are
@@ -46,8 +45,8 @@ context matter more than live option quotes.
 
 Proposed experience:
 
-1. Open the morning journal to a compact **Previous session activity** inbox.
-2. Use the prior completed U.S. market session—not simply calendar yesterday—so
+1. Open the journal to a compact **Latest session activity** inbox.
+2. Use the latest completed U.S. market session—not simply calendar yesterday—so
    weekends and market holidays resolve correctly.
 3. Show fills grouped into understandable trade events. The first contract uses
    factual labels such as opening, closing, roll, assignment, and expiration;
@@ -151,10 +150,10 @@ Next:
 4. Strategy fit by VIX regime.
 5. Versioned rule results and whether warnings were followed.
 6. Position/account history rather than current snapshot only.
-7. Build an open-position execution ledger from transaction group-fill IDs so
-   multiple spreads sharing an expiration can remain separate after partial
-   closes, rolls, and contract reuse. Use opening order ID when group-fill ID
-   is absent; see `docs/open-position-execution-ledger-plan.md`.
+7. Use the open-position execution ledger (built and tested, not yet wired in)
+   in position grouping so multiple spreads sharing an expiration stay separate
+   after partial closes, rolls, and contract reuse; see
+   `docs/open-position-execution-ledger-plan.md`.
 
 ### All-account portfolio and holdings
 
@@ -197,8 +196,10 @@ read-first contracts to the UI, OpenClaw, and market-data research.
 
 Current:
 
-- Accounts, balances, positions, quotes, volatility metrics, and complex-order
-  client support.
+- Accounts, balances, positions, quotes, volatility metrics, market metrics
+  (IV per expiration, IV−HV), option-quote snapshots with model values (IV,
+  theo price), nested option chains, and complex-order client support. The client
+  pools connections, retries reads briefly, and refreshes a rejected token once.
 - LLM-friendly position, market-data, volatility, and equity-analysis packages.
 - Normalized account risk fields and explicit brokerage balance freshness/missing-data metadata in both the positions API and LLM positions pack.
 - Historical price/chart features and portable JSON/Markdown handoffs.
@@ -225,9 +226,10 @@ Next:
    exposure context without changing FlowPatrol priority scoring.
 2. Add the normalized all-account/all-asset portfolio summary and a broader
    trading-status model beyond the implemented option risk summary.
-3. Extend the implemented session activity inbox with verified prior-session
-   resolution, position-state classification, and journal attachments.
-4. Nested option chains, margin requirements, order dry-run, and margin dry-run.
+3. Extend the implemented session activity inbox with position-state
+   classification and journal attachments.
+4. Margin requirements, order dry-run, and margin dry-run (nested option chains
+   are implemented).
 5. Portfolio-review and trade-review packs with freshness and missing-data
    status.
 6. Document all stable cross-project contracts.
@@ -264,7 +266,7 @@ ingestion, analysis, ranking, and versioned APIs remain in
   freshness, and safety policy in the owning backend. The frontend should
   request documented read models, render them, collect user input, and invoke
   explicit commands; it should not reproduce business logic.
-- TRACE is now a first-class sidebar workspace directly below Journal. Its
+- TRACE is a first-class sidebar workspace. Its
   `/trace/overview` route includes versioned typed models,
   same-origin API access, cancellation-safe session state, partial-source isolation,
   and explicit backend readiness/quality status. Charm is embedded in the
@@ -291,6 +293,10 @@ ingestion, analysis, ranking, and versioned APIs remain in
   proxy, quality states, bookmarkable watchlist/portfolio filters, compact
   brokerage scan context, upload/watchlist commands, and ticker history plus
   complete Spread ID evidence.
+- TRACE now leads with "What the research says" (the study registry's headline
+  and evidence tiers), an all-arm paper scorecard and the negative-pocket shadow
+  review; retired studies are hidden. Flow Ideas has an opened-vs-closed contract
+  ledger with linked legs and Equity Hub links per report date.
 - Flow Ideas and TRACE presentation cutover is complete. Future research
   modules must enter the shared Trade Journal shell only after their versioned
   API contracts are stable; do not create new standalone mini pages.
@@ -347,7 +353,7 @@ Container hardening follow-up:
 - [tastytrade-route-use-map.md](tastytrade-route-use-map.md)
 - Workspace product map: `../../docs/trading-product-map.md`
 
-### September 26 research review follow-through
+### September 26 research review follow-through (historical)
 
 The main paper view now shows gross expectancy, average winning/losing close and
 worst-session loss alongside costs and win rate. The distance-shadow panel uses

@@ -1,5 +1,9 @@
 # tastytrade Route Use Map
 
+Status: planning analysis from July 2026, kept for its route priorities. What is
+built is listed in [brokerage-api-inventory.md](brokerage-api-inventory.md#local-endpoints)
+and in "Routes already represented in the client" below (updated October 17, 2026).
+
 This document summarizes tastytrade API routes that are useful for the trading
 workspace and how `trade-journal` can expose them safely to the rest of the
 system.
@@ -258,11 +262,15 @@ priority should remain local shadow outcomes from captured data.
 
 ## Suggested Build Order
 
-1. Harden existing OAuth token handling and headers.
+1. Harden existing OAuth token handling and headers. *Done: cached token with a
+   shared refresh, one retry after a rejected token, pooled connections.*
 2. Build a normalized account summary from accounts, trading status, balances,
-   positions, and market data.
-3. Add orders and transactions read APIs for journal reconciliation.
-4. Add symbol search and nested option-chain lookup.
+   positions, and market data. *Partly done: holdings snapshot and per-account
+   balance context; no trading-status read yet.*
+3. Add orders and transactions read APIs for journal reconciliation. *Done for the
+   activity inbox and spread-history sync; no general order/transaction route.*
+4. Add symbol search and nested option-chain lookup. *Nested chain done; symbol
+   search not built.*
 5. Add order dry-run and margin dry-run for candidate validation.
 6. Add market sessions to gate alerts and candidate workflows.
 7. Add streaming only after REST snapshots are insufficient.
@@ -289,26 +297,28 @@ priority should remain local shadow outcomes from captured data.
 
 ## Routes Already Represented In The Client
 
-The existing `trade-journal/api/app/tastytrade.py` client already covers:
+`trade-journal/api/app/tastytrade.py` covers:
 
 - `POST /oauth/token`
 - `GET /customers/me/accounts`
 - `GET /accounts/{account_number}/positions?net-positions=true&include-marks=true`
 - `GET /accounts/{account_number}/balances`
+- `GET /accounts/{account_number}/orders` (dated, paginated)
+- `GET /accounts/{account_number}/transactions` (dated, paginated)
+- `POST /accounts/{account_number}/complex-orders` (bracket exits; live submission is gated)
 - `GET /market-data/by-type`
 - `GET /market-metrics`
-- `POST /accounts/{account_number}/complex-orders`
+- `GET /market-metrics/historic-corporate-events/earnings-reports/{symbol}`
+- `GET /option-chains/{symbol}/nested`
+- `GET /watchlists`, `PUT /watchlists/{name}` (gated by `BROKERAGE_WATCHLIST_WRITES_ENABLED`)
 
 The next best additions are:
 
 - `GET /accounts/{account_number}/trading-status`
-- `GET /accounts/{account_number}/orders`
 - `GET /accounts/{account_number}/orders/{id}`
 - `POST /accounts/{account_number}/orders/dry-run`
-- `GET /accounts/{account_number}/transactions`
 - `GET /accounts/{account_number}/transactions/total-fees`
 - `GET /symbols/search/{symbol}`
-- `GET /option-chains/{symbol}/nested`
 - `GET /margin/accounts/{account_number}/requirements`
 - `POST /margin/accounts/{account_number}/dry-run`
 - `GET /market-time/equities/sessions/current`

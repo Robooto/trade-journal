@@ -1,6 +1,6 @@
 # Enabling Work Plan
 
-Last reviewed: 2026-07-16
+Last reviewed: 2026-10-17
 
 This plan orders the product roadmap by dependency. Each wave should ship as
 small API-backed vertical slices. Brokerage authentication and normalization
@@ -99,10 +99,11 @@ Completed on 2026-07-15:
    IV percentile, broker five-day IV-index change, and liquidity observations.
 3. **Implemented:** batch research-symbol context API over current and
    persisted data.
-4. **Implemented:** normalize prior-session activity into opening, closing,
+4. **Implemented:** normalize a session's activity into opening, closing,
    roll, fill, assignment, expiration, cash, and other review events. The API
-   resolves the prior U.S. equity session across recurring holidays and known
-   exceptional closures, while retaining an explicit-date override. The journal
+   resolves the latest completed U.S. equity session (today after the close,
+   otherwise the previous one) across recurring holidays and known exceptional
+   closures, while retaining an explicit-date override. The journal
    UI shows a compact inbox and can merge factual legs, ticker, source ID, and
    writing prompts into a local draft. Grouping remains broker-ID-only and
    ambiguous rows stay explicit. Position-state evidence is still required
@@ -110,10 +111,12 @@ Completed on 2026-07-15:
 
 ## Wave 3: workflow features
 
-- Enrich FlowPatrol using the documented batch broker contract.
-- Add FlowPatrol, brokerage-watchlist, overlap, and combined-universe modes.
-- Add journal handoffs for research ideas and positions; the brokerage activity
-  handoff is implemented.
+- **Implemented:** enrich FlowPatrol using the documented batch broker contract
+  (price, IV rank and trend, exposure and watchlist membership per candidate).
+- **Partly implemented:** watchlist and held/not-held filters on the Flow Ideas
+  queue and a separate Watchlists page; no combined-universe mode yet.
+- **Partly implemented:** journal context links to positions and research ideas
+  and the brokerage activity handoff; no one-click handoff from a research idea.
 - Plot entries, fills, adjustments, exits, and current positions on charts.
 - Produce portfolio-review, trade-review, and research-context LLM packs.
 - Save investigate/watch/dismiss/traded dispositions.

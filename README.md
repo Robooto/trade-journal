@@ -11,7 +11,15 @@ Tastytrade client.
 
 ## Current capabilities
 
-- A morning dashboard that preserves the daily research links and hands off directly to the journal.
+- A morning dashboard with a desk strip (paper experiment results and research status),
+  a daily checklist, and recent journal entries.
+- A TRACE workspace: session timeline, trade read, market snapshot, signed GEX
+  structure map, shared chart annotations, what the research says, and the paper
+  experiments (scorecard, negative-pocket shadow, ledger and replay). TRACE data comes
+  from the market-data pipeline; this app owns the only user-facing view of it.
+- Research: FlowPatrol Flow Ideas (ranked queue, opened-vs-closed contract ledger,
+  linked legs, Equity Hub links) and brokerage watchlist research.
+- A SpotGamma pivot tracker with level age and staleness.
 - Journal entry API and Angular journal views with automatic local drafts, optional
   ticker tags, note/symbol search, context links to positions/research, and a fast
   today-entry workflow.
@@ -73,6 +81,7 @@ Leave the value false or unset anywhere that should remain read-only. Production
 UI requests use same-origin `/v1` routing through Nginx. `CORS_ORIGINS` is only
 needed for separately hosted development clients and accepts a comma-separated
 list of allowed origins.
+
 ## Production deployment
 
 Production runs on the x86_64 mini beside the market-data pipeline. See

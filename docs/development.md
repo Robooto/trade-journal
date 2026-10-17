@@ -107,6 +107,14 @@ new session without trades does not prevent a needed service deployment.
   Empty sessions clear previous geometry, including ticks and cursors.
 - `PaperNowComponent` and `PaperLedgerComponent`: catalog-driven current paper
   presentation and exact contract evidence, respectively.
+- `PaperArmsComponent` and `PaperNegativePocketComponent`: the all-arm paper
+  scorecard (`/api/trace/paper-arms`) and the negative-pocket shadow review
+  (`/api/trace/paper-negative-pocket`); presentation only, figures come from the pipeline.
+- `ResearchSummaryComponent`: "What the research says", rendered from the study
+  registry's headline and per-study evidence tier/summary (`/api/trace/research-status`).
+- `TradeReadComponent`, `TraceMarketSnapshotComponent` and `SignedGexMapComponent`:
+  the capture's trade read, market snapshot, and signed GEX structure map (with the
+  shared chart annotations above it).
 
 Current session trade cards display recorded short/long option strikes for both
 open and closed trial trades. Quote-path replay lists recorded baseline entries,

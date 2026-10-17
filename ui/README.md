@@ -1,61 +1,32 @@
-# Ui
+# Trade Journal UI
 
-Using angular material Azure/Blue theme
+Angular 21 single-page app with Angular Material (dark M3 theme, azure palette),
+Tailwind utilities, `lightweight-charts` for price charts, and Vitest for unit tests.
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.12.
+## Sections
 
-## Development server
+| Route | Folder | What it shows |
+|---|---|---|
+| `/dashboard` | `dashboard/` | Desk strip (paper arms, research status), daily checklist, recent journal entries |
+| `/journal` | `journal/` | Journal entries, latest-session broker activity |
+| `/trace` | `trace/` | TRACE session workspace, research summary, paper experiments |
+| `/positions` | `positions/` | Option positions by account with risk context and bracket exits |
+| `/charts` | `charts/` | Price charts and the equity analysis package |
+| `/pivot-tracker` | `pivot-tracker/` | SpotGamma pivot levels with age and change |
+| `/research/flow-ideas`, `/research/watchlists` | `research/` | FlowPatrol ideas, contract flow ledger, watchlist research |
 
-To start a local development server, run:
+`/v1` calls go to the Trade Journal API; `/research-api` calls go to the
+market-data pipeline API (`/api/...`). In production both are same-origin and the UI
+container's Nginx proxies them.
 
-```bash
-ng serve
-```
+## Development
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+From the repository root, `make setup` once, then `make dev` (Angular dev server on
+`http://localhost:4200`). It sends `/v1` calls to a local API on `localhost:8876`
+(`src/environments/environment.ts`) and proxies `/research-api` to the pipeline on
+mini (`proxy.conf.json`). `make test-ui` type-checks specs and runs Vitest once;
+`make smoke` checks the deployed TRACE and paper views in a browser.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with Vitest, use the following command:
-
-```bash
-npm test -- --watch=false
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+`make test-ui` can leave a running dev server unable to resolve `zone.js`; restart
+it if that happens. Commands, contract generation and component ownership are in
+[`../docs/development.md`](../docs/development.md).

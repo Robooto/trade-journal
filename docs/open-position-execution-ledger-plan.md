@@ -1,5 +1,10 @@
 # Open-position execution ledger plan
 
+Status (2026-10-17): the ledger is built and tested in
+`api/app/services/open_execution_ledger_service.py` (cached transaction scan,
+provenance grouping), but position grouping does not call it yet; positions still
+group by expiration as described below.
+
 ## Outcome of the live spike
 
 The open-positions payload has no transaction provenance. A read-only two-year,

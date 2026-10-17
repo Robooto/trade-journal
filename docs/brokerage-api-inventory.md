@@ -66,28 +66,33 @@ For the current tastytrade route analysis and recommended build order, see
 - Open interest and volume.
 - Expiration metadata.
 
-## Local Endpoint Candidates
+## Local Endpoints
 
-Document stable local endpoints here as they are implemented.
+Implemented (`/v1/broker`, plus the option-position routes under `/v1/trades`):
 
 ```text
-GET /v1/broker/holdings
-GET /v1/broker/activity-inbox[?session_date=YYYY-MM-DD]
-PUT /v1/broker/activity-disposition
+GET  /v1/broker/holdings
+GET  /v1/broker/activity-inbox[?session_date=YYYY-MM-DD]
+PUT  /v1/broker/activity-disposition
+POST /v1/broker/activity-imports/tastytrade-csv
+GET  /v1/broker/imported-spread-trades
+POST /v1/broker/imported-spread-trades/sync
 POST /v1/broker/research-symbol-context
-GET /v1/broker/watchlists
-GET /v1/broker/watchlist-research
+GET  /v1/broker/research-metrics/{symbol}
+GET  /v1/broker/watchlists
+GET  /v1/broker/watchlist-research
 POST /v1/broker/watchlists/{watchlist_name}/symbols
-GET /v1/broker/accounts
-GET /v1/broker/summary
-GET /v1/broker/positions
-GET /v1/broker/orders
-GET /v1/broker/trades
-GET /v1/broker/quotes?symbols=SPY,QQQ
-GET /v1/broker/options/{symbol}/chain
-POST /v1/broker/option-quote-snapshots  (include_model_values: IV, theo price, rho)
-GET /v1/broker/market-metrics?symbols=SPX
+GET  /v1/broker/option-chains/{symbol}/nested
+POST /v1/broker/option-quote-snapshots  (include_model_values adds IV, theo price, rho)
+GET  /v1/broker/market-metrics?symbols=SPX
+GET  /v1/trades, GET /v1/trades/summary, POST /v1/trades/market-data[/summary],
+POST /v1/trades/volatility-data[/summary], POST /v1/trades/bracket-orders
 ```
+
+Candidates, not built: generic accounts, balances summary, all-asset positions,
+orders, fills/trades, quotes and full option-chain reads. See
+[`tastytrade-route-use-map.md`](tastytrade-route-use-map.md) for their tastytrade
+sources.
 
 ## Wave 1 Foundation Status
 
@@ -104,8 +109,9 @@ Implemented backend foundations:
   `strategy_confidence`, and `grouping_source`. Calendar/diagonal pairs are
   inferred only from singleton
   expiration buckets so same-expiration spreads cannot be split apart.
-- `BrokerActivityInboxV1` defaults to the prior U.S. equity-market session in
-  New York time or accepts an explicit historical date. It groups normalized
+- `BrokerActivityInboxV1` defaults to the latest completed U.S. equity-market
+  session in New York time (today after the 4:00 p.m. close, otherwise the previous
+  session) or accepts an explicit historical date. It groups normalized
   transactions by group-fill ID first and shared order ID second, joins
   matching order metadata, preserves every normalized leg, and reports source
   failures without discarding activity from other available sources/accounts.

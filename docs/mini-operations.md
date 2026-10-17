@@ -99,30 +99,21 @@ run `PRAGMA integrity_check` before restart.
 The retired Raspberry Pi is only a stopped, write-disabled recovery snapshot.
 Do not deploy to it. See `raspberry-pi-operations.md` for the retirement guard.
 
-## Paper trial and quote-quality pilot
+## Paper research collectors
 
-From October 5, the paper tab foregrounds the pipeline-owned distance-filter /
-one-position trial. The existing overlapping baseline and distance-only control
-continue collecting. The API catalog supplies dates and IDs; no UI policy defaults
-substitute for unavailable configuration. Trial results exclude all earlier
-replay data and surface payoff math plus completed-path coverage.
+The pipeline's paper collectors run on mini as systemd user timers and only read
+through this API; none can submit orders. As of October 17, 2026:
 
-The pipeline's isolated minute sampler runs October 5–9 and uses only
-`POST /v1/broker/option-quote-snapshots`. This route now preserves throttling as
-429 with a bounded Retry-After, authorization failure as 403, and other temporary
-request failures as 503. It never retries login or calls order endpoints. Pipeline
-owns the pilot timer, independent research store, quality audit and backups; see
-`../market-data-pipeline/docs/operations/paper-forward-trial-2026-10-05.md` in the
-workspace for installation, observation gates and rollback.
+| Collector (pipeline timer) | Window | Trade Journal routes |
+| --- | --- | --- |
+| Rotation arms C0–D0, width and full-lifetime quotes | Oct 12 – Nov 6 (frozen) | `POST /v1/broker/option-quote-snapshots` |
+| Negative-pocket shadow | Oct 16 – Dec 11 | `POST /v1/broker/option-quote-snapshots` |
+| Signal option context (every take/pass) | Oct 19 – Dec 11 | `option-quote-snapshots` with `include_model_values`, `GET /v1/broker/market-metrics` |
 
-### Paper dashboard layout
-
-The paper tab now foregrounds one current strategy: schedule/rules, the selected
-capture's signal and reasons, open trades, closed outcomes, skips and payoff
-results. Signal readiness is separate from admission, and unavailable position
-state is never shown as flat. Times are formatted explicitly in Pacific time.
-Comparison controls and quote diagnostics remain in supporting detail. Retired
-policy cards, archive switches and the duplicate prospective-research panel are
-removed from this UI; the pipeline retains all study data and frozen policies.
-The trade ledger offers the current trial and its two controls. Quote-path replay
-remains available for collected directional entries.
+`option-quote-snapshots` returns throttling as 429 with a bounded Retry-After,
+authorization failure as 403 and other temporary failures as 503. The tastytrade
+client retries reads briefly and refreshes a rejected token once (see
+[brokerage API inventory](brokerage-api-inventory.md#client-behavior)). The pipeline
+owns the timers, stores, backups and stop procedures; see its
+`docs/operations/` runbooks. The TRACE page's paper tab shows the all-arm scorecard,
+the negative-pocket review, the ledger and quote-path replay.
