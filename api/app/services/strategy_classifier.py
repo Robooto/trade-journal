@@ -1,6 +1,8 @@
 from collections import Counter
 from typing import Any
 
+from app.services.position_math import extract_expiration_date
+
 
 def _get(position: dict[str, Any], *keys: str) -> Any:
     for key in keys:
@@ -24,7 +26,8 @@ def _normalized_leg(position: dict[str, Any]) -> dict[str, Any]:
         "symbol": _get(position, "symbol", "instrument-symbol"),
         "option_type": _get(position, "option_type", "option-type"),
         "strike": _float_value(_get(position, "strike")),
-        "expiration_date": _get(position, "expiration_date", "expires_at", "expires-at"),
+        # Compare dates: calls and puts on some ETFs settle at different times on the same day.
+        "expiration_date": extract_expiration_date(_get(position, "expiration_date", "expires_at", "expires-at")),
         "direction": _get(position, "quantity_direction", "quantity-direction"),
     }
 

@@ -74,3 +74,16 @@ def test_unknown_when_required_leg_data_is_missing():
 
     assert result["label"] == "unknown"
     assert result["confidence"] == "low"
+
+
+def test_short_strangle_with_different_call_and_put_settlement_times():
+    from app.services.strategy_classifier import classify_strategy
+
+    # Live EWZ legs: tastytrade settles the put at 21:00Z and the call at 21:15Z on the same day.
+    legs = [
+        {"symbol": "EWZ   261120P00033000", "option-type": "P", "strike": 33.0,
+         "expires-at": "2026-11-20T21:00:00.000Z", "quantity-direction": "Short"},
+        {"symbol": "EWZ   261120C00046000", "option-type": "C", "strike": 46.0,
+         "expires-at": "2026-11-20T21:15:00.000Z", "quantity-direction": "Short"},
+    ]
+    assert classify_strategy(legs)["label"] == "short_strangle"
