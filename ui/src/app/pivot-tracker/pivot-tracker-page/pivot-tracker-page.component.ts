@@ -4,9 +4,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize, Observable, Subject, takeUntil } from 'rxjs';
 
 import {
+  PIVOT_STALE_DAYS,
   PivotLevel,
   PivotLevelCreate,
   PivotTrackerService,
+  pivotAgeDays,
 } from '../pivot-tracker.service';
 import {
   PivotDialogResult,
@@ -31,6 +33,26 @@ export class PivotTrackerPageComponent implements OnInit, OnDestroy {
   historyError: string | null = null;
 
   private destroy$ = new Subject<void>();
+
+  ageDays(pivot: PivotLevel): number | null {
+    return pivotAgeDays(pivot.date);
+  }
+
+  isStale(pivot: PivotLevel): boolean {
+    return (pivotAgeDays(pivot.date) ?? 0) > PIVOT_STALE_DAYS;
+  }
+
+  ageLabel(pivot: PivotLevel): string {
+    const days = pivotAgeDays(pivot.date);
+    return days === null ? '' : days === 0 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`;
+  }
+
+  /** Change from the previous recorded level of the same index; history is newest first. */
+  changeFromPrevious(index: number): number | null {
+    const current = this.history[index];
+    const previous = this.history.slice(index + 1).find(pivot => pivot.index === current?.index);
+    return current && previous ? current.price - previous.price : null;
+  }
 
   constructor(
     private pivotTracker: PivotTrackerService,

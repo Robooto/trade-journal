@@ -19,10 +19,12 @@
             <p class="section-eyebrow">Current recorded level</p>
             <h2>Primary market pivot</h2>
           </div>
-          <div class="status-chip">
-            <span class="status-dot"></span>
-            Saved reference
-          </div>
+          @if ((latest$ | async); as current) {
+            <div class="status-chip" [class.stale]="isStale(current)">
+              <span class="status-dot"></span>
+              {{ isStale(current) ? 'Over a week old · review it' : 'Saved reference' }}
+            </div>
+          }
         </div>
 
         @if (latestLoading) {
@@ -38,7 +40,7 @@
             <div class="pivot-value">{{ latest.price | number:'1.2-2' }}</div>
             <div class="pivot-date">
               <mat-icon>calendar_today</mat-icon>
-              Recorded {{ latest.date | date:'mediumDate' }}
+              Recorded {{ latest.date | date:'mediumDate' }} · {{ ageLabel(latest) }}
             </div>
           </div>
 
@@ -106,7 +108,7 @@
 
     @if (!historyLoading && history.length) {
       <div class="history-list" role="list">
-        @for (pivot of history; track pivot; let first = $first) {
+        @for (pivot of history; track pivot; let first = $first; let i = $index) {
           <article class="history-row" [class.latest]="first" role="listitem">
             <div class="history-marker">
               <span></span>
@@ -115,13 +117,22 @@
               <span class="history-index">{{ pivot.index }}</span>
               <strong>{{ pivot.price | number:'1.2-2' }}</strong>
             </div>
+            <div class="history-change">
+              @if (changeFromPrevious(i); as change) {
+                <span [class.up]="change > 0" [class.down]="change < 0">{{ change > 0 ? '+' : '' }}{{ change | number:'1.0-2' }}</span>
+              } @else if (changeFromPrevious(i) === 0) {
+                <span>unchanged</span>
+              }
+            </div>
             <div class="history-date">
               <mat-icon>event</mat-icon>
               {{ pivot.date | date:'mediumDate' }}
             </div>
-            @if (first) {
-              <span class="latest-chip">Current</span>
-            }
+            <div class="history-badge">
+              @if (first) {
+                <span class="latest-chip">Current</span>
+              }
+            </div>
           </article>
         }
       </div>

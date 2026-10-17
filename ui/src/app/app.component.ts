@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Observable } from 'rxjs';
 import { LoadingService } from './shared/loading.service';
 import { FuturesService } from './shared/futures.service';
-import { PivotLevel, PivotTrackerService } from './pivot-tracker/pivot-tracker.service';
+import { PIVOT_STALE_DAYS, PivotLevel, PivotTrackerService, pivotAgeDays } from './pivot-tracker/pivot-tracker.service';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +13,14 @@ export class AppComponent implements OnInit {
   currentContract: string;
   isCollapsed = false;
   pivot$!: Observable<PivotLevel | null>;
+
+  pivotAge(pivot: PivotLevel): number | null {
+    return pivotAgeDays(pivot.date);
+  }
+
+  pivotStale(pivot: PivotLevel): boolean {
+    return (pivotAgeDays(pivot.date) ?? 0) > PIVOT_STALE_DAYS;
+  }
   
   get loading$() {
     return this.loadingService.loading$;

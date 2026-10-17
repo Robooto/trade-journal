@@ -10,12 +10,13 @@
     @if (pivot$ | async; as pivot) {
       <div
         class="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 font-semibold text-amber-300 sm:px-3"
-        matTooltip="Latest SpotGamma pivot"
+        [class.opacity-60]="pivotStale(pivot)"
+        [matTooltip]="pivotStale(pivot) ? 'Latest SpotGamma pivot, recorded ' + pivotAge(pivot) + ' days ago. Review it on Pivot Tracker.' : 'Latest SpotGamma pivot'"
       >
         <mat-icon class="h-[18px] w-[18px] text-[18px]">track_changes</mat-icon>
         <span class="text-[0.65rem] uppercase tracking-[0.08em]">{{ pivot.index }}</span>
         <span class="text-sm sm:text-base">{{ pivot.price | number:'1.2-2' }}</span>
-        <span class="hidden text-xs opacity-80 md:inline">{{ pivot.date | date:'MMM d' }}</span>
+        <span class="hidden text-xs opacity-80 md:inline">{{ pivot.date | date:'MMM d' }}@if (pivotStale(pivot)) { · {{ pivotAge(pivot) }}d old }</span>
       </div>
       <button mat-icon-button color="warn" [routerLink]="['/pivot-tracker']" matTooltip="Update pivot level">
         <mat-icon>tune</mat-icon>

@@ -50,3 +50,16 @@ export class PivotTrackerService {
     this.latestSubject.next(pivot);
   }
 }
+
+
+/** A manually recorded pivot older than this many calendar days should be reviewed. */
+export const PIVOT_STALE_DAYS = 7;
+
+/** Whole calendar days since a YYYY-MM-DD pivot date, or null when the date is invalid. */
+export function pivotAgeDays(date: string | null | undefined, today = new Date()): number | null {
+  if (!date) return null;
+  const recorded = new Date(`${date.slice(0, 10)}T12:00:00`);
+  if (Number.isNaN(recorded.getTime())) return null;
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 12);
+  return Math.max(0, Math.round((start.getTime() - recorded.getTime()) / 86_400_000));
+}
