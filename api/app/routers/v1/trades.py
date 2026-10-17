@@ -18,19 +18,13 @@ from app.schemas.trades import (
 from app.db import get_db
 from app import tastytrade
 from app.settings import settings
-from app.services.trades_service import (
-    acquire_token,
-    fetch_accounts,
-    collect_positions_and_symbols,
-    fetch_market_and_beta_data,
-    augment_positions_with_market_data,
-    group_positions_and_compute_totals,
-    apply_volatility,
-    apply_balance,
+from app.services.position_summaries import (
     build_llm_positions_summary,
     build_market_data_summary,
     build_volatility_data_summary,
 )
+from app.services.bracket_orders import build_bracket_payload
+from app.services.trades_service import load_positions
 from app.services.trades_errors import TastytradeAuthError, TastytradeFetchError
 
 router = APIRouter(
@@ -45,108 +39,10 @@ def _jsonable_tasty(value):
     return value
 
 
-def _is_credit_trade(quantity_direction: str, cost_effect: str | None) -> bool:
-    direction = (quantity_direction or "").strip().lower()
-    if direction == "short":
-        return True
-    if direction == "long":
-        return False
-    return (cost_effect or "").strip().lower() == "credit"
-
-
-def _round_price(value: float) -> float:
-    return round(float(value) + 1e-8, 2)
-
-
-def _clamp_price(value: float) -> float:
-    if value < 0.01:
-        return 0.01
-    return value
-
-
-def _build_bracket_payload(req: BracketOrderRequest) -> tuple[dict, float, float]:
-    is_credit = _is_credit_trade(req.quantity_direction, req.cost_effect)
-    entry_price = float(req.entry_price)
-    if is_credit:
-        take_profit_price = entry_price * (1 - req.take_profit_percent / 100)
-        stop_loss_price = entry_price * (1 + req.stop_loss_percent / 100)
-    else:
-        take_profit_price = entry_price * (1 + req.take_profit_percent / 100)
-        stop_loss_price = max(0.01, entry_price * (1 - req.stop_loss_percent / 100))
-
-    take_profit_price = _round_price(_clamp_price(take_profit_price))
-    stop_loss_price = _round_price(_clamp_price(stop_loss_price))
-
-    action = "Buy to Close" if req.quantity_direction.strip().lower() == "short" else "Sell to Close"
-    price_effect = "Debit" if is_credit else "Credit"
-
-    payload = {
-        "type": "OCO",
-        "orders": [
-            {
-                "order-type": "Limit",
-                "price": take_profit_price,
-                "price-effect": price_effect,
-                "time-in-force": "GTC",
-                "legs": [
-                    {
-                        "symbol": req.symbol,
-                        "instrument-type": req.instrument_type,
-                        "action": action,
-                        "quantity": req.quantity,
-                    }
-                ],
-            },
-            {
-                "order-type": "Stop",
-                "time-in-force": "GTC",
-                "stop-trigger": stop_loss_price,
-                "legs": [
-                    {
-                        "symbol": req.symbol,
-                        "instrument-type": req.instrument_type,
-                        "action": action,
-                        "quantity": req.quantity,
-                    }
-                ],
-            },
-        ],
-    }
-    return payload, take_profit_price, stop_loss_price
-
-
 def _load_positions_data(db: Session) -> list[dict]:
     try:
-        token = acquire_token(db)
-        accounts = fetch_accounts(token)
-
-        (
-            positions_by_account,
-            equity_option_syms,
-            future_option_syms,
-            equity_underlyings,
-            future_underlyings,
-        ) = collect_positions_and_symbols(token, accounts)
-
-        market_map, beta_map = fetch_market_and_beta_data(
-            token,
-            equity_option_syms,
-            future_option_syms,
-            equity_underlyings,
-            future_underlyings,
-        )
-
-        augment_positions_with_market_data(positions_by_account, market_map, beta_map)
-
-        accounts_data = group_positions_and_compute_totals(positions_by_account, beta_map)
-
-        apply_volatility(token, accounts_data)
-        apply_balance(token, accounts_data)
-
-        return accounts_data
-    except TastytradeAuthError as e:
-        raise HTTPException(status_code=500, detail=str(e)) from e
-    except TastytradeFetchError as e:
+        return load_positions(db)
+    except (TastytradeAuthError, TastytradeFetchError) as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
@@ -296,7 +192,7 @@ def submit_bracket_order(req: BracketOrderRequest, db: Session = Depends(get_db)
     if req.take_profit_percent <= 0 or req.stop_loss_percent <= 0:
         raise HTTPException(status_code=400, detail="percent values must be positive")
 
-    payload, take_profit_price, stop_loss_price = _build_bracket_payload(req)
+    payload, take_profit_price, stop_loss_price = build_bracket_payload(req)
     tasty_response = None
 
     if not req.dry_run:

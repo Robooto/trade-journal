@@ -12,7 +12,7 @@ from app.schemas.brokerage import (
     SourceMetadataV1,
 )
 from app.tastytrade_schema import TastyAccount, TastyPosition, TastyTransaction
-from app.services.values import to_float
+from app.services.values import tasty_dict, to_float
 
 
 INSTRUMENT_ASSET_CLASSES = {
@@ -24,14 +24,6 @@ INSTRUMENT_ASSET_CLASSES = {
     "Bond": AssetClass.FIXED_INCOME,
     "Fixed Income Security": AssetClass.FIXED_INCOME,
 }
-
-
-def _as_dict(value) -> dict:
-    if hasattr(value, "to_tasty_dict"):
-        return value.to_tasty_dict()
-    if isinstance(value, Mapping):
-        return dict(value)
-    raise TypeError(f"Unsupported broker value: {type(value)!r}")
 
 
 def _datetime(value) -> datetime | None:
@@ -72,7 +64,7 @@ def normalize_holding(
     account_number: str,
     position: TastyPosition | Mapping,
 ) -> HoldingV1:
-    raw = _as_dict(position)
+    raw = tasty_dict(position)
     instrument_type = str(raw.get("instrument-type") or "Unknown")
     symbol = str(raw.get("symbol") or "").strip()
     underlying = str(raw.get("underlying-symbol") or symbol).strip()
@@ -158,7 +150,7 @@ def build_holding_snapshot(
     account_errors = account_errors or {}
 
     for account_value in accounts:
-        account = _as_dict(account_value)
+        account = tasty_dict(account_value)
         account_number = str(account.get("account-number") or "")
         raw_positions = list(positions_by_account.get(account_number, []))
         holdings = [
@@ -241,7 +233,7 @@ def normalize_activity_event(
     *,
     fetched_at: datetime,
 ) -> BrokerActivityEventV1:
-    raw = _as_dict(transaction)
+    raw = tasty_dict(transaction)
     transaction_id = str(raw.get("id") or "missing-id")
     occurred_at = (
         _datetime(raw.get("executed-at"))

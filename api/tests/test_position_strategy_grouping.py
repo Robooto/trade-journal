@@ -1,4 +1,4 @@
-from app.services.trades_service import group_positions_and_compute_totals
+from app.services.position_grouping import group_positions_and_compute_totals
 
 
 def _leg(

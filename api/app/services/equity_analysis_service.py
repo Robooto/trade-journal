@@ -17,7 +17,7 @@ from app.schemas.charts import (
     VolatilitySnapshot,
     VolatilityTermPoint,
 )
-from app.services.values import fraction_to_percent, to_float
+from app.services.values import fraction_to_percent, tasty_dict, to_float
 
 
 ANALYSIS_PROFILE = """Analyze this single-stock options setup using the supplied data.
@@ -64,12 +64,6 @@ def build_equity_hub_url(symbol: str, as_of_date: str) -> str:
         "eh-model": "synthoi",
     })
     return f"https://dashboard.spotgamma.com/equityhub?{query}"
-
-
-def tasty_dict(value: Any) -> dict[str, Any]:
-    if hasattr(value, "model_dump"):
-        return value.model_dump(by_alias=True, exclude_none=True)
-    return dict(value) if isinstance(value, dict) else {}
 
 
 def normalize_market(raw: Any) -> dict[str, Any]:

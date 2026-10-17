@@ -30,8 +30,7 @@ def test_router_translates_trade_service_exception(monkeypatch):
     def fail(db):
         raise TastytradeFetchError("Failed to fetch accounts: bad accounts")
 
-    monkeypatch.setattr(trades, "acquire_token", lambda db: "FAKE")
-    monkeypatch.setattr(trades, "fetch_accounts", fail)
+    monkeypatch.setattr(trades, "load_positions", fail)
 
     with pytest.raises(HTTPException) as exc_info:
         trades._load_positions_data(db=None)

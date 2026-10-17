@@ -19,15 +19,7 @@ from app.tastytrade_schema import (
     TastyVolatilityMetric,
     TastyWatchlist,
 )
-from app.services.values import fraction_to_percent, to_float
-
-
-def _as_dict(value) -> dict:
-    if hasattr(value, "to_tasty_dict"):
-        return value.to_tasty_dict()
-    if isinstance(value, Mapping):
-        return dict(value)
-    raise TypeError(f"Unsupported broker value: {type(value)!r}")
+from app.services.values import fraction_to_percent, tasty_dict, to_float
 
 
 def _normalize_symbols(symbols: Sequence[str]) -> list[str]:
@@ -64,7 +56,7 @@ def _watchlist_memberships(
 ) -> dict[str, list[WatchlistMembershipV1]]:
     memberships: dict[str, list[WatchlistMembershipV1]] = {}
     for value in watchlists:
-        watchlist = _as_dict(value)
+        watchlist = tasty_dict(value)
         name = str(watchlist.get("name") or "")
         group_name = watchlist.get("group-name")
         for entry in watchlist.get("watchlist-entries", []) or []:
@@ -176,12 +168,12 @@ def build_research_symbol_context(
     watchlist_map = _watchlist_memberships(watchlists)
     market_map = {
         str(item.get("symbol") or "").upper(): item
-        for item in map(_as_dict, market_data)
+        for item in map(tasty_dict, market_data)
         if item.get("symbol")
     }
     volatility_map = {
         str(item.get("symbol") or "").upper(): item
-        for item in map(_as_dict, volatility_metrics)
+        for item in map(tasty_dict, volatility_metrics)
         if item.get("symbol")
     }
     exposure_map = _exposure_by_symbol(holding_snapshot)

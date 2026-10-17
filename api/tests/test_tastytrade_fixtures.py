@@ -3,16 +3,15 @@ from pathlib import Path
 
 from app.schemas.trades import LlmPositionsSummaryResponse, MarketDataSummaryResponse
 from app.services import trades_service
+from app.services.position_grouping import group_positions_and_compute_totals
+from app.services.position_summaries import build_llm_positions_summary, build_market_data_summary
 from app.services.trades_service import (
     apply_balance,
     apply_volatility,
     augment_positions_with_market_data,
-    build_llm_positions_summary,
-    build_market_data_summary,
     collect_positions_and_symbols,
     fetch_accounts,
     fetch_market_and_beta_data,
-    group_positions_and_compute_totals,
 )
 from app.tastytrade_schema import (
     TastyAccount,

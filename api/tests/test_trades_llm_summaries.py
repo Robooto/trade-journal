@@ -5,25 +5,23 @@ from app.schemas.trades import (
     MarketDataSummaryResponse,
     VolatilityDataSummaryResponse,
 )
-from app.services.trades_service import (
-    apply_balance,
-    _buying_power_zone,
-    augment_positions_with_market_data,
+from app.services.position_grouping import buying_power_zone, group_positions_and_compute_totals
+from app.services.position_summaries import (
     build_llm_positions_summary,
     build_market_data_summary,
     build_volatility_data_summary,
-    group_positions_and_compute_totals,
 )
+from app.services.trades_service import apply_balance, augment_positions_with_market_data
 
 
 def test_buying_power_zone_boundaries():
-    assert _buying_power_zone(None) == "unavailable"
-    assert _buying_power_zone(0) == "low"
-    assert _buying_power_zone(19.9) == "low"
-    assert _buying_power_zone(20) == "comfortable"
-    assert _buying_power_zone(40) == "comfortable"
-    assert _buying_power_zone(40.1) == "elevated"
-    assert _buying_power_zone(50) == "elevated"
+    assert buying_power_zone(None) == "unavailable"
+    assert buying_power_zone(0) == "low"
+    assert buying_power_zone(19.9) == "low"
+    assert buying_power_zone(20) == "comfortable"
+    assert buying_power_zone(40) == "comfortable"
+    assert buying_power_zone(40.1) == "elevated"
+    assert buying_power_zone(50) == "elevated"
 
 
 def test_market_data_summary_normalizes_numeric_fields():

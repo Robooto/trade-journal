@@ -22,7 +22,7 @@ from app.services.equity_analysis_service import (
     normalize_volatility,
     render_markdown,
 )
-from app.routers.v1.trades import _load_positions_data
+from app.services.trades_service import load_positions
 
 router = APIRouter(
     prefix="/v1/charts",
@@ -178,7 +178,7 @@ def get_equity_analysis_package(
             warnings.append("Volatility and term-structure data are unavailable.")
 
     try:
-        exposure = find_portfolio_exposure(_load_positions_data(db), symbol)
+        exposure = find_portfolio_exposure(load_positions(db), symbol)
         statuses.append(SourceStatus(source="portfolio_exposure", status="ok"))
     except Exception as exc:
         statuses.append(SourceStatus(

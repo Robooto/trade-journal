@@ -103,7 +103,7 @@ async def test_analysis_package_json_includes_all_source_boundaries(client):
         patch("app.routers.v1.charts.tastytrade.get_active_token", return_value="token"),
         patch("app.routers.v1.charts.tastytrade.fetch_market_data", return_value=market),
         patch("app.routers.v1.charts.tastytrade.fetch_volatility_data", return_value=volatility),
-        patch("app.routers.v1.charts._load_positions_data", return_value=[]),
+        patch("app.routers.v1.charts.load_positions", return_value=[]),
     ):
         response = await client.get(
             "/v1/charts/analysis-package/NVDA"
@@ -139,7 +139,7 @@ async def test_analysis_package_accepts_manual_spotgamma_fields(client):
             "app.routers.v1.charts.tastytrade.get_active_token",
             side_effect=RuntimeError("broker offline"),
         ),
-        patch("app.routers.v1.charts._load_positions_data", return_value=[]),
+        patch("app.routers.v1.charts.load_positions", return_value=[]),
     ):
         response = await client.get(
             "/v1/charts/analysis-package/NVDA"
@@ -170,7 +170,7 @@ async def test_analysis_package_markdown_is_complete_handoff(client):
             side_effect=RuntimeError("broker offline"),
         ),
         patch(
-            "app.routers.v1.charts._load_positions_data",
+            "app.routers.v1.charts.load_positions",
             side_effect=RuntimeError("positions offline"),
         ),
     ):
