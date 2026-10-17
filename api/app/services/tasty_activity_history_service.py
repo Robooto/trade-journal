@@ -3,8 +3,9 @@ from __future__ import annotations
 import logging
 import re
 from collections import defaultdict, deque
-from datetime import date, datetime, timezone
-from typing import Any, Callable
+from datetime import date, datetime, UTC
+from typing import Any
+from collections.abc import Callable
 
 from sqlalchemy.orm import Session
 
@@ -185,7 +186,7 @@ def _broker_fill_orders(
             "source": "tastytrade_history",
             "account_number": account_number,
             "symbol": next((str(row.underlying_symbol) for row in fill_rows if row.underlying_symbol), ""),
-            "fill_ts": min(occurred) if occurred else datetime.now(timezone.utc),
+            "fill_ts": min(occurred) if occurred else datetime.now(UTC),
             "order_id": order_id,
             "price": round(price, 6),
             "side": side,
@@ -257,6 +258,6 @@ def _timestamp(value: Any) -> datetime | None:
         return None
     try:
         parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-        return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed
+        return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed
     except ValueError:
         return None

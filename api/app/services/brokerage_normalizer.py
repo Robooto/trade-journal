@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from typing import Iterable, Mapping, Sequence
+from datetime import datetime, UTC
+from collections.abc import Iterable, Mapping, Sequence
 
 from app.schemas.brokerage import (
     AccountHoldingSnapshotV1,
@@ -45,7 +45,7 @@ def _datetime(value) -> datetime | None:
         except ValueError:
             return None
     if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=timezone.utc)
+        return parsed.replace(tzinfo=UTC)
     return parsed
 
 

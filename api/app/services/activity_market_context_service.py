@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from datetime import date, datetime, time, timezone
+from datetime import date, datetime, time, UTC
 from zoneinfo import ZoneInfo
 
 from app.schemas.brokerage import (
@@ -124,7 +124,7 @@ def _session_bars(
     for bar in response.bars:
         observed = datetime.fromtimestamp(
             bar.time / 1000,
-            tz=timezone.utc,
+            tz=UTC,
         ).astimezone(NEW_YORK)
         if (
             observed.date() == session_date
@@ -165,7 +165,7 @@ def _symbol_context(
     )
     nearest_at = datetime.fromtimestamp(
         nearest.time / 1000,
-        tz=timezone.utc,
+        tz=UTC,
     )
     difference_minutes = abs(
         (nearest_at - occurred_utc).total_seconds()
@@ -226,8 +226,8 @@ def _source_symbol(symbol: str) -> str:
 
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
-        return value.replace(tzinfo=timezone.utc)
-    return value.astimezone(timezone.utc)
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
 
 
 def _percent_change(value: float, base: float) -> float | None:

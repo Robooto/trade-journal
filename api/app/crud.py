@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import List
 from uuid import UUID
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
@@ -12,7 +11,7 @@ from app.schemas.journal import Event, JournalEntryCreate, JournalEntryUpdate
 from app.schemas.pivots import PivotLevelCreate
 
 
-def _normalize_tickers(tickers: List[str] | None) -> list[str]:
+def _normalize_tickers(tickers: list[str] | None) -> list[str]:
     return list(dict.fromkeys(
         ticker.strip().upper()
         for ticker in (tickers or [])
@@ -48,7 +47,7 @@ def get_entries(
     limit: int = 20,
     q: str | None = None,
     ticker: str | None = None,
-) -> List[JournalEntryORM]:
+) -> list[JournalEntryORM]:
     """Return matching journal entries sorted newest-first by date."""
     return (
         _entries_query(db, q=q, ticker=ticker)
@@ -258,7 +257,7 @@ def get_recent_pivot_levels(
     *,
     limit: int = 7,
     index: str = "SPX",
-) -> List[PivotLevelORM]:
+) -> list[PivotLevelORM]:
     symbol = _normalize_index(index)
     limit = max(1, limit)
     return (

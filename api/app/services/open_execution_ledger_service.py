@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 from hashlib import sha256
 
 from app import tastytrade
@@ -28,7 +28,7 @@ def load_open_execution_groups(
     fetched_at: datetime | None = None,
     cache: InMemoryCache | None = None,
 ) -> OpenExecutionGroupCollectionV1:
-    fetched_at = fetched_at or datetime.now(timezone.utc)
+    fetched_at = fetched_at or datetime.now(UTC)
     cache = cache or get_cache()
     cache_key = (
         f"open-executions:{account_number}:{start_date.isoformat()}:"
@@ -175,6 +175,6 @@ def _occurred_at(transaction) -> datetime:
         or transaction.transaction_date
     )
     parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import Session
@@ -23,7 +23,7 @@ def observation(
     observed_at = datetime.combine(
         observation_date,
         datetime.min.time(),
-        tzinfo=timezone.utc,
+        tzinfo=UTC,
     )
     return ResearchMetricObservationV1(
         symbol=symbol,

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, UTC
 from functools import lru_cache
 from zoneinfo import ZoneInfo
 
@@ -102,7 +102,7 @@ def previous_us_equity_market_session(
     as_of: datetime | date | None = None,
 ) -> date:
     if as_of is None:
-        local_date = datetime.now(timezone.utc).astimezone(EASTERN).date()
+        local_date = datetime.now(UTC).astimezone(EASTERN).date()
     elif isinstance(as_of, datetime):
         if as_of.tzinfo is None:
             raise ValueError("as_of datetime must include a timezone")
@@ -129,7 +129,7 @@ def latest_completed_us_equity_market_session(
     Morning review therefore still shows the prior session, while after the close the
     session that just ended is shown instead of the one before it.
     """
-    now = as_of or datetime.now(timezone.utc)
+    now = as_of or datetime.now(UTC)
     if now.tzinfo is None:
         raise ValueError("as_of datetime must include a timezone")
     local = now.astimezone(EASTERN)

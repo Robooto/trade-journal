@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Any, Optional
+from typing import Any
 
 
 def _get(position: dict[str, Any], *keys: str) -> Any:
@@ -10,7 +10,7 @@ def _get(position: dict[str, Any], *keys: str) -> Any:
     return None
 
 
-def _float_value(value: Any) -> Optional[float]:
+def _float_value(value: Any) -> float | None:
     if value is None:
         return None
     try:

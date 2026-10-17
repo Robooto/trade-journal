@@ -1,8 +1,8 @@
 import logging
 import re
 from collections import defaultdict
-from typing import Any, Dict, List, Tuple, Set, Optional
-from datetime import date, datetime, timezone
+from typing import Any
+from datetime import date, datetime, UTC
 
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -18,7 +18,7 @@ def _as_tasty_dict(value: Any, *, by_alias: bool = True) -> dict:
     return dict(value)
 
 
-def _optional_float(value: Any) -> Optional[float]:
+def _optional_float(value: Any) -> float | None:
     if value is None:
         return None
     try:
@@ -40,7 +40,7 @@ def _quantity_multiplier(position: dict) -> tuple[int, int]:
     return quantity, multiplier
 
 
-def _direction_sign(quantity_direction: Optional[str]) -> int:
+def _direction_sign(quantity_direction: str | None) -> int:
     return -1 if (quantity_direction or "").strip().lower() == "short" else 1
 
 
@@ -48,7 +48,7 @@ def _brokerage_greek_total(value: float) -> int:
     return int(round(value))
 
 
-def _optional_int(value: Any) -> Optional[int]:
+def _optional_int(value: Any) -> int | None:
     if value is None:
         return None
     try:
@@ -57,7 +57,7 @@ def _optional_int(value: Any) -> Optional[int]:
         return None
 
 
-def _numeric_field(data: dict, *keys: str) -> Optional[float]:
+def _numeric_field(data: dict, *keys: str) -> float | None:
     for key in keys:
         value = _optional_float(data.get(key))
         if value is not None:
@@ -93,7 +93,7 @@ def extract_expiration_date(expires_at: str) -> str:
         return expires_at
 
 
-def days_to_expiration(expires_at: str, today: Optional[date] = None) -> Optional[int]:
+def days_to_expiration(expires_at: str, today: date | None = None) -> int | None:
     expiration_date = extract_expiration_date(expires_at)
     if not expiration_date:
         return None
@@ -105,7 +105,7 @@ def days_to_expiration(expires_at: str, today: Optional[date] = None) -> Optiona
     return (expires_on - today).days
 
 
-def _signed_credit_value(position: dict, price: Optional[float]) -> Optional[float]:
+def _signed_credit_value(position: dict, price: float | None) -> float | None:
     if price is None:
         return None
     quantity, multiplier = _quantity_multiplier(position)
@@ -113,7 +113,7 @@ def _signed_credit_value(position: dict, price: Optional[float]) -> Optional[flo
     return value if (position.get("quantity-direction") or "").strip().lower() == "short" else -value
 
 
-def _position_money_fields(position: dict) -> dict[str, Optional[float]]:
+def _position_money_fields(position: dict) -> dict[str, float | None]:
     avg_open = _numeric_field(position, "average-open-price")
     mark = _numeric_field(position.get("market_data", {}), "mark")
     quantity, multiplier = _quantity_multiplier(position)
@@ -133,7 +133,7 @@ def _position_money_fields(position: dict) -> dict[str, Optional[float]]:
     }
 
 
-def _assignment_exposure(position: dict) -> Optional[float]:
+def _assignment_exposure(position: dict) -> float | None:
     if (
         position.get("option-type") != "P"
         or (position.get("quantity-direction") or "").strip().lower() != "short"
@@ -146,7 +146,7 @@ def _assignment_exposure(position: dict) -> Optional[float]:
     return round(strike * quantity * multiplier, 2)
 
 
-def _spread_percent(position: dict) -> Optional[float]:
+def _spread_percent(position: dict) -> float | None:
     market_data = position.get("market_data", {})
     bid = _numeric_field(market_data, "bid")
     ask = _numeric_field(market_data, "ask")
@@ -159,12 +159,12 @@ def _spread_percent(position: dict) -> Optional[float]:
 def _management_flags(
     *,
     strategy_label: str,
-    days_to_nearest_expiration: Optional[int],
-    percent_credit_captured: Optional[float],
-    beta_delta_shares: Optional[float],
-    theta_dollars_per_day: Optional[float],
-    vega_dollars_per_vol_point: Optional[float],
-    assignment_exposure_dollars: Optional[float],
+    days_to_nearest_expiration: int | None,
+    percent_credit_captured: float | None,
+    beta_delta_shares: float | None,
+    theta_dollars_per_day: float | None,
+    vega_dollars_per_vol_point: float | None,
+    assignment_exposure_dollars: float | None,
     positions: list[dict],
 ) -> list[str]:
     flags = []
@@ -191,7 +191,7 @@ def _management_flags(
     return flags
 
 
-def parse_equity_option_symbol(symbol: str) -> Tuple[Optional[float], Optional[str]]:
+def parse_equity_option_symbol(symbol: str) -> tuple[float | None, str | None]:
     """
     Parse OCC-formatted equity option symbol to extract strike and option type.
     
@@ -230,7 +230,7 @@ def acquire_token(db: Session) -> str:
         raise TastytradeAuthError(f"Authentication to Tastytrade failed: {e}") from e
 
 
-def fetch_accounts(token: str) -> List[dict]:
+def fetch_accounts(token: str) -> list[dict]:
     """Fetch the list of accounts for the authenticated user."""
     try:
         return [
@@ -243,14 +243,14 @@ def fetch_accounts(token: str) -> List[dict]:
 
 
 def collect_positions_and_symbols(
-    token: str, accounts: List[dict]
-) -> Tuple[List[dict], Set[str], Set[str], Set[str], Set[str]]:
+    token: str, accounts: list[dict]
+) -> tuple[list[dict], set[str], set[str], set[str], set[str]]:
     """Fetch positions per account and gather unique symbols."""
-    positions_by_account: List[dict] = []
-    equity_option_syms: Set[str] = set()
-    future_option_syms: Set[str] = set()
-    equity_underlyings: Set[str] = set()
-    future_underlyings: Set[str] = set()
+    positions_by_account: list[dict] = []
+    equity_option_syms: set[str] = set()
+    future_option_syms: set[str] = set()
+    equity_underlyings: set[str] = set()
+    future_underlyings: set[str] = set()
 
     for acct in accounts:
         acct_num = acct.get("account_number")
@@ -270,7 +270,7 @@ def collect_positions_and_symbols(
         if not filtered:
             continue
 
-        augmented: List[dict] = []
+        augmented: list[dict] = []
         for pos in filtered:
             p = pos.copy()
             symbol = p.get("symbol")
@@ -305,15 +305,15 @@ def collect_positions_and_symbols(
 
 def fetch_market_and_beta_data(
     token: str,
-    equity_option_syms: Set[str],
-    future_option_syms: Set[str],
-    equity_underlyings: Set[str],
-    future_underlyings: Set[str],
-) -> Tuple[Dict[str, dict], Dict[str, float]]:
+    equity_option_syms: set[str],
+    future_option_syms: set[str],
+    equity_underlyings: set[str],
+    future_underlyings: set[str],
+) -> tuple[dict[str, dict], dict[str, float]]:
     """Retrieve option market data and underlying beta values in one request."""
 
-    market_map: Dict[str, dict] = {}
-    beta_map: Dict[str, float] = {}
+    market_map: dict[str, dict] = {}
+    beta_map: dict[str, float] = {}
 
     symbols_present = (
         equity_option_syms
@@ -354,7 +354,7 @@ def fetch_market_and_beta_data(
 
 
 def augment_positions_with_market_data(
-    positions_by_account: List[dict], market_map: Dict[str, dict], beta_map: Dict[str, float]
+    positions_by_account: list[dict], market_map: dict[str, dict], beta_map: dict[str, float]
 ) -> None:
     """Attach market data, compute P/L and beta for each position."""
     for acct in positions_by_account:
@@ -516,13 +516,13 @@ def _pair_unambiguous_cross_expiration_legs(
 def _position_strategy_groups(
     positions: list[dict],
 ) -> list[tuple[tuple[str, str], list[dict]]]:
-    by_underlying: Dict[str, list[dict]] = defaultdict(list)
+    by_underlying: dict[str, list[dict]] = defaultdict(list)
     for position in positions:
         by_underlying[position.get("underlying-symbol", "") or ""].append(position)
 
     result: list[tuple[tuple[str, str], list[dict]]] = []
     for underlying, underlying_positions in by_underlying.items():
-        explicit: Dict[str, list[dict]] = defaultdict(list)
+        explicit: dict[str, list[dict]] = defaultdict(list)
         remaining = []
         for position in underlying_positions:
             group_fill_id = _position_group_fill_id(position)
@@ -552,7 +552,7 @@ def _position_strategy_groups(
             for index, legs in enumerate(diagonals)
         )
 
-        by_expiration: Dict[str, list[dict]] = defaultdict(list)
+        by_expiration: dict[str, list[dict]] = defaultdict(list)
         for position in remaining:
             by_expiration[
                 extract_expiration_date(position.get("expires-at", "") or "")
@@ -565,10 +565,10 @@ def _position_strategy_groups(
 
 
 def group_positions_and_compute_totals(
-    positions_by_account: List[dict], beta_map: Dict[str, float]
-) -> List[dict]:
+    positions_by_account: list[dict], beta_map: dict[str, float]
+) -> list[dict]:
     """Group positions into explicit or safely inferred option strategies."""
-    accounts_data: List[dict] = []
+    accounts_data: list[dict] = []
 
     for acct in positions_by_account:
         acct_num = acct["account_number"]
@@ -777,15 +777,15 @@ def _root_symbol(sym: str) -> str:
     return sym
 
 
-def apply_volatility(token: str, accounts_data: List[dict]) -> None:
+def apply_volatility(token: str, accounts_data: list[dict]) -> None:
     """Augment groups with implied volatility information."""
 
     for acct in accounts_data:
         groups_list = acct["groups"]
 
         unique_roots = sorted({_root_symbol(g["underlying_symbol"]) for g in groups_list if g["underlying_symbol"]})
-        vol_rank_map: Dict[str, float] = {}
-        vol_change_map: Dict[str, float] = {}
+        vol_rank_map: dict[str, float] = {}
+        vol_change_map: dict[str, float] = {}
         if unique_roots:
             try:
                 vol_data = tastytrade.fetch_volatility_data(token, unique_roots)
@@ -814,7 +814,7 @@ def apply_volatility(token: str, accounts_data: List[dict]) -> None:
             g["iv_5d_change"] = vol_change_map.get(root)
 
 
-def _buying_power_zone(utilization_percent: Optional[float]) -> str:
+def _buying_power_zone(utilization_percent: float | None) -> str:
     """Return the app's review zone; these thresholds are not brokerage rules."""
     if utilization_percent is None:
         return "unavailable"
@@ -825,7 +825,7 @@ def _buying_power_zone(utilization_percent: Optional[float]) -> str:
     return "elevated"
 
 
-def _underlying_concentrations(groups: List[dict]) -> List[dict]:
+def _underlying_concentrations(groups: list[dict]) -> list[dict]:
     """Rank underlying Greek exposure by its share of absolute beta-delta."""
     by_underlying: dict[str, dict[str, float | int | str]] = {}
     for group in groups:
@@ -885,12 +885,12 @@ def _underlying_concentrations(groups: List[dict]) -> List[dict]:
     return sorted(results, key=lambda item: abs(item["beta_delta_shares"]), reverse=True)
 
 
-def apply_balance(token: str, accounts_data: List[dict]) -> None:
+def apply_balance(token: str, accounts_data: list[dict]) -> None:
     """Attach normalized balance, utilization, and Greek risk context to each account."""
 
     for acct in accounts_data:
         acct_num = acct["account_number"]
-        fetched_at = datetime.now(timezone.utc).isoformat()
+        fetched_at = datetime.now(UTC).isoformat()
         warnings: list[str] = []
         values = {
             "net_liquidating_value_dollars": None,
@@ -940,7 +940,7 @@ def apply_balance(token: str, accounts_data: List[dict]) -> None:
         })
 
 
-def build_market_data_summary(items: List[Any], requested_symbols: List[str]) -> dict:
+def build_market_data_summary(items: list[Any], requested_symbols: list[str]) -> dict:
     """Return a compact, numeric market data payload suitable for LLM context."""
     normalized = []
     seen_symbols = set()
@@ -982,7 +982,7 @@ def build_market_data_summary(items: List[Any], requested_symbols: List[str]) ->
     }
 
 
-def build_volatility_data_summary(items: List[Any], requested_symbols: List[str]) -> dict:
+def build_volatility_data_summary(items: list[Any], requested_symbols: list[str]) -> dict:
     """Return compact volatility data with percentages already scaled for humans."""
     normalized = []
     seen_symbols = set()
@@ -1010,7 +1010,7 @@ def build_volatility_data_summary(items: List[Any], requested_symbols: List[str]
     }
 
 
-def build_llm_positions_summary(accounts_data: List[dict]) -> dict:
+def build_llm_positions_summary(accounts_data: list[dict]) -> dict:
     """Strip broker-specific nesting from grouped positions for LLM consumers."""
     accounts = []
     portfolio = {

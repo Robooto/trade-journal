@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 
 from app.services.cache_service import InMemoryCache
 from app.services.open_execution_ledger_service import load_open_execution_groups
@@ -55,7 +55,7 @@ def test_order_id_groups_four_opening_legs_when_group_fill_is_absent(monkeypatch
         "FAKE",
         date(2024, 7, 17),
         date(2026, 7, 17),
-        fetched_at=datetime(2026, 7, 17, tzinfo=timezone.utc),
+        fetched_at=datetime(2026, 7, 17, tzinfo=UTC),
         cache=cache,
     )
     cached = load_open_execution_groups(

@@ -1,4 +1,3 @@
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -33,7 +32,7 @@ async def get_latest_pivot_level(
     return latest
 
 
-@router.get("/history", response_model=List[PivotLevel])
+@router.get("/history", response_model=list[PivotLevel])
 async def get_pivot_level_history(
     limit: int = Query(7, ge=1, le=30),
     index: str = Query("SPX"),

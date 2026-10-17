@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Literal, Optional
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import PlainTextResponse
@@ -34,8 +34,8 @@ router = APIRouter(
 async def get_symbol_history(
     symbol: str,
     resolution: str = Query(default="1d", description="Chart resolution (1d, 1h, 5m, etc.)"),
-    from_ts: Optional[int] = Query(default=None, description="Start timestamp (Unix)"),
-    to_ts: Optional[int] = Query(default=None, description="End timestamp (Unix)")
+    from_ts: int | None = Query(default=None, description="Start timestamp (Unix)"),
+    to_ts: int | None = Query(default=None, description="End timestamp (Unix)")
 ) -> ChartResponse:
     """
     Get historical chart data for a symbol from Yahoo Finance API.
@@ -63,17 +63,17 @@ async def get_symbol_history(
 def get_equity_analysis_package(
     symbol: str,
     resolution: str = Query(default="1d"),
-    from_ts: Optional[int] = Query(default=None),
-    to_ts: Optional[int] = Query(default=None),
+    from_ts: int | None = Query(default=None),
+    to_ts: int | None = Query(default=None),
     format: Literal["json", "markdown"] = Query(default="json"),
-    sg_spot: Optional[float] = Query(default=None),
-    sg_lvp: Optional[float] = Query(default=None),
-    sg_hvp: Optional[float] = Query(default=None),
-    sg_call_gamma: Optional[float] = Query(default=None),
-    sg_put_gamma: Optional[float] = Query(default=None),
-    sg_top_gamma_expiration: Optional[str] = Query(default=None),
-    sg_gamma_strike: Optional[list[float]] = Query(default=None),
-    sg_notes: Optional[str] = Query(default=None),
+    sg_spot: float | None = Query(default=None),
+    sg_lvp: float | None = Query(default=None),
+    sg_hvp: float | None = Query(default=None),
+    sg_call_gamma: float | None = Query(default=None),
+    sg_put_gamma: float | None = Query(default=None),
+    sg_top_gamma_expiration: str | None = Query(default=None),
+    sg_gamma_strike: list[float] | None = Query(default=None),
+    sg_notes: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
     """Build one versioned, LLM-friendly package for single-stock analysis."""

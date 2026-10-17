@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 
 from app.schemas.brokerage import (
     AssetClass,

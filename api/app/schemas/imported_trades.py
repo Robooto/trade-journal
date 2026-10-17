@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -38,7 +38,7 @@ class ImportedSpreadTradeV1(BaseModel):
     @field_validator("entry_ts", "exit_ts")
     @classmethod
     def ensure_utc_offset(cls, value: datetime) -> datetime:
-        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value
 
     model_config = {"from_attributes": True}
 

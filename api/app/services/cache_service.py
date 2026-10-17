@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Optional, Any
+from typing import Any
 from dataclasses import dataclass
 from threading import Lock
 
@@ -21,10 +21,10 @@ class InMemoryCache:
     """
     
     def __init__(self):
-        self._cache: Dict[str, CacheEntry] = {}
+        self._cache: dict[str, CacheEntry] = {}
         self._lock = Lock()
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Get a value from cache if it exists and hasn't expired.
         
@@ -105,7 +105,7 @@ class InMemoryCache:
 
 
 # Global cache instance
-_cache_instance: Optional[InMemoryCache] = None
+_cache_instance: InMemoryCache | None = None
 
 
 def get_cache() -> InMemoryCache:

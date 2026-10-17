@@ -2,7 +2,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 
 # Sample yfinance DataFrame response
@@ -111,11 +111,11 @@ async def test_get_chart_history_default_timestamps(client):
             call_kwargs = mock_ticker.history.call_args[1]
             expected_end = datetime.fromtimestamp(
                 int(mock_now.timestamp()),
-                tz=timezone.utc,
+                tz=UTC,
             )
             expected_start = datetime.fromtimestamp(
                 int((mock_now - timedelta(days=30)).timestamp()),
-                tz=timezone.utc,
+                tz=UTC,
             )
 
             assert call_kwargs["end"] == expected_end
@@ -146,10 +146,10 @@ async def test_get_chart_history_preserves_epoch_as_timezone_aware_utc(client):
             assert response.status_code == 200
             call_kwargs = mock_ticker.history.call_args.kwargs
             assert call_kwargs["start"] == datetime.fromtimestamp(
-                from_ts, tz=timezone.utc,
+                from_ts, tz=UTC,
             )
             assert call_kwargs["end"] == datetime.fromtimestamp(
-                to_ts, tz=timezone.utc,
+                to_ts, tz=UTC,
             )
 
 

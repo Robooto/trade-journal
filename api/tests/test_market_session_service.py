@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 
 import pytest
 
@@ -33,7 +33,7 @@ def test_previous_session_handles_weekends_holidays_and_closures(
 
 def test_datetime_uses_new_york_calendar_date():
     assert previous_us_equity_market_session(
-        datetime(2026, 7, 16, 3, 0, tzinfo=timezone.utc)
+        datetime(2026, 7, 16, 3, 0, tzinfo=UTC)
     ) == date(2026, 7, 14)
 
 

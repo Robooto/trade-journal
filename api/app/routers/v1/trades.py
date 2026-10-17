@@ -3,7 +3,6 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from typing import List
 
 from app.schemas.trades import (
     BracketOrderRequest,
@@ -161,10 +160,10 @@ def _get_tastytrade_token_or_403(db: Session) -> str:
 
 def _fetch_market_data_or_500(
     token: str,
-    equity: List[str],
-    equity_option: List[str],
-    future: List[str],
-    future_option: List[str],
+    equity: list[str],
+    equity_option: list[str],
+    future: list[str],
+    future_option: list[str],
 ):
     try:
         return tastytrade.fetch_market_data(token, equity, equity_option, future, future_option)
@@ -173,7 +172,7 @@ def _fetch_market_data_or_500(
         raise HTTPException(status_code=500, detail=f"Failed to fetch market data: {e}") from e
 
 
-def _fetch_volatility_data_or_500(token: str, symbols: List[str]):
+def _fetch_volatility_data_or_500(token: str, symbols: list[str]):
     try:
         return tastytrade.fetch_volatility_data(token, symbols)
     except Exception as e:
@@ -223,8 +222,8 @@ def get_positions_summary(db: Session = Depends(get_db)):
     """
     return build_llm_positions_summary(_load_positions_data(db))
 
-@router.post("/market-data",summary="Get market data for symbols", response_model=List[dict])
-def get_market_data(equity: List[str], equity_option: List[str], future: List[str], future_option: List[str], db: Session = Depends(get_db)):
+@router.post("/market-data",summary="Get market data for symbols", response_model=list[dict])
+def get_market_data(equity: list[str], equity_option: list[str], future: list[str], future_option: list[str], db: Session = Depends(get_db)):
     """
     Fetch market data for the given symbols from the Tastytrade API.
     Returns a list of market data dictionaries.
@@ -255,8 +254,8 @@ def get_market_data_summary(req: MarketDataRequest, db: Session = Depends(get_db
     requested_symbols = req.equity + req.equity_option + req.future + req.future_option
     return build_market_data_summary(market_data, requested_symbols)
 
-@router.post("/volatility-data",summary="Get volatility data for symbols", response_model=List[dict])
-def get_volatility_data(symbols: List[str], db: Session = Depends(get_db)):
+@router.post("/volatility-data",summary="Get volatility data for symbols", response_model=list[dict])
+def get_volatility_data(symbols: list[str], db: Session = Depends(get_db)):
     """
     Fetch volatility data for the given symbols from the Tastytrade API.
     Returns a list of volatility data dictionaries.

@@ -1,6 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import List, Optional
+from datetime import datetime, timedelta, UTC
 
 import pandas as pd
 import yfinance as yf
@@ -15,8 +14,8 @@ logger = logging.getLogger(__name__)
 def get_chart_history(
     symbol: str,
     resolution: str = "1d",
-    from_ts: Optional[int] = None,
-    to_ts: Optional[int] = None
+    from_ts: int | None = None,
+    to_ts: int | None = None
 ) -> ChartResponse:
     """
     Fetch historical chart data for a symbol using yfinance library.
@@ -52,8 +51,8 @@ def get_chart_history(
     
     try:
         # Convert timestamps to datetime objects for yfinance
-        start_date = datetime.fromtimestamp(from_ts, tz=timezone.utc)
-        end_date = datetime.fromtimestamp(to_ts, tz=timezone.utc)
+        start_date = datetime.fromtimestamp(from_ts, tz=UTC)
+        end_date = datetime.fromtimestamp(to_ts, tz=UTC)
         
         # Map resolution to yfinance interval format
         interval_map = {
@@ -122,7 +121,7 @@ def get_chart_history(
             ) from e
 
 
-def _build_bars_from_dataframe(df) -> List[Bar]:
+def _build_bars_from_dataframe(df) -> list[Bar]:
     """
     Build list of Bar objects from yfinance pandas DataFrame.
     

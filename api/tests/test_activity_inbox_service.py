@@ -1,5 +1,5 @@
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 from pathlib import Path
 
 from app import tastytrade
@@ -13,7 +13,7 @@ from app.tastytrade_schema import TastyAccount, TastyOrder, TastyTransaction
 
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "tastytrade"
-FETCHED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc)
+FETCHED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=UTC)
 SESSION_DATE = date(2026, 7, 14)
 
 

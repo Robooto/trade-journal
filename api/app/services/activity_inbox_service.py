@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Callable, Sequence
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 
 from app import tastytrade
 from app.schemas.brokerage import (
@@ -27,7 +27,7 @@ def fetch_activity_inbox(
     *,
     fetched_at: datetime | None = None,
 ) -> BrokerActivityInboxV1:
-    fetched_at = fetched_at or datetime.now(timezone.utc)
+    fetched_at = fetched_at or datetime.now(UTC)
     date_text = session_date.isoformat()
     try:
         accounts = tastytrade.fetch_accounts(token)

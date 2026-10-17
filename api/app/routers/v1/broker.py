@@ -1,5 +1,5 @@
 import logging
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, UTC
 from zoneinfo import ZoneInfo
 
 import requests
@@ -236,7 +236,7 @@ def get_watchlist_research(db: Session = Depends(get_db)):
             for symbol in summary.symbols
         )
     )
-    generated_at = datetime.now(timezone.utc)
+    generated_at = datetime.now(UTC)
     if not symbols:
         return BrokerWatchlistResearchV1(
             generated_at=generated_at,
@@ -311,7 +311,7 @@ def add_watchlist_symbol(
 def get_nested_option_chain(symbol: str, db: Session = Depends(get_db)):
     token = _token_or_403(db)
     normalized = symbol.strip().upper()
-    generated_at = datetime.now(timezone.utc)
+    generated_at = datetime.now(UTC)
     try:
         expirations = tastytrade.fetch_nested_option_chain(token, normalized)
     except ValueError as exc:
@@ -340,7 +340,7 @@ def create_option_quote_snapshot(request: OptionQuoteSnapshotRequestV1, db: Sess
     symbols = list(dict.fromkeys(symbol.strip() for symbol in request.option_symbols if symbol.strip()))
     if not symbols:
         raise HTTPException(status_code=422, detail="At least one option symbol is required.")
-    generated_at = datetime.now(timezone.utc)
+    generated_at = datetime.now(UTC)
     try:
         market_rows = tastytrade.fetch_market_data(token, [], symbols, [], [])
     except requests.RequestException as exc:
@@ -397,7 +397,7 @@ def get_market_metrics(symbols: str = Query(..., min_length=1, max_length=200), 
     requested = tuple(dict.fromkeys(s.strip().upper() for s in symbols.split(",") if s.strip()))
     if not requested or len(requested) > 20:
         raise HTTPException(status_code=422, detail="Request between one and twenty symbols.")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cached = _MARKET_METRICS_CACHE.get(requested)
     if cached and now - cached[0] < _MARKET_METRICS_TTL:
         return cached[1].model_copy(update={"cached": True})

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 from app import tastytrade
 from app.schemas.brokerage import HoldingSnapshotV1
@@ -12,7 +12,7 @@ def fetch_holding_snapshot(
     *,
     fetched_at: datetime | None = None,
 ) -> HoldingSnapshotV1:
-    fetched_at = fetched_at or datetime.now(timezone.utc)
+    fetched_at = fetched_at or datetime.now(UTC)
     try:
         accounts = tastytrade.fetch_accounts(token)
     except Exception as exc:

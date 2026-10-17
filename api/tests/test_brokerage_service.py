@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 
 import pytest
 
@@ -9,7 +9,7 @@ from app.services.trades_errors import TastytradeFetchError
 from app.tastytrade_schema import TastyAccount, TastyPosition
 
 
-FETCHED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc)
+FETCHED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=UTC)
 
 
 def accounts():

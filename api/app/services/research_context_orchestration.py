@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
@@ -149,7 +149,7 @@ def fetch_research_symbol_context(
     fetched_at: datetime | None = None,
     watchlists_override: list | None = None,
 ) -> ResearchSymbolContextV1:
-    fetched_at = fetched_at or datetime.now(timezone.utc)
+    fetched_at = fetched_at or datetime.now(UTC)
     requested = _symbols(symbols)
     if not requested:
         raise ValueError("At least one non-empty symbol is required.")

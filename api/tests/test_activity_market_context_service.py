@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 from zoneinfo import ZoneInfo
 
 from app.schemas.brokerage import (
@@ -42,7 +42,7 @@ def event(symbol: str = "AAPL") -> BrokerActivityReviewEventV1:
             15,
             18,
             2,
-            tzinfo=timezone.utc,
+            tzinfo=UTC,
         ),
         underlying_symbol=symbol,
         grouping_status="explicit",
@@ -113,7 +113,7 @@ def test_entry_time_context_uses_nearest_bar_and_session_facts():
 
     inbox = BrokerActivityInboxV1(
         session_date=SESSION_DATE,
-        generated_at=datetime.now(timezone.utc),
+        generated_at=datetime.now(UTC),
         events=[event()],
         source_status=[],
     )
@@ -148,7 +148,7 @@ def test_entry_time_context_keeps_activity_when_chart_is_unavailable():
 
     inbox = BrokerActivityInboxV1(
         session_date=SESSION_DATE,
-        generated_at=datetime.now(timezone.utc),
+        generated_at=datetime.now(UTC),
         events=[event()],
         source_status=[],
     )

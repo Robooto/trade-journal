@@ -1,9 +1,9 @@
 import os
 import requests
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, UTC
 from sqlalchemy.orm import Session
-from typing import Generic, Tuple, List, TypeVar
+from typing import Generic, TypeVar
 from urllib.parse import quote
 
 from app import crud
@@ -50,7 +50,7 @@ def _request_json(method: str, path: str, **kwargs) -> dict:
     response.raise_for_status()
     return response.json()
 
-def login_to_tastytrade() -> Tuple[str, datetime]:
+def login_to_tastytrade() -> tuple[str, datetime]:
     """
     Authenticate with the Tastytrade API and get an OAuth access token.
     Returns a tuple of (auth_header_value, expiration_datetime).
@@ -82,7 +82,7 @@ def login_to_tastytrade() -> Tuple[str, datetime]:
     except (TypeError, ValueError):
         expires_in = 0
     buffer_seconds = 30  # refresh a little early to avoid using an expired token
-    exp_dt = datetime.now(timezone.utc) + timedelta(seconds=max(expires_in - buffer_seconds, 0))
+    exp_dt = datetime.now(UTC) + timedelta(seconds=max(expires_in - buffer_seconds, 0))
     bearer_token = f"{token_type} {access_token}".strip()
     return bearer_token, exp_dt
 
@@ -94,7 +94,7 @@ def get_active_token(db: Session) -> str:
     token_entry = crud.get_session_token(db)
 
     if token_entry:
-        if token_entry.expiration.replace(tzinfo=timezone.utc) > datetime.now(timezone.utc):
+        if token_entry.expiration.replace(tzinfo=UTC) > datetime.now(UTC):
             return token_entry.token
     # If no token found or it's expired, log in again to get a new token
     new_token, new_expiration = login_to_tastytrade()
@@ -105,7 +105,7 @@ def _items_from_response(data: dict) -> list[dict]:
     return data.get("data", {}).get("items", [])
 
 
-def fetch_accounts(token: str) -> List[TastyAccount]:
+def fetch_accounts(token: str) -> list[TastyAccount]:
     """
     Fetch all accounts for the logged-in user via the Tastytrade API.
 
@@ -119,7 +119,7 @@ def fetch_accounts(token: str) -> List[TastyAccount]:
         accounts.append(TastyAccount.model_validate(acct))
     return accounts
 
-def fetch_positions(token: str, account_number: str) -> List[TastyPosition]:
+def fetch_positions(token: str, account_number: str) -> list[TastyPosition]:
     """
     Retrieve all positions for a given account from the Tastytrade API.
     Returns a list of position dictionaries for the specified account.
@@ -142,7 +142,7 @@ def fetch_nested_option_chain(token: str, symbol: str) -> list[dict]:
     )
     return list(_items_from_response(data))
 
-def fetch_market_data(token: str, equity: List[str], equity_option: List[str], future: List[str], future_option: List[str]) -> List[TastyMarketData]:
+def fetch_market_data(token: str, equity: list[str], equity_option: list[str], future: list[str], future_option: list[str]) -> list[TastyMarketData]:
     """
     Fetch market data for the given symbols from the Tastytrade API.
     Returns a list of market data dictionaries.
@@ -161,7 +161,7 @@ def fetch_market_data(token: str, equity: List[str], equity_option: List[str], f
     )
     return [TastyMarketData.model_validate(item) for item in _items_from_response(data)]
 
-def fetch_volatility_data(token: str, symbols: List[str]) -> List[TastyVolatilityMetric]:
+def fetch_volatility_data(token: str, symbols: list[str]) -> list[TastyVolatilityMetric]:
     """
     Fetch volatility data for the given symbols from the Tastytrade API.
     Returns a list of volatility data dictionaries.
@@ -271,7 +271,7 @@ def _page_from_response(
     )
 
 
-def fetch_watchlists(token: str) -> List[TastyWatchlist]:
+def fetch_watchlists(token: str) -> list[TastyWatchlist]:
     data = _request_json("GET", "/watchlists", headers=_headers(token))
     return [
         TastyWatchlist.model_validate(item)
@@ -411,7 +411,7 @@ def fetch_historical_earnings(
     *,
     start_date: str,
     end_date: str,
-) -> List[TastyEarningsReport]:
+) -> list[TastyEarningsReport]:
     _validate_page_window(
         start_date,
         end_date,

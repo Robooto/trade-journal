@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, UTC
 from types import SimpleNamespace
 
 import pytest
@@ -17,7 +17,7 @@ from app.tastytrade_schema import TastyWatchlist
 from app.services.trades_errors import TastytradeFetchError
 
 
-GENERATED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc)
+GENERATED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=UTC)
 
 
 def snapshot():

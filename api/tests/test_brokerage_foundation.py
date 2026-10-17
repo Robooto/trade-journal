@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, UTC
 from pathlib import Path
 
 import pytest
@@ -30,7 +30,7 @@ from app.tastytrade_schema import (
 
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "tastytrade"
-FETCHED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc)
+FETCHED_AT = datetime(2026, 7, 15, 12, 0, tzinfo=UTC)
 
 
 def load_fixture(name: str) -> dict:

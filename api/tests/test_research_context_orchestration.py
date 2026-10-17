@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ from app.services.research_metric_store import upsert_research_metric
 from app.tastytrade_schema import TastyMarketData, TastyVolatilityMetric
 
 
-FETCHED_AT = datetime(2026, 7, 15, 13, 20, tzinfo=timezone.utc)
+FETCHED_AT = datetime(2026, 7, 15, 13, 20, tzinfo=UTC)
 
 
 def session():

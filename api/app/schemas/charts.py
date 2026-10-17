@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -19,7 +19,7 @@ class Bar(BaseModel):
 
 class ChartResponse(BaseModel):
     s: str
-    bars: List[Bar]
+    bars: list[Bar]
 
     model_config = {
         "from_attributes": True,
@@ -35,65 +35,65 @@ class AnalysisWindow(BaseModel):
 class SourceStatus(BaseModel):
     source: str
     status: Literal["ok", "partial", "unavailable"]
-    detail: Optional[str] = None
+    detail: str | None = None
 
 
 class ChartFeatures(BaseModel):
     bar_count: int = 0
-    first_close: Optional[float] = None
-    last_close: Optional[float] = None
-    change_percent: Optional[float] = None
-    window_high: Optional[float] = None
-    window_low: Optional[float] = None
-    average_volume: Optional[float] = None
+    first_close: float | None = None
+    last_close: float | None = None
+    change_percent: float | None = None
+    window_high: float | None = None
+    window_low: float | None = None
+    average_volume: float | None = None
 
 
 class VolatilityTermPoint(BaseModel):
     expiration_date: str
-    implied_volatility_percent: Optional[float] = None
-    option_chain_type: Optional[str] = None
-    settlement_type: Optional[str] = None
+    implied_volatility_percent: float | None = None
+    option_chain_type: str | None = None
+    settlement_type: str | None = None
 
 
 class VolatilitySnapshot(BaseModel):
-    current_iv_percent: Optional[float] = None
-    iv_15_day_percent: Optional[float] = None
-    iv_rank_percent: Optional[float] = None
-    iv_percentile_percent: Optional[float] = None
-    iv_5_day_change_percent: Optional[float] = None
-    corr_spy_3_month: Optional[float] = None
-    liquidity_rating: Optional[float] = None
-    term_structure: List[VolatilityTermPoint] = Field(default_factory=list)
+    current_iv_percent: float | None = None
+    iv_15_day_percent: float | None = None
+    iv_rank_percent: float | None = None
+    iv_percentile_percent: float | None = None
+    iv_5_day_change_percent: float | None = None
+    corr_spy_3_month: float | None = None
+    liquidity_rating: float | None = None
+    term_structure: list[VolatilityTermPoint] = Field(default_factory=list)
 
 
 class SpotGammaContext(BaseModel):
     source: Literal["manual", "captured", "unavailable"] = "unavailable"
     equity_hub_url: str
-    spot: Optional[float] = None
-    low_volatility_point: Optional[float] = None
-    high_volatility_point: Optional[float] = None
-    call_gamma_notional: Optional[float] = None
-    put_gamma_notional: Optional[float] = None
-    top_gamma_expiration: Optional[str] = None
-    major_gamma_strikes: List[float] = Field(default_factory=list)
-    notes: Optional[str] = None
+    spot: float | None = None
+    low_volatility_point: float | None = None
+    high_volatility_point: float | None = None
+    call_gamma_notional: float | None = None
+    put_gamma_notional: float | None = None
+    top_gamma_expiration: str | None = None
+    major_gamma_strikes: list[float] = Field(default_factory=list)
+    notes: str | None = None
 
 
 class CatalystContext(BaseModel):
     source: Literal["manual", "captured", "unavailable"] = "unavailable"
-    earnings_date: Optional[str] = None
-    earnings_time: Optional[str] = None
-    events: List[str] = Field(default_factory=list)
-    notes: Optional[str] = None
+    earnings_date: str | None = None
+    earnings_time: str | None = None
+    events: list[str] = Field(default_factory=list)
+    notes: str | None = None
 
 
 class PortfolioExposure(BaseModel):
     status: Literal["ok", "unavailable"] = "unavailable"
     matching_groups: int = 0
-    buying_power_effect: Optional[float] = None
-    beta_delta: Optional[float] = None
-    account_percent_used_bp: Optional[float] = None
-    notes: List[str] = Field(default_factory=list)
+    buying_power_effect: float | None = None
+    beta_delta: float | None = None
+    account_percent_used_bp: float | None = None
+    notes: list[str] = Field(default_factory=list)
 
 
 class EquityAnalysisPackageV1(BaseModel):
@@ -105,12 +105,12 @@ class EquityAnalysisPackageV1(BaseModel):
     as_of_date: str
     window: AnalysisWindow
     equity_hub_url: str
-    market: Optional[Dict[str, Any]] = None
-    volatility: Optional[VolatilitySnapshot] = None
+    market: dict[str, Any] | None = None
+    volatility: VolatilitySnapshot | None = None
     chart_features: ChartFeatures
-    chart_bars: List[Bar] = Field(default_factory=list)
+    chart_bars: list[Bar] = Field(default_factory=list)
     spotgamma: SpotGammaContext
     catalysts: CatalystContext
     portfolio_exposure: PortfolioExposure
-    source_status: List[SourceStatus]
-    warnings: List[str] = Field(default_factory=list)
+    source_status: list[SourceStatus]
+    warnings: list[str] = Field(default_factory=list)

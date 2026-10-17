@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Any, Mapping
+from typing import Any
+from collections.abc import Mapping
 
 from pydantic import BaseModel, model_validator
 

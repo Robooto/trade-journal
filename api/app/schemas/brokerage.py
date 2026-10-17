@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -14,9 +14,9 @@ class DataStatus(str, Enum):
 
 class SourceMetadataV1(BaseModel):
     source: str
-    endpoint: Optional[str] = None
+    endpoint: str | None = None
     fetched_at: datetime
-    observed_at: Optional[datetime] = None
+    observed_at: datetime | None = None
     status: DataStatus = DataStatus.OK
     missing_fields: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
@@ -45,13 +45,13 @@ class HoldingV1(BaseModel):
     quantity_direction: Literal["long", "short", "unknown"]
     signed_quantity: float
     multiplier: float = 1.0
-    average_open_price: Optional[float] = None
-    mark: Optional[float] = None
-    close_price: Optional[float] = None
-    market_value_dollars: Optional[float] = None
-    signed_cost_basis_dollars: Optional[float] = None
-    unrealized_pl_dollars: Optional[float] = None
-    expires_at: Optional[datetime] = None
+    average_open_price: float | None = None
+    mark: float | None = None
+    close_price: float | None = None
+    market_value_dollars: float | None = None
+    signed_cost_basis_dollars: float | None = None
+    unrealized_pl_dollars: float | None = None
+    expires_at: datetime | None = None
     missing_fields: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
@@ -61,7 +61,7 @@ class HoldingV1(BaseModel):
 class AccountHoldingSnapshotV1(BaseModel):
     account_number: str
     nickname: str = ""
-    account_type: Optional[str] = None
+    account_type: str | None = None
     holdings: list[HoldingV1] = Field(default_factory=list)
     source: SourceMetadataV1
 
@@ -96,21 +96,21 @@ class BrokerActivityEventV1(BaseModel):
     account_number: str
     kind: BrokerActivityKind
     occurred_at: datetime
-    transaction_type: Optional[str] = None
-    transaction_sub_type: Optional[str] = None
-    order_id: Optional[str] = None
-    broker_transaction_id: Optional[str] = None
-    group_fill_id: Optional[str] = None
-    symbol: Optional[str] = None
-    underlying_symbol: Optional[str] = None
-    instrument_type: Optional[str] = None
-    action: Optional[str] = None
-    quantity: Optional[float] = None
-    price: Optional[float] = None
-    value_dollars: Optional[float] = None
-    net_value_dollars: Optional[float] = None
-    fees_dollars: Optional[float] = None
-    description: Optional[str] = None
+    transaction_type: str | None = None
+    transaction_sub_type: str | None = None
+    order_id: str | None = None
+    broker_transaction_id: str | None = None
+    group_fill_id: str | None = None
+    symbol: str | None = None
+    underlying_symbol: str | None = None
+    instrument_type: str | None = None
+    action: str | None = None
+    quantity: float | None = None
+    price: float | None = None
+    value_dollars: float | None = None
+    net_value_dollars: float | None = None
+    fees_dollars: float | None = None
+    description: str | None = None
     grouping_status: Literal["explicit", "ungrouped", "ambiguous"] = "ungrouped"
     source: SourceMetadataV1
     warnings: list[str] = Field(default_factory=list)
@@ -151,20 +151,20 @@ class BrokerActivitySymbolContextV1(BaseModel):
     source: Literal["yahoo_chart"] = "yahoo_chart"
     status: DataStatus
     resolution: Literal["5m"] = "5m"
-    activity_price: Optional[float] = None
-    matched_at: Optional[datetime] = None
+    activity_price: float | None = None
+    matched_at: datetime | None = None
     match_quality: Literal[
         "nearest_5m_close",
         "session_only",
         "unavailable",
     ] = "unavailable"
-    minutes_from_activity: Optional[float] = None
-    session_open: Optional[float] = None
-    session_high: Optional[float] = None
-    session_low: Optional[float] = None
-    session_close: Optional[float] = None
-    session_change_percent: Optional[float] = None
-    activity_from_open_percent: Optional[float] = None
+    minutes_from_activity: float | None = None
+    session_open: float | None = None
+    session_high: float | None = None
+    session_low: float | None = None
+    session_close: float | None = None
+    session_change_percent: float | None = None
+    activity_from_open_percent: float | None = None
     bars: list[BrokerActivityMarketBarV1] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
@@ -175,8 +175,8 @@ class BrokerActivityMarketContextV1(BaseModel):
     schema_version: Literal["broker-activity-market-context.v1"] = (
         "broker-activity-market-context.v1"
     )
-    underlying: Optional[BrokerActivitySymbolContextV1] = None
-    benchmark: Optional[BrokerActivitySymbolContextV1] = None
+    underlying: BrokerActivitySymbolContextV1 | None = None
+    benchmark: BrokerActivitySymbolContextV1 | None = None
     warnings: list[str] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}
@@ -191,22 +191,22 @@ class BrokerActivityReviewEventV1(BaseModel):
     account_number: str
     review_kind: BrokerActivityReviewKind
     occurred_at: datetime
-    underlying_symbol: Optional[str] = None
-    group_fill_id: Optional[str] = None
+    underlying_symbol: str | None = None
+    group_fill_id: str | None = None
     grouping_status: Literal["explicit", "ungrouped", "ambiguous"]
     order_ids: list[str] = Field(default_factory=list)
-    order_status: Optional[str] = None
-    order_type: Optional[str] = None
-    order_price: Optional[float] = None
-    order_price_effect: Optional[str] = None
+    order_status: str | None = None
+    order_type: str | None = None
+    order_price: float | None = None
+    order_price_effect: str | None = None
     leg_count: int
     legs: list[BrokerActivityEventV1]
-    net_value_dollars: Optional[float] = None
-    fees_dollars: Optional[float] = None
+    net_value_dollars: float | None = None
+    fees_dollars: float | None = None
     summary: str
     review_status: Literal["pending", "reviewed", "skipped"] = "pending"
-    journal_entry_id: Optional[str] = None
-    market_context: Optional[BrokerActivityMarketContextV1] = None
+    journal_entry_id: str | None = None
+    market_context: BrokerActivityMarketContextV1 | None = None
     warnings: list[str] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}
@@ -230,7 +230,7 @@ class BrokerActivityDispositionRequestV1(BaseModel):
     activity_group_id: str = Field(min_length=1, max_length=512)
     session_date: date
     status: BrokerActivityDispositionStatus
-    journal_entry_id: Optional[str] = Field(default=None, max_length=36)
+    journal_entry_id: str | None = Field(default=None, max_length=36)
 
     model_config = {"extra": "forbid"}
 
@@ -242,7 +242,7 @@ class BrokerActivityDispositionV1(BaseModel):
     activity_group_id: str
     session_date: date
     status: BrokerActivityDispositionStatus
-    journal_entry_id: Optional[str] = None
+    journal_entry_id: str | None = None
     updated_at: datetime
 
     model_config = {"extra": "forbid"}
@@ -250,10 +250,10 @@ class BrokerActivityDispositionV1(BaseModel):
 class OpenExecutionLegV1(BaseModel):
     broker_transaction_id: str
     symbol: str
-    underlying_symbol: Optional[str] = None
-    action: Optional[str] = None
-    quantity: Optional[float] = None
-    price: Optional[float] = None
+    underlying_symbol: str | None = None
+    action: str | None = None
+    quantity: float | None = None
+    price: float | None = None
     executed_at: datetime
 
     model_config = {"extra": "forbid"}
@@ -263,9 +263,9 @@ class OpenExecutionGroupV1(BaseModel):
     schema_version: Literal["open-execution-group.v1"] = "open-execution-group.v1"
     execution_group_id: str
     account_number: str
-    broker_group_fill_id: Optional[str] = None
-    broker_order_id: Optional[str] = None
-    underlying_symbol: Optional[str] = None
+    broker_group_fill_id: str | None = None
+    broker_order_id: str | None = None
+    underlying_symbol: str | None = None
     opened_at: datetime
     provenance_source: Literal["group_fill", "order", "unmatched"]
     match_status: Literal["exact", "partial", "ambiguous", "unmatched"] = "unmatched"
@@ -294,41 +294,41 @@ class OpenExecutionGroupCollectionV1(BaseModel):
 
 class WatchlistMembershipV1(BaseModel):
     name: str
-    group_name: Optional[str] = None
+    group_name: str | None = None
     source: Literal["private", "public"] = "private"
 
 
 class PriceContextV1(BaseModel):
-    mark: Optional[float] = None
-    previous_close: Optional[float] = None
-    day_change_percent: Optional[float] = None
-    five_session_change_percent: Optional[float] = None
-    as_of: Optional[datetime] = None
+    mark: float | None = None
+    previous_close: float | None = None
+    day_change_percent: float | None = None
+    five_session_change_percent: float | None = None
+    as_of: datetime | None = None
 
 
 class VolatilityContextV1(BaseModel):
-    iv_index_percent: Optional[float] = None
-    iv_rank_percent: Optional[float] = None
-    iv_percentile_percent: Optional[float] = None
-    iv_index_5_day_change_percent: Optional[float] = None
-    iv_rank_5_day_change_percent: Optional[float] = None
-    liquidity_rating: Optional[float] = None
-    as_of: Optional[datetime] = None
+    iv_index_percent: float | None = None
+    iv_rank_percent: float | None = None
+    iv_percentile_percent: float | None = None
+    iv_index_5_day_change_percent: float | None = None
+    iv_rank_5_day_change_percent: float | None = None
+    liquidity_rating: float | None = None
+    as_of: datetime | None = None
 
 
 class EarningsContextV1(BaseModel):
     status: Literal["confirmed", "estimated", "unavailable"] = "unavailable"
-    earnings_date: Optional[date] = None
-    earnings_time: Optional[str] = None
-    source: Optional[str] = None
-    detail: Optional[str] = None
+    earnings_date: date | None = None
+    earnings_time: str | None = None
+    source: str | None = None
+    detail: str | None = None
 
 
 class ExposureContextV1(BaseModel):
     is_held: bool = False
     account_numbers: list[str] = Field(default_factory=list)
     asset_classes: list[AssetClass] = Field(default_factory=list)
-    net_underlying_quantity: Optional[float] = None
+    net_underlying_quantity: float | None = None
     option_position_count: int = 0
 
 
@@ -367,13 +367,13 @@ class ResearchMetricObservationV1(BaseModel):
     observed_at: datetime
     fetched_at: datetime
     source: str = "tastytrade"
-    mark: Optional[float] = None
-    previous_close: Optional[float] = None
-    iv_index_percent: Optional[float] = None
-    iv_rank_percent: Optional[float] = None
-    iv_percentile_percent: Optional[float] = None
-    iv_index_5_day_change_percent: Optional[float] = None
-    liquidity_rating: Optional[float] = None
+    mark: float | None = None
+    previous_close: float | None = None
+    iv_index_percent: float | None = None
+    iv_rank_percent: float | None = None
+    iv_percentile_percent: float | None = None
+    iv_index_5_day_change_percent: float | None = None
+    liquidity_rating: float | None = None
 
     model_config = {"extra": "forbid"}
 
@@ -386,8 +386,8 @@ class ResearchSymbolContextRequestV1(BaseModel):
 
 class BrokerWatchlistSummaryV1(BaseModel):
     name: str
-    group_name: Optional[str] = None
-    order_index: Optional[int] = None
+    group_name: str | None = None
+    order_index: int | None = None
     symbols: list[str] = Field(default_factory=list)
     symbol_count: int
 
@@ -458,21 +458,21 @@ class OptionQuoteSnapshotRequestV1(BaseModel):
 
 class OptionQuoteObservationV1(BaseModel):
     symbol: str
-    quoted_at: Optional[datetime] = None
-    mark: Optional[float] = None
-    bid: Optional[float] = None
-    ask: Optional[float] = None
-    bid_size: Optional[float] = None
-    ask_size: Optional[float] = None
-    volume: Optional[float] = None
-    open_interest: Optional[float] = None
-    delta: Optional[float] = None
-    gamma: Optional[float] = None
-    theta: Optional[float] = None
-    vega: Optional[float] = None
-    rho: Optional[float] = None
-    implied_volatility: Optional[float] = None
-    theo_price: Optional[float] = None
+    quoted_at: datetime | None = None
+    mark: float | None = None
+    bid: float | None = None
+    ask: float | None = None
+    bid_size: float | None = None
+    ask_size: float | None = None
+    volume: float | None = None
+    open_interest: float | None = None
+    delta: float | None = None
+    gamma: float | None = None
+    theta: float | None = None
+    vega: float | None = None
+    rho: float | None = None
+    implied_volatility: float | None = None
+    theo_price: float | None = None
 
     model_config = {"extra": "forbid"}
 
@@ -492,25 +492,25 @@ class OptionQuoteSnapshotV1(BaseModel):
 
 class ExpirationImpliedVolatilityV1(BaseModel):
     expiration_date: date
-    settlement_type: Optional[str] = None
-    option_chain_type: Optional[str] = None
-    implied_volatility: Optional[float] = None
+    settlement_type: str | None = None
+    option_chain_type: str | None = None
+    implied_volatility: float | None = None
 
     model_config = {"extra": "forbid"}
 
 
 class MarketMetricV1(BaseModel):
     symbol: str
-    implied_volatility_index: Optional[float] = None
-    implied_volatility_index_rank: Optional[float] = None
-    implied_volatility_percentile: Optional[float] = None
-    implied_volatility_index_5_day_change: Optional[float] = None
-    implied_volatility_30_day: Optional[float] = None
-    historical_volatility_30_day: Optional[float] = None
-    historical_volatility_60_day: Optional[float] = None
-    historical_volatility_90_day: Optional[float] = None
-    iv_hv_30_day_difference: Optional[float] = None
-    implied_volatility_updated_at: Optional[datetime] = None
+    implied_volatility_index: float | None = None
+    implied_volatility_index_rank: float | None = None
+    implied_volatility_percentile: float | None = None
+    implied_volatility_index_5_day_change: float | None = None
+    implied_volatility_30_day: float | None = None
+    historical_volatility_30_day: float | None = None
+    historical_volatility_60_day: float | None = None
+    historical_volatility_90_day: float | None = None
+    iv_hv_30_day_difference: float | None = None
+    implied_volatility_updated_at: datetime | None = None
     expiration_implied_volatilities: list[ExpirationImpliedVolatilityV1] = Field(default_factory=list)
 
     model_config = {"extra": "forbid"}

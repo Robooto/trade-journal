@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Iterable, Optional
+from datetime import datetime, UTC
+from typing import Any
+from collections.abc import Iterable
 from urllib.parse import urlencode
 
 from app.schemas.charts import (
@@ -202,10 +203,10 @@ def create_package(
     from_ts: int,
     to_ts: int,
     bars: list[Bar],
-    market: Optional[dict[str, Any]],
-    volatility: Optional[VolatilitySnapshot],
+    market: dict[str, Any] | None,
+    volatility: VolatilitySnapshot | None,
     portfolio_exposure: PortfolioExposure,
-    spotgamma: Optional[SpotGammaContext],
+    spotgamma: SpotGammaContext | None,
     source_status: list[SourceStatus],
     warnings: list[str],
 ) -> EquityAnalysisPackageV1:
@@ -214,7 +215,7 @@ def create_package(
         spotgamma.equity_hub_url = equity_hub_url
     return EquityAnalysisPackageV1(
         analysis_instructions=ANALYSIS_PROFILE,
-        generated_at=datetime.now(timezone.utc),
+        generated_at=datetime.now(UTC),
         symbol=symbol.upper(),
         as_of_date=as_of_date,
         window=AnalysisWindow(
