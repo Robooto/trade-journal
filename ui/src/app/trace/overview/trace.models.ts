@@ -502,6 +502,15 @@ export interface StrikeLadderResponse {
     readonly structure_level?: number;
     readonly distance_band?: string | null;
   } | null;
+  /** 30-minute move and HIRO confirmation (hypothesis H4: promising, not established). */
+  readonly flow?: {
+    readonly move_30m_points: number | null;
+    readonly hiro_change_30m: number | null;
+    readonly hiro_flat: boolean | null;
+    readonly hiro_confirms_move: boolean | null;
+    readonly side_against_move: 'put' | 'call' | null;
+    readonly evidence: string;
+  } | null;
   readonly rows: readonly StrikeLadderRow[];
   readonly warnings: readonly string[];
   readonly notes: readonly string[];

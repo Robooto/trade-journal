@@ -101,6 +101,25 @@ export class StrikeLadderComponent implements OnChanges, OnDestroy {
     return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }).format(new Date(value));
   }
 
+  flowLabel(): string | null {
+    const flow = this.ladder()?.flow;
+    if (!flow || flow.move_30m_points == null) return null;
+    const move = `SPX ${flow.move_30m_points > 0 ? '+' : ''}${flow.move_30m_points.toFixed(1)} pts / 30m`;
+    const hiro = flow.hiro_change_30m == null ? '' : ` · HIRO ${this.compact(flow.hiro_change_30m)} / 30m`;
+    if (flow.hiro_flat) return `${move}${hiro} · HIRO flat`;
+    if (flow.hiro_confirms_move == null) return `${move}${hiro} · no clear move`;
+    const side = flow.side_against_move === 'put' ? 'puts below' : 'calls above';
+    return flow.hiro_confirms_move
+      ? `${move}${hiro} · HIRO confirms the move · ${side} sit against it`
+      : `${move}${hiro} · HIRO opposes the move · ${side} sit against it`;
+  }
+
+  private compact(value: number): string {
+    const sign = value > 0 ? '+' : value < 0 ? '\u2212' : '';
+    const abs = Math.abs(value);
+    return abs >= 1e9 ? `${sign}${(abs / 1e9).toFixed(2)}B` : `${sign}${(abs / 1e6).toFixed(0)}M`;
+  }
+
   pickLabel(): string | null {
     const pick = this.ladder()?.bot_pick;
     if (!pick?.decision) return null;

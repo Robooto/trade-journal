@@ -20,6 +20,9 @@
     <p class="state state--error" role="status">Strike ladder unavailable for this capture.</p>
   } @else if (ladder(); as l) {
     @if (pickLabel(); as pick) { <p class="pick" [attr.data-decision]="ladder()?.bot_pick?.decision">{{ pick }}</p> }
+    @if (flowLabel(); as flow) {
+      <p class="flow" [attr.data-confirms]="l.flow?.hiro_confirms_move">{{ flow }} <small [title]="l.flow?.evidence ?? ''">unproven (H4)</small></p>
+    }
     @for (warning of l.warnings; track warning) { <p class="warning" role="status">{{ warning }}</p> }
 
     <div class="sides">

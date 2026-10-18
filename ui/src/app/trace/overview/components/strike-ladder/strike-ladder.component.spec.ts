@@ -86,4 +86,12 @@ describe('StrikeLadderComponent', () => {
     api.strikeLadder.mockReturnValue(throwError(() => new Error('down')));
     expect(render().el.textContent).toContain('Strike ladder unavailable');
   });
+
+  it('shows whether HIRO confirms the 30-minute move, labelled unproven', () => {
+    api.strikeLadder.mockReturnValue(of(ladder({ flow: { move_30m_points: 12, hiro_change_30m: 920e6, hiro_flat: false,
+      hiro_confirms_move: true, side_against_move: 'put', evidence: 'H4: not yet established' } })));
+    const { el } = render();
+    expect(el.querySelector('.flow')?.textContent).toContain('SPX +12.0 pts / 30m · HIRO +920M / 30m · HIRO confirms the move · puts below sit against it');
+    expect(el.querySelector('.flow')?.textContent).toContain('unproven (H4)');
+  });
 });

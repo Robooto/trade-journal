@@ -37,3 +37,7 @@ footer { display: grid; gap: .25rem; justify-items: start; }
 footer small { color: #a2b3c9; font-size: .72rem; }
 .toggle { padding: .3rem .6rem; border: 1px solid rgba(141,181,255,.4); border-radius: .5rem; background: transparent; color: #8db5ff; font-size: .78rem; cursor: pointer; }
 .toggle:hover { background: rgba(141,181,255,.1); }
+.flow { margin: 0; font-size: .85rem; color: #cbd5e1; }
+.flow[data-confirms='true'] { color: #93c5fd; }
+.flow[data-confirms='false'] { color: #fcd34d; }
+.flow small { margin-left: .35rem; color: #94a3b8; font-size: .7rem; text-decoration: underline dotted; cursor: help; }
