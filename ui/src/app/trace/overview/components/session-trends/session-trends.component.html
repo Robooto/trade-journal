@@ -2,70 +2,10 @@
   <header class="trend-panel__header">
     <div>
       <p class="trend-eyebrow">Session movement</p>
-      <h2 id="session-trends-title">Price structure and flow pressure</h2>
-      <p>All series use the versioned TRACE timeline. The vertical cursor follows the selected capture.</p>
+      <h2 id="session-trends-title">HIRO flow</h2>
+      <p>Dealer hedging flow against spot. Walls and shelf are on the structure map above. The vertical cursor follows the selected capture.</p>
     </div>
   </header>
-
-  <section class="trend-chart" aria-labelledby="price-structure-title">
-    <header class="trend-chart__header">
-      <div>
-        <h3 id="price-structure-title">Price, walls, and shelf</h3>
-        <p>Spot and backend-provided structural levels across the session.</p>
-      </div>
-      <div class="trend-segment" aria-label="Price structure scale">
-        <button type="button" [class.active]="priceWindowMode === 'near'" (click)="setPriceWindowMode('near')">Near price</button>
-        <button type="button" [class.active]="priceWindowMode === 'full'" (click)="setPriceWindowMode('full')">Full range</button>
-      </div>
-    </header>
-
-    <div class="trend-legend" aria-label="Price structure legend">
-      <span class="legend--spot"><i></i>Spot</span>
-      <span class="legend--put"><i></i>Put wall</span>
-      <span class="legend--hedge"><i></i>Hedge wall</span>
-      <span class="legend--call"><i></i>Call wall</span>
-      <span class="legend--shelf"><i></i>Shelf</span>
-      <span class="legend--containment"><i></i>Containment +</span>
-      <span class="legend--expansion"><i></i>Expansion &minus;</span>
-    </div>
-
-    @if (priceChart.priceHasData) {
-      <div class="trend-svg-frame">
-        <svg class="trend-svg trend-svg--price" [attr.viewBox]="'0 0 ' + width + ' ' + priceHeight" preserveAspectRatio="none" role="img" aria-label="TRACE price, wall, and shelf trends">
-          @for (tick of priceChart.priceYTicks; track tick.position) {
-            <line class="trend-grid" x1="76" [attr.y1]="tick.position" [attr.x2]="width - 72" [attr.y2]="tick.position" />
-            <text class="trend-axis-label" x="68" [attr.y]="tick.position + 4" text-anchor="end">{{ tick.label }}</text>
-          }
-          @for (marker of priceChart.priceNodeMarkers; track marker.key) {
-            @if (marker.negative) {
-              <path class="structure-node structure-node--negative" [ngClass]="marker.cssClass" [attr.d]="marker.path" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></path>
-            } @else {
-              <circle class="structure-node structure-node--positive" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" [attr.r]="marker.radius" [attr.opacity]="marker.opacity"><title>{{ marker.title }}</title></circle>
-            }
-          }
-          @for (series of priceChart.priceSeries; track series.key) {
-            <polyline class="trend-line" [ngClass]="series.cssClass" [attr.points]="series.points"><title>{{ series.label }}</title></polyline>
-          }
-          <line class="trend-active-line" [attr.x1]="priceChart.priceActiveX" y1="20" [attr.x2]="priceChart.priceActiveX" [attr.y2]="priceHeight - 46" />
-          @for (marker of priceChart.priceMarkers; track marker.key) {
-            <circle class="trend-marker" [ngClass]="marker.cssClass" [attr.cx]="marker.x" [attr.cy]="marker.y" r="4.5" />
-          }
-          <g class="marked-price-layer" aria-label="Marked price levels">
-            @for (level of priceChart.priceLevelMarkers; track level.id) {
-              <line [class]="'marked-price-line-halo marked-price-line-halo--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" />
-              <line [class]="'marked-price-line marked-price-line--' + (level.proximityState ?? 'far')" x1="76" [attr.y1]="level.position" [attr.x2]="width - 72" [attr.y2]="level.position" [attr.stroke]="level.color"><title>{{ level.label }} &middot; {{ level.price | number:'1.0-2' }}</title></line>
-              <text class="marked-price-label" [attr.x]="width - 78" [attr.y]="level.position - 5" text-anchor="end" [attr.fill]="level.color">{{ level.label }} {{ level.price | number:'1.0-2' }}</text>
-            }
-          </g>
-          @for (tick of priceChart.priceXTicks; track tick.position) {
-            <text class="trend-axis-label" [attr.x]="tick.position" [attr.y]="priceHeight - 13" text-anchor="middle">{{ tick.label }}</text>
-          }
-        </svg>
-      </div>
-    } @else {
-      <div class="trend-empty">Price structure needs at least two captures.</div>
-    }
-  </section>
 
   <section class="trend-chart" aria-labelledby="hiro-pressure-title">
     <header class="trend-chart__header">
@@ -89,8 +29,8 @@
     </header>
 
     <div class="hiro-research-note" role="note">
-      <span>Direction, magnitude, and opposing-flow balance are descriptive only, not trade approval. High balance has not established lower movement or direction. Rings mark &ge;750M capture moves.</span>
-      <strong>{{ hiroChart.hiroJumpCount }} large moves</strong>
+      <span>Shaded columns mark flat SPX HIRO: its 30-minute change is small next to this session's typical change so far. Whether flat HIRO means price stays pinned is being tested; until then it is context, not a signal. Rings mark &ge;750M capture moves.</span>
+      <strong>{{ hiroChart.hiroFlatCount }} flat · {{ hiroChart.hiroJumpCount }} large moves</strong>
     </div>
 
     <div class="trend-legend" aria-label="HIRO pressure legend">
@@ -98,6 +38,7 @@
       <span class="legend--equities-hiro"><i></i>Equities HIRO{{ hiroViewMode === 'change' ? ' change' : '' }}</span>
       <span class="legend--spot"><i></i>Spot</span>
       <span class="legend--hiro-jump"><i></i>&ge;750M move</span>
+      <span class="legend--hiro-flat"><i></i>Flat HIRO (30m)</span>
       @if (hiroViewMode === 'level') {
         <span class="legend--hiro-balance"><i></i>High opposing balance</span>
       }
@@ -108,6 +49,9 @@
         <svg class="trend-svg trend-svg--hiro" [attr.viewBox]="'0 0 ' + width + ' ' + hiroHeight" preserveAspectRatio="none" role="img" aria-label="TRACE SPX and equities HIRO pressure with spot">
           <rect class="hiro-zone hiro-zone--positive" x="76" y="20" [attr.width]="width - 148" [attr.height]="hiroChart.hiroZeroY - 20" />
           <rect class="hiro-zone hiro-zone--negative" x="76" [attr.y]="hiroChart.hiroZeroY" [attr.width]="width - 148" [attr.height]="hiroHeight - 46 - hiroChart.hiroZeroY" />
+          @for (band of hiroChart.hiroFlatBands; track band.key) {
+            <rect class="hiro-flat-band" [attr.x]="band.x" y="20" [attr.width]="band.width" [attr.height]="hiroHeight - 66"><title>{{ band.title }}</title></rect>
+          }
           <text class="hiro-zone-label hiro-zone-label--positive" x="84" y="35">{{ hiroViewMode === 'change' ? 'HIRO rising' : 'Positive HIRO' }}</text>
           <text class="hiro-zone-label hiro-zone-label--negative" x="84" [attr.y]="hiroHeight - 54">{{ hiroViewMode === 'change' ? 'HIRO falling' : 'Negative HIRO' }}</text>
           @for (tick of hiroChart.hiroYTicks; track tick.position) {

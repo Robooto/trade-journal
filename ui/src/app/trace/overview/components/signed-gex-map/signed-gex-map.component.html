@@ -3,7 +3,7 @@
     <div>
       <p class="gex-eyebrow">Capture-linked structure</p>
       <h2 id="signed-gex-title">Signed GEX structure map</h2>
-      <p>Circles are positive GEX; diamonds are negative GEX. Color is the backend node state.</p>
+      <p>Circles are positive GEX, diamonds negative. Size is the node's gamma{{ sizedByGamma ? '' : ' share (absolute gamma unavailable for this session)' }}; color shows whether it grew or shrank over the last 30 minutes.</p>
     </div>
     <div class="gex-controls">
       <div class="gex-segment" aria-label="Signed GEX price window">
@@ -28,7 +28,7 @@
         <div class="active-node" [class.active-node--negative]="node.gamma_sign === 'negative'">
           <span>{{ node.gamma_sign === 'negative' ? '&minus;' : '+' }}</span>
           <strong>{{ node.center_strike | number:'1.0-1' }}</strong>
-          <small>{{ labelize(node.state) }} &middot; {{ formatPercent(node.cluster_share) }}</small>
+          <small>{{ node.node_gamma != null ? formatCompact(node.node_gamma) : formatPercent(node.cluster_share) }} &middot; {{ growthLabel(node) }}</small>
         </div>
       }
     </div>
@@ -57,6 +57,9 @@
             <circle [attr.class]="node.cssClass" [attr.cx]="node.x" [attr.cy]="node.y" [attr.r]="node.radius" [attr.opacity]="node.opacity"><title>{{ node.title }}</title></circle>
           }
         }
+        @for (line of levelLines; track line.key) {
+          <polyline [attr.class]="'gex-level ' + line.cssClass" [attr.points]="line.points"><title>{{ line.label }}</title></polyline>
+        }
         <polyline class="gex-spot-line" [attr.points]="spotPoints" />
         </g>
         <line class="gex-active-line" [attr.x1]="activeX" y1="18" [attr.x2]="activeX" [attr.y2]="mapHeight - 44" />
@@ -80,11 +83,13 @@
   <div class="gex-legend" aria-label="Signed GEX legend">
     <span><i class="legend-circle"></i>Positive</span>
     <span><i class="legend-diamond"></i>Negative</span>
-    <span><i class="legend-dot strengthening"></i>Strengthening</span>
-    <span><i class="legend-dot weakening"></i>Weakening</span>
-    <span><i class="legend-dot forming"></i>Forming</span>
-    <span><i class="legend-dot migrating"></i>Migrating</span>
-    <span><i class="legend-dot stable"></i>Stable</span>
+    <span><i class="legend-dot growing"></i>Growing ≥25% / 30m</span>
+    <span><i class="legend-dot shrinking"></i>Shrinking ≥25% / 30m</span>
+    <span><i class="legend-dot steady"></i>Steady</span>
+    <span><i class="legend-line put"></i>Put wall</span>
+    <span><i class="legend-line call"></i>Call wall</span>
+    <span><i class="legend-line hedge"></i>Hedge wall</span>
+    <span><i class="legend-line shelf"></i>Shelf</span>
   </div>
 
 </section>

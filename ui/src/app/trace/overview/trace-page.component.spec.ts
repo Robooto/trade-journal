@@ -513,12 +513,15 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     const order = Array.from(fixture.nativeElement.querySelectorAll(
-      '.price-level-disclosure, app-signed-gex-map, app-trace-session-trends, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
+      'app-strike-ladder, app-signed-gex-map, app-trace-session-trends, app-trace-market-snapshot, .price-level-disclosure, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
     )).map((element: any) => element.classList.contains('price-level-disclosure') ? 'annotations' : element.tagName.toLowerCase());
+    // What the research and the user care about first: price per strike, node structure, then flow.
     expect(order).toEqual([
-      'annotations',
+      'app-strike-ladder',
       'app-signed-gex-map',
       'app-trace-session-trends',
+      'app-trace-market-snapshot',
+      'annotations',
       'app-trace-gamma-profile',
       'app-charm-widget',
       'app-trace-capture-history',

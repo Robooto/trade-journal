@@ -82,6 +82,11 @@ export interface TraceDashboardRow {
   readonly spx_hiro: number | null;
   readonly spx_hiro_d: number | null;
   readonly spx_hiro_rate_per_minute: number | null;
+  /** Unrounded SPX/equities HIRO change over the prior 5/15/30 minutes from the capture's own candles. */
+  readonly spx_hiro_change_5m?: number | null;
+  readonly spx_hiro_change_15m?: number | null;
+  readonly spx_hiro_change_30m?: number | null;
+  readonly equities_hiro_change_30m?: number | null;
   readonly spx_hiro_accel_per_minute2: number | null;
   readonly spx_hiro_source_age_seconds: number | null;
   readonly spx_hiro_interval_seconds: number | null;
@@ -153,6 +158,12 @@ export interface TraceHistogramRow {
   readonly share_d: number | null;
   readonly center_d_points: number | null;
   readonly cluster_width: number | null;
+  /** Signed source gamma over the node's strike span, now and over the same span 10 and 30 minutes earlier. */
+  readonly node_gamma?: number | null;
+  readonly node_gamma_10m_ago?: number | null;
+  readonly node_gamma_30m_ago?: number | null;
+  /** True for the capture's own (latest) source frame; the prior bucket's frame is also returned. */
+  readonly latest_frame?: boolean | null;
   readonly spot: number | null;
   readonly put_wall: number | null;
   readonly hedge_wall: number | null;

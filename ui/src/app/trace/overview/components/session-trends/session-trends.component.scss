@@ -44,3 +44,6 @@
 .hiro-research-note{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-top:.65rem;padding:.55rem .7rem;border:1px solid rgba(251,191,36,.2);border-radius:.6rem;background:rgba(251,191,36,.04);color:#aebed3;font-size:.68rem;line-height:1.4}.hiro-research-note strong{flex:0 0 auto;color:#fcd34d;font-size:.65rem;text-transform:uppercase}.legend--hiro-jump{color:#fbbf24}.legend--hiro-jump i{width:.55rem;height:.55rem;border:2px solid currentColor;border-radius:50%}
 .trend-empty { display:flex; min-height:10rem; align-items:center; justify-content:center; color:#8fa1ba; font-size:.78rem; }
 @media(max-width:760px){.trend-chart__header{flex-direction:column}.hiro-header-tools{width:100%;justify-items:start}.hiro-facts{justify-content:flex-start}.hiro-research-note{align-items:flex-start;flex-direction:column}.trend-svg--price{height:17rem}.trend-svg--hiro{height:18rem}}
+
+.hiro-flat-band { fill: rgba(148, 163, 184, .16); }
+.legend--hiro-flat i { display: inline-block; width: .9rem; height: .6rem; background: rgba(148, 163, 184, .35); }

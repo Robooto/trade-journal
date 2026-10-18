@@ -1,6 +1,7 @@
+import type { TraceDashboardRow } from '../../trace.models';
 import { renderPriceLevels } from '../../trace-price-levels';
 import { emptyHiroChart, HiroChart, HiroViewMode, TrendChartInput } from './trend-chart.models';
-import { clamp, numericValue, captureChanges, robustAbsoluteLimit, paddedDomain, makeXScale, makeYScale, makeClampedYScale, valueSeriesPoints, seriesPoints, makeTicks, timeTicks, trianglePath, formatCompact, formatSignedCompact } from './trend-chart.utils';
+import { clamp, numericValue, captureChanges, robustAbsoluteLimit, paddedDomain, makeXScale, makeYScale, makeClampedYScale, valueSeriesPoints, seriesPoints, makeTicks, timeTicks, formatCompact, formatSignedCompact } from './trend-chart.utils';
 
 export function buildHiroChart(input: TrendChartInput, mode: HiroViewMode): HiroChart {
   const chart = emptyHiroChart();
@@ -90,22 +91,16 @@ export function buildHiroChart(input: TrendChartInput, mode: HiroViewMode): Hiro
       }];
     })(),
   ];
-  chart.hiroDirectionMarkers = mode === 'change' ? [] : input.rows.flatMap((row, index) => {
-    const definitions = [
-      { key: 'spx', value: numericValue(row.spx_hiro), rate: numericValue(row.spx_hiro_rate_per_minute), label: 'SPX' },
-      { key: 'equities', value: numericValue(row.equities_hiro), rate: numericValue(row.equities_hiro_rate_per_minute), label: 'Equities' },
-    ] as const;
-    return definitions.flatMap(definition => {
-      if (definition.value == null || definition.rate == null || definition.rate === 0) return [];
-      const upward = definition.rate > 0;
-      return [{
-        key: `${row.capture_id}-${definition.key}`,
-        path: trianglePath(x(index), yHiro(definition.value), upward, 4.5),
-        cssClass: upward ? 'hiro-direction-marker--up' : 'hiro-direction-marker--down',
-        title: `${definition.label} ${upward ? 'rising' : 'falling'} at ${formatSignedCompact(definition.rate)}/min`,
-      }];
-    });
-  });
+  chart.hiroDirectionMarkers = [];
+  const flags = flatHiroFlags(input.rows);
+  const step = input.rows.length > 1 ? x(1) - x(0) : 0;
+  chart.hiroFlatCount = flags.filter(Boolean).length;
+  chart.hiroFlatBands = input.rows.flatMap((row, index) => !flags[index] ? [] : [{
+    key: `${row.capture_id}-flat`,
+    x: x(index) - step / 2,
+    width: step,
+    title: `Flat SPX HIRO: ${formatSignedCompact(numericValue(row.spx_hiro_change_30m) ?? 0)} over 30 minutes, under ${Math.round(FLAT_FRACTION * 100)}% of this session's typical 30-minute change so far.`,
+  }]);
   chart.hiroBalanceMarkers = mode === 'change' ? [] : input.rows.flatMap((row, index) => {
     if (
       row.hiro_relationship_class !== 'opposing'
@@ -146,4 +141,29 @@ export function buildHiroChart(input: TrendChartInput, mode: HiroViewMode): Hiro
     : null;
   chart.hiroHasData = chart.hiroSeries.length > 1;
   return chart;
+}
+
+/** Flat when |30-minute SPX HIRO change| is under this fraction of the session's median so far. */
+export const FLAT_FRACTION = 0.35;
+const FLAT_MIN_HISTORY = 6;
+
+/**
+ * Causal flat-HIRO flags: each capture is compared only with earlier captures in the session.
+ * Sessions without minute-level HIRO changes (before October 18, 2026 backfill) return no flags.
+ */
+export function flatHiroFlags(rows: readonly TraceDashboardRow[]): boolean[] {
+  const history: number[] = [];
+  return rows.map(row => {
+    const change = numericValue(row.spx_hiro_change_30m ?? null);
+    if (change == null) return false;
+    const absolute = Math.abs(change);
+    let flat = false;
+    if (history.length >= FLAT_MIN_HISTORY) {
+      const sorted = [...history].sort((a, b) => a - b);
+      const median = sorted[Math.floor(sorted.length / 2)];
+      flat = median > 0 && absolute < FLAT_FRACTION * median;
+    }
+    history.push(absolute);
+    return flat;
+  });
 }

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges, computed, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
+import { latestFrameNodes } from '../../signed-gex-node-selection';
 import type { TraceHistogramRow, TraceResearchStatusResponse } from '../../trace.models';
 import type { Spx0DteDecisionJournalResponse } from '../decision-journal/decision-journal.models';
 
@@ -62,7 +63,7 @@ export class TradeReadComponent implements OnChanges, OnDestroy {
     const strike = this.shortStrike();
     if (spot === null || strike === null) return [];
     const low = Math.min(spot, strike), high = Math.max(spot, strike);
-    return nodes
+    return latestFrameNodes(nodes)
       .filter(node => node.capture_id === captureId && node.gamma_sign === 'negative'
         && ACTIVE_NODE_STATES.has(String(node.state).toUpperCase())
         && (node.cluster_share ?? 0) >= MIN_NODE_SHARE

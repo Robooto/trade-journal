@@ -98,6 +98,13 @@ export function emptyPriceChart(): PriceChart {
   };
 }
 
+export interface HiroFlatBand {
+  readonly key: string;
+  readonly x: number;
+  readonly width: number;
+  readonly title: string;
+}
+
 export interface HiroChart {
   hiroSeries: readonly TrendSeries[];
   hiroYTicks: readonly AxisTick[];
@@ -107,6 +114,8 @@ export interface HiroChart {
   hiroDirectionMarkers: readonly HiroDirectionMarker[];
   hiroJumpMarkers: readonly HiroJumpMarker[];
   hiroBalanceMarkers: readonly HiroBalanceMarker[];
+  hiroFlatBands: readonly HiroFlatBand[];
+  hiroFlatCount: number;
   hiroPriceLevelMarkers: readonly RenderedPriceLevel[];
   hiroJumpLineYPositive: number | null;
   hiroJumpLineYNegative: number | null;
@@ -126,6 +135,8 @@ export function emptyHiroChart(): HiroChart {
     hiroDirectionMarkers: [],
     hiroJumpMarkers: [],
     hiroBalanceMarkers: [],
+    hiroFlatBands: [],
+    hiroFlatCount: 0,
     hiroPriceLevelMarkers: [],
     hiroJumpLineYPositive: null,
     hiroJumpLineYNegative: null,

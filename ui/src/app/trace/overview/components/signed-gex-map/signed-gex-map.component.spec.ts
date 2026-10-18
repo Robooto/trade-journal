@@ -105,4 +105,29 @@ describe('SignedGexMapComponent', () => {
       .toBeGreaterThan(Array.from(chart.children).indexOf(node));
     expect(fixture.nativeElement.textContent).toContain('Decision level');
   });
+
+  it('plots one frame per capture, sized by absolute gamma and colored by 30-minute growth', () => {
+    const base = nodes[0];
+    fixture.componentRef.setInput('nodes', [
+      { ...base, timestamp: '2026-07-24T12:49:00-07:00', latest_frame: false, center_strike: 7419, node_gamma: 1e9 },
+      { ...base, latest_frame: true, node_gamma: 4e9, node_gamma_10m_ago: 3e9, node_gamma_30m_ago: 2e9 },
+      { ...base, latest_frame: true, gamma_sign: 'negative', center_strike: 7405, node_gamma: -1e9, node_gamma_30m_ago: -2e9 },
+    ]);
+    fixture.detectChanges();
+    const chart = fixture.nativeElement.querySelector('.gex-map') as SVGElement;
+    expect(chart.querySelectorAll('.gex-node')).toHaveLength(2);
+    const growing = chart.querySelector('.gex-node--positive') as SVGCircleElement;
+    const shrinking = chart.querySelector('.gex-node--negative') as SVGPathElement;
+    expect(growing.getAttribute('class')).toContain('gex-trend--growing');
+    expect(shrinking.getAttribute('class')).toContain('gex-trend--shrinking');
+    expect(Number(growing.getAttribute('r'))).toBeCloseTo(13.5, 1);
+    expect(growing.querySelector('title')?.textContent).toContain('30m +100%');
+    expect(fixture.nativeElement.textContent).toContain('Growing +100% / 30m');
+  });
+
+  it('draws walls and shelf from the capture rows', () => {
+    fixture.componentRef.setInput('rows', rows.map(row => ({ ...row, put_wall: 7300, call_wall: 7500, hedge_wall: 7410, global_shelf_center: 7405 })));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelectorAll('.gex-level')).toHaveLength(4);
+  });
 });

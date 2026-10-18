@@ -81,9 +81,8 @@ describe('MarketSnapshotComponent', () => {
     expect(text).toContain('Medium movement');
     expect(text).toContain('Low ≤ 5.1 bps');
     expect(text).toContain('hedge 98 pts away');
-    expect(text).toContain('Charm at Market');
-    expect(text).toContain('+327.0M');
-    expect(text).toContain('Charm research was retired October 16');
+    // Charm was retired October 16; it stays in its collapsed section, not the snapshot.
+    expect(text).not.toContain('Charm at Market');
     expect(text).not.toContain('Bull-put research qualifier');
     expect(text).toContain('1 positive · 1 negative');
     expect(fixture.nativeElement.querySelector('.snapshot-spot').textContent).toContain('7412');

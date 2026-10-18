@@ -4,7 +4,7 @@ import {
   TraceDashboardRow,
   TraceHistogramRow,
 } from '../../trace.models';
-import { selectKeyGexNodes } from '../../signed-gex-node-selection';
+import { latestFrameNodes, nodeGammaChange, selectKeyGexNodes } from '../../signed-gex-node-selection';
 import { RenderedPriceLevel, TracePriceLevel, renderPriceLevels } from '../../trace-price-levels';
 
 type WindowMode = 'near' | 'full';
@@ -21,6 +21,22 @@ interface RenderNode {
   readonly opacity: number;
   readonly title: string;
 }
+
+interface LevelLine {
+  readonly key: string;
+  readonly label: string;
+  readonly cssClass: string;
+  readonly points: string;
+}
+
+/** A node counts as growing or shrinking when its absolute gamma moved this much over 30 minutes. */
+const GROWTH_THRESHOLD = 0.25;
+const LEVEL_SERIES = [
+  { key: 'put_wall', label: 'Put wall', cssClass: 'gex-level--put' },
+  { key: 'call_wall', label: 'Call wall', cssClass: 'gex-level--call' },
+  { key: 'hedge_wall', label: 'Hedge wall', cssClass: 'gex-level--hedge' },
+  { key: 'global_shelf_center', label: 'Shelf', cssClass: 'gex-level--shelf' },
+] as const;
 
 interface AxisTick {
   readonly position: number;
@@ -52,6 +68,8 @@ export class SignedGexMapComponent implements OnChanges {
   activeY = 0;
   activeNodes: readonly TraceHistogramRow[] = [];
   renderedPriceLevels: readonly RenderedPriceLevel[] = [];
+  levelLines: readonly LevelLine[] = [];
+  sizedByGamma = false;
 
   ngOnChanges(): void {
     this.rebuildMap();
@@ -100,7 +118,7 @@ export class SignedGexMapComponent implements OnChanges {
     const x = (index: number) => 58 + index / Math.max(1, this.rows.length - 1) * (this.mapWidth - 94);
     const y = (strike: number) => 18 + (maximum - strike) / Math.max(1, maximum - minimum) * (this.mapHeight - 62);
     const rowIndex = new Map(this.rows.map((row, index) => [row.capture_id, index]));
-    const visibleNodes = this.nodes.filter(node =>
+    const visibleNodes = latestFrameNodes(this.nodes).filter(node =>
       Number.isFinite(node.center_strike) &&
       (this.windowMode === 'full' || (node.center_strike >= minimum && node.center_strike <= maximum)),
     );
@@ -108,10 +126,14 @@ export class SignedGexMapComponent implements OnChanges {
       ? selectKeyGexNodes(visibleNodes, this.rows)
       : visibleNodes;
 
+    const maxGamma = Math.max(0, ...selectedNodes.map(node => Math.abs(node.node_gamma ?? 0)));
+    this.sizedByGamma = maxGamma > 0;
     this.renderNodes = selectedNodes.flatMap((node, nodeIndex): RenderNode[] => {
       const index = rowIndex.get(node.capture_id);
       if (index == null) return [];
-      const radius = 2.8 + Math.min(10, Math.sqrt(Math.max(0, node.cluster_share ?? 0)) * 18);
+      const radius = this.sizedByGamma && node.node_gamma != null
+        ? 2.5 + Math.sqrt(Math.abs(node.node_gamma) / maxGamma) * 11
+        : 2.8 + Math.min(10, Math.sqrt(Math.max(0, node.cluster_share ?? 0)) * 18);
       const negative = node.gamma_sign === 'negative';
       const nodeX = x(index);
       const nodeY = y(node.center_strike);
@@ -125,9 +147,9 @@ export class SignedGexMapComponent implements OnChanges {
         radius,
         negative,
         path: diamondPath(nodeX, nodeY, radius),
-        cssClass: `gex-node gex-node--${negative ? 'negative' : 'positive'} gex-state--${stateKey(node.state)}`,
+        cssClass: `gex-node gex-node--${negative ? 'negative' : 'positive'} gex-trend--${growthKey(node)}`,
         opacity: nodeOpacity(node.state, distance, this.windowMode),
-        title: `${formatTime(node.ts)} · ${negative ? 'Negative' : 'Positive'} GEX · ${node.center_strike.toFixed(1)} · ${this.labelize(node.state)} · ${this.formatPercent(node.cluster_share)}`,
+        title: this.nodeTitle(node),
       }];
     });
     this.yTicks = makeTicks(minimum, maximum, 5).map(value => ({
@@ -142,10 +164,35 @@ export class SignedGexMapComponent implements OnChanges {
     this.activeX = x(activeIndex);
     this.activeY = y(activeRow.spot ?? (minimum + maximum) / 2);
     this.renderedPriceLevels = renderPriceLevels(this.priceLevels, minimum, maximum, y);
+    this.levelLines = LEVEL_SERIES.flatMap(series => {
+      const points = this.rows
+        .map((row, index) => {
+          const value = (row as unknown as Record<string, unknown>)[series.key];
+          return typeof value === 'number' && Number.isFinite(value) ? `${x(index).toFixed(2)},${y(value).toFixed(2)}` : null;
+        })
+        .filter((point): point is string => Boolean(point));
+      return points.length > 1 ? [{ key: series.key, label: series.label, cssClass: series.cssClass, points: points.join(' ') }] : [];
+    });
     const selectedCaptureNodes = visibleNodes.filter(node => node.capture_id === activeRow.capture_id);
     this.activeNodes = selectKeyGexNodes(selectedCaptureNodes, [activeRow])
       .sort((left, right) => (right.cluster_share ?? 0) - (left.cluster_share ?? 0))
       .slice(0, 6);
+  }
+
+  growthLabel(node: TraceHistogramRow): string {
+    const change = nodeGammaChange(node, 30);
+    if (change == null) return this.labelize(node.state);
+    const key = growthKey(node);
+    const pct = `${change > 0 ? '+' : ''}${Math.round(change * 100)}%`;
+    return key === 'growing' ? `Growing ${pct} / 30m` : key === 'shrinking' ? `Shrinking ${pct} / 30m` : `Steady ${pct} / 30m`;
+  }
+
+  nodeTitle(node: TraceHistogramRow): string {
+    const sign = node.gamma_sign === 'negative' ? 'Negative' : 'Positive';
+    const size = node.node_gamma == null ? this.formatPercent(node.cluster_share) + ' share' : `gamma ${this.formatCompact(node.node_gamma)}`;
+    const change10 = nodeGammaChange(node, 10), change30 = nodeGammaChange(node, 30);
+    const changes = change30 == null ? '' : ` · 10m ${formatChange(change10)} · 30m ${formatChange(change30)}`;
+    return `${formatTime(node.ts)} · ${sign} GEX · ${node.center_strike.toFixed(1)} · ${size}${changes}`;
   }
 
   private visibleDomain(activeIndex: number, activeRow: TraceDashboardRow): [number, number] {
@@ -175,6 +222,18 @@ export class SignedGexMapComponent implements OnChanges {
     this.activeNodes = [];
     this.renderedPriceLevels = [];
   }
+}
+
+function formatChange(value: number | null): string {
+  return value == null ? '\u2014' : `${value > 0 ? '+' : ''}${Math.round(value * 100)}%`;
+}
+
+/** Growth from absolute gamma over 30 minutes; falls back to the backend share state for older sessions. */
+function growthKey(node: TraceHistogramRow): string {
+  const change = nodeGammaChange(node, 30);
+  if (change != null) return change >= GROWTH_THRESHOLD ? 'growing' : change <= -GROWTH_THRESHOLD ? 'shrinking' : 'steady';
+  const state = stateKey(node.state);
+  return state === 'strengthening' ? 'growing' : state === 'weakening' ? 'shrinking' : state === 'faded' || state === 'collapsed' ? 'faded' : 'steady';
 }
 
 function stateKey(value: string): string {

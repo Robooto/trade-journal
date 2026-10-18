@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 import { TraceDashboardRow, TraceHistogramRow } from '../../trace.models';
 import { TracePriceLevel } from '../../trace-price-levels';
-import { PriceWindowMode, HiroViewMode, emptyPriceChart, emptyHiroChart } from './trend-chart.models';
+import { HiroViewMode, emptyHiroChart } from './trend-chart.models';
 import { clamp, numericValue, formatCompact, formatSignedCompact, labelize } from './trend-chart.utils';
-import { buildPriceChart } from './price-chart';
 import { buildHiroChart } from './hiro-chart';
 
 @Component({
@@ -20,24 +19,13 @@ export class SessionTrendsComponent implements OnChanges {
   @Input() priceLevels: readonly TracePriceLevel[] = [];
 
   readonly width = 1200;
-  readonly priceHeight = 330;
   readonly hiroHeight = 340;
-
-  priceWindowMode: PriceWindowMode = 'near';
-  priceChart = emptyPriceChart();
 
   hiroViewMode: HiroViewMode = 'level';
   hiroChart = emptyHiroChart();
 
   ngOnChanges(): void {
-    this.rebuildPriceChart();
     this.rebuildHiroChart();
-  }
-
-  setPriceWindowMode(mode: PriceWindowMode): void {
-    if (mode === this.priceWindowMode) return;
-    this.priceWindowMode = mode;
-    this.rebuildPriceChart();
   }
 
   setHiroViewMode(mode: HiroViewMode): void {
@@ -87,11 +75,6 @@ export class SessionTrendsComponent implements OnChanges {
   gammaLabel(value: string | null | undefined): string {
     if (!value) return 'Gamma unavailable';
     return `${this.labelize(value)} gamma`;
-  }
-
-  private rebuildPriceChart(): void {
-    this.priceChart = buildPriceChart({ rows: this.rows, activeIndex: this.activeIndex,
-      priceLevels: this.priceLevels, width: this.width, height: this.priceHeight }, this.nodes, this.priceWindowMode);
   }
 
   private rebuildHiroChart(): void {

@@ -9,6 +9,9 @@ import {
   TraceRealizedVolatilityResponse,
   TraceRealizedVolatilityRow,
 } from '../../trace.models';
+import { latestFrameNodes, nodeGammaChange } from '../../signed-gex-node-selection';
+
+const INACTIVE_NODE_STATES = new Set(['FADED', 'COLLAPSED', 'COLLAPSING']);
 
 @Component({
   selector: 'app-trace-market-snapshot',
@@ -59,11 +62,23 @@ export class MarketSnapshotComponent {
     return this.charmOverview?.series.find(row => row.capture_id === captureId) ?? null;
   }
 
+  /** The capture's own frame, active nodes only, largest absolute gamma first (share when gamma is unavailable). */
   get activeNodes(): readonly TraceHistogramRow[] {
     const captureId = this.activeRow?.capture_id;
-    return this.histogramNodes
-      .filter(node => node.capture_id === captureId)
-      .sort((left, right) => (right.cluster_share ?? 0) - (left.cluster_share ?? 0));
+    return latestFrameNodes(this.histogramNodes.filter(node => node.capture_id === captureId))
+      .filter(node => !INACTIVE_NODE_STATES.has(node.state.toUpperCase()))
+      .sort((left, right) => Math.abs(right.node_gamma ?? 0) - Math.abs(left.node_gamma ?? 0)
+        || (right.cluster_share ?? 0) - (left.cluster_share ?? 0));
+  }
+
+  nodeSize(node: TraceHistogramRow): string {
+    return node.node_gamma != null ? this.formatCompact(node.node_gamma, true) : this.formatPercent(node.cluster_share);
+  }
+
+  nodeGrowth(node: TraceHistogramRow): string {
+    const change = nodeGammaChange(node, 30);
+    if (change == null) return this.labelize(node.state);
+    return `${change >= 0.25 ? 'Growing' : change <= -0.25 ? 'Shrinking' : 'Steady'} ${change > 0 ? '+' : ''}${Math.round(change * 100)}% / 30m`;
   }
 
   topNodes(sign: 'positive' | 'negative'): readonly TraceHistogramRow[] {

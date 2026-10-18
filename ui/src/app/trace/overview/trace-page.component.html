@@ -154,6 +154,28 @@
 
     <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" />
 
+  }
+
+  @if (facade.bundle()?.histogram; as histogram) {
+    <app-signed-gex-map
+      [rows]="facade.captureRows()"
+      [nodes]="histogram.rows"
+      [activeIndex]="facade.selectedCaptureIndex()"
+      [priceLevels]="displayedPriceLevels()"
+    />
+  }
+
+  @if (facade.captureRows().length) {
+    <app-trace-session-trends
+      [rows]="facade.captureRows()"
+      [nodes]="facade.bundle()?.histogram?.rows ?? []"
+      [activeIndex]="facade.selectedCaptureIndex()"
+      [priceLevels]="displayedPriceLevels()"
+    />
+  }
+
+
+  @if (facade.selectedCapture(); as capture) {
     <app-trace-market-snapshot
       [rows]="facade.captureRows()"
       [activeIndex]="facade.selectedCaptureIndex()"
@@ -232,27 +254,9 @@
     }
   </section>
   </details>
-
-  @if (facade.bundle()?.histogram; as histogram) {
-    <app-signed-gex-map
-      [rows]="facade.captureRows()"
-      [nodes]="histogram.rows"
-      [activeIndex]="facade.selectedCaptureIndex()"
-      [priceLevels]="displayedPriceLevels()"
-    />
-  }
-
-  @if (facade.captureRows().length) {
-    <app-trace-session-trends
-      [rows]="facade.captureRows()"
-      [nodes]="facade.bundle()?.histogram?.rows ?? []"
-      [activeIndex]="facade.selectedCaptureIndex()"
-      [priceLevels]="displayedPriceLevels()"
-    />
-  }
-
-
   @if (facade.selectedCapture()) {
+  <details class="retired-disclosure">
+    <summary><strong>Gamma profile</strong><small>Descriptive context · not part of any supported result</small></summary>
     <app-trace-gamma-profile
       [gammaProfile]="facade.gammaProfile()"
       [gammaContextRows]="facade.bundle()?.gammaContext?.rows ?? []"
@@ -262,6 +266,7 @@
       [priceLevels]="displayedPriceLevels()"
       (captureSelected)="selectCaptureTimestamp($event)"
     />
+  </details>
   }
   <details class="retired-disclosure">
     <summary><strong>Charm pressure</strong><small>Retired research · raw market data only</small></summary>

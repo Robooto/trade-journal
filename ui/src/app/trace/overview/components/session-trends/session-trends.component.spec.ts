@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TraceDashboardRow, TraceHistogramRow } from '../../trace.models';
 import { SessionTrendsComponent } from './session-trends.component';
+import { flatHiroFlags } from './hiro-chart';
 
 const rows: TraceDashboardRow[] = Array.from({ length: 12 }, (_, index) => ({
   ts: `2026-07-24T${String(9 + Math.floor(index / 6)).padStart(2, '0')}:${String((index % 6) * 10).padStart(2, '0')}:00-07:00`,
@@ -44,95 +45,69 @@ describe('SessionTrendsComponent', () => {
     fixture.detectChanges();
   });
 
-  it('renders the five price-structure series and three HIRO/spot series', () => {
-    expect(fixture.nativeElement.textContent).toContain('Price, walls, and shelf');
-    expect(fixture.nativeElement.textContent).toContain('HIRO pressure');
-    expect(fixture.nativeElement.querySelectorAll('.trend-svg--price polyline')).toHaveLength(5);
+  it('renders HIRO and spot series without a separate price chart', () => {
+    expect(fixture.nativeElement.textContent).toContain('HIRO flow');
+    expect(fixture.nativeElement.textContent).not.toContain('Price, walls, and shelf');
+    expect(fixture.nativeElement.querySelector('.trend-svg--price')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.trend-svg--hiro polyline')).toHaveLength(3);
     expect(fixture.nativeElement.querySelector('.trend-line--spx-hiro')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.trend-line--equities-hiro')).not.toBeNull();
   });
 
   it('defaults to HIRO pressure while preserving the change view', () => {
-    expect(fixture.nativeElement.textContent).toContain('Containment +');
-    expect(fixture.nativeElement.textContent).toContain('Expansion');
-    expect(fixture.nativeElement.querySelectorAll('.structure-node--positive')).toHaveLength(1);
-    expect(fixture.nativeElement.querySelectorAll('.structure-node--negative')).toHaveLength(1);
     expect(component.hiroViewMode).toBe('level');
-    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(24);
-    expect(fixture.nativeElement.textContent).toContain('not trade approval');
-
+    expect(fixture.nativeElement.textContent).toContain('context, not a signal');
     const changeButton = Array.from<HTMLButtonElement>(
       fixture.nativeElement.querySelectorAll('.trend-segment button'),
     ).find(button => button.textContent?.trim() === 'Change');
     changeButton?.click();
     fixture.detectChanges();
-
     expect(component.hiroViewMode).toBe('change');
-    expect(fixture.nativeElement.querySelectorAll('.hiro-direction-marker')).toHaveLength(0);
     expect(fixture.nativeElement.textContent).toContain('Strong Buying Increasing');
     expect(fixture.nativeElement.textContent).toContain('Selling Increasing');
   });
 
-  it('shows shared marked prices on both price-aware session charts', () => {
+  it('shades flat HIRO causally against the session so far', () => {
+    const changes = [400, 380, 420, 390, 410, 400, 30, 500, 20, 450, 410, 40].map(v => v * 1_000_000);
+    fixture.componentRef.setInput('rows', rows.map((row, index) => ({ ...row, spx_hiro_change_30m: changes[index] })));
+    fixture.detectChanges();
+    // Captures 7, 9 and 12 are under 35% of the median of earlier captures; the first six only build history.
+    expect(flatHiroFlags(rows.map((row, index) => ({ ...row, spx_hiro_change_30m: changes[index] }))))
+      .toEqual([false, false, false, false, false, false, true, false, true, false, false, true]);
+    expect(fixture.nativeElement.querySelectorAll('.hiro-flat-band')).toHaveLength(3);
+    expect(fixture.nativeElement.textContent).toContain('3 flat');
+  });
+
+  it('shows no flat bands for sessions without minute-level HIRO changes', () => {
+    expect(fixture.nativeElement.querySelectorAll('.hiro-flat-band')).toHaveLength(0);
+  });
+
+  it('shows shared marked prices on the HIRO chart', () => {
     fixture.componentRef.setInput('priceLevels', [
       { id: 'level-1', price: 7420, label: 'Invalidation', color: '#fbbf24' },
     ]);
     fixture.detectChanges();
-
-    const priceChart = fixture.nativeElement.querySelector('.trend-svg--price') as SVGElement;
     const hiroChart = fixture.nativeElement.querySelector('.trend-svg--hiro') as SVGElement;
-    const priceLayer = priceChart.querySelector('.marked-price-layer') as SVGElement;
-    const hiroLayer = hiroChart.querySelector('.marked-price-layer') as SVGElement;
-    const priceNode = priceChart.querySelector('.structure-node') as SVGElement;
-    const hiroSeries = hiroChart.querySelector('.trend-line') as SVGElement;
-
-    expect(priceChart.querySelectorAll('.marked-price-line')).toHaveLength(1);
     expect(hiroChart.querySelectorAll('.marked-price-line')).toHaveLength(1);
-    expect(priceChart.querySelectorAll('.marked-price-line-halo')).toHaveLength(1);
-    expect(hiroChart.querySelectorAll('.marked-price-line-halo')).toHaveLength(1);
-    expect(Array.from(priceChart.children).indexOf(priceLayer))
-      .toBeGreaterThan(Array.from(priceChart.children).indexOf(priceNode));
-    expect(Array.from(hiroChart.children).indexOf(hiroLayer))
-      .toBeGreaterThan(Array.from(hiroChart.children).indexOf(hiroSeries));
     expect(fixture.nativeElement.textContent).toContain('Invalidation');
   });
 
-  it('keeps both responsive charts aligned to the selected capture', () => {
-    const latestX = component.priceChart.priceActiveX;
+  it('keeps the chart aligned to the selected capture', () => {
+    const latestX = component.hiroChart.hiroActiveX;
     component.activeIndex = 4;
     component.ngOnChanges();
     fixture.detectChanges();
-
-    expect(component.priceChart.priceActiveX).toBeLessThan(latestX);
-    expect(component.hiroChart.hiroActiveX).toBe(component.priceChart.priceActiveX);
-    expect(fixture.nativeElement.querySelector('.trend-svg--price').getAttribute('width')).toBeNull();
-    expect(fixture.nativeElement.querySelectorAll('.trend-svg--price .trend-marker')).toHaveLength(5);
+    expect(component.hiroChart.hiroActiveX).toBeLessThan(latestX);
     expect(fixture.nativeElement.querySelectorAll('.trend-svg--hiro .trend-marker')).toHaveLength(3);
   });
 
   it('clears chart geometry when a new session has too few captures', () => {
-    expect(component.priceChart.priceYTicks.length).toBeGreaterThan(0);
     expect(component.hiroChart.hiroYTicks.length).toBeGreaterThan(0);
     fixture.componentRef.setInput('rows', rows.slice(0, 1));
     fixture.detectChanges();
-    expect(component.priceChart.priceHasData).toBe(false);
     expect(component.hiroChart.hiroHasData).toBe(false);
-    expect(component.priceChart.priceYTicks).toEqual([]);
     expect(component.hiroChart.hiroYTicks).toEqual([]);
-    expect(component.priceChart.priceNodeMarkers).toEqual([]);
-    expect(component.hiroChart.hiroMarkers).toEqual([]);
     expect(fixture.nativeElement.querySelectorAll('polyline')).toHaveLength(0);
-  });
-
-  it('changes only the price scale when full range is selected', () => {
-    const nearLabels = component.priceChart.priceYTicks.map(tick => tick.label);
-    component.setPriceWindowMode('full');
-    const fullLabels = component.priceChart.priceYTicks.map(tick => tick.label);
-
-    expect(component.priceWindowMode).toBe('full');
-    expect(fullLabels).not.toEqual(nearLabels);
-    expect(component.hiroChart.hiroHasData).toBe(true);
   });
 
   it('highlights 750M capture changes as magnitude-only events', () => {
@@ -165,7 +140,6 @@ describe('SessionTrendsComponent', () => {
     expect(fixture.nativeElement.textContent).toContain('Opposing \u00b7 95% balanced');
     expect(fixture.nativeElement.textContent).toContain('1.90B combined');
     expect(fixture.nativeElement.textContent).toContain('Positive gamma');
-    expect(fixture.nativeElement.textContent).toContain('has not established lower movement or direction');
     expect(fixture.nativeElement.querySelectorAll('.hiro-balance-marker')).toHaveLength(1);
     expect(fixture.nativeElement.textContent).toContain('High opposing balance');
 

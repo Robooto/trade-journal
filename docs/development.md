@@ -115,6 +115,10 @@ new session without trades does not prevent a needed service deployment.
 - `TradeReadComponent`, `TraceMarketSnapshotComponent` and `SignedGexMapComponent`:
   the capture's trade read, market snapshot, and signed GEX structure map (with the
   shared chart annotations above it).
+- Trace tab order: trade read, strike ladder, signed GEX structure map (nodes sized by absolute
+  gamma, colored by 30-minute growth, with walls and shelf), HIRO flow (with causal flat-HIRO
+  shading), market snapshot, marked levels, then collapsed gamma profile, Charm and capture history.
+  Node lists use one source frame per capture (`latestFrameNodes`).
 - `StrikeLadderComponent`: every short strike for the selected capture with the
   market's credit and delta next to historical finish-beyond and touch rates and
   the GEX nodes in the path (`/api/trace/{date}/strike-ladder`); presentation only.

@@ -1,9 +1,31 @@
 import { TraceDashboardRow, TraceHistogramRow } from './trace.models';
 
+/**
+ * Each capture carries its own source frame plus the prior bucket's frame. Charts plot one frame per
+ * capture: the latest. Uses the backend flag when present, else the newest timestamp per capture.
+ */
+export function latestFrameNodes(nodes: readonly TraceHistogramRow[]): TraceHistogramRow[] {
+  if (nodes.some(node => node.latest_frame != null)) return nodes.filter(node => node.latest_frame === true);
+  const latest = new Map<string, string>();
+  for (const node of nodes) {
+    const current = latest.get(node.capture_id);
+    if (current === undefined || node.timestamp > current) latest.set(node.capture_id, node.timestamp);
+  }
+  return nodes.filter(node => node.timestamp === latest.get(node.capture_id));
+}
+
+/** Change in absolute node gamma over the lookback, as a fraction of the earlier size; null when unknown. */
+export function nodeGammaChange(node: TraceHistogramRow, minutes: 10 | 30 = 30): number | null {
+  const now = node.node_gamma, earlier = minutes === 10 ? node.node_gamma_10m_ago : node.node_gamma_30m_ago;
+  if (now == null || earlier == null || Math.abs(earlier) < 1) return null;
+  return (Math.abs(now) - Math.abs(earlier)) / Math.abs(earlier);
+}
+
 export function selectKeyGexNodes(
-  nodes: readonly TraceHistogramRow[],
+  allNodes: readonly TraceHistogramRow[],
   rows: readonly TraceDashboardRow[],
 ): TraceHistogramRow[] {
+  const nodes = latestFrameNodes(allNodes);
   const spots = new Map(rows.map(row => [row.capture_id, row.spot]));
   const hiddenStates = new Set(['COLLAPSED', 'COLLAPSING', 'FADED']);
   const groups = new Map<string, TraceHistogramRow[]>();
