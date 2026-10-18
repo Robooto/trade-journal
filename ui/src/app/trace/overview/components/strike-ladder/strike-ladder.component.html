@@ -19,7 +19,7 @@
   } @else if (error()) {
     <p class="state state--error" role="status">Strike ladder unavailable for this capture.</p>
   } @else if (ladder(); as l) {
-    @if (pickLabel(); as pick) { <p class="pick">{{ pick }}</p> }
+    @if (pickLabel(); as pick) { <p class="pick" [attr.data-decision]="ladder()?.bot_pick?.decision">{{ pick }}</p> }
     @for (warning of l.warnings; track warning) { <p class="warning" role="status">{{ warning }}</p> }
 
     <div class="sides">

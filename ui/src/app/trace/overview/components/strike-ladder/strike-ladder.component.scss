@@ -11,7 +11,8 @@ h3 { margin: 0 0 .4rem; color: #b5c4d7; font-size: .78rem; font-weight: 700; let
 .facts dd { margin: 0; font-weight: 650; font-size: .9rem; }
 .state { margin: 0; color: #a2b3c9; }
 .state--error { color: #fca5a5; }
-.pick { margin: 0; font-weight: 650; color: #6ee7b7; }
+.pick { margin: 0; font-weight: 650; color: #cbd5e1; }
+.pick[data-decision='take'] { color: #6ee7b7; }
 .warning { margin: 0; padding: .45rem .7rem; border: 1px solid rgba(251,191,36,.45); border-radius: .5rem; color: #fcd34d; font-size: .82rem; }
 .sides { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); gap: 1rem; }
 .side { min-width: 0; overflow-x: auto; }
