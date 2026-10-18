@@ -152,6 +152,8 @@
       [researchStatus]="facade.researchStatus()"
     />
 
+    <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" />
+
     <app-trace-market-snapshot
       [rows]="facade.captureRows()"
       [activeIndex]="facade.selectedCaptureIndex()"

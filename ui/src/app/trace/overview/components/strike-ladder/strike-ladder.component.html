@@ -1,0 +1,84 @@
+<section class="ladder" aria-labelledby="strike-ladder-title">
+  <header>
+    <div>
+      <p class="eyebrow">Strike ladder · {{ ladder()?.width_points ?? 10 }}-point credit spreads</p>
+      <h2 id="strike-ladder-title">What the market charges vs. what history did</h2>
+    </div>
+    @if (ladder(); as l) {
+      <dl class="facts">
+        <div><dt>Spot</dt><dd>{{ l.spot | number:'1.0-1' }}</dd></div>
+        <div><dt>To close</dt><dd>{{ duration(l.minutes_to_close) }}</dd></div>
+        <div><dt>History</dt><dd>{{ l.base_rate_sessions }} earlier sessions</dd></div>
+        <div><dt>Prices</dt><dd>{{ l.grid ? 'chain grid ' + time(l.grid.captured_at) : 'not recorded' }}</dd></div>
+      </dl>
+    }
+  </header>
+
+  @if (loading() && !ladder()) {
+    <p class="state" aria-live="polite">Loading strike ladder…</p>
+  } @else if (error()) {
+    <p class="state state--error" role="status">Strike ladder unavailable for this capture.</p>
+  } @else if (ladder(); as l) {
+    @if (pickLabel(); as pick) { <p class="pick">{{ pick }}</p> }
+    @for (warning of l.warnings; track warning) { <p class="warning" role="status">{{ warning }}</p> }
+
+    <div class="sides">
+      @for (group of [{ label: 'Puts below spot · bull put spreads', rows: puts() }, { label: 'Calls above spot · bear call spreads', rows: calls() }]; track group.label) {
+        <div class="side">
+          <h3>{{ group.label }}</h3>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Short</th>
+                <th scope="col">Dist</th>
+                @if (hasPrices()) {
+                  <th scope="col" title="Short bid minus long ask, one spread">Credit</th>
+                  <th scope="col" title="Short-leg delta: the market-implied chance of finishing beyond the strike">Market</th>
+                }
+                <th scope="col" title="How often SPX finished beyond a strike this far away with similar time left, earlier sessions only">History</th>
+                <th scope="col" title="How often a later capture reached the strike (10-minute captures undercount brief touches)">Touched</th>
+                <th scope="col">Nodes in path / at strike</th>
+                @if (hasPrices()) { <th scope="col">Read</th> }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of group.rows; track row.short_strike) {
+                <tr [class.pick]="row.bot_pick" [attr.data-read]="row.pricing_read ?? null">
+                  <th scope="row">{{ row.short_strike }}@if (row.bot_pick) { <span class="badge">bot</span> }</th>
+                  <td>{{ row.distance_points | number:'1.0-0' }}</td>
+                  @if (hasPrices()) {
+                    <td>{{ money(row.prices?.credit) }}</td>
+                    <td>{{ pct(row.prices?.short_abs_delta) }}</td>
+                  }
+                  <td [title]="interval(row)">{{ pct(row.history?.finished_beyond_rate) }}</td>
+                  <td>{{ pct(row.history?.touched_rate) }}</td>
+                  <td class="nodes">
+                    @for (node of row.nodes.negative_between; track node.strike) {
+                      <span class="node node--negative" [title]="nodeTitle(node)">{{ nodeLabel(node) }}</span>
+                    }
+                    @for (node of row.nodes.positive_between; track node.strike) {
+                      <span class="node node--positive" [title]="nodeTitle(node)">{{ nodeLabel(node) }}</span>
+                    }
+                    @for (node of row.nodes.at_strike; track node.strike) {
+                      <span class="node node--at" [attr.data-sign]="node.sign" [title]="'At strike: ' + nodeTitle(node)">{{ nodeLabel(node) }} at</span>
+                    }
+                  </td>
+                  @if (hasPrices()) {
+                    <td><span class="read" [title]="readHint(row)">{{ readLabel(row) }}</span></td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <footer>
+      <button type="button" class="toggle" (click)="showAll.set(!showAll())">{{ showAll() ? 'Show strikes within 40 points' : 'Show all strikes to 75 points' }}</button>
+      <small>Negative nodes in the path are weaker barriers: price breaks through them more often (supported, untested on option P/L). ▲ strengthening · ▼ weakening.</small>
+      @for (note of l.notes; track note) { <small>{{ note }}</small> }
+      <small>Research context, not an order.</small>
+    </footer>
+  }
+</section>

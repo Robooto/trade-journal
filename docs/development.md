@@ -115,6 +115,9 @@ new session without trades does not prevent a needed service deployment.
 - `TradeReadComponent`, `TraceMarketSnapshotComponent` and `SignedGexMapComponent`:
   the capture's trade read, market snapshot, and signed GEX structure map (with the
   shared chart annotations above it).
+- `StrikeLadderComponent`: every short strike for the selected capture with the
+  market's credit and delta next to historical finish-beyond and touch rates and
+  the GEX nodes in the path (`/api/trace/{date}/strike-ladder`); presentation only.
 
 Current session trade cards display recorded short/long option strikes for both
 open and closed trial trades. Quote-path replay lists recorded baseline entries,

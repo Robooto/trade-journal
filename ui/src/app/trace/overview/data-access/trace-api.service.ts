@@ -14,6 +14,7 @@ import {
   TracePaperScorecardResponse,
   TraceRealizedVolatilityResponse,
   TraceResearchStatusResponse,
+  StrikeLadderResponse,
   TraceSessionsResponse,
   TraceSnapshotResponse,
   TraceSummaryResponse,
@@ -148,6 +149,11 @@ export class TraceApiService {
     return this.http.get<Spx0DteDecisionJournalResponse>(
       this.sessionUrl(date) + '/0dte-decision-journal', { params },
     );
+  }
+
+  strikeLadder(date: string, ts: string): Observable<StrikeLadderResponse> {
+    const params = new HttpParams().set('ts', ts);
+    return this.http.get<StrikeLadderResponse>(this.sessionUrl(date) + '/strike-ladder', { params });
   }
 
   human0DteDecision(date: string, captureId: string): Observable<Spx0DteHumanDecisionList> {

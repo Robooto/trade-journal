@@ -426,3 +426,72 @@ export interface TracePaperReplayEntriesResponse {
     readonly protocol_sha256: string | null;
   }[];
 }
+
+/** GET /api/trace/{date}/strike-ladder (trace-strike-ladder.v1). */
+export interface StrikeLadderNode {
+  readonly strike: number;
+  readonly sign: 'positive' | 'negative' | string;
+  readonly state: string | null;
+  readonly share: number | null;
+  readonly share_change: number | null;
+}
+
+export interface StrikeLadderHistory {
+  readonly captures: number;
+  readonly sessions: number;
+  readonly finished_beyond_rate: number;
+  readonly touched_rate: number;
+  readonly finished_beyond_interval: readonly [number, number] | null;
+  readonly touched_interval: readonly [number, number] | null;
+}
+
+export interface StrikeLadderPrices {
+  readonly long_strike: number;
+  readonly credit: number;
+  readonly mid_credit: number;
+  readonly credit_to_risk: number | null;
+  readonly short_abs_delta?: number;
+  readonly model_credit?: number;
+}
+
+export interface StrikeLadderRow {
+  readonly side: 'put' | 'call';
+  readonly short_strike: number;
+  readonly distance_points: number;
+  readonly history_distance_points: number;
+  readonly history: StrikeLadderHistory | null;
+  readonly prices: StrikeLadderPrices | null;
+  readonly nodes: {
+    readonly negative_between: readonly StrikeLadderNode[];
+    readonly positive_between: readonly StrikeLadderNode[];
+    readonly at_strike: readonly StrikeLadderNode[];
+  };
+  readonly bot_pick: boolean;
+  readonly implied_minus_history?: number;
+  readonly pricing_read?: 'market_richer' | 'in_line' | 'market_cheaper';
+}
+
+export interface StrikeLadderResponse {
+  readonly schema_version: 'trace-strike-ladder.v1';
+  readonly status: 'ok' | 'prices_unavailable';
+  readonly date: string;
+  readonly capture_id: string;
+  readonly ts: string;
+  readonly spot: number;
+  readonly minutes_to_close: number;
+  readonly time_bucket: string | null;
+  readonly width_points: number;
+  readonly grid: { readonly capture_id: string; readonly captured_at: string; readonly spot: number | null } | null;
+  readonly base_rate_sessions: number;
+  readonly bot_pick: {
+    readonly decision?: string | null;
+    readonly trade_type?: string | null;
+    readonly side?: 'put' | 'call';
+    readonly short_strike?: number;
+    readonly structure_level?: number;
+    readonly distance_band?: string | null;
+  } | null;
+  readonly rows: readonly StrikeLadderRow[];
+  readonly warnings: readonly string[];
+  readonly notes: readonly string[];
+}

@@ -1,4 +1,5 @@
 import { TradeReadComponent } from './overview/components/trade-read/trade-read.component';
+import { StrikeLadderComponent } from './overview/components/strike-ladder/strike-ladder.component';
 import { ResearchSummaryComponent } from './overview/components/research-summary/research-summary.component';
 import { PaperWorkspaceComponent } from './overview/components/paper-workspace/paper-workspace.component';
 import { PaperReplayChartComponent } from './overview/components/paper-replay-chart/paper-replay-chart.component';
@@ -31,6 +32,6 @@ import { PaperNowComponent } from './overview/components/paper-now/paper-now.com
     SignedGexMapComponent,
     CharmWidgetComponent,
   ],
-  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent, TradeReadComponent],
+  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent, TradeReadComponent, StrikeLadderComponent],
 })
 export class TraceModule {}

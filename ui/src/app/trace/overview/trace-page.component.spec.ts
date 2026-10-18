@@ -28,6 +28,7 @@ import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.com
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
 import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
 import { TradeReadComponent } from './components/trade-read/trade-read.component';
+import { StrikeLadderComponent } from './components/strike-ladder/strike-ladder.component';
 
 class CharmApiStub {
   readonly surface = vi.fn(() => of({
@@ -46,6 +47,7 @@ class TraceApiStub {
   readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
   readonly paperQuotePilot = vi.fn(() => of({ status: 'no_evidence' }));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
+  readonly strikeLadder = vi.fn(() => NEVER);
   readonly decisionJournal = vi.fn(() => of({
     schema_version: 'spx-0dte-decision.v1',
     protocol_id: 'spx-0dte-decision-journal-v1',
@@ -126,6 +128,7 @@ describe('TracePageComponent', () => {
         PaperNowComponent,
         ResearchSummaryComponent,
         TradeReadComponent,
+        StrikeLadderComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,
