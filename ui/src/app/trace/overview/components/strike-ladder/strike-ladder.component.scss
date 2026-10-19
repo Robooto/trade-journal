@@ -17,12 +17,12 @@ h3 { margin: 0 0 .4rem; color: #b5c4d7; font-size: .78rem; font-weight: 700; let
 .sides { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); gap: 1rem; }
 .side { min-width: 0; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
-th, td { padding: .32rem .45rem; text-align: right; white-space: nowrap; border-bottom: 1px solid rgba(148,163,184,.14); }
-thead th { color: #a2b3c9; font-size: .7rem; font-weight: 650; text-transform: uppercase; letter-spacing: .04em; cursor: help; }
+th, td { padding: .3rem .35rem; text-align: right; white-space: nowrap; border-bottom: 1px solid rgba(148,163,184,.14); }
+thead th { color: #a2b3c9; font-size: .66rem; font-weight: 650; text-transform: uppercase; letter-spacing: .01em; cursor: help; }
 tbody th { text-align: left; font-weight: 700; }
-td.nodes { text-align: left; white-space: normal; }
+th.nodes, td.nodes { text-align: left; white-space: normal; min-width: 6.5rem; }
 tr.pick { background: rgba(110,231,183,.08); outline: 1px solid rgba(110,231,183,.45); outline-offset: -1px; }
-.badge { margin-left: .35rem; padding: 0 .35rem; border-radius: .3rem; background: rgba(110,231,183,.2); color: #6ee7b7; font-size: .65rem; text-transform: uppercase; }
+.badge { display: inline-block; margin-left: .3rem; padding: 0 .35rem; border-radius: .3rem; background: rgba(110,231,183,.2); color: #6ee7b7; font-size: .65rem; text-transform: uppercase; }
 .node { display: inline-block; margin: .05rem .2rem .05rem 0; padding: 0 .3rem; border-radius: .3rem; font-size: .72rem; cursor: help; }
 .node--negative { background: rgba(196,155,255,.16); color: #d8b4fe; }
 .node--positive { background: rgba(56,189,248,.14); color: #7dd3fc; }
@@ -41,6 +41,6 @@ footer small { color: #a2b3c9; font-size: .72rem; }
 .flow[data-confirms='true'] { color: #93c5fd; }
 .flow[data-confirms='false'] { color: #fcd34d; }
 .flow small { margin-left: .35rem; color: #94a3b8; font-size: .7rem; text-decoration: underline dotted; cursor: help; }
-.hiro-tag { margin-left: .35rem; padding: 0 .35rem; border-radius: .3rem; font-size: .65rem; font-weight: 650; cursor: help; }
+.hiro-tag { display: block; width: max-content; margin-top: .1rem; padding: 0 .35rem; border-radius: .3rem; font-size: .65rem; font-weight: 650; cursor: help; }
 .hiro-tag[data-tone='lead'] { background: rgba(147,197,253,.16); color: #93c5fd; }
 .hiro-tag[data-tone='caution'] { background: rgba(252,211,77,.14); color: #fcd34d; }

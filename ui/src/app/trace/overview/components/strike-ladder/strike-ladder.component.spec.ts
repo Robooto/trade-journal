@@ -59,7 +59,7 @@ describe('StrikeLadderComponent', () => {
     expect(pick.textContent).toContain('14%');
     expect(pick.textContent).toContain('6%');
     expect(pick.textContent).toContain('−7670 ▲');
-    expect(pick.textContent).toContain('Market richer');
+    expect(pick.textContent).toContain('Richer');
     expect(callRows[0].getAttribute('data-read')).toBe('market_cheaper');
     expect(el.textContent).toContain('Bot take: bear call short 7690');
   });

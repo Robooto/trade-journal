@@ -6,12 +6,12 @@ import type { StrikeLadderNode, StrikeLadderResponse, StrikeLadderRow } from '..
 
 const DEFAULT_MAX_DISTANCE = 40;
 const READ_LABEL: Record<string, string> = {
-  market_richer: 'Market richer', in_line: 'In line', market_cheaper: 'Market cheaper',
+  market_richer: 'Richer', in_line: 'In line', market_cheaper: 'Cheaper',
 };
 const READ_HINT: Record<string, string> = {
-  market_richer: 'The market prices a higher chance of finishing beyond this strike than history shows: favorable to the seller.',
+  market_richer: 'Market richer than history. The market prices a higher chance of finishing beyond this strike than history shows: favorable to the seller.',
   in_line: 'Market delta sits inside the historical range.',
-  market_cheaper: 'History shows strikes this far finishing beyond more often than the market prices: unfavorable to the seller.',
+  market_cheaper: 'Market cheaper than history. History shows strikes this far finishing beyond more often than the market prices: unfavorable to the seller.',
 };
 
 /** Every short strike for the selected capture: what the market charges next to what history did. */
