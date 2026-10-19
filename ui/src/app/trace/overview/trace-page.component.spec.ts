@@ -12,12 +12,9 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { SharedMaterialModule } from '../../shared/material.module';
-import { CharmApiService } from '../charm/charm-api.service';
-import { CharmWidgetComponent } from '../charm/charm-widget.component';
 import { CaptureHistoryComponent } from './components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './components/market-snapshot/market-snapshot.component';
-import { DecisionJournalComponent } from './components/decision-journal/decision-journal.component';
 import { TraceApiService } from './data-access/trace-api.service';
 import { SessionTrendsComponent } from './components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
@@ -27,19 +24,8 @@ import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.compone
 import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
 import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
-import { TradeReadComponent } from './components/trade-read/trade-read.component';
 import { StrikeLadderComponent } from './components/strike-ladder/strike-ladder.component';
 
-class CharmApiStub {
-  readonly surface = vi.fn(() => of({
-    ts: '2026-07-24T13:00:05-07:00',
-    spot: 7412,
-    nearest_flip: 7410,
-    robust_abs_p95: 100,
-    source: { close_window: false },
-    rows: [{ spot: 7400, charm_per_minute: -10 }, { spot: 7420, charm_per_minute: 10 }],
-  }));
-}
 class TraceApiStub {
   readonly paperResearchScorecard = vi.fn((date: string) => of(researchScorecardForTest(date)));
   readonly paperNegativePocket = vi.fn(() => NEVER);
@@ -87,9 +73,6 @@ class TraceFacadeStub {
   readonly gammaProfile = signal<any>(null);
   readonly gammaProfileLoading = signal(false);
   readonly gammaProfileError = signal<string | null>(null);
-  readonly charmOverview = signal<any>(null);
-  readonly charmLoading = signal(false);
-  readonly charmError = signal<string | null>(null);
   readonly paperScorecard = signal<any>(null);
   readonly paperScorecardLoading = signal(false);
   readonly paperScorecardError = signal<string | null>(null);
@@ -121,20 +104,19 @@ describe('TracePageComponent', () => {
     globalThis.localStorage.removeItem('trade-journal.trace.price-levels.v1');
     facade = new TraceFacadeStub();
     await TestBed.configureTestingModule({
-      declarations: [TracePageComponent, PaperWorkspaceComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, DecisionJournalComponent, SessionTrendsComponent, SignedGexMapComponent, CharmWidgetComponent],
+      declarations: [TracePageComponent, PaperWorkspaceComponent, CaptureHistoryComponent, GammaProfileComponent, MarketSnapshotComponent, SessionTrendsComponent, SignedGexMapComponent],
       imports: [
         PaperReplayChartComponent,
         PaperLedgerComponent,
         PaperNowComponent,
         ResearchSummaryComponent,
-        TradeReadComponent,
         StrikeLadderComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,
         NoopAnimationsModule,
       ],
-      providers: [{ provide: TraceFacade, useValue: facade }, { provide: CharmApiService, useClass: CharmApiStub }, { provide: TraceApiService, useClass: TraceApiStub }],
+      providers: [{ provide: TraceFacade, useValue: facade }, { provide: TraceApiService, useClass: TraceApiStub }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TracePageComponent);
@@ -365,9 +347,10 @@ describe('TracePageComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('Session timeline');
     expect(fixture.nativeElement.textContent).not.toContain('SPX 0DTE Decision Journal');
-    expect(fixture.nativeElement.textContent).toContain('Market snapshot');
-    expect(fixture.nativeElement.textContent).toContain('−1.28B');
-    expect(fixture.nativeElement.textContent).toContain('Medium movement');
+    const snapshot = fixture.nativeElement.querySelector('app-trace-market-snapshot').textContent;
+    expect(snapshot).toContain('Snapshot');
+    expect(snapshot).not.toContain('−1.28B');
+    expect(snapshot).toContain('Medium');
   });
 
   it('moves through captures with unmodified left and right arrow keys', () => {
@@ -412,7 +395,7 @@ describe('TracePageComponent', () => {
     expect(facade.stepCapture).not.toHaveBeenCalled();
   });
 
-  it('delegates session, timeline, and Charm capture changes to the facade', () => {
+  it('delegates session and timeline changes to the facade', () => {
     facade.captureRows.set([{ ts: 'first' }, { ts: 'selected' }]);
     (facade.sessions as any).set([{ date: '2026-07-24', status: 'ready' }]);
     fixture.componentInstance.selectSessionDate(new Date(2026, 6, 24));
@@ -427,16 +410,16 @@ describe('TracePageComponent', () => {
   it('adds and removes browser-persisted marked price levels', () => {
     const component = fixture.componentInstance;
     component.priceLevelPrice = 7412.5;
-    component.priceLevelLabel = 'Invalidation';
+    component.priceLevelLabel = 'Resistance';
     component.priceLevelColor = '#fbbf24';
-    component.priceLevelKind = 'negative_gamma';
 
     component.addPriceLevel();
     fixture.detectChanges();
 
     expect(component.priceLevels.levels()).toHaveLength(1);
-    expect(component.priceLevels.levels()[0].kind).toBe('negative_gamma');
-    expect(fixture.nativeElement.textContent).toContain('Invalidation');
+    expect(component.priceLevels.levels()[0]).not.toHaveProperty('kind');
+    expect(fixture.nativeElement.querySelector('.price-level-list').textContent).toContain('Resistance');
+    expect(component.priceLevelLabel).toBe('Support');
     expect(globalThis.localStorage.getItem('trade-journal.trace.price-levels.v1')).toContain('7412.5');
 
     component.removePriceLevel(component.priceLevels.levels()[0].id);
@@ -454,7 +437,7 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
     expect(component.editingPriceLevelId).toBe(id);
     expect(component.priceLevelPrice).toBe(7400);
-    expect(fixture.nativeElement.textContent).toContain('Save changes');
+    expect(fixture.nativeElement.querySelector('.price-level-form button[type=submit]').textContent).toContain('Save');
     component.priceLevelPrice = 7425;
     component.addPriceLevel();
     expect(component.priceLevels.levels()).toHaveLength(1);
@@ -478,23 +461,21 @@ describe('TracePageComponent', () => {
     facade.selectedCaptureIndex.set(0);
     const component = fixture.componentInstance;
     component.priceLevelPrice = 7415;
-    component.priceLevelLabel = 'Negative band';
-    component.priceLevelKind = 'negative_gamma';
+    component.priceLevelLabel = 'Resistance';
 
     component.addPriceLevel();
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Elevated breach / acceleration risk');
-    expect(fixture.nativeElement.textContent).toContain('3.0 pts');
+    expect(fixture.nativeElement.querySelector('.price-level-list').textContent).toContain('3.0 pts · Touch');
     expect(open).toHaveBeenCalledOnce();
-    expect(open.mock.calls[0][0]).toContain('Negative band 7,415 · 3.0 pts');
+    expect(open.mock.calls[0][0]).toContain('Resistance 7,415 · 3.0 pts');
 
     facade.selectedCapture.set({ ...capture, spot: 7413 });
     fixture.detectChanges();
     expect(open).toHaveBeenCalledOnce();
   });
 
-  it('keeps charts in the same sequence as the legacy TRACE dashboard', () => {
+  it('puts price levels first, then ladder, node map, HIRO flow and snapshot', () => {
     const capture = {
       ts: '2026-07-24T13:00:05-07:00',
       capture_id: 'capture-2',
@@ -513,17 +494,16 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     const order = Array.from(fixture.nativeElement.querySelectorAll(
-      'app-strike-ladder, app-signed-gex-map, app-trace-session-trends, app-trace-market-snapshot, .price-level-disclosure, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
-    )).map((element: any) => element.classList.contains('price-level-disclosure') ? 'annotations' : element.tagName.toLowerCase());
-    // What the research and the user care about first: price per strike, node structure, then flow.
+      '.price-level-panel, app-trade-read, app-strike-ladder, app-signed-gex-map, app-trace-session-trends, app-trace-market-snapshot, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
+    )).map((element: any) => element.classList.contains('price-level-panel') ? 'levels' : element.tagName.toLowerCase());
+    // Sam's order (October 19): his levels, price per strike, node structure, flow, then the snapshot.
     expect(order).toEqual([
+      'levels',
       'app-strike-ladder',
       'app-signed-gex-map',
       'app-trace-session-trends',
       'app-trace-market-snapshot',
-      'annotations',
       'app-trace-gamma-profile',
-      'app-charm-widget',
       'app-trace-capture-history',
     ]);
   });

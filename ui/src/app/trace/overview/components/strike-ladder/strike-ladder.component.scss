@@ -41,3 +41,6 @@ footer small { color: #a2b3c9; font-size: .72rem; }
 .flow[data-confirms='true'] { color: #93c5fd; }
 .flow[data-confirms='false'] { color: #fcd34d; }
 .flow small { margin-left: .35rem; color: #94a3b8; font-size: .7rem; text-decoration: underline dotted; cursor: help; }
+.hiro-tag { margin-left: .35rem; padding: 0 .35rem; border-radius: .3rem; font-size: .65rem; font-weight: 650; cursor: help; }
+.hiro-tag[data-tone='lead'] { background: rgba(147,197,253,.16); color: #93c5fd; }
+.hiro-tag[data-tone='caution'] { background: rgba(252,211,77,.14); color: #fcd34d; }

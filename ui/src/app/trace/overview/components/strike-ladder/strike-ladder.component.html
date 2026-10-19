@@ -47,7 +47,7 @@
             <tbody>
               @for (row of group.rows; track row.short_strike) {
                 <tr [class.pick]="row.bot_pick" [attr.data-read]="row.pricing_read ?? null">
-                  <th scope="row">{{ row.short_strike }}@if (row.bot_pick) { <span class="badge">bot</span> }</th>
+                  <th scope="row">{{ row.short_strike }}@if (row.bot_pick) { <span class="badge">bot</span> }@if (hiroTag(row); as tag) { <span class="hiro-tag" [attr.data-tone]="tag.tone" [title]="tag.title">{{ tag.label }}</span> }</th>
                   <td>{{ row.distance_points | number:'1.0-0' }}</td>
                   @if (hasPrices()) {
                     <td>{{ money(row.prices?.credit) }}</td>

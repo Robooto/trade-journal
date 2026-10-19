@@ -112,16 +112,20 @@ new session without trades does not prevent a needed service deployment.
   (`/api/trace/paper-negative-pocket`); presentation only, figures come from the pipeline.
 - `ResearchSummaryComponent`: "What the research says", rendered from the study
   registry's headline and per-study evidence tier/summary (`/api/trace/research-status`).
-- `TradeReadComponent`, `TraceMarketSnapshotComponent` and `SignedGexMapComponent`:
-  the capture's trade read, market snapshot, and signed GEX structure map (with the
-  shared chart annotations above it).
-- Trace tab order: trade read, strike ladder, signed GEX structure map (nodes sized by absolute
-  gamma, colored by 30-minute growth, with walls and shelf), HIRO flow (with causal flat-HIRO
-  shading), market snapshot, marked levels, then collapsed gamma profile, Charm and capture history.
-  Node lists use one source frame per capture (`latestFrameNodes`).
+- `TraceMarketSnapshotComponent` and `SignedGexMapComponent`: one compact row of capture
+  facts (spot, gamma pocket, support, resistance, walls, shelf, movement) and the signed GEX
+  structure map. HIRO and nodes are not repeated in the snapshot.
+- Trace tab order (Sam, October 19, 2026): marked price levels (SPX price, Support/Resistance
+  label, color), strike ladder, signed GEX structure map (nodes sized by absolute gamma, colored
+  by 30-minute growth, with walls and shelf), HIRO flow (with causal flat-HIRO shading), snapshot,
+  then collapsed gamma profile and capture history. The trade read and Charm panels are retired;
+  the ladder header shows the bot's take or pass. Node lists use one source frame per capture
+  (`latestFrameNodes`).
 - `StrikeLadderComponent`: every short strike for the selected capture with the
   market's credit and delta next to historical finish-beyond and touch rates and
   the GEX nodes in the path (`/api/trace/{date}/strike-ladder`); presentation only.
+  Rows on the side against the 30-minute move carry a HIRO tag ("HIRO side" when HIRO
+  confirms the move, "HIRO opposes" when it does not), labelled as the H4b lead.
 
 Current session trade cards display recorded short/long option strikes for both
 open and closed trial trades. Quote-path replay lists recorded baseline entries,

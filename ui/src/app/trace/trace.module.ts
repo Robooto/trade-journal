@@ -1,4 +1,3 @@
-import { TradeReadComponent } from './overview/components/trade-read/trade-read.component';
 import { StrikeLadderComponent } from './overview/components/strike-ladder/strike-ladder.component';
 import { ResearchSummaryComponent } from './overview/components/research-summary/research-summary.component';
 import { PaperWorkspaceComponent } from './overview/components/paper-workspace/paper-workspace.component';
@@ -8,11 +7,9 @@ import { FormsModule } from '@angular/forms';
 import { NgModule } from '@angular/core';
 
 import { SharedMaterialModule } from '../shared/material.module';
-import { CharmWidgetComponent } from './charm/charm-widget.component';
 import { CaptureHistoryComponent } from './overview/components/capture-history/capture-history.component';
 import { GammaProfileComponent } from './overview/components/gamma-profile/gamma-profile.component';
 import { MarketSnapshotComponent } from './overview/components/market-snapshot/market-snapshot.component';
-import { DecisionJournalComponent } from './overview/components/decision-journal/decision-journal.component';
 import { SessionTrendsComponent } from './overview/components/session-trends/session-trends.component';
 import { SignedGexMapComponent } from './overview/components/signed-gex-map/signed-gex-map.component';
 import { TracePageComponent } from './overview/trace-page.component';
@@ -27,11 +24,9 @@ import { PaperNowComponent } from './overview/components/paper-now/paper-now.com
     CaptureHistoryComponent,
     GammaProfileComponent,
     MarketSnapshotComponent,
-    DecisionJournalComponent,
     SessionTrendsComponent,
     SignedGexMapComponent,
-    CharmWidgetComponent,
   ],
-  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent, TradeReadComponent, StrikeLadderComponent],
+  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent, StrikeLadderComponent],
 })
 export class TraceModule {}

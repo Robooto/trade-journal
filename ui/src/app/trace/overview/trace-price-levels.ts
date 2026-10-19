@@ -5,13 +5,13 @@ export interface TracePriceLevel {
   readonly price: number;
   readonly label: string;
   readonly color: string;
-  readonly kind: TracePriceLevelKind;
   readonly proximityState?: TracePriceLevelProximityState;
   readonly distancePoints?: number;
   readonly approachDirection?: TracePriceLevelApproachDirection;
 }
 
-export type TracePriceLevelKind = 'positive_gamma' | 'negative_gamma' | 'unclassified';
+/** Levels are labelled support or resistance; older saved labels are kept as typed. */
+export const PRICE_LEVEL_LABELS = ['Support', 'Resistance'] as const;
 export type TracePriceLevelProximityState = 'far' | 'watch' | 'near' | 'touch';
 export type TracePriceLevelApproachDirection = 'approaching' | 'moving_away' | 'steady';
 
@@ -34,12 +34,7 @@ export class TracePriceLevelsStore {
 
   readonly levels = this.state.asReadonly();
 
-  add(
-    price: number,
-    label: string,
-    color = DEFAULT_COLOR,
-    kind: TracePriceLevelKind = 'unclassified',
-  ): void {
+  add(price: number, label: string, color = DEFAULT_COLOR): void {
     if (!Number.isFinite(price) || price <= 0) return;
     const normalizedLabel = label.trim() || formatPrice(price);
     const next = [
@@ -49,7 +44,6 @@ export class TracePriceLevelsStore {
         price,
         label: normalizedLabel,
         color: validColor(color) ? color : DEFAULT_COLOR,
-        kind: validKind(kind) ? kind : 'unclassified',
       },
     ].sort((left, right) => right.price - left.price);
     this.write(next);
@@ -59,12 +53,11 @@ export class TracePriceLevelsStore {
     this.write(this.state().filter(level => level.id !== id));
   }
 
-  update(id: string, price: number, label: string, color: string, kind: TracePriceLevelKind): boolean {
+  update(id: string, price: number, label: string, color: string): boolean {
     if (!Number.isFinite(price) || price <= 0 || !this.state().some(level => level.id === id)) return false;
     this.write(this.state().map(level => level.id === id ? {
       id, price, label: label.trim() || formatPrice(price),
       color: validColor(color) ? color : DEFAULT_COLOR,
-      kind: validKind(kind) ? kind : 'unclassified' as const,
     } : level).sort((left, right) => right.price - left.price));
     return true;
   }
@@ -140,7 +133,6 @@ function readStoredLevels(): readonly TracePriceLevel[] {
         price: value.price,
         label: value.label,
         color: value.color,
-        kind: validKind(value.kind) ? value.kind : 'unclassified',
       }];
     }).sort((left, right) => right.price - left.price);
   } catch {
@@ -158,10 +150,6 @@ function formatPrice(price: number): string {
 
 function validColor(value: string): boolean {
   return /^#[0-9a-f]{6}$/i.test(value);
-}
-
-function validKind(value: unknown): value is TracePriceLevelKind {
-  return value === 'positive_gamma' || value === 'negative_gamma' || value === 'unclassified';
 }
 
 function proximityState(distancePoints: number): TracePriceLevelProximityState {

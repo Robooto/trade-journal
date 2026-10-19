@@ -1,18 +1,15 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
-import { CharmOverview, CharmSeriesPoint } from '../../../charm/charm.models';
 import {
-  TraceResearchStatusResponse,
   TraceDashboardRow,
-  TraceGammaContextRow,
-  TraceHistogramRow,
   TraceRealizedVolatilityResponse,
   TraceRealizedVolatilityRow,
 } from '../../trace.models';
-import { latestFrameNodes, nodeGammaChange } from '../../signed-gex-node-selection';
 
-const INACTIVE_NODE_STATES = new Set(['FADED', 'COLLAPSED', 'COLLAPSING']);
-
+/**
+ * One compact row of facts for the selected capture. HIRO, nodes and strike-level evidence live
+ * in their own panels (HIRO flow, GEX map, strike ladder), so they are not repeated here.
+ */
 @Component({
   selector: 'app-trace-market-snapshot',
   templateUrl: './market-snapshot.component.html',
@@ -23,18 +20,7 @@ const INACTIVE_NODE_STATES = new Set(['FADED', 'COLLAPSED', 'COLLAPSING']);
 export class MarketSnapshotComponent {
   @Input() rows: readonly TraceDashboardRow[] = [];
   @Input() activeIndex = 0;
-  @Input() researchStatus: TraceResearchStatusResponse | null = null;
-
-  get candidateStudies() {
-    return (this.researchStatus?.studies ?? []).filter(study =>
-      study.id === 'structure-distance-short-strike');
-  }
-  @Input() histogramNodes: readonly TraceHistogramRow[] = [];
-  @Input() gammaContextRows: readonly TraceGammaContextRow[] = [];
   @Input() realizedVolatility: TraceRealizedVolatilityResponse | null = null;
-  @Input() charmOverview: CharmOverview | null = null;
-  @Input() charmLoading = false;
-  @Input() charmError: string | null = null;
 
   get activeRow(): TraceDashboardRow | null {
     return this.rows[this.activeIndex] ?? null;
@@ -47,69 +33,31 @@ export class MarketSnapshotComponent {
     return previous?.spot == null ? null : row.spot - previous.spot;
   }
 
-  get gammaContext(): TraceGammaContextRow | null {
-    const captureId = this.activeRow?.capture_id;
-    return this.gammaContextRows.find(row => row.capture_id === captureId) ?? null;
-  }
-
   get volatility(): TraceRealizedVolatilityRow | null {
     const captureId = this.activeRow?.capture_id;
     return this.realizedVolatility?.rows.find(row => row.capture_id === captureId) ?? null;
   }
 
-  get charm(): CharmSeriesPoint | null {
-    const captureId = this.activeRow?.capture_id;
-    return this.charmOverview?.series.find(row => row.capture_id === captureId) ?? null;
+  valueTone(value: number | null | undefined): 'positive' | 'negative' | 'neutral' {
+    if (value == null || value === 0) return 'neutral';
+    return value > 0 ? 'positive' : 'negative';
   }
 
-  /** The capture's own frame, active nodes only, largest absolute gamma first (share when gamma is unavailable). */
-  get activeNodes(): readonly TraceHistogramRow[] {
-    const captureId = this.activeRow?.capture_id;
-    return latestFrameNodes(this.histogramNodes.filter(node => node.capture_id === captureId))
-      .filter(node => !INACTIVE_NODE_STATES.has(node.state.toUpperCase()))
-      .sort((left, right) => Math.abs(right.node_gamma ?? 0) - Math.abs(left.node_gamma ?? 0)
-        || (right.cluster_share ?? 0) - (left.cluster_share ?? 0));
+  gammaTone(): 'positive' | 'negative' | 'neutral' {
+    const sign = this.activeRow?.pocket_sign;
+    return sign === 'positive' ? 'positive' : sign === 'negative' ? 'negative' : 'neutral';
   }
 
-  nodeSize(node: TraceHistogramRow): string {
-    return node.node_gamma != null ? this.formatCompact(node.node_gamma, true) : this.formatPercent(node.cluster_share);
+  gammaLabel(): string {
+    if (this.activeRow?.pocket_sign === 'positive') return 'Positive';
+    if (this.activeRow?.pocket_sign === 'negative') return 'Negative';
+    return 'Transition';
   }
 
-  nodeGrowth(node: TraceHistogramRow): string {
-    const change = nodeGammaChange(node, 30);
-    if (change == null) return this.labelize(node.state);
-    return `${change >= 0.25 ? 'Growing' : change <= -0.25 ? 'Shrinking' : 'Steady'} ${change > 0 ? '+' : ''}${Math.round(change * 100)}% / 30m`;
-  }
-
-  topNodes(sign: 'positive' | 'negative'): readonly TraceHistogramRow[] {
-    const nodes = this.activeNodes.filter(node =>
-      sign === 'negative' ? node.gamma_sign === 'negative' : node.gamma_sign !== 'negative',
-    );
-    const unique: TraceHistogramRow[] = [];
-    for (const node of nodes) {
-      if (!unique.some(existing => Math.abs(existing.center_strike - node.center_strike) < 0.25)) {
-        unique.push(node);
-      }
-    }
-    return unique.slice(0, 2);
-  }
-
-  nodeCount(sign: 'positive' | 'negative'): number {
-    return this.activeNodes.filter(node =>
-      sign === 'negative' ? node.gamma_sign === 'negative' : node.gamma_sign !== 'negative',
-    ).length;
-  }
-
-  flowTone(): 'positive' | 'negative' | 'warning' | 'neutral' {
-    const relationship = this.activeRow?.flow_relationship;
-    if (relationship === 'aligned_up') return 'positive';
-    if (relationship === 'aligned_down') return 'negative';
-    if (relationship === 'divergent' || relationship === 'spx_only') return 'warning';
-    return 'neutral';
-  }
-
-  gammaTone(): 'warning' | 'neutral' {
-    return 'neutral';
+  gammaNote(): string {
+    if (this.activeRow?.pocket_sign === 'positive') return 'containment context';
+    if (this.activeRow?.pocket_sign === 'negative') return 'expansion context';
+    return 'no clear pocket';
   }
 
   volatilityTone(): 'warning' | 'neutral' {
@@ -118,17 +66,12 @@ export class MarketSnapshotComponent {
       : 'neutral';
   }
 
-  valueTone(value: number | null | undefined): 'positive' | 'negative' | 'neutral' {
-    if (value == null || value === 0) return 'neutral';
-    return value > 0 ? 'positive' : 'negative';
-  }
-
-  hiroShockTone(delta: number | null | undefined): 'shock-positive' | 'shock-negative' | 'extreme-positive' | 'extreme-negative' | null {
-    if (delta == null || !Number.isFinite(delta) || Math.abs(delta) < 750_000_000) return null;
-    if (Math.abs(delta) >= 1_000_000_000) {
-      return delta > 0 ? 'extreme-positive' : 'extreme-negative';
-    }
-    return delta > 0 ? 'shock-positive' : 'shock-negative';
+  volatilityLabel(): string {
+    const regime = this.volatility?.realized_vol_regime;
+    if (regime === 'low_realized') return 'Low';
+    if (regime === 'mid_realized') return 'Medium';
+    if (regime === 'high_realized') return 'High';
+    return this.volatility?.classification_status === 'current_window_missing' ? 'Building' : '—';
   }
 
   shelfTone(): 'positive' | 'negative' | 'neutral' {
@@ -137,50 +80,21 @@ export class MarketSnapshotComponent {
     return 'neutral';
   }
 
-  gammaLabel(): string {
-    if (this.activeRow?.pocket_sign === 'positive') return 'Positive gamma';
-    if (this.activeRow?.pocket_sign === 'negative') return 'Negative gamma';
-    return 'Neutral / transition gamma';
-  }
-
-  structureBandLabel(value: string | null | undefined): string {
-    switch (value) {
-      case 'fragile_0_3': return '0–3 fragile';
-      case 'intermediate_3_10': return '3–10 intermediate';
-      case 'cleaner_history_10_20': return '10–20 cleaner history';
-      case 'wide_20_40': return '20–40 wide';
-      default: return 'No qualifying level';
-    }
-  }
-
-  structureLabel(type: string | null | undefined): string {
-    return type ? this.labelize(type) : 'Unavailable';
-  }
-
-  volatilityLabel(): string {
-    const regime = this.volatility?.realized_vol_regime;
-    if (regime === 'low_realized') return 'Low movement';
-    if (regime === 'mid_realized') return 'Medium movement';
-    if (regime === 'high_realized') return 'High movement';
-    return this.volatility?.classification_status === 'current_window_missing' ? 'Building' : 'Unavailable';
-  }
-
   wallNote(): string {
     const row = this.activeRow;
-    if (row?.spot == null) return 'Distance unavailable';
+    if (row?.spot == null) return 'distance unavailable';
     const levels = [
       { label: 'put', value: row.put_wall },
       { label: 'hedge', value: row.hedge_wall },
       { label: 'call', value: row.call_wall },
     ].filter((level): level is { label: string; value: number } => level.value != null && Number.isFinite(level.value));
-    if (!levels.length) return 'Distance unavailable';
+    if (!levels.length) return 'distance unavailable';
     const nearest = levels.sort((left, right) => Math.abs(left.value - row.spot!) - Math.abs(right.value - row.spot!))[0];
     return `${nearest.label} ${this.formatSpot(Math.abs(nearest.value - row.spot))} pts away`;
   }
 
-  threshold(name: string): number | null {
-    const value = this.realizedVolatility?.thresholds?.[name];
-    return typeof value === 'number' && Number.isFinite(value) ? value : null;
+  structureLabel(type: string | null | undefined): string {
+    return type ? this.labelize(type) : '—';
   }
 
   formatSpot(value: number | null | undefined): string {
@@ -188,29 +102,9 @@ export class MarketSnapshotComponent {
     return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
   }
 
-  formatCompact(value: number | null | undefined, signed = false): string {
-    if (value == null || !Number.isFinite(value)) return '—';
-    const absolute = Math.abs(value);
-    const sign = value < 0 ? '−' : signed && value > 0 ? '+' : '';
-    if (absolute >= 1_000_000_000) return `${sign}${(absolute / 1_000_000_000).toFixed(2)}B`;
-    if (absolute >= 1_000_000) return `${sign}${(absolute / 1_000_000).toFixed(1)}M`;
-    if (absolute >= 1_000) return `${sign}${(absolute / 1_000).toFixed(1)}K`;
-    return `${sign}${Math.round(absolute * 10) / 10}`;
-  }
-
   formatSignedPoints(value: number | null | undefined): string {
     if (value == null || !Number.isFinite(value)) return '—';
     return `${value > 0 ? '+' : value < 0 ? '−' : ''}${Math.abs(value).toFixed(1).replace(/\.0$/, '')}`;
-  }
-
-  formatDuration(seconds: number | null | undefined): string {
-    if (seconds == null || !Number.isFinite(seconds)) return 'unavailable';
-    if (seconds >= 60) return `${(seconds / 60).toFixed(1)}m`;
-    return `${Math.round(seconds)}s`;
-  }
-
-  formatPercent(value: number | null | undefined): string {
-    return value == null ? '—' : `${(value * 100).toFixed(1)}%`;
   }
 
   formatBps(value: number | null | undefined): string {
@@ -218,20 +112,14 @@ export class MarketSnapshotComponent {
   }
 
   formatTime(value: string | null | undefined): string {
-    if (!value) return 'Unavailable';
+    if (!value) return '—';
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
     return new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(parsed);
   }
 
   labelize(value: string | null | undefined): string {
-    if (!value) return 'Unavailable';
+    if (!value) return '—';
     return value.replaceAll('_', ' ').replace(/\b\w/g, character => character.toUpperCase());
-  }
-
-  nodeStateClass(value: string): string {
-    const normalized = value.toLowerCase();
-    return ['strengthening', 'weakening', 'forming', 'migrating', 'collapsing', 'collapsed', 'faded']
-      .includes(normalized) ? `snapshot-node--${normalized}` : 'snapshot-node--stable';
   }
 }

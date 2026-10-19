@@ -262,19 +262,12 @@
 
 .price-level-panel {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.6rem;
   min-width: 0;
-  padding: 1rem;
+  padding: 0.7rem 1rem;
   border: 1px solid rgba(148, 163, 184, 0.2);
   border-radius: 1rem;
   background: rgba(22, 27, 34, 0.92);
-}
-
-.price-level-panel header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
 }
 
 .price-level-panel h2 {
@@ -282,19 +275,15 @@
   font-size: 1rem;
 }
 
-.price-level-panel header p:not(.trace-eyebrow),
-.price-level-empty {
-  margin: 0.3rem 0 0;
-  color: #8fa1ba;
-  font-size: 0.72rem;
-}
-
 .price-level-form {
-  display: grid;
-  grid-template-columns: 8rem minmax(10rem, 14rem) minmax(9rem, 11rem) auto auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
 }
+
+.price-level-form h2 { margin-right: 0.5rem; }
+.price-level-form mat-form-field { width: 9rem; }
 
 .price-level-color {
   display: grid;
@@ -318,54 +307,6 @@
   flex-wrap: wrap;
   gap: 0.45rem;
 }
-
-.price-proximity-rail {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-  gap: 0.55rem;
-}
-
-.price-proximity-rail article {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.2rem 0.65rem;
-  min-width: 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  border-radius: 0.75rem;
-  background: rgba(30, 64, 175, 0.11);
-}
-
-.price-proximity-rail article[data-state='near'] {
-  border-color: rgba(251, 191, 36, 0.48);
-  background: rgba(180, 83, 9, 0.13);
-}
-
-.price-proximity-rail article[data-state='touch'] {
-  border-color: rgba(244, 114, 182, 0.58);
-  background: rgba(157, 23, 77, 0.15);
-  box-shadow: 0 0 0 1px rgba(244, 114, 182, 0.12), 0 0 22px rgba(244, 114, 182, 0.08);
-}
-
-.price-proximity-state {
-  grid-row: 1 / span 2;
-  padding: 0.18rem 0.4rem;
-  border-radius: 999px;
-  color: #bfdbfe;
-  background: rgba(59, 130, 246, 0.16);
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.price-proximity-rail article[data-state='near'] .price-proximity-state { color: #fde68a; background: rgba(245, 158, 11, 0.16); }
-.price-proximity-rail article[data-state='touch'] .price-proximity-state { color: #fbcfe8; background: rgba(236, 72, 153, 0.17); }
-.price-proximity-rail article > div { display: flex; min-width: 0; justify-content: space-between; gap: 0.6rem; }
-.price-proximity-rail strong { overflow: hidden; color: #eef4ff; font-size: 0.76rem; text-overflow: ellipsis; white-space: nowrap; }
-.price-proximity-rail article > div span { color: #bac7d8; font-size: 0.68rem; text-transform: capitalize; white-space: nowrap; }
-.price-proximity-rail small { color: #91a3ba; font-size: 0.64rem; }
 
 .price-level-list > span {
   display: inline-flex;
@@ -419,14 +360,6 @@
     grid-template-columns: 1fr;
   }
 
-  .price-level-panel header {
-    flex-direction: column;
-  }
-
-  .price-level-form {
-    width: 100%;
-    grid-template-columns: 8rem minmax(10rem, 1fr) minmax(9rem, 11rem) auto auto;
-  }
 }
 
 @media (max-width: 640px) {
@@ -448,11 +381,6 @@
     align-items: center;
   }
 
-  .price-proximity-rail article > div {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.1rem;
   }
-}
 
 

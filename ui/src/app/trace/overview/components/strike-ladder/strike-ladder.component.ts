@@ -114,6 +114,20 @@ export class StrikeLadderComponent implements OnChanges, OnDestroy {
       : `${move}${hiro} · HIRO opposes the move · ${side} sit against it`;
   }
 
+  /**
+   * Which side of HIRO's 30-minute read a row sits on (H4b, a lead): against a HIRO-confirmed move
+   * was touched less in development (42% vs 61%); against a move HIRO opposes was touched more.
+   */
+  hiroTag(row: StrikeLadderRow): { label: string; tone: 'lead' | 'caution'; title: string } | null {
+    const flow = this.ladder()?.flow;
+    if (!flow || flow.hiro_flat || flow.hiro_confirms_move == null || row.side !== flow.side_against_move) return null;
+    return flow.hiro_confirms_move
+      ? { label: 'HIRO side', tone: 'lead',
+          title: 'Against a HIRO-confirmed move: touched less often in development (42% vs 61%). A lead, not established.' }
+      : { label: 'HIRO opposes', tone: 'caution',
+          title: 'Against a move HIRO opposes: touched more often in development (61% vs 42%). A lead, not established.' };
+  }
+
   private compact(value: number): string {
     const sign = value > 0 ? '+' : value < 0 ? '\u2212' : '';
     const abs = Math.abs(value);

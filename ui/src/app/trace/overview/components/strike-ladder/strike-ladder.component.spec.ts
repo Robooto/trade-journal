@@ -87,6 +87,27 @@ describe('StrikeLadderComponent', () => {
     expect(render().el.textContent).toContain('Strike ladder unavailable');
   });
 
+  it('tags rows on the side against the 30-minute move with the HIRO read', () => {
+    const flow = { move_30m_points: 12, hiro_change_30m: 920e6, hiro_flat: false, hiro_confirms_move: true,
+      side_against_move: 'put' as const, evidence: 'H4b' };
+    api.strikeLadder.mockReturnValue(of(ladder({ flow })));
+    const { fixture, el } = render();
+    const putTag = el.querySelectorAll('.side')[0].querySelector('.hiro-tag');
+    expect(putTag?.textContent).toBe('HIRO side');
+    expect(putTag?.getAttribute('data-tone')).toBe('lead');
+    expect(el.querySelectorAll('.side')[1].querySelector('.hiro-tag')).toBeNull();
+
+    api.strikeLadder.mockReturnValue(of(ladder({ flow: { ...flow, hiro_confirms_move: false } })));
+    fixture.componentRef.setInput('captureTs', '2026-10-19T10:40:05-07:00');
+    fixture.detectChanges();
+    expect(el.querySelectorAll('.side')[0].querySelector('.hiro-tag')?.textContent).toBe('HIRO opposes');
+
+    api.strikeLadder.mockReturnValue(of(ladder({ flow: { ...flow, hiro_flat: true } })));
+    fixture.componentRef.setInput('captureTs', '2026-10-19T10:50:05-07:00');
+    fixture.detectChanges();
+    expect(el.querySelector('.hiro-tag')).toBeNull();
+  });
+
   it('shows whether HIRO confirms the 30-minute move, labelled unproven', () => {
     api.strikeLadder.mockReturnValue(of(ladder({ flow: { move_30m_points: 12, hiro_change_30m: 920e6, hiro_flat: false,
       hiro_confirms_move: true, side_against_move: 'put', evidence: 'H4: not yet established' } })));

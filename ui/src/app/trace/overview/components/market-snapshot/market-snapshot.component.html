@@ -1,130 +1,52 @@
 @if (activeRow; as row) {
   <section class="snapshot-panel" aria-labelledby="market-snapshot-title">
     <header class="snapshot-header">
-      <div>
-        <p class="snapshot-eyebrow">At a glance</p>
-        <h2 id="market-snapshot-title">Market snapshot</h2>
-      </div>
+      <h2 id="market-snapshot-title">Snapshot</h2>
       <strong>{{ formatTime(row.ts) }}</strong>
     </header>
 
     <div class="snapshot-grid">
-      <article class="snapshot-card snapshot-card--spot">
+      <article class="snapshot-card">
         <span class="snapshot-label">Spot</span>
         <strong class="snapshot-spot">{{ formatSpot(row.spot) }}</strong>
-        <small>Last move <b [attr.data-tone]="valueTone(spotMove)">{{ formatCompact(spotMove, true) }}</b></small>
+        <small>last move <b [attr.data-tone]="valueTone(spotMove)">{{ formatSignedPoints(spotMove) }}</b></small>
       </article>
 
-      <article class="snapshot-card snapshot-card--hiro">
-        <span class="snapshot-label">HIRO Flow</span>
-        <div class="snapshot-split">
-          <div>
-            <span>SPX</span>
-            <strong [attr.data-tone]="valueTone(row.spx_hiro)">{{ formatCompact(row.spx_hiro) }}</strong>
-            <small>rate <b [attr.data-tone]="valueTone(row.spx_hiro_rate_per_minute)" [attr.data-hiro-shock]="hiroShockTone(row.spx_hiro_d)">{{ formatCompact(row.spx_hiro_rate_per_minute, true) }}/min</b> · {{ labelize(row.flow_spx_acceleration) }} · age {{ formatDuration(row.spx_hiro_source_age_seconds) }}</small>
-          </div>
-          <div>
-            <span>Equities</span>
-            <strong [attr.data-tone]="valueTone(row.equities_hiro)">{{ formatCompact(row.equities_hiro) }}</strong>
-            <small>rate <b [attr.data-tone]="valueTone(row.equities_hiro_rate_per_minute)">{{ formatCompact(row.equities_hiro_rate_per_minute, true) }}/min</b> · {{ labelize(row.flow_equities_acceleration) }} · age {{ formatDuration(row.equities_hiro_source_age_seconds) }}</small>
-          </div>
-        </div>
-      </article>
-
-      <article class="snapshot-card snapshot-card--pressure" [attr.data-card-tone]="flowTone()">
-        <span class="snapshot-label">HIRO Pressure</span>
-        <strong>{{ labelize(row.flow_state) }}</strong>
-        <small>{{ labelize(row.flow_relationship) }} · SPX {{ formatCompact(row.flow_spx_score, true) }} · equities {{ formatCompact(row.flow_equities_score, true) }} · {{ labelize(row.flow_readiness_status) }}</small>
-      </article>
-
-      <article class="snapshot-card snapshot-card--gamma" [attr.data-card-tone]="gammaTone()">
-        <span class="snapshot-label">Gamma Structure</span>
+      <article class="snapshot-card" [attr.data-card-tone]="gammaTone()">
+        <span class="snapshot-label">Gamma</span>
         <strong>{{ gammaLabel() }}</strong>
-        <small>{{ labelize(row.local_gamma_setup) }} · at spot {{ formatCompact(gammaContext?.nearest_total_gamma, true) }} · slope {{ formatCompact(gammaContext?.cross_spot_slope, true) }}/pt</small>
-        <em>Market context · not a forecast</em>
+        <small>{{ gammaNote() }}</small>
       </article>
 
-      <article class="snapshot-card snapshot-card--volatility" [attr.data-card-tone]="volatilityTone()">
-        <span class="snapshot-label">Realized Volatility</span>
+      <article class="snapshot-card">
+        <span class="snapshot-label">Support</span>
+        <strong>{{ formatSpot(row.structure_support_level) }}</strong>
+        <small>{{ structureLabel(row.structure_support_type) }} · {{ formatSpot(row.structure_support_distance) }} pts</small>
+      </article>
+
+      <article class="snapshot-card">
+        <span class="snapshot-label">Resistance</span>
+        <strong>{{ formatSpot(row.structure_resistance_level) }}</strong>
+        <small>{{ structureLabel(row.structure_resistance_type) }} · {{ formatSpot(row.structure_resistance_distance) }} pts</small>
+      </article>
+
+      <article class="snapshot-card snapshot-card--wide">
+        <span class="snapshot-label">Walls put / hedge / call</span>
+        <strong>{{ formatSpot(row.put_wall) }} / {{ formatSpot(row.hedge_wall) }} / {{ formatSpot(row.call_wall) }}</strong>
+        <small>{{ wallNote() }}</small>
+      </article>
+
+      <article class="snapshot-card">
+        <span class="snapshot-label">Shelf</span>
+        <strong [attr.data-tone]="shelfTone()">{{ formatSpot(row.global_shelf_center) }}</strong>
+        <small>{{ labelize(row.shelf_direction) }} {{ formatSignedPoints(row.shelf_center_d) }}</small>
+      </article>
+
+      <article class="snapshot-card" [attr.data-card-tone]="volatilityTone()">
+        <span class="snapshot-label">Movement</span>
         <strong>{{ volatilityLabel() }}</strong>
-        @if (volatility; as vol) {
-          <small>{{ formatBps(vol.realized_vol_bps) }} RMS · {{ vol.return_observations }}/{{ vol.lookback_returns }} returns · Low ≤ {{ formatBps(threshold('low_max_bps')) }} · Mid ≤ {{ formatBps(threshold('mid_max_bps')) }}</small>
-          <small>As of {{ formatTime(vol.as_of) }} · prior sessions only</small>
-        } @else {
-          <small>No volatility context for this capture.</small>
-        }
-        <em>Research context · not scored</em>
-      </article>
-
-      <article class="snapshot-card snapshot-card--structure">
-        <span class="snapshot-label">Price Structure</span>
-        <small>Distance is research context. Expand candidate evidence below for sample sizes and uncertainty; buffered underlying-price survival is not option profitability.</small>
-        <div class="snapshot-split snapshot-split--study-distance">
-          <div>
-            <span>Support study distance</span>
-            <strong>{{ formatSpot(row.structure_support_level) }} · {{ structureLabel(row.structure_support_type) }}</strong>
-            <small>{{ formatSpot(row.structure_support_distance) }} pts · {{ structureBandLabel(row.structure_support_band) }}</small>
-          </div>
-          <div>
-            <span>Resistance study distance</span>
-            <strong>{{ formatSpot(row.structure_resistance_level) }} · {{ structureLabel(row.structure_resistance_type) }}</strong>
-            <small>{{ formatSpot(row.structure_resistance_distance) }} pts · {{ structureBandLabel(row.structure_resistance_band) }}</small>
-          </div>
-        </div>
-        <div class="snapshot-split snapshot-split--structure">
-          <div>
-            <span>Walls</span>
-            <strong>{{ formatSpot(row.put_wall) }} / {{ formatSpot(row.hedge_wall) }} / {{ formatSpot(row.call_wall) }}</strong>
-            <small>{{ wallNote() }}</small>
-          </div>
-          <div>
-            <span>Shelf</span>
-            <strong [attr.data-tone]="shelfTone()">{{ formatSpot(row.global_shelf_center) }}</strong>
-            <small>{{ labelize(row.shelf_direction) }} {{ formatSignedPoints(row.shelf_center_d) }}</small>
-          </div>
-        </div>
-      </article>
-
-
-      <article class="snapshot-card snapshot-card--nodes">
-        <span class="snapshot-label">Signed GEX Nodes</span>
-        <strong>{{ nodeCount('positive') }} positive · {{ nodeCount('negative') }} negative</strong>
-        <div class="snapshot-node-groups">
-          @for (sign of ['positive', 'negative']; track sign) {
-            <div>
-              <span>{{ sign | titlecase }} GEX</span>
-              @for (node of topNodes($any(sign)); track node.gamma_sign + ':' + node.center_strike) {
-                <div class="snapshot-node" [ngClass]="nodeStateClass(node.state)" [class.snapshot-node--negative]="sign === 'negative'">
-                  <b>{{ sign === 'negative' ? '−' : '+' }}</b>
-                  <strong>{{ formatSpot(node.center_strike) }}</strong>
-                  <span>{{ nodeGrowth(node) }}</span>
-                  <small>{{ nodeSize(node) }}</small>
-                </div>
-              } @empty {
-                <small>No active nodes</small>
-              }
-            </div>
-          }
-        </div>
+        <small>{{ formatBps(volatility?.realized_vol_bps) }} realized · context only</small>
       </article>
     </div>
-    <section class="candidate-evidence" aria-label="Candidate distance and confirmation evidence">
-      <h3>Candidate evidence · distance to structure</h3>
-      <p>How often a short strike five points beyond the frozen structure survived the next six captures (about 60 minutes), by distance band. Distance is the strongest supported signal and is also priced into credit.</p>
-      @for (study of candidateStudies; track study.id) {
-        <details>
-          <summary>{{ study.label }} · samples and results</summary>
-          @for (table of study.evidence_tables ?? []; track table.scope + table.title) {
-            <h4>{{ table.scope === 'week' ? 'Weekly' : 'Cumulative' }} through {{ table.week_end }} · {{ table.title }}</h4>
-            <div class="evidence-table-scroll" tabindex="0" [attr.aria-label]="table.title">
-              <table><thead><tr>@for (column of table.columns; track $index) { <th scope="col">{{ column }}</th> }</tr></thead>
-                <tbody>@for (row of table.rows; track $index) { <tr>@for (cell of row; track $index) { <td>{{ cell }}</td> }</tr> } @empty { <tr><td [attr.colspan]="table.columns.length">No qualifying rows in this scope.</td></tr> }</tbody>
-              </table>
-            </div>
-          } @empty { <p>Verified study results unavailable. No historical rates have been substituted.</p> }
-        </details>
-      } @empty { <p>Study evidence unavailable.</p> }
-      <small>Weekly observations also appear in cumulative samples. Results are observational, not option win rates. Sample floors trigger review, not promotion.</small>
-    </section>
   </section>
 }

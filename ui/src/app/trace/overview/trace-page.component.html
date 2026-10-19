@@ -99,6 +99,41 @@
     </section>
   }
 
+  <section class="price-level-panel" aria-labelledby="price-level-title">
+    <form class="price-level-form" (ngSubmit)="addPriceLevel()">
+      <h2 id="price-level-title">Price levels</h2>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>SPX price</mat-label>
+        <input #priceInput matInput type="number" min="0.01" step="any" name="priceLevelPrice" [(ngModel)]="priceLevelPrice" required />
+      </mat-form-field>
+      <mat-form-field appearance="outline" subscriptSizing="dynamic">
+        <mat-label>Label</mat-label>
+        <mat-select name="priceLevelLabel" [(ngModel)]="priceLevelLabel">
+          @for (option of priceLevelLabelOptions(); track option) { <mat-option [value]="option">{{ option }}</mat-option> }
+        </mat-select>
+      </mat-form-field>
+      <label class="price-level-color">Color <input type="color" name="priceLevelColor" [(ngModel)]="priceLevelColor" /></label>
+      <button mat-flat-button color="primary" type="submit" [disabled]="!priceLevelPrice || priceLevelPrice <= 0">{{ editingPriceLevelId ? 'Save' : 'Add' }}</button>
+      @if (editingPriceLevelId) { <button mat-stroked-button type="button" (click)="cancelPriceLevelEdit()">Cancel</button> }
+    </form>
+    @if (priceLevels.levels().length) {
+      <div class="price-level-list" aria-label="Marked SPX price levels">
+        @for (level of displayedPriceLevels(); track level.id) {
+          <span [attr.data-state]="level.proximityState ?? 'far'">
+            <i [style.background]="level.color"></i>
+            <strong>{{ level.price | number:'1.0-2' }}</strong>
+            {{ level.label }}
+            @if (level.distancePoints !== undefined) {
+              <small>{{ level.distancePoints | number:'1.1-1' }} pts@if (level.proximityState && level.proximityState !== 'far') { · {{ proximityStateLabel($any(level)) }}, {{ approachLabel($any(level)) }} }</small>
+            }
+            <button type="button" (click)="editPriceLevel(level.id); priceInput.focus()" [attr.aria-label]="'Edit ' + level.label"><mat-icon>edit</mat-icon></button>
+            <button type="button" (click)="removePriceLevel(level.id)" [attr.aria-label]="'Remove ' + level.label"><mat-icon>close</mat-icon></button>
+          </span>
+        }
+      </div>
+    }
+  </section>
+
   @if (facade.selectedCapture(); as capture) {
     <section class="trace-timeline-panel" aria-labelledby="trace-timeline-title" aria-keyshortcuts="ArrowLeft ArrowRight">
       <div class="trace-timeline-heading">
@@ -143,15 +178,6 @@
       </div>
     </section>
 
-    <app-trade-read
-      [date]="facade.selectedDate()"
-      [captureTs]="capture.ts"
-      [captureId]="capture.capture_id"
-      [spot]="capture.spot"
-      [nodes]="facade.bundle()?.histogram?.rows ?? []"
-      [researchStatus]="facade.researchStatus()"
-    />
-
     <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" />
 
   }
@@ -179,81 +205,9 @@
     <app-trace-market-snapshot
       [rows]="facade.captureRows()"
       [activeIndex]="facade.selectedCaptureIndex()"
-      [histogramNodes]="facade.bundle()?.histogram?.rows ?? []"
-      [gammaContextRows]="facade.bundle()?.gammaContext?.rows ?? []"
       [realizedVolatility]="facade.bundle()?.realizedVolatility ?? null"
-      [researchStatus]="facade.researchStatus()"
-      [charmOverview]="facade.charmOverview()"
-      [charmLoading]="facade.charmLoading()"
-      [charmError]="facade.charmError()"
     />
   }
-  <details class="price-level-disclosure" [open]="priceLevels.levels().length > 0">
-    <summary><strong>Marked price levels</strong><small>{{ priceLevels.levels().length }} saved · shown on every TRACE chart</small></summary>
-  <section class="price-level-panel price-level-panel--embedded" aria-labelledby="price-level-title">
-    <header>
-      <div>
-        <p class="trace-eyebrow">Shared chart annotations</p>
-        <h2 id="price-level-title">Marked price levels</h2>
-        <p>Saved in this browser and shown on every TRACE chart with a price axis.</p>
-      </div>
-      <form class="price-level-form" (ngSubmit)="addPriceLevel()">
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>SPX price</mat-label>
-          <input #priceInput matInput type="number" min="0.01" step="any" name="priceLevelPrice" [(ngModel)]="priceLevelPrice" required />
-        </mat-form-field>
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Label</mat-label>
-          <input matInput name="priceLevelLabel" [(ngModel)]="priceLevelLabel" placeholder="Invalidation, target..." />
-        </mat-form-field>
-        <mat-form-field appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Gamma type</mat-label>
-          <mat-select name="priceLevelKind" [(ngModel)]="priceLevelKind">
-            <mat-option value="unclassified">Unclassified</mat-option>
-            <mat-option value="positive_gamma">Positive gamma</mat-option>
-            <mat-option value="negative_gamma">Negative gamma</mat-option>
-          </mat-select>
-        </mat-form-field>
-        <label class="price-level-color">Color <input type="color" name="priceLevelColor" [(ngModel)]="priceLevelColor" /></label>
-        <button mat-flat-button color="primary" type="submit" [disabled]="!priceLevelPrice || priceLevelPrice <= 0">{{ editingPriceLevelId ? 'Save changes' : 'Add level' }}</button>
-        @if (editingPriceLevelId) {
-          <button mat-stroked-button type="button" (click)="cancelPriceLevelEdit()">Cancel</button>
-          <span role="status">Editing existing level</span>
-        }
-      </form>
-    </header>
-    @if (nearbyPriceLevels().length) {
-      <div class="price-proximity-rail" aria-live="polite" aria-label="Nearby marked price levels">
-        @for (level of nearbyPriceLevels(); track level.id) {
-          <article [attr.data-state]="level.proximityState" [attr.data-kind]="level.kind">
-            <span class="price-proximity-state">{{ proximityStateLabel(level) }}</span>
-            <div>
-              <strong>{{ level.label }} · {{ level.price | number:'1.0-2' }}</strong>
-              <span>{{ level.distancePoints | number:'1.1-1' }} pts · {{ approachLabel(level) }}</span>
-            </div>
-            <small>{{ proximityContext(level.kind) }}</small>
-          </article>
-        }
-      </div>
-    }
-    @if (priceLevels.levels().length) {
-      <div class="price-level-list" aria-label="Marked SPX price levels">
-        @for (level of displayedPriceLevels(); track level.id) {
-          <span [attr.data-state]="level.proximityState ?? 'far'">
-            <i [style.background]="level.color"></i>
-            <strong>{{ level.price | number:'1.0-2' }}</strong>
-            {{ level.label }}
-            <small>{{ priceLevelKindLabel(level.kind) }}@if (level.distancePoints !== undefined) { · {{ level.distancePoints | number:'1.1-1' }} pts }</small>
-            <button type="button" (click)="editPriceLevel(level.id); priceInput.focus()" [attr.aria-label]="'Edit ' + level.label"><mat-icon>edit</mat-icon></button>
-            <button type="button" (click)="removePriceLevel(level.id)" [attr.aria-label]="'Remove ' + level.label"><mat-icon>close</mat-icon></button>
-          </span>
-        }
-      </div>
-    } @else {
-      <p class="price-level-empty">No marked levels yet.</p>
-    }
-  </section>
-  </details>
   @if (facade.selectedCapture()) {
   <details class="retired-disclosure">
     <summary><strong>Gamma profile</strong><small>Descriptive context · not part of any supported result</small></summary>
@@ -268,19 +222,6 @@
     />
   </details>
   }
-  <details class="retired-disclosure">
-    <summary><strong>Charm pressure</strong><small>Retired research · raw market data only</small></summary>
-  <app-charm-widget
-    [date]="facade.selectedDate()"
-    [captureTs]="facade.selectedCapture()?.ts ?? null"
-    [overview]="facade.charmOverview()"
-    [loading]="facade.charmLoading()"
-    [error]="facade.charmError()"
-    [priceLevels]="displayedPriceLevels()"
-    (captureSelected)="selectCaptureTimestamp($event)"
-    (refreshRequested)="facade.reload()"
-  />
-  </details>
 
   @if (facade.captureRows().length) {
     <app-trace-capture-history

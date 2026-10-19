@@ -4,7 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus } from './trace.models';
 import {
-  TracePriceLevelKind,
+  PRICE_LEVEL_LABELS,
   TracePriceLevelProximity,
   TracePriceLevelsStore,
   calculatePriceLevelProximities,
@@ -26,9 +26,8 @@ export class TracePageComponent implements OnInit, OnDestroy {
   activeWorkspaceTab: 'trace' | 'paper' = 'trace';
   priceLevelPrice: number | null = null;
   editingPriceLevelId: string | null = null;
-  priceLevelLabel = '';
+  priceLevelLabel: string = PRICE_LEVEL_LABELS[0];
   priceLevelColor = '#fbbf24';
-  priceLevelKind: TracePriceLevelKind = 'unclassified';
 
   private readonly alertState = new Map<string, { armed: boolean; lastAlertedAt: number | null }>();
   private autoRefreshTimer: ReturnType<typeof setTimeout> | null = null;
@@ -106,10 +105,10 @@ export class TracePageComponent implements OnInit, OnDestroy {
     const price = Number(this.priceLevelPrice);
     if (!Number.isFinite(price) || price <= 0) return;
     if (this.editingPriceLevelId) {
-      if (!this.priceLevels.update(this.editingPriceLevelId, price, this.priceLevelLabel, this.priceLevelColor, this.priceLevelKind)) return;
+      if (!this.priceLevels.update(this.editingPriceLevelId, price, this.priceLevelLabel, this.priceLevelColor)) return;
       this.alertState.delete(this.editingPriceLevelId);
     } else {
-      this.priceLevels.add(price, this.priceLevelLabel, this.priceLevelColor, this.priceLevelKind);
+      this.priceLevels.add(price, this.priceLevelLabel, this.priceLevelColor);
     }
     this.cancelPriceLevelEdit();
   }
@@ -121,13 +120,18 @@ export class TracePageComponent implements OnInit, OnDestroy {
     this.priceLevelPrice = level.price;
     this.priceLevelLabel = level.label;
     this.priceLevelColor = level.color;
-    this.priceLevelKind = level.kind;
+  }
+
+  /** Support and Resistance, plus an older saved label while it is being edited. */
+  priceLevelLabelOptions(): readonly string[] {
+    const options: readonly string[] = PRICE_LEVEL_LABELS;
+    return options.includes(this.priceLevelLabel) ? options : [...options, this.priceLevelLabel];
   }
 
   cancelPriceLevelEdit(): void {
     this.editingPriceLevelId = null;
     this.priceLevelPrice = null;
-    this.priceLevelLabel = '';
+    this.priceLevelLabel = PRICE_LEVEL_LABELS[0];
   }
 
   removePriceLevel(id: string): void {
@@ -190,12 +194,6 @@ export class TracePageComponent implements OnInit, OnDestroy {
     }).format(value);
   }
 
-  priceLevelKindLabel(kind: TracePriceLevelKind): string {
-    if (kind === 'positive_gamma') return 'Positive gamma';
-    if (kind === 'negative_gamma') return 'Negative gamma';
-    return 'Unclassified';
-  }
-
   proximityStateLabel(level: TracePriceLevelProximity): string {
     if (level.proximityState === 'touch') return 'Touch';
     if (level.proximityState === 'near') return 'Near';
@@ -204,12 +202,6 @@ export class TracePageComponent implements OnInit, OnDestroy {
 
   approachLabel(level: TracePriceLevelProximity): string {
     return level.approachDirection.replace('_', ' ');
-  }
-
-  proximityContext(kind: TracePriceLevelKind): string {
-    if (kind === 'positive_gamma') return 'Potential pause / rejection zone';
-    if (kind === 'negative_gamma') return 'Elevated breach / acceleration risk';
-    return 'Marked gamma structure nearby';
   }
 
   private updateProximityAlerts(levels: readonly TracePriceLevelProximity[]): void {
@@ -239,7 +231,7 @@ export class TracePageComponent implements OnInit, OnDestroy {
 
       this.alertState.set(level.id, { armed: false, lastAlertedAt: now });
       const message = level.label + ' ' + formatLevelPrice(level.price)
-        + ' · ' + level.distancePoints.toFixed(1) + ' pts · ' + this.proximityContext(level.kind);
+        + ' · ' + level.distancePoints.toFixed(1) + ' pts ' + this.approachLabel(level);
       this.snackBar.open(
         message,
         'Dismiss',
