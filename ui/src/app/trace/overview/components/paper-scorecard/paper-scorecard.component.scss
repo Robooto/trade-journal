@@ -9,7 +9,7 @@ header span, small { font-size: .74rem; }
 .table-scroll { overflow-x: auto; margin-bottom: .5rem; }
 table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
 th, td { padding: .45rem .4rem; text-align: left; border-bottom: 1px solid #42516a; white-space: nowrap; }
-td, th.day { text-align: right; }
+td, thead th:not(:first-child) { text-align: right; }
 thead th { color: #b5c4d7; font-weight: 600; }
 tbody th { font-weight: 600; }
 tr[data-reference='true'] th { color: #d7e7ff; }
