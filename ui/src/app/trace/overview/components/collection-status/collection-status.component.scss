@@ -1,0 +1,7 @@
+:host { display:block; min-width:0; }
+.collection-line { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem .9rem; margin:0; padding:.45rem .8rem; border:1px solid rgba(148,163,184,.18); border-radius:.6rem; background:rgba(255,255,255,.03); color:#a3b3c8; font-size:.74rem; }
+.collection-line strong { color:#edf4ff; font-weight:650; }
+.dot { width:.5rem; height:.5rem; border-radius:50%; background:#64748b; }
+.collection-line[data-state='live'] .dot { background:#34d399; }
+.collection-line[data-state='stale'] { border-color:rgba(250,204,21,.4); }
+.collection-line[data-state='stale'] .dot { background:#fbbf24; }

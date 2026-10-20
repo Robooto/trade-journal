@@ -21,6 +21,8 @@ const GROUPS: readonly { tier: Tier; title: string; hint: string }[] = [
 })
 export class ResearchSummaryComponent {
   @Input({ required: true }) status!: TraceResearchStatusResponse;
+  /** Open by default on the Research tab. */
+  @Input() open = false;
   readonly groups = GROUPS;
 
   studies(tier: Tier): readonly TraceStudyStatus[] {

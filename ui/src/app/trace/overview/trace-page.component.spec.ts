@@ -25,6 +25,7 @@ import { PaperNowComponent } from './components/paper-now/paper-now.component';
 import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
 import { StrikeLadderComponent } from './components/strike-ladder/strike-ladder.component';
 import { ChainGridHeatmapComponent } from './components/chain-grid-heatmap/chain-grid-heatmap.component';
+import { CollectionStatusComponent } from './components/collection-status/collection-status.component';
 
 class TraceApiStub {
   readonly paperBacktestScorecard = vi.fn(() => NEVER);
@@ -32,6 +33,7 @@ class TraceApiStub {
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
   readonly strikeLadder = vi.fn(() => NEVER);
   readonly chainGrid = vi.fn(() => NEVER);
+  readonly collectionStatus = vi.fn(() => NEVER);
   readonly decisionJournal = vi.fn(() => of({
     schema_version: 'spx-0dte-decision.v1',
     protocol_id: 'spx-0dte-decision-journal-v1',
@@ -110,6 +112,7 @@ describe('TracePageComponent', () => {
         ResearchSummaryComponent,
         StrikeLadderComponent,
         ChainGridHeatmapComponent,
+        CollectionStatusComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,
@@ -145,6 +148,9 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
 
     const summary = fixture.nativeElement.querySelector('app-research-summary');
+    // It lives on the Research tab, open, rather than above the workspace tabs.
+    expect(summary.closest('#research-workspace-panel')).not.toBeNull();
+    expect(summary.querySelector('details.research-summary').open).toBe(true);
     expect(summary.textContent).toContain('Distance and time left carry the signal.');
     expect(summary.textContent).toContain('reviewed 2026-10-16');
     const supported = summary.querySelector('[data-tier="supported"]');

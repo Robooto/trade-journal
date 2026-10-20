@@ -530,3 +530,10 @@ export interface ChainGridViewResponse {
   settlement: number | null; strikes: number[]; captures: ChainGridColumn[]; recorded_snapshots: number;
   notes: string[]; order_submission_enabled: false;
 }
+
+/** What TRACE and the chain grid recorded for one session (`trace-collection-status.v1`). */
+export interface TraceCollectionStatus {
+  schema_version: 'trace-collection-status.v1'; date: string; order_submission_enabled: false;
+  trace: { captures: number; first_ts: string | null; latest_ts: string | null };
+  chain_grid: { status: 'recorded' | 'none' | 'unavailable'; recorded: number; skipped: number; latest_captured_at: string | null; settlement: number | null };
+}

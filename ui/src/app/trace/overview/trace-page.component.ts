@@ -23,7 +23,7 @@ const TRACE_REFRESH_DELAY_MINUTES = 1;
   standalone: false,
 })
 export class TracePageComponent implements OnInit, OnDestroy {
-  activeWorkspaceTab: 'trace' | 'paper' = 'trace';
+  activeWorkspaceTab: 'trace' | 'paper' | 'research' = 'trace';
   priceLevelPrice: number | null = null;
   editingPriceLevelId: string | null = null;
   priceLevelLabel: string = PRICE_LEVEL_LABELS[0];

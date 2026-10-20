@@ -1,0 +1,11 @@
+@if (error()) {
+  <p class="collection-line" data-state="stale" role="status">Collection status unavailable.</p>
+} @else if (status(); as s) {
+  <p class="collection-line" [attr.data-state]="state(s)" role="status" aria-label="Data collection status">
+    <span class="dot" aria-hidden="true"></span>
+    <strong>{{ state(s) === 'live' ? 'Collecting' : state(s) === 'stale' ? 'TRACE capture overdue' : 'Session ' + s.date }}</strong>
+    <span>TRACE {{ s.trace.captures }} captures · latest {{ time(s.trace.latest_ts) }}</span>
+    <span>Chain grid {{ s.chain_grid.recorded }} snapshots@if (s.chain_grid.skipped) { · {{ s.chain_grid.skipped }} skipped }</span>
+    <span>@if (s.chain_grid.settlement !== null) { Settled {{ s.chain_grid.settlement | number:'1.2-2' }} } @else { Not settled yet }</span>
+  </p>
+}

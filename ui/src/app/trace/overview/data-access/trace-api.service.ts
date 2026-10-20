@@ -16,6 +16,7 @@ import {
   TraceResearchStatusResponse,
   StrikeLadderResponse,
   ChainGridViewResponse,
+  TraceCollectionStatus,
   TraceSessionsResponse,
   TraceSnapshotResponse,
   TraceSummaryResponse,
@@ -136,6 +137,10 @@ export class TraceApiService {
     return this.http.get<Spx0DteDecisionJournalResponse>(
       this.sessionUrl(date) + '/0dte-decision-journal', { params },
     );
+  }
+
+  collectionStatus(date: string): Observable<TraceCollectionStatus> {
+    return this.http.get<TraceCollectionStatus>(this.sessionUrl(date) + '/collection-status');
   }
 
   chainGrid(date: string): Observable<ChainGridViewResponse> {

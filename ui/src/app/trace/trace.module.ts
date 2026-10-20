@@ -1,5 +1,6 @@
 import { StrikeLadderComponent } from './overview/components/strike-ladder/strike-ladder.component';
 import { ChainGridHeatmapComponent } from './overview/components/chain-grid-heatmap/chain-grid-heatmap.component';
+import { CollectionStatusComponent } from './overview/components/collection-status/collection-status.component';
 import { ResearchSummaryComponent } from './overview/components/research-summary/research-summary.component';
 import { PaperWorkspaceComponent } from './overview/components/paper-workspace/paper-workspace.component';
 import { PaperReplayChartComponent } from './overview/components/paper-replay-chart/paper-replay-chart.component';
@@ -28,6 +29,6 @@ import { PaperNowComponent } from './overview/components/paper-now/paper-now.com
     SessionTrendsComponent,
     SignedGexMapComponent,
   ],
-  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent, StrikeLadderComponent, ChainGridHeatmapComponent],
+  imports: [PaperReplayChartComponent, CommonModule, FormsModule, SharedMaterialModule, TraceRoutingModule, PaperLedgerComponent, PaperNowComponent, ResearchSummaryComponent, StrikeLadderComponent, ChainGridHeatmapComponent, CollectionStatusComponent],
 })
 export class TraceModule {}

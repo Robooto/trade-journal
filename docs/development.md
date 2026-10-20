@@ -111,8 +111,15 @@ new session without trades does not prevent a needed service deployment.
   arms on the same entries, with per-session totals (`/api/trace/paper-backtest-scorecard`,
   computed by the pipeline backtester). The dashboard's paper desk reads the same
   endpoint for this week's live-rules and hold-to-expiry results. Presentation only.
-- `ResearchSummaryComponent`: "What the research says", rendered from the study
+- `ResearchSummaryComponent`: "What the research says" on the Research tab, rendered from the study
   registry's headline and per-study evidence tier/summary (`/api/trace/research-status`).
+- `CollectionStatusComponent`: one line under the workspace tabs with the session's
+  TRACE captures, chain-grid snapshots and settlement (`/api/trace/{date}/collection-status`);
+  flags a capture overdue by 12+ minutes during the session.
+- `ChainGridHeatmapComponent`: the session's chain grid as a heat map (credit or delta by
+  short strike and capture, calls above or puts below) with SPX, settlement, active nodes on
+  that side and a HIRO strip that reads like the ladder's tag (`/api/trace/{date}/chain-grid`).
+  Clicking a column selects that capture for the page.
 - `TraceMarketSnapshotComponent` and `SignedGexMapComponent`: one compact row of capture
   facts (spot, gamma pocket, support, resistance, walls, shelf, movement) and the signed GEX
   structure map. HIRO and nodes are not repeated in the snapshot.

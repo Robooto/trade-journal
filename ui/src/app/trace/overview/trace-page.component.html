@@ -18,12 +18,6 @@
     </div>
   </header>
 
-  @if (facade.researchStatus(); as status) {
-    <app-research-summary [status]="status" />
-  } @else if (facade.researchStatusError()) {
-    <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError() }}</span></div></section>
-  }
-
   <section class="trace-control-panel" aria-label="TRACE session controls">
     <mat-form-field appearance="outline" class="trace-date-field" subscriptSizing="dynamic">
       <mat-label>Session date</mat-label>
@@ -72,7 +66,18 @@
       [class.is-active]="activeWorkspaceTab === 'paper'"
       (click)="activeWorkspaceTab = 'paper'"
     ><mat-icon>science</mat-icon><span>Paper trading</span></button>
+    <button
+      type="button"
+      role="tab"
+      id="research-workspace-tab"
+      aria-controls="research-workspace-panel"
+      [attr.aria-selected]="activeWorkspaceTab === 'research'"
+      [class.is-active]="activeWorkspaceTab === 'research'"
+      (click)="activeWorkspaceTab = 'research'"
+    ><mat-icon>menu_book</mat-icon><span>Research</span></button>
   </nav>
+
+  <app-collection-status class="trace-collection-status" [date]="facade.selectedDate()" [refreshAt]="lastRefreshRequestedAt()" />
 
   <div
     class="trace-workspace-panel"
@@ -250,4 +255,18 @@
   </div>
 
 
+  <div
+    class="trace-workspace-panel"
+    id="research-workspace-panel"
+    role="tabpanel"
+    aria-labelledby="research-workspace-tab"
+    [hidden]="activeWorkspaceTab !== 'research'"
+  >
+    @if (facade.researchStatus(); as status) {
+      <app-research-summary [status]="status" [open]="true" />
+    } @else if (facade.researchStatusError()) {
+      <section class="trace-state" role="status"><mat-icon>info</mat-icon><div><strong>Evidence registry unavailable</strong><span>{{ facade.researchStatusError() }}</span></div></section>
+    }
+    <p class="research-tool-note">Every finding here can be rerun on demand on mini with <code>scripts/research.sh</code> (scorecard, day, chain-grid, hiro-tag, hypotheses). Nothing runs on a timer, and nothing places or authorizes trades.</p>
+  </div>
 </section>
