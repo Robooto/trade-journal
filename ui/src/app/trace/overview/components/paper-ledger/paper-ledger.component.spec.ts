@@ -29,10 +29,11 @@ describe('PaperLedgerComponent', () => {
     fixture.componentRef.setInput('fromDate', '2026-09-21'); fixture.componentRef.setInput('toDate', '2026-09-21');
     fixture.detectChanges();
   });
-  it('defaults to the forward trial only from its prospective start', () => {
+  it('shows only the live bot, with no picker for older test variants', () => {
     fixture.componentRef.setInput('toDate', '2026-10-05'); fixture.detectChanges();
-    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-10-05', expect.objectContaining({ policy_id: 'paper-distance-one-position.v1' }));
-    expect(fixture.componentInstance.policies.some(p => p.id === 'credit-risk-to-close.v4')).toBe(true);
+    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-10-05', expect.objectContaining({ policy_id: 'credit-risk-to-close.v4' }));
+    expect(fixture.nativeElement.querySelector('select[name="policy"]')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Structure iron condor');
   });
   it('renders all four stored symbols and buy/sell labels without treating a condor as a vertical', () => {
     const text = fixture.nativeElement.textContent;
@@ -52,24 +53,5 @@ describe('PaperLedgerComponent', () => {
     fixture.componentInstance.load(); fixture.detectChanges();
     expect(fixture.componentInstance.response()).toBeNull();
     expect(fixture.nativeElement.textContent).toContain('No results have been substituted');
-  });
-  it('selects the distance shadow and identifies excluded P/L as baseline evidence', () => {
-    api.paperTrades.mockReturnValue(of({ ...RESPONSE, rows: [{ ...RESPONSE.rows[0],
-      status: 'skipped', reason: 'fragile_structure_distance', gross_pnl_dollars: null,
-      excluded_baseline_outcome: { status: 'closed', reason: 'two_times_entry_credit_stop', gross_pnl_dollars: -160 },
-    }] }));
-    const c = fixture.componentInstance;
-    c.policy = 'structure-distance-shadow.v1'; c.load(true); fixture.detectChanges();
-    expect(api.paperTrades).toHaveBeenLastCalledWith('2026-09-21', '2026-09-21', expect.objectContaining({ policy_id: 'structure-distance-shadow.v1', active_only: 'true' }));
-    expect(fixture.nativeElement.textContent).toContain("Excluded opportunity's baseline: closed");
-    expect(fixture.nativeElement.textContent).toContain('-$160.00');
-    expect(fixture.nativeElement.querySelector('details.trade summary').textContent).toContain('Unavailable gross');
-  });
-  it('shows only the trial and its current controls', () => {
-    fixture.componentRef.setInput('toDate', '2026-10-05'); fixture.detectChanges();
-    const c = fixture.componentInstance;
-    expect(c.policies.map(p => p.id).sort()).toEqual(['credit-risk-to-close.v4', 'paper-distance-one-position.v1', 'structure-distance-shadow.v1'].sort());
-    expect(fixture.nativeElement.textContent).not.toContain('Include archived setups');
-    expect(fixture.nativeElement.textContent).not.toContain('Structure iron condor');
   });
 });

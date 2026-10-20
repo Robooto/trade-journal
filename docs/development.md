@@ -105,8 +105,11 @@ new session without trades does not prevent a needed service deployment.
   `trend-chart.models.ts` and `trend-chart.utils.ts` hold their shared types and
   rendering helpers. These functions do not fetch data or alter research policy.
   Empty sessions clear previous geometry, including ticks and cursors.
-- `PaperNowComponent` and `PaperLedgerComponent`: catalog-driven current paper
-  presentation and exact contract evidence, respectively.
+- `PaperNowComponent` and `PaperLedgerComponent`: the live paper bot only (the catalog's
+  active policy): its rules, the selected capture's signal, the session's trades, results
+  since the cohort start and collection coverage; and its exact contract records. Older
+  test variants (distance one-position trial, distance-only control, first opposite take,
+  earlier policy versions) stay in the pipeline ledger but are not shown.
 - `PaperScorecardComponent`: the live baseline rules next to the frozen hold-family
   arms on the same entries, with per-session totals (`/api/trace/paper-backtest-scorecard`,
   computed by the pipeline backtester). The dashboard's paper desk reads the same

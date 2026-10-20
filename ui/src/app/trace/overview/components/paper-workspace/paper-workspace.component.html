@@ -9,7 +9,7 @@
       <div><p class="trace-eyebrow">Selected TRACE capture</p><h2 id="paper-replay-controls-title">Trade replay</h2></div>
       <span>{{ formatTimestamp(capture.ts) }} · capture {{ facade.selectedCaptureIndex() + 1 }} of {{ facade.captureRows().length }}</span>
     </header>
-    <p>Replay shows recorded baseline entries, including signals skipped by the current trial. Open and closed trades above show only entries admitted by the current strategy.</p>
+    <p>Replay any of the bot's recorded entries through the selected capture to see its quote path.</p>
     <div class="paper-replay-action">
       <label class="paper-replay-selector">Recorded baseline entry · {{ eligibleReplayEntries().length }} available
         <select [ngModel]="selectedReplayEntry" (ngModelChange)="selectReplayEntry($event)" name="selectedReplayEntry" [disabled]="facade.paperReplayEntriesLoading() || !eligibleReplayEntries().length">
@@ -70,7 +70,7 @@
 </details>
 
 <details class="paper-ledger-disclosure" (toggle)="ledgerExpanded = $any($event.target).open">
-  <summary><span><strong>Trade records</strong><small>Current trial and comparison data</small></span><mat-icon>expand_more</mat-icon></summary>
+  <summary><span><strong>Trade records</strong><small>Every recorded entry of the live bot</small></span><mat-icon>expand_more</mat-icon></summary>
   @if (ledgerExpanded && active) {
     <form class="paper-scorecard-range" (ngSubmit)="ledgerFromDate = paperFromDate; ledgerToDate = paperToDate">
       <label>From <input type="date" [(ngModel)]="paperFromDate" name="paperFromDate" /></label>

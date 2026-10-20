@@ -1,21 +1,19 @@
 <section class="paper-now" aria-labelledby="paper-now-title">
   <header>
-    <div><p class="eyebrow">Paper trading · {{ date }}</p><h2 id="paper-now-title">Paper trading now</h2></div>
+    <div><p class="eyebrow">Paper trading · {{ date }}</p><h2 id="paper-now-title">The paper bot</h2></div>
     <span>Paper only · no brokerage orders</span>
   </header>
   @if (catalogError()) { <p role="alert">Paper configuration unavailable. Strategy and results could not be loaded.</p> }
-  @else if (catalog()?.forward_experiment; as experiment) {
+  @else if (catalog()?.active; as active) {
     <section class="strategy-overview" aria-label="Current paper strategy">
-      <div class="strategy-heading"><h3>SPX directional spreads · one position</h3><strong class="status-badge">{{ trialStarted ? 'Forward trial' : 'Scheduled' }}</strong></div>
-      <p>Follow fresh directional signals while avoiding entries too close to the frozen structure. One open spread across both directions; wait for a new signal after it closes.</p>
+      <div class="strategy-heading"><h3>SPX 0DTE credit spreads · live rules</h3><strong class="status-badge">Running since {{ active.start_date }}</strong></div>
+      <p>Sells a 10-point bull put or bear call spread on each fresh directional TRACE signal, beyond the frozen support or resistance. Trades can overlap.</p>
       <div class="rule-list" aria-label="Strategy rules">
-        <span>10-point spread · 1 contract per leg</span><span>1 open position</span><span>Skip distance below 3 points</span>
-        <span>Minimum credit {{ catalog()?.active?.minimum_entry_credit_dollars | currency }}</span>
-        <span>Take profit at 50% of credit</span><span>Stop at 2× credit buyback debit</span><span>Close by 1 p.m. Pacific</span>
+        <span>{{ active.width_points }}-point spread · 1 contract per leg</span><span>Overlapping trades allowed</span>
+        <span>Minimum credit {{ active.minimum_entry_credit_dollars | currency }}</span>
+        <span>Take profit at 50% of credit</span><span>Stop at {{ active.stop_debit_multiple }}× credit buyback debit</span><span>Close by 1 p.m. Pacific</span>
       </div>
-      <small>At the exact stop, loss before costs equals the entry credit. Missing distance is retained and flagged. New entries run {{ catalog()?.active?.entry_start_local }}–{{ catalog()?.active?.entry_end_local }} Pacific.</small>
-      @if (!trialStarted) { <p class="status-note">Scheduled for {{ experiment.start_date }}; no forward outcomes yet. Earlier replay results do not count toward this trial.</p> }
-      @else { <p>Trial since {{ experiment.start_date }} · session trades below use the latest stored quotes for {{ date }}.</p> }
+      <small>New entries {{ active.entry_start_local }}–{{ active.entry_end_local }} Pacific, decided on the ten-minute captures. The scorecard below tests the same entries held to expiry.</small>
     </section>
   } @else if (loading()) { <p role="status">Loading paper configuration…</p> }
 
@@ -30,55 +28,56 @@
         <p class="signal-headline"><strong>{{ signal.decision === 'take' ? 'Signal qualifies' : 'Wait · entry conditions not met' }}</strong>@if (signal.trade_type) { · {{ label(signal.trade_type) }} } · grade {{ signal.grade }} · {{ signal.quality_score }}/100</p>
         <div class="reason-list">@for (reason of signal.reason_codes; track reason) { <span>{{ label(reason) }}</span> }</div>
       }
-      <small>A qualifying signal needs a fresh onset, a free position slot, and valid distance, credit and quotes before a paper trade is admitted.</small>
+      <small>A qualifying signal needs a fresh onset and valid credit and quotes before a paper trade is admitted.</small>
     } @else { <p>Select a capture to see its signal and reasons.</p> }
   </section>
 
-  @if (trialStarted) {
-    <section class="session-trades" aria-label="Current session trades">
-      <h3>Open trades · {{ date }}</h3>
-      @if (sessionUnavailable) { <p role="alert">Session trade evidence is unavailable. Missing data is not a flat position.</p> }
-      @else if (!currentSession) { <p role="status">Loading trial session trades…</p> }
-      @else if (currentSession.status === 'no_evidence') { <p>No session evidence recorded yet.</p> }
-      @else {
-        @for (trade of sessionTrades('open'); track trade.evaluation_id) {
-          <article class="trade-card" aria-label="Open paper trade"><strong>{{ label(trade.trade_type) }} · opened {{ time(trade.onset_ts) }}</strong>
-            <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
-            <p>Entry credit {{ money(trade.entry_credit_dollars) }} · maximum entry risk {{ money(trade.max_risk_dollars) }}</p>
-            <p>{{ label(trade.reason) }}</p>
-          </article>
-        } @empty { <p>No evaluable open trade. {{ sessionTrades('unevaluable').length }} opportunities have unavailable outcomes.</p> }
-        <h3>Closed trades · {{ sessionTrades('closed').length }}</h3>
-        @for (trade of sessionTrades('closed'); track trade.evaluation_id) {
-          <article class="trade-card" aria-label="Closed paper trade"><strong>{{ label(trade.trade_type) }} · {{ time(trade.onset_ts) }} → {{ time(trade.exit_ts) }}</strong>
-            <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
-            <p>{{ label(trade.reason) }} · {{ money(trade.gross_pnl_dollars) }} gross @if (trade.cost_scenarios?.length) { · {{ money(trade.cost_scenarios![0].net_scenario_dollars) }} after assumed costs }</p>
-            <small>Entry credit {{ money(trade.entry_credit_dollars) }} · exit debit {{ money(trade.exit_debit_dollars) }}</small>
-          </article>
-        } @empty { <p>No completed trades recorded.</p> }
-        <h3>Skipped signals · {{ sessionTrades('skipped').length }}</h3>
-        <div class="reason-list">@for (trade of sessionTrades('skipped'); track trade.evaluation_id) { <span>{{ time(trade.onset_ts) }} · {{ label(trade.reason) }}</span> } @empty { <span>No recorded skips.</span> }</div>
-        @for (trade of sessionTrades('unevaluable'); track trade.evaluation_id) { <p role="status">{{ time(trade.onset_ts) }} · Outcome unavailable: {{ label(trade.reason) }}. This is excluded from closed returns.</p> }
-        @if (currentSession!.total > currentSession!.rows.length) { <p>Showing {{ currentSession!.rows.length }} of {{ currentSession!.total }} opportunities. Open trade records below for the full list.</p> }
-      }
-    </section>
-    <section aria-label="Current strategy results">
-      <h3>Results since {{ catalog()?.forward_experiment?.start_date }}</h3>
-      @if (trialError() || trial()?.status === 'unavailable') { <p role="alert">Trial results unavailable.</p> }
-      @else if (trial()?.forward_experiment; as test) {
-        <dl class="performance-metrics">
-          <div><dt>After assumed costs</dt><dd>{{ money(test.trial.cost_scenario_pnl_dollars) }}</dd></div>
-          <div><dt>Profit per closed trade</dt><dd>{{ money(test.trial.cost_scenario_expectancy_dollars) }}</dd></div>
-          <div><dt>Win rate / break-even required</dt><dd>{{ test.trial.gross_win_rate == null ? 'Not available' : (test.trial.gross_win_rate | percent:'1.1-1') }} / {{ test.trial.empirical_break_even_win_rate == null ? 'Not available' : (test.trial.empirical_break_even_win_rate | percent:'1.1-1') }}</dd></div>
-          <div><dt>Average win / loss</dt><dd>{{ money(test.trial.average_win_dollars) }} / {{ money(test.trial.average_loss_dollars) }}</dd></div>
-          <div><dt>Completed trade paths</dt><dd>{{ test.trial.completed_path_coverage == null ? 'Not available' : (test.trial.completed_path_coverage | percent:'1.1-1') }} · {{ test.trial.completed_path_denominator }} admitted</dd></div>
-        </dl>
-        <p>Review progress: {{ test.complete_eligible_sessions }}/{{ test.required_sessions }} complete eligible sessions · {{ test.eligible_trial_closes }}/{{ test.required_trial_closes }} trial closes. No automatic promotion.</p>
-        <p>Average complete-session result: {{ money(test.mean_session_net_scenario) }} after assumed costs.</p>
-        @if (test.mean_session_net_interval_95; as interval) { <small>95% session interval: {{ money(interval[0]) }} to {{ money(interval[1]) }}. Small samples do not establish profitability.</small> }
-      } @else { <p>Waiting for forward results.</p> }
-    </section>
-  }
+  <section class="session-trades" aria-label="Current session trades">
+    <h3>Open trades · {{ date }}</h3>
+    @if (sessionUnavailable) { <p role="alert">Session trade evidence is unavailable. Missing data is not a flat position.</p> }
+    @else if (!currentSession) { <p role="status">Loading session trades…</p> }
+    @else if (currentSession.status === 'no_evidence') { <p>No session evidence recorded yet.</p> }
+    @else {
+      @for (trade of sessionTrades('open'); track trade.evaluation_id) {
+        <article class="trade-card" aria-label="Open paper trade"><strong>{{ label(trade.trade_type) }} · opened {{ time(trade.onset_ts) }}</strong>
+          <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
+          <p>Entry credit {{ money(trade.entry_credit_dollars) }} · maximum entry risk {{ money(trade.max_risk_dollars) }}</p>
+          <p>{{ label(trade.reason) }}</p>
+        </article>
+      } @empty { <p>No evaluable open trade. {{ sessionTrades('unevaluable').length }} opportunities have unavailable outcomes.</p> }
+      <h3>Closed trades · {{ sessionTrades('closed').length }}</h3>
+      @for (trade of sessionTrades('closed'); track trade.evaluation_id) {
+        <article class="trade-card" aria-label="Closed paper trade"><strong>{{ label(trade.trade_type) }} · {{ time(trade.onset_ts) }} → {{ time(trade.exit_ts) }}</strong>
+          <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
+          <p>{{ label(trade.reason) }} · {{ money(trade.gross_pnl_dollars) }} gross @if (trade.cost_scenarios?.length) { · {{ money(trade.cost_scenarios![0].net_scenario_dollars) }} after assumed costs }</p>
+          <small>Entry credit {{ money(trade.entry_credit_dollars) }} · exit debit {{ money(trade.exit_debit_dollars) }}</small>
+        </article>
+      } @empty { <p>No completed trades recorded.</p> }
+      <h3>Skipped signals · {{ sessionTrades('skipped').length }}</h3>
+      <div class="reason-list">@for (trade of sessionTrades('skipped'); track trade.evaluation_id) { <span>{{ time(trade.onset_ts) }} · {{ label(trade.reason) }}</span> } @empty { <span>No recorded skips.</span> }</div>
+      @for (trade of sessionTrades('unevaluable'); track trade.evaluation_id) { <p role="status">{{ time(trade.onset_ts) }} · Outcome unavailable: {{ label(trade.reason) }}. This is excluded from closed returns.</p> }
+      @if (currentSession!.total > currentSession!.rows.length) { <p>Showing {{ currentSession!.rows.length }} of {{ currentSession!.total }} opportunities. Open trade records below for the full list.</p> }
+    }
+  </section>
+
+  <section aria-label="Current strategy results">
+    <h3>Results since {{ catalog()?.active?.start_date }}</h3>
+    @if (resultsError() || results()?.status === 'unavailable') { <p role="alert">Results unavailable.</p> }
+    @else if (summary; as total) {
+      <dl class="performance-metrics">
+        <div><dt>After assumed costs</dt><dd>{{ money(total.cost_scenario_pnl_dollars) }}</dd></div>
+        <div><dt>Closed trades</dt><dd>{{ total.closed }}</dd></div>
+        <div><dt>Profit per closed trade</dt><dd>{{ money(total.cost_scenario_expectancy_dollars) }}</dd></div>
+        <div><dt>Win rate / break-even required</dt><dd>{{ total.gross_win_rate == null ? 'Not available' : (total.gross_win_rate | percent:'1.1-1') }} / {{ total.empirical_break_even_win_rate == null ? 'Not available' : (total.empirical_break_even_win_rate | percent:'1.1-1') }}</dd></div>
+        <div><dt>Average win / loss</dt><dd>{{ money(total.average_win_dollars) }} / {{ money(total.average_loss_dollars) }}</dd></div>
+        <div><dt>Completed trade paths</dt><dd>{{ total.completed_path_coverage == null ? 'Not available' : (total.completed_path_coverage | percent:'1.1-1') }}</dd></div>
+      </dl>
+      <small>Recorded rules on the bot's own ten-minute quotes. Small samples do not establish profitability.</small>
+    } @else if (results()) { <p>No closed trades recorded yet.</p> }
+    @else { <p role="status">Loading results…</p> }
+  </section>
+
+  <app-paper-scorecard [refreshAt]="refreshAt" />
 
   <section class="collection-status" aria-label="Data collection status">
     <h3>Data collection</h3>
@@ -90,30 +89,13 @@
           @if (coverage.largest_gap_seconds !== null) { · largest gap {{ coverage.largest_gap_seconds / 60 | number:'1.0-1' }} min }
         </p>
         @if (coverage.primary_status === 'excluded') { <p role="status">This session is excluded from complete-session means. Closed trade totals remain separate.</p> }
-        @if (coverage.unknown_position_state) { <p role="alert">Position state unknown. Later entries stay blocked for this session.</p> }
+        @if (coverage.unknown_position_state) { <p role="alert">Position state unknown for part of this session.</p> }
         <ul>@for (reason of coverage.reasons; track reason) { <li>{{ coverageLabel(reason) }}</li> }</ul>
-        <small>A fresh TRACE signal does not establish paper coverage. This readout uses recorded paper cycles and trade paths.</small>
       </div>
-    } @else if (trialStarted && !currentSession) { <p role="status">Loading paper collection evidence…</p> }
+    } @else if (!currentSession) { <p role="status">Loading paper collection evidence…</p> }
     @else { <p>Paper session coverage has not been published for this date.</p> }
     <small>Sampled quotes are modeled evidence. {{ catalog()?.cost_label }}. Actual fills and fees remain unverified.</small>
   </section>
-
-  <details class="supporting-data"><summary>Comparison data and collection detail</summary>
-    <p>The original baseline and distance-only control keep collecting so we can compare the current trial with the same opportunities. They are supporting evidence.</p>
-    @if (trial()?.forward_experiment; as test) {
-      <p>Same-date distance-only control: {{ money(test.control.cost_scenario_pnl_dollars) }} after assumed costs. Mean complete-session difference: {{ money(test.mean_session_difference) }}.</p>
-      @for (day of test.daily; track day.date) {
-        <p>{{ day.date }} · {{ day.collection ? coverageLabel(day.collection.primary_status) : day.complete ? 'complete' : 'incomplete; excluded from session means' }} · trial {{ money(day.trial_net_scenario) }} · control {{ money(day.control_net_scenario) }}</p>
-        @if (day.collection?.reasons?.length) { <small>@for (reason of day.collection!.reasons; track reason) { {{ coverageLabel(reason) }}@if (!$last) { · } }</small> }
-      }
-      <small>Complete no-entry sessions count as zero. Missing source records or outcomes do not.</small>
-    } @else {
-      @if (comparisonError() || comparison()?.status === 'unavailable') { <p role="alert">Comparison evidence unavailable.</p> }
-      @for (item of comparison()?.strategy_summaries || []; track item.strategy_id) { <p>Collection baseline from {{ cohortStart }}: {{ item.summary.closed }} closed · {{ money(item.summary.cost_scenario_pnl_dollars) }} after assumed costs · {{ item.summary.empirical_break_even_win_rate == null ? 'Not available' : (item.summary.empirical_break_even_win_rate | percent:'1.1-1') }} break-even win rate.</p> }
-      @if (shadow()?.distance_shadow; as test) { <p>Distance-only control from {{ test.start_date }}: {{ test.shadow.closed }} closed · {{ money(test.shadow.cost_scenario_pnl_dollars) }} after assumed costs.</p> }
-    }
-  </details>
 </section>
 
 <ng-template #contractStrikes let-trade>
@@ -124,5 +106,3 @@
     } @empty { <strong>Unavailable</strong> }
   </div>
 </ng-template>
-
-<app-paper-scorecard [refreshAt]="refreshAt" />

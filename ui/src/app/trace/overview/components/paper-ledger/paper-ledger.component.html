@@ -1,13 +1,12 @@
 <section class="ledger" aria-labelledby="paper-ledger-title">
   <h2 id="paper-ledger-title">Exact contracts & admission ledger</h2>
-  <p>Recorded signals and exact contracts for the current trial and its comparison controls.</p>
+  <p>Recorded signals and exact contracts for the live bot.</p>
   <form (ngSubmit)="load(true)" class="filters">
-    <label>Trial or control<select name="policy" [(ngModel)]="policy">@for (item of policies; track item.id) { <option [value]="item.id">{{ item.label }}</option> }</select></label>
     <label>Outcome<select name="status" [(ngModel)]="status"><option value="">All outcomes</option><option>closed</option><option>open</option><option>skipped</option><option>unevaluable</option></select></label>
     <label>Contract / date / reason<input name="search" [(ngModel)]="search" maxlength="100" /></label>
     <button type="submit" [disabled]="loading()">Apply filters / refresh</button>
   </form>
-  <p>Skipped signals are opportunities, not entered trial trades.</p>
+  <p>Skipped signals are opportunities the bot did not enter.</p>
   @if (loading()) { <p role="status">Loading exact contracts…</p> }
   @if (error()) { <p role="alert">{{ error() }}</p> }
   @if (response(); as data) {
@@ -21,7 +20,6 @@
       <details class="trade">
         <summary>{{ trade.onset_ts }} · {{ trade.trade_type }} · {{ trade.width_points }}-point wings · {{ trade.status }} · {{ money(trade.gross_pnl_dollars) }} gross</summary>
         <p>Entry: {{ trade.entry_status }} · {{ trade.reason }} · Exit: {{ trade.exit_ts || 'Not recorded' }}</p>
-        @if (trade.excluded_control_outcome; as control) { <p>Skipped signal’s distance-only control: {{ control.status }} · {{ control.reason }} · {{ money(control.gross_pnl_dollars) }} gross. This is a control outcome, not a trial trade.</p> }
         @if (trade.excluded_baseline_outcome; as baseline) { <p>Excluded opportunity's baseline: {{ baseline.status }} · {{ baseline.reason }} · {{ money(baseline.gross_pnl_dollars) }} gross. This outcome belongs to the baseline.</p> }
         @if (trade.distance_filter === 'missing_distance_retained') { <p>Entry distance unavailable; retained in both arms.</p> }
         <p>Credit {{ money(trade.entry_credit_dollars) }} · Debit {{ money(trade.exit_debit_dollars) }} · Expiration max risk {{ money(trade.max_risk_dollars) }}</p>

@@ -36,7 +36,6 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
     });
   }
   ngOnDestroy(): void { this.request?.unsubscribe(); this.catalogRequest?.unsubscribe(); }
-  get policies() { const catalog = this.catalog(); return catalog?.policies.filter(policy => [catalog.active?.policy_id, catalog.forward_experiment?.id, catalog.distance_shadow.id].includes(policy.id)) ?? []; }
   load(reset = false): void {
     if (!this.fromDate || !this.toDate || !this.policy || !this.catalog()) { this.loading.set(false); return; }
     if (reset) this.offset = 0;
@@ -53,9 +52,8 @@ export class PaperLedgerComponent implements OnChanges, OnDestroy {
   configureLedger(): void {
     const catalog = this.catalog();
     if (!catalog) return;
-    const trial = catalog.forward_experiment;
-    const preferred = trial?.start_date && this.toDate >= trial.start_date ? trial.id : catalog.active?.policy_id;
-    this.policy = preferred ?? '';
+    // Only the live bot's records; older test variants stay in the pipeline's ledger.
+    this.policy = catalog.active?.policy_id ?? '';
     this.width = String(catalog.active?.width_points ?? '');
     this.load(true);
   }

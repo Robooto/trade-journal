@@ -25,27 +25,16 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   readonly response = signal<PaperLedgerResponse | null>(null);
   readonly loading = signal(false);
   readonly error = signal(false);
-  readonly comparison = signal<PaperLedgerResponse | null>(null);
-  readonly comparisonError = signal(false);
-  readonly shadow = signal<PaperLedgerResponse | null>(null);
-  readonly shadowError = signal(false);
+  /** Results for the live bot since its cohort started (one row; summaries only). */
+  readonly results = signal<PaperLedgerResponse | null>(null);
+  readonly resultsError = signal(false);
   readonly catalog = signal<PaperCatalog | null>(null);
   readonly catalogError = signal(false);
-  readonly trial = signal<PaperLedgerResponse | null>(null);
-  readonly trialSession = signal<PaperLedgerResponse | null>(null);
-  readonly trialError = signal(false);
-  readonly trialSessionError = signal(false);
-  private trialRequest?: Subscription;
-  private trialSessionRequest?: Subscription;
   private catalogRequest?: Subscription;
-  private shadowRequest?: Subscription;
   private request?: Subscription;
-  private comparisonRequest?: Subscription;
+  private resultsRequest?: Subscription;
 
   constructor(private readonly api: TraceApiService) {}
-
-  get cohortStart(): string { return this.catalog()?.active?.start_date ?? ''; }
-  get policyId(): string { return this.catalog()?.active?.policy_id ?? ''; }
 
   ngOnChanges(): void {
     this.decisionRequest?.unsubscribe(); this.decision.set(null); this.decisionError.set(false); this.decisionLoading.set(false);
@@ -56,21 +45,10 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
         error: () => { this.decisionError.set(true); this.decisionLoading.set(false); },
       });
     }
-    this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe();
-    this.trial.set(null); this.trialSession.set(null); this.trialError.set(false); this.trialSessionError.set(false);
-    this.catalogRequest?.unsubscribe();
-    this.catalog.set(null);
-    this.catalogError.set(false);
-    this.shadowRequest?.unsubscribe();
-    this.shadow.set(null);
-    this.shadowError.set(false);
-    this.loading.set(false);
-    this.request?.unsubscribe();
-    this.comparisonRequest?.unsubscribe();
-    this.comparison.set(null);
-    this.comparisonError.set(false);
-    this.response.set(null);
-    this.error.set(false);
+    this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.resultsRequest?.unsubscribe();
+    this.catalog.set(null); this.catalogError.set(false);
+    this.response.set(null); this.error.set(false); this.loading.set(false);
+    this.results.set(null); this.resultsError.set(false);
     if (!this.date) return;
     this.loading.set(true);
     this.catalogRequest = this.api.paperCatalog(this.date).subscribe({
@@ -80,45 +58,25 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   }
 
   private loadEvidence(): void {
-    const catalog = this.catalog();
-    if (!catalog?.active) { this.loading.set(false); return; }
-    const width = String(catalog.active.width_points);
-    this.request = this.api.paperTrades(this.date, this.date, {
-      policy_id: this.policyId, strategy_id: 'spx-directional-vertical.v1',
-      offset: '0', limit: '200',
-      width_points: width, active_only: 'true',
-    }).subscribe({
+    const active = this.catalog()?.active;
+    if (!active) { this.loading.set(false); return; }
+    const filters = { policy_id: active.policy_id, strategy_id: 'spx-directional-vertical.v1', width_points: String(active.width_points), active_only: 'true' };
+    this.request = this.api.paperTrades(this.date, this.date, { ...filters, offset: '0', limit: '200' }).subscribe({
       next: response => { this.response.set(response); this.loading.set(false); },
       error: () => { this.error.set(true); this.loading.set(false); },
     });
-    if (catalog.distance_shadow.start_date && this.date >= catalog.distance_shadow.start_date) {
-      this.shadowRequest = this.api.paperTrades(catalog.distance_shadow.start_date, this.date, {
-        policy_id: catalog.distance_shadow.id, strategy_id: 'spx-directional-vertical.v1',
-        width_points: width, active_only: 'true', limit: '1',
-      }).subscribe({
-        next: response => this.shadow.set(response),
-        error: () => this.shadowError.set(true),
-      });
-    }
-    const experiment = catalog.forward_experiment;
-    if (experiment?.start_date && this.date >= experiment.start_date) {
-      const filters = { policy_id: experiment.id, strategy_id: 'spx-directional-vertical.v1', width_points: width, active_only: 'true' };
-      this.trialRequest = this.api.paperTrades(experiment.start_date, this.date, { ...filters, limit: '1' }).subscribe({
-        next: response => this.trial.set(response), error: () => this.trialError.set(true),
-      });
-      this.trialSessionRequest = this.api.paperTrades(this.date, this.date, { ...filters, limit: '200' }).subscribe({
-        next: response => this.trialSession.set(response), error: () => this.trialSessionError.set(true),
-      });
-    }
-    this.comparisonRequest = this.api.paperTrades(this.cohortStart, this.date, {
-      policy_id: this.policyId, strategy_id: 'spx-directional-vertical.v1', width_points: width, active_only: 'true', limit: '1',
-    }).subscribe({
-      next: response => this.comparison.set(response),
-      error: () => this.comparisonError.set(true),
+    this.resultsRequest = this.api.paperTrades(active.start_date, this.date, { ...filters, limit: '1' }).subscribe({
+      next: response => this.results.set(response),
+      error: () => this.resultsError.set(true),
     });
   }
 
-  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.resultsRequest?.unsubscribe(); }
+
+  /** The live bot's summary since its cohort start, from the ledger's strategy summaries. */
+  get summary() {
+    return this.results()?.strategy_summaries?.find(item => item.strategy_id === 'spx-directional-vertical.v1')?.summary ?? null;
+  }
 
   time(value: string | null | undefined): string {
     if (!value) return 'Not available';
@@ -132,18 +90,9 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     return value == null ? 'Not available' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
   }
 
-  get trialStarted(): boolean {
-    const start = this.catalog()?.forward_experiment?.start_date;
-    return !!start && this.date >= start;
-  }
+  get currentSession(): PaperLedgerResponse | null { return this.response(); }
 
-  get currentSession(): PaperLedgerResponse | null {
-    return this.trialStarted ? this.trialSession() : this.response();
-  }
-
-  get sessionUnavailable(): boolean {
-    return (this.trialStarted ? this.trialSessionError() : this.error()) || this.currentSession?.status === 'unavailable';
-  }
+  get sessionUnavailable(): boolean { return this.error() || this.response()?.status === 'unavailable'; }
 
   get sessionCoverage() {
     return this.currentSession?.session_coverage?.find(day => day.date === this.date) ?? null;

@@ -34,15 +34,17 @@ describe('PaperNowComponent current strategy overview', () => {
     api=apiFixture();
     await TestBed.configureTestingModule({imports:[PaperNowComponent],providers:[{provide:TraceApiService,useValue:api}]}).compileComponents();
   });
-  it('puts the scheduled strategy first and removes retired strategy cards',()=> {
-    const fixture=TestBed.createComponent(PaperNowComponent); fixture.componentRef.setInput('date','2026-10-02'); fixture.detectChanges();
+  it('leads with the live bot and none of the older test variants',()=> {
+    const fixture=TestBed.createComponent(PaperNowComponent); fixture.componentRef.setInput('date','2026-10-05'); fixture.detectChanges();
     const text=fixture.nativeElement.textContent;
-    expect(text).toContain('Scheduled for 2026-10-05'); expect(text).toContain('1 open position');
-    expect(text).not.toContain('Structure iron condor'); expect(text).not.toContain('5 versus 10');
+    expect(text).toContain('SPX 0DTE credit spreads · live rules'); expect(text).toContain('Overlapping trades allowed');
+    expect(text).not.toContain('Forward trial'); expect(text).not.toContain('distance-only control'); expect(text).not.toContain('Structure iron condor');
+    const policies=api.paperTrades.mock.calls.map(call=>(call as unknown as [string,string,{policy_id:string}])[2]?.policy_id);
+    expect(new Set(policies)).toEqual(new Set([catalogForTest('2026-10-05').active!.policy_id]));
     expect(fixture.nativeElement.querySelector('[aria-label="Current paper strategy"]').closest('details')).toBeNull();
-    expect(api.paperTrades.mock.calls.some(call=>(call as unknown as [string,string,{policy_id:string}])[2]?.policy_id==='paper-distance-one-position.v1')).toBe(false);
   });
-  it('shows open trades, exits, skips and incomplete outcomes without research disclosures',()=> {
+  it('shows open trades, exits, skips and incomplete outcomes, then results since the cohort start',()=> {
+    api.paperTrades.mockImplementation(((from: string) => of(from === '2026-10-05' ? response : {...response, strategy_summaries:[{strategy_id:'spx-directional-vertical.v1', summary}]})) as any);
     const fixture=TestBed.createComponent(PaperNowComponent); fixture.componentRef.setInput('date','2026-10-05'); fixture.detectChanges();
     const text=fixture.nativeElement.textContent;
     expect(text).toContain('Open trades'); expect(text).toContain('Entry credit $100.00');
@@ -50,7 +52,7 @@ describe('PaperNowComponent current strategy overview', () => {
     expect(text).toContain('Position already open or just closed'); expect(text).toContain('Quote missing along the trade path');
     expect(text).toContain('33.3%'); expect(text).toContain('100.0% / Not available');
     expect(fixture.nativeElement.querySelector('[aria-label="Current session trades"]').closest('details')).toBeNull();
-    expect(api.paperTrades).toHaveBeenCalledWith('2026-10-05','2026-10-05',expect.objectContaining({policy_id:'paper-distance-one-position.v1',limit:'200'}));
+    expect(api.paperTrades).toHaveBeenCalledWith('2026-10-05','2026-10-05',expect.objectContaining({limit:'200'}));
   });
   it('shows selected capture signal and reasons directly',()=> {
     const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');
