@@ -60,6 +60,7 @@ export class TracePageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.facade.loadSessions();
     this.lastRefreshRequestedAt.set(new Date());
+    this.liveState.set(isTraceSessionHours(new Date()) ? 'live' : 'closed');
     this.scheduleLiveCheck();
   }
 
