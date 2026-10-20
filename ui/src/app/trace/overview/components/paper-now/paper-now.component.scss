@@ -43,3 +43,7 @@ h3 small { font-size: .72rem; font-weight: normal; }
 .paper-coverage p { margin: .25rem 0 .5rem; }
 .paper-coverage ul { padding-left: 1.25rem; margin: .5rem 0; color: #c8d6e8; font-size: .85rem; }
 @media (max-width: 600px) { .paper-now { padding: .85rem; } header { flex-direction: column; } .performance-metrics { grid-template-columns: 1fr; } }
+
+.held-result { margin:.25rem 0 0; color:#9ec5f4; font-size:.78rem; }
+.bot-details { padding:.7rem .9rem; border:1px solid rgba(148,163,184,.2); border-radius:.75rem; }
+.bot-details > summary { cursor:pointer; color:#d7e7ff; font-weight:650; }

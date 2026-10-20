@@ -47,10 +47,10 @@ export interface BacktestPolicySummary {
 export interface BacktestScorecardPolicy {
   id: string; label: string; summary: BacktestPolicySummary;
   versus_reference: { sessions: number; difference_dollars: number } | null;
-  trades: { day: string; status: string; net: number | null }[];
+  trades: { day: string; onset?: string; status: string; reason?: string | null; gross?: number | null; net: number | null }[];
 }
 export interface PaperBacktestScorecard {
-  schema_version: 'paper-backtest-scorecard.v1'; from_date: string; sessions: string[];
+  schema_version: 'paper-backtest-scorecard.v1'; from_date: string; to_date: string | null; sessions: string[];
   reference_policy: string; cost_per_trade_dollars: number | null; policies: BacktestScorecardPolicy[];
   order_submission_enabled: false;
 }

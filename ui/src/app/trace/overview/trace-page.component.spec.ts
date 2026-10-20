@@ -218,7 +218,7 @@ describe('TracePageComponent', () => {
     fixture.detectChanges();
     const panel = fixture.nativeElement.querySelector('#paper-workspace-panel') as HTMLElement;
     const ledger = panel.querySelector('.paper-ledger-disclosure') as HTMLDetailsElement;
-    expect(panel.textContent).toContain('The paper bot');
+    expect(panel.textContent).toContain('Paper bot test');
     expect(panel.querySelector('app-decision-journal')).toBeNull();
     expect(ledger.open).toBe(false);
     expect(panel.querySelector('app-paper-ledger')).toBeNull();

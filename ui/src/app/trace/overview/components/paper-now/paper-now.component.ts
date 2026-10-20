@@ -1,10 +1,10 @@
 import type { PaperCatalog } from '../../data-access/generated/research-contracts';
 import { PaperScorecardComponent } from '../paper-scorecard/paper-scorecard.component';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
-import type { PaperLedgerResponse, PaperLedgerRow } from '../../data-access/paper.models';
+import type { PaperBacktestScorecard, PaperLedgerResponse, PaperLedgerRow } from '../../data-access/paper.models';
 
 @Component({
   selector: 'app-paper-now',
@@ -33,10 +33,15 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   private catalogRequest?: Subscription;
   private request?: Subscription;
   private resultsRequest?: Subscription;
+  readonly scorecard = signal<PaperBacktestScorecard | null>(null);
+  readonly scorecardError = signal(false);
+  private scorecardRequest?: Subscription;
 
   constructor(private readonly api: TraceApiService) {}
 
-  ngOnChanges(): void {
+  ngOnChanges(changes: SimpleChanges = {}): void {
+    // The scorecard covers every session, so capture selection does not reload it.
+    if (changes['date'] || changes['refreshAt'] || !this.scorecardRequest) this.loadScorecard();
     this.decisionRequest?.unsubscribe(); this.decision.set(null); this.decisionError.set(false); this.decisionLoading.set(false);
     if (this.date && this.captureTs) {
       this.decisionLoading.set(true);
@@ -71,7 +76,23 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.resultsRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.scorecardRequest?.unsubscribe(); this.decisionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.resultsRequest?.unsubscribe(); }
+
+  private loadScorecard(): void {
+    this.scorecardRequest?.unsubscribe();
+    this.scorecardError.set(false);
+    this.scorecardRequest = this.api.paperBacktestScorecard().subscribe({
+      next: card => this.scorecard.set(card),
+      error: () => { this.scorecard.set(null); this.scorecardError.set(true); },
+    });
+  }
+
+  /** The same entry under the hold-to-expiry rule (H1), matched by its onset capture. */
+  heldResult(trade: PaperLedgerRow): { net: number | null; status: string; reason: string | null } | null {
+    const hold = this.scorecard()?.policies.find(policy => policy.id === 'H1-hold');
+    const match = hold?.trades.find(row => row.onset === trade.onset_ts);
+    return match ? { net: match.net, status: match.status, reason: match.reason ?? null } : null;
+  }
 
   /** The live bot's summary since its cohort start, from the ledger's strategy summaries. */
   get summary() {
@@ -125,7 +146,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
       position_occupied_or_same_capture_exit: 'Position already open or just closed',
       position_state_unknown: 'Earlier position could not be evaluated', entry_credit_below_minimum: 'Credit below minimum',
       missing_path_quote: 'Quote missing along the trade path', capture_gap: 'Gap in captured data',
-      awaiting_exit: 'Waiting for target, stop or market close',
+      awaiting_exit: 'Waiting for target, stop or market close', expired: 'settled at the close',
     };
     return labels[reason] ?? reason.replaceAll('_', ' ');
   }

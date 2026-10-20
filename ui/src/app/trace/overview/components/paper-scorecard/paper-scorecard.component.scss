@@ -18,3 +18,6 @@ tr[data-reference='true'] { background: rgba(141,181,255,.06); }
 [data-net='gain'] { color: #6ee7b7; }
 .partial { display: block; color: #fde68a; font-size: .68rem; font-weight: 500; }
 @media (max-width: 600px) { header { flex-direction: column; } }
+.test-banner { display:flex; flex-wrap:wrap; align-items:center; gap:.35rem 1rem; margin:0 0 .8rem; padding:.6rem .8rem; border-radius:.6rem; background:rgba(141,181,255,.08); color:#a2b3c9; font-size:.8rem; }
+.test-banner strong { color:#eef4ff; font-size:.9rem; }
+.test-banner .progress { display:inline-block; width:6rem; height:.4rem; border-radius:.2rem; background:linear-gradient(90deg, #759bc9 calc(var(--fill, 0) * 100%), rgba(148,163,184,.2) 0); }

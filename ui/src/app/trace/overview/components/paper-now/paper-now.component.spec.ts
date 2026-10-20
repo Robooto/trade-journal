@@ -41,7 +41,18 @@ describe('PaperNowComponent current strategy overview', () => {
     expect(text).not.toContain('Forward trial'); expect(text).not.toContain('distance-only control'); expect(text).not.toContain('Structure iron condor');
     const policies=api.paperTrades.mock.calls.map(call=>(call as unknown as [string,string,{policy_id:string}])[2]?.policy_id);
     expect(new Set(policies)).toEqual(new Set([catalogForTest('2026-10-05').active!.policy_id]));
-    expect(fixture.nativeElement.querySelector('[aria-label="Current paper strategy"]').closest('details')).toBeNull();
+    // The scorecard leads; the bot's rules and long-run record sit in a collapsed section.
+    expect(fixture.nativeElement.querySelector('[aria-label="Current paper strategy"]').closest('details')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('app-paper-scorecard').compareDocumentPosition(
+      fixture.nativeElement.querySelector('[aria-label="Current session trades"]')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+  it('shows each closed trade under the hold-to-expiry rule too',()=> {
+    api.paperBacktestScorecard.mockReturnValue(of({ schema_version:'paper-backtest-scorecard.v1', from_date:'2026-10-19', to_date:'2026-12-11',
+      sessions:['2026-10-05'], reference_policy:'recorded-rules', cost_per_trade_dollars:12.6, order_submission_enabled:false,
+      policies:[{ id:'H1-hold', label:'H1 hold to expiry', summary:{ closed:1, censored:0, net_dollars:87.4, net_per_trade:87.4, win_rate:1, worst_session:87.4, session_totals:{ '2026-10-05':87.4 } } as any, versus_reference:null,
+        trades:[{ day:'2026-10-05', onset:row.onset_ts, status:'closed', reason:'expired', net:87.4 }] }] }) as any);
+    const fixture=TestBed.createComponent(PaperNowComponent); fixture.componentRef.setInput('date','2026-10-05'); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[aria-label="Closed paper trade"] .held-result').textContent).toContain('Held to expiry (H1): $87.40 after costs · settled at the close');
   });
   it('shows open trades, exits, skips and incomplete outcomes, then results since the cohort start',()=> {
     api.paperTrades.mockImplementation(((from: string) => of(from === '2026-10-05' ? response : {...response, strategy_summaries:[{strategy_id:'spx-directional-vertical.v1', summary}]})) as any);

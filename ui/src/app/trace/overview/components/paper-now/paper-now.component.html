@@ -1,36 +1,10 @@
 <section class="paper-now" aria-labelledby="paper-now-title">
   <header>
-    <div><p class="eyebrow">Paper trading · {{ date }}</p><h2 id="paper-now-title">The paper bot</h2></div>
+    <div><p class="eyebrow">Paper trading · {{ date }}</p><h2 id="paper-now-title">Paper bot test</h2></div>
     <span>Paper only · no brokerage orders</span>
   </header>
-  @if (catalogError()) { <p role="alert">Paper configuration unavailable. Strategy and results could not be loaded.</p> }
-  @else if (catalog()?.active; as active) {
-    <section class="strategy-overview" aria-label="Current paper strategy">
-      <div class="strategy-heading"><h3>SPX 0DTE credit spreads · live rules</h3><strong class="status-badge">Running since {{ active.start_date }}</strong></div>
-      <p>Sells a 10-point bull put or bear call spread on each fresh directional TRACE signal, beyond the frozen support or resistance. Trades can overlap.</p>
-      <div class="rule-list" aria-label="Strategy rules">
-        <span>{{ active.width_points }}-point spread · 1 contract per leg</span><span>Overlapping trades allowed</span>
-        <span>Minimum credit {{ active.minimum_entry_credit_dollars | currency }}</span>
-        <span>Take profit at 50% of credit</span><span>Stop at {{ active.stop_debit_multiple }}× credit buyback debit</span><span>Close by 1 p.m. Pacific</span>
-      </div>
-      <small>New entries {{ active.entry_start_local }}–{{ active.entry_end_local }} Pacific, decided on the ten-minute captures. The scorecard below tests the same entries held to expiry.</small>
-    </section>
-  } @else if (loading()) { <p role="status">Loading paper configuration…</p> }
 
-  <section class="signal-panel" aria-label="Selected capture signal">
-    <h3>Entry signal @if (captureTs) { <small>· {{ time(captureTs) }} Pacific · selected capture</small> }</h3>
-    @if (decisionLoading()) { <p role="status">Checking the selected signal…</p> }
-    @else if (decisionError()) { <p role="alert">Signal evidence unavailable for this capture.</p> }
-    @else if (decision(); as signal) {
-      @if (signal.decision_status === 'ineligible') { <p>Entry window closed · no new trades from this capture.</p> }
-      @else if (signal.decision_status === 'unavailable') { <p>Waiting for complete signal data.</p> }
-      @else {
-        <p class="signal-headline"><strong>{{ signal.decision === 'take' ? 'Signal qualifies' : 'Wait · entry conditions not met' }}</strong>@if (signal.trade_type) { · {{ label(signal.trade_type) }} } · grade {{ signal.grade }} · {{ signal.quality_score }}/100</p>
-        <div class="reason-list">@for (reason of signal.reason_codes; track reason) { <span>{{ label(reason) }}</span> }</div>
-      }
-      <small>A qualifying signal needs a fresh onset and valid credit and quotes before a paper trade is admitted.</small>
-    } @else { <p>Select a capture to see its signal and reasons.</p> }
-  </section>
+  <app-paper-scorecard [card]="scorecard()" [error]="scorecardError()" />
 
   <section class="session-trades" aria-label="Current session trades">
     <h3>Open trades · {{ date }}</h3>
@@ -51,6 +25,7 @@
           <ng-container *ngTemplateOutlet="contractStrikes; context: { $implicit: trade }" />
           <p>{{ label(trade.reason) }} · {{ money(trade.gross_pnl_dollars) }} gross @if (trade.cost_scenarios?.length) { · {{ money(trade.cost_scenarios![0].net_scenario_dollars) }} after assumed costs }</p>
           <small>Entry credit {{ money(trade.entry_credit_dollars) }} · exit debit {{ money(trade.exit_debit_dollars) }}</small>
+          @if (heldResult(trade); as held) { <p class="held-result">Held to expiry (H1): {{ held.net === null ? 'unresolved' : money(held.net) + ' after costs' }}@if (held.reason) { · {{ label(held.reason) }} }</p> }
         </article>
       } @empty { <p>No completed trades recorded.</p> }
       <h3>Skipped signals · {{ sessionTrades('skipped').length }}</h3>
@@ -60,24 +35,53 @@
     }
   </section>
 
-  <section aria-label="Current strategy results">
-    <h3>Results since {{ catalog()?.active?.start_date }}</h3>
-    @if (resultsError() || results()?.status === 'unavailable') { <p role="alert">Results unavailable.</p> }
-    @else if (summary; as total) {
-      <dl class="performance-metrics">
-        <div><dt>After assumed costs</dt><dd>{{ money(total.cost_scenario_pnl_dollars) }}</dd></div>
-        <div><dt>Closed trades</dt><dd>{{ total.closed }}</dd></div>
-        <div><dt>Profit per closed trade</dt><dd>{{ money(total.cost_scenario_expectancy_dollars) }}</dd></div>
-        <div><dt>Win rate / break-even required</dt><dd>{{ total.gross_win_rate == null ? 'Not available' : (total.gross_win_rate | percent:'1.1-1') }} / {{ total.empirical_break_even_win_rate == null ? 'Not available' : (total.empirical_break_even_win_rate | percent:'1.1-1') }}</dd></div>
-        <div><dt>Average win / loss</dt><dd>{{ money(total.average_win_dollars) }} / {{ money(total.average_loss_dollars) }}</dd></div>
-        <div><dt>Completed trade paths</dt><dd>{{ total.completed_path_coverage == null ? 'Not available' : (total.completed_path_coverage | percent:'1.1-1') }}</dd></div>
-      </dl>
-      <small>Recorded rules on the bot's own ten-minute quotes. Small samples do not establish profitability.</small>
-    } @else if (results()) { <p>No closed trades recorded yet.</p> }
-    @else { <p role="status">Loading results…</p> }
+  <section class="signal-panel" aria-label="Selected capture signal">
+    <h3>Entry signal @if (captureTs) { <small>· {{ time(captureTs) }} Pacific · selected capture</small> }</h3>
+    @if (decisionLoading()) { <p role="status">Checking the selected signal…</p> }
+    @else if (decisionError()) { <p role="alert">Signal evidence unavailable for this capture.</p> }
+    @else if (decision(); as signal) {
+      @if (signal.decision_status === 'ineligible') { <p>Entry window closed · no new trades from this capture.</p> }
+      @else if (signal.decision_status === 'unavailable') { <p>Waiting for complete signal data.</p> }
+      @else {
+        <p class="signal-headline"><strong>{{ signal.decision === 'take' ? 'Signal qualifies' : 'Wait · entry conditions not met' }}</strong>@if (signal.trade_type) { · {{ label(signal.trade_type) }} } · grade {{ signal.grade }} · {{ signal.quality_score }}/100</p>
+        <div class="reason-list">@for (reason of signal.reason_codes; track reason) { <span>{{ label(reason) }}</span> }</div>
+      }
+      <small>A qualifying signal needs a fresh onset and valid credit and quotes before a paper trade is admitted.</small>
+    } @else { <p>Select a capture to see its signal and reasons.</p> }
   </section>
 
-  <app-paper-scorecard [refreshAt]="refreshAt" />
+  <details class="bot-details">
+    <summary>The bot's rules and its record since {{ catalog()?.active?.start_date }}</summary>
+  @if (catalogError()) { <p role="alert">Paper configuration unavailable. Strategy and results could not be loaded.</p> }
+    @else if (catalog()?.active; as active) {
+      <section class="strategy-overview" aria-label="Current paper strategy">
+        <div class="strategy-heading"><h3>SPX 0DTE credit spreads · live rules</h3><strong class="status-badge">Running since {{ active.start_date }}</strong></div>
+        <p>Sells a 10-point bull put or bear call spread on each fresh directional TRACE signal, beyond the frozen support or resistance. Trades can overlap.</p>
+        <div class="rule-list" aria-label="Strategy rules">
+          <span>{{ active.width_points }}-point spread · 1 contract per leg</span><span>Overlapping trades allowed</span>
+          <span>Minimum credit {{ active.minimum_entry_credit_dollars | currency }}</span>
+          <span>Take profit at 50% of credit</span><span>Stop at {{ active.stop_debit_multiple }}× credit buyback debit</span><span>Close by 1 p.m. Pacific</span>
+        </div>
+        <small>New entries {{ active.entry_start_local }}–{{ active.entry_end_local }} Pacific, decided on the ten-minute captures. The scorecard below tests the same entries held to expiry.</small>
+      </section>
+    } @else if (loading()) { <p role="status">Loading paper configuration…</p> }
+  <section aria-label="Current strategy results">
+      <h3>Record since {{ catalog()?.active?.start_date }} (before the exit test)</h3>
+      @if (resultsError() || results()?.status === 'unavailable') { <p role="alert">Results unavailable.</p> }
+      @else if (summary; as total) {
+        <dl class="performance-metrics">
+          <div><dt>After assumed costs</dt><dd>{{ money(total.cost_scenario_pnl_dollars) }}</dd></div>
+          <div><dt>Closed trades</dt><dd>{{ total.closed }}</dd></div>
+          <div><dt>Profit per closed trade</dt><dd>{{ money(total.cost_scenario_expectancy_dollars) }}</dd></div>
+          <div><dt>Win rate / break-even required</dt><dd>{{ total.gross_win_rate == null ? 'Not available' : (total.gross_win_rate | percent:'1.1-1') }} / {{ total.empirical_break_even_win_rate == null ? 'Not available' : (total.empirical_break_even_win_rate | percent:'1.1-1') }}</dd></div>
+          <div><dt>Average win / loss</dt><dd>{{ money(total.average_win_dollars) }} / {{ money(total.average_loss_dollars) }}</dd></div>
+          <div><dt>Completed trade paths</dt><dd>{{ total.completed_path_coverage == null ? 'Not available' : (total.completed_path_coverage | percent:'1.1-1') }}</dd></div>
+        </dl>
+        <small>Recorded rules on the bot's own ten-minute quotes. Small samples do not establish profitability.</small>
+      } @else if (results()) { <p>No closed trades recorded yet.</p> }
+      @else { <p role="status">Loading results…</p> }
+    </section>
+  </details>
 
   <section class="collection-status" aria-label="Data collection status">
     <h3>Data collection</h3>

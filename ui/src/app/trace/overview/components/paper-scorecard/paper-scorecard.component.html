@@ -1,18 +1,24 @@
-@if (error()) {
+@if (error) {
   <section class="paper-scorecard" role="status">Paper scorecard unavailable.</section>
-} @else if (scorecard(); as card) {
+} @else if (card; as card) {
   <section class="paper-scorecard" aria-labelledby="paper-scorecard-title">
+    <p class="test-banner" aria-label="What is being tested">
+      <strong>1 bot + {{ card.policies.length - 1 }} exit rules on the same trades</strong>
+      <span>{{ card.from_date | date:'MMM d' }} – {{ card.to_date | date:'MMM d' }}</span>
+      <span>Session {{ card.sessions.length }} of {{ firstRead }} to the first read</span>
+      <i class="progress" [style.--fill]="card.sessions.length / firstRead" aria-hidden="true"></i>
+    </p>
     <header>
-      <div><p class="eyebrow">Paper only · since {{ card.from_date }} · {{ card.sessions.length }} sessions</p><h3 id="paper-scorecard-title">Scorecard: exits on the bot's own entries</h3></div>
+      <div><h3 id="paper-scorecard-title">Scorecard</h3></div>
       @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per trade</span> }
     </header>
-    <p>Every row takes the same baseline entries; only the filters and exits differ. The first row is the live bot. The others were frozen on October 17 and are scored only on later sessions.</p>
+    <p>Each rule takes the bot's own entries and changes only the exit or skips some entries. The question: does holding to expiry (H1) beat the bot's 50% target and 2× stop? Rules are frozen; nothing changes before the read.</p>
     <div class="table-scroll"><table>
-      <thead><tr><th>Rules</th><th>Trades</th><th>Net</th><th>Per trade</th><th>Win rate</th><th>Worst day</th><th>vs live</th>
+      <thead><tr><th>Rules</th><th>Trades</th><th>Net</th><th>Per trade</th><th>Win rate</th><th>Worst day</th><th>vs bot</th>
         @for (day of card.sessions; track day) { <th class="day">{{ day.slice(5) }}</th> }</tr></thead>
       <tbody>@for (policy of card.policies; track policy.id) {
         <tr [attr.data-reference]="policy.id === card.reference_policy">
-          <th>{{ policy.label }}@if (policy.summary.censored) { <small class="partial" title="Some trades' recorded paths end before a rule could resolve; totals cover resolved trades only.">{{ policy.summary.censored }} unresolved</small> }</th>
+          <th>{{ label(policy, card) }}@if (policy.summary.censored) { <small class="partial" title="Some trades' recorded paths end before a rule could resolve; totals cover resolved trades only.">{{ policy.summary.censored }} unresolved</small> }</th>
           <td>{{ policy.summary.closed }}</td>
           <td [attr.data-net]="tone(policy.summary.net_dollars)">{{ money(policy.summary.net_dollars) }}</td>
           <td [attr.data-net]="tone(policy.summary.net_per_trade)">{{ money(policy.summary.net_per_trade) }}</td>
@@ -23,6 +29,6 @@
         </tr>
       }</tbody>
     </table></div>
-    <small>Hold rows settle at the close. "vs live" compares sessions where both have results. A few sessions are not evidence; no rule changes automatically, and no orders are placed. Run <code>scripts/research.sh scorecard</code> for intervals.</small>
+    <small>First read after {{ firstRead }} sessions, final read {{ card.to_date | date:'MMM d' }}. A rule passes only if it is profitable after costs and beats the bot by a margin that holds up across sessions. Hold rows settle at the close; no orders are placed.</small>
   </section>
 }

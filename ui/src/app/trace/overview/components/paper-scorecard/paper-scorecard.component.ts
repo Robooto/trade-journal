@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
-import { Subscription } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import type { BacktestScorecardPolicy, PaperBacktestScorecard } from '../../data-access/paper.models';
-import { TraceApiService } from '../../data-access/trace-api.service';
 
-/** The live baseline rules next to the frozen hold-family arms on the same entries. Paper only. */
+/** Sessions to the hold-family's first read (docs/studies/hold-family-preregistration-2026-10-17.md). */
+export const FIRST_READ_SESSIONS = 20;
+
+/** The live bot next to the four frozen exit rules on the same entries. Paper only. */
 @Component({
   selector: 'app-paper-scorecard',
   standalone: true,
@@ -13,24 +14,10 @@ import { TraceApiService } from '../../data-access/trace-api.service';
   styleUrl: './paper-scorecard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PaperScorecardComponent implements OnChanges, OnDestroy {
-  @Input() refreshAt: Date | null = null;
-  readonly scorecard = signal<PaperBacktestScorecard | null>(null);
-  readonly error = signal(false);
-  private request?: Subscription;
-
-  constructor(private readonly api: TraceApiService) {}
-
-  ngOnChanges(): void {
-    this.request?.unsubscribe();
-    this.error.set(false);
-    this.request = this.api.paperBacktestScorecard().subscribe({
-      next: value => this.scorecard.set(value),
-      error: () => { this.scorecard.set(null); this.error.set(true); },
-    });
-  }
-
-  ngOnDestroy(): void { this.request?.unsubscribe(); }
+export class PaperScorecardComponent {
+  @Input() card: PaperBacktestScorecard | null = null;
+  @Input() error = false;
+  readonly firstRead = FIRST_READ_SESSIONS;
 
   money(value: number | null | undefined): string {
     if (value === null || value === undefined) return '—';
@@ -44,5 +31,10 @@ export class PaperScorecardComponent implements OnChanges, OnDestroy {
 
   session(policy: BacktestScorecardPolicy, day: string): number | null {
     return policy.summary.session_totals[day] ?? null;
+  }
+
+  /** "Bot (live rules)" for the reference, "H1 hold to expiry" for the rest. */
+  label(policy: BacktestScorecardPolicy, card: PaperBacktestScorecard): string {
+    return policy.id === card.reference_policy ? 'Bot (live rules)' : policy.label;
   }
 }
