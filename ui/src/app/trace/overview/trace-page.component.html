@@ -200,6 +200,13 @@
     />
   }
 
+  @if (facade.selectedDate()) {
+    <app-chain-grid-heatmap
+      [date]="facade.selectedDate()"
+      [captureTs]="facade.selectedCapture()?.ts ?? null"
+      (captureSelected)="selectCaptureTimestamp($event)"
+    />
+  }
 
   @if (facade.selectedCapture(); as capture) {
     <app-trace-market-snapshot

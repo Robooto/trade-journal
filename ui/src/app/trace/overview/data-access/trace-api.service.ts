@@ -15,6 +15,7 @@ import {
   TraceRealizedVolatilityResponse,
   TraceResearchStatusResponse,
   StrikeLadderResponse,
+  ChainGridViewResponse,
   TraceSessionsResponse,
   TraceSnapshotResponse,
   TraceSummaryResponse,
@@ -135,6 +136,10 @@ export class TraceApiService {
     return this.http.get<Spx0DteDecisionJournalResponse>(
       this.sessionUrl(date) + '/0dte-decision-journal', { params },
     );
+  }
+
+  chainGrid(date: string): Observable<ChainGridViewResponse> {
+    return this.http.get<ChainGridViewResponse>(this.sessionUrl(date) + '/chain-grid');
   }
 
   strikeLadder(date: string, ts: string): Observable<StrikeLadderResponse> {

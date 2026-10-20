@@ -1,0 +1,74 @@
+<section class="grid-panel" aria-labelledby="chain-grid-title">
+  <header class="grid-header">
+    <div>
+      <p class="grid-eyebrow">SPX 0DTE chain grid · 10-point spreads</p>
+      <h2 id="chain-grid-title">What the market charged, all day</h2>
+      <p>Each cell is one short strike at one capture. Brighter means more {{ metric() === 'credit' ? 'credit' : 'delta (market-implied chance of finishing beyond)' }}. The line is SPX; click a column to move the whole page to that capture.</p>
+    </div>
+    <div class="grid-controls">
+      <div class="grid-segment" role="group" aria-label="Spread side">
+        <button type="button" [class.active]="side() === 'call'" (click)="side.set('call')">Calls above</button>
+        <button type="button" [class.active]="side() === 'put'" (click)="side.set('put')">Puts below</button>
+      </div>
+      <div class="grid-segment" role="group" aria-label="Color by">
+        <button type="button" [class.active]="metric() === 'credit'" (click)="metric.set('credit')">Credit</button>
+        <button type="button" [class.active]="metric() === 'delta'" (click)="metric.set('delta')">Delta</button>
+      </div>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <p class="grid-empty" role="status">Loading the chain grid…</p>
+  } @else if (error()) {
+    <p class="grid-empty" role="alert">Chain grid unavailable for this session.</p>
+  } @else if (view(); as grid) {
+    @if (!grid.recorded_snapshots) {
+      <p class="grid-empty">No chain-grid snapshots for {{ grid.date }}. Prices start October 19, 2026.</p>
+    } @else {
+      <div class="grid-scroll">
+        <svg #chart class="grid-chart" [attr.viewBox]="'0 0 ' + width + ' ' + height()"
+             role="img" [attr.aria-label]="'Chain grid heat map for ' + grid.date + ', ' + (side() === 'call' ? 'calls above' : 'puts below') + ' spot'"
+             (click)="select(columnAt($event, chart))">
+          @for (cell of cells(); track $index) {
+            <rect class="grid-cell" [attr.x]="cell.x" [attr.y]="cell.y" [attr.width]="cell.w" [attr.height]="cell.h" rx="2" [attr.fill]="cell.fill"><title>{{ cell.title }}</title></rect>
+          }
+          @if (selectedIndex() >= 0) {
+            <rect class="grid-selected" [attr.x]="52 + selectedIndex() * columnWidth()" y="4" [attr.width]="columnWidth()" [attr.height]="stripY() + 14" rx="3" />
+          }
+          @if (settlementY(); as sy) {
+            <line class="grid-settle" x1="52" [attr.x2]="width - 12" [attr.y1]="sy" [attr.y2]="sy" />
+          }
+          <path class="grid-spot" [attr.d]="spotPath()" />
+          @for (node of nodeMarks(); track $index) {
+            @if (node.negative) {
+              <rect class="grid-node grid-node--negative" [attr.x]="node.x - 3.5" [attr.y]="node.y - 3.5" width="7" height="7" [attr.transform]="'rotate(45 ' + node.x + ' ' + node.y + ')'"><title>{{ node.title }}</title></rect>
+            } @else {
+              <circle class="grid-node grid-node--positive" [attr.cx]="node.x" [attr.cy]="node.y" r="3.5"><title>{{ node.title }}</title></circle>
+            }
+          }
+          @for (label of strikeLabels(); track label.label) {
+            <text class="grid-axis" x="46" [attr.y]="label.y" text-anchor="end">{{ label.label }}</text>
+          }
+          @for (mark of strip(); track $index) {
+            <rect class="grid-strip" [attr.data-state]="mark.state" [attr.x]="mark.x" [attr.y]="stripY()" [attr.width]="mark.w" height="10" rx="2"><title>{{ mark.title }}</title></rect>
+          }
+          <text class="grid-axis" x="46" [attr.y]="stripY() + 8" text-anchor="end">HIRO</text>
+          @for (tick of ticks(); track tick.ts) {
+            <text class="grid-axis" [attr.x]="tick.x" [attr.y]="height() - 6" text-anchor="middle">{{ tick.label }}</text>
+          }
+        </svg>
+      </div>
+      <div class="grid-legend" aria-label="Legend">
+        <span class="grid-scale"><small>{{ metric() === 'credit' ? '$0' : '0' }}</small><i [style.background]="legendStops()"></i><small>{{ legendMaximum() }}</small></span>
+        <span><i class="legend-line"></i>SPX</span>
+        @if (grid.settlement !== null) { <span><i class="legend-line legend-line--settle"></i>Settled {{ grid.settlement | number:'1.2-2' }}</span> }
+        <span><i class="legend-circle"></i>Positive node</span>
+        <span><i class="legend-diamond"></i>Negative node</span>
+        <span><i class="legend-strip" data-state="tagged"></i>HIRO side</span>
+        <span><i class="legend-strip" data-state="opposes"></i>HIRO opposes</span>
+        <span><i class="legend-strip" data-state="flat"></i>HIRO flat</span>
+      </div>
+      <small class="grid-note">Credit is the conservative fill (short bid minus long ask), per 1-lot. The HIRO strip reads like the ladder's tag for the side shown. The 13:00 column is after the bell and has no prices. Research only; no orders.</small>
+    }
+  }
+</section>

@@ -515,3 +515,18 @@ export interface StrikeLadderResponse {
   readonly warnings: readonly string[];
   readonly notes: readonly string[];
 }
+
+/** One session's chain grid: every OTM 10-point spread by capture (`trace-chain-grid-view.v1`). */
+export type ChainGridHiroState = 'confirms' | 'opposes' | 'flat' | 'none';
+export interface ChainGridCell { side: 'put' | 'call'; strike: number; credit: number; mid_credit: number; delta: number | null; }
+export interface ChainGridColumn {
+  capture_id: string; ts: string; spot: number; grid: 'recorded' | 'missing' | 'after_bell';
+  hiro: { state: ChainGridHiroState; side_against_move: 'put' | 'call' | null; move_30m_points: number | null; change_30m: number | null };
+  nodes: { strike: number; sign: string | null; share: number | null }[];
+  cells: ChainGridCell[];
+}
+export interface ChainGridViewResponse {
+  schema_version: 'trace-chain-grid-view.v1'; date: string; width_points: number; max_distance_points: number;
+  settlement: number | null; strikes: number[]; captures: ChainGridColumn[]; recorded_snapshots: number;
+  notes: string[]; order_submission_enabled: false;
+}

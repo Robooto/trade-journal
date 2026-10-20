@@ -24,12 +24,14 @@ import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.com
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
 import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
 import { StrikeLadderComponent } from './components/strike-ladder/strike-ladder.component';
+import { ChainGridHeatmapComponent } from './components/chain-grid-heatmap/chain-grid-heatmap.component';
 
 class TraceApiStub {
   readonly paperBacktestScorecard = vi.fn(() => NEVER);
   readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
   readonly strikeLadder = vi.fn(() => NEVER);
+  readonly chainGrid = vi.fn(() => NEVER);
   readonly decisionJournal = vi.fn(() => of({
     schema_version: 'spx-0dte-decision.v1',
     protocol_id: 'spx-0dte-decision-journal-v1',
@@ -107,6 +109,7 @@ describe('TracePageComponent', () => {
         PaperNowComponent,
         ResearchSummaryComponent,
         StrikeLadderComponent,
+        ChainGridHeatmapComponent,
         CommonModule,
         FormsModule,
         SharedMaterialModule,
@@ -485,19 +488,21 @@ describe('TracePageComponent', () => {
     };
     facade.captureRows.set([capture]);
     facade.selectedCapture.set(capture);
+    facade.selectedDate.set('2026-07-24');
     (facade.bundle as any).set({ histogram: { rows: [] } });
 
     fixture.detectChanges();
 
     const order = Array.from(fixture.nativeElement.querySelectorAll(
-      '.price-level-panel, app-trade-read, app-strike-ladder, app-signed-gex-map, app-trace-session-trends, app-trace-market-snapshot, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
+      '.price-level-panel, app-trade-read, app-strike-ladder, app-signed-gex-map, app-trace-session-trends, app-chain-grid-heatmap, app-trace-market-snapshot, app-trace-gamma-profile, app-charm-widget, app-trace-capture-history',
     )).map((element: any) => element.classList.contains('price-level-panel') ? 'levels' : element.tagName.toLowerCase());
-    // Sam's order (October 19): his levels, price per strike, node structure, flow, then the snapshot.
+    // The October 19 order: levels, price per strike, node structure, flow, the day's chain grid, then the snapshot.
     expect(order).toEqual([
       'levels',
       'app-strike-ladder',
       'app-signed-gex-map',
       'app-trace-session-trends',
+      'app-chain-grid-heatmap',
       'app-trace-market-snapshot',
       'app-trace-gamma-profile',
       'app-trace-capture-history',
