@@ -42,8 +42,11 @@ describe('ChainGridHeatmapComponent', () => {
     expect(component.strikes()).toEqual([7720, 7710]);
     expect(fixture.nativeElement.querySelectorAll('.grid-cell').length).toBe(4);
     expect(fixture.nativeElement.querySelector('.grid-cell title').textContent).toContain('7710 call');
-    // The negative node at 7712 is inside the call rows; the positive one at 7600 is not.
+    // The negative node at 7712 sits above SPX inside the call rows; the positive one at 7600 does not.
     expect(component.nodeMarks().map(n => n.negative)).toEqual([true, true]);
+    component.side.set('put');
+    expect(component.nodeMarks()).toEqual([]);
+    component.side.set('call');
     expect(component.strip().map(s => s.state)).toEqual(['tagged', 'none']);
     expect(component.selectedIndex()).toBe(1);
     component.side.set('put');

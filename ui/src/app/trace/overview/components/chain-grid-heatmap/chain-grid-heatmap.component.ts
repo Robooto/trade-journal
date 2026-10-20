@@ -89,7 +89,8 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
   readonly spotPath = computed(() => this.columns().map((c, i) => `${i ? 'L' : 'M'}${this.cx(i).toFixed(1)},${this.y(c.spot).toFixed(1)}`).join(' '));
   readonly settlementY = computed(() => { const s = this.view()?.settlement; return s == null ? null : this.y(s); });
   readonly nodeMarks = computed(() => this.columns().flatMap((c, i) => c.nodes
-    .filter(n => this.inRange(n.strike))
+    // Only nodes on the side shown: between SPX and the strikes a spread on that side would sell.
+    .filter(n => this.inRange(n.strike) && (this.side() === 'call' ? n.strike > c.spot : n.strike < c.spot))
     .map(n => ({ x: this.cx(i), y: this.y(n.strike), negative: n.sign === 'negative', title: `${n.sign ?? ''} node ${n.strike.toFixed(0)} · ${this.time(c.ts)}` }))));
   readonly strip = computed(() => this.columns().map((c, i) => ({ x: LEFT + i * this.columnWidth() + 1, w: Math.max(1, this.columnWidth() - 2),
     state: hiroStrip(c, this.side()), title: this.stripTitle(c) })));
