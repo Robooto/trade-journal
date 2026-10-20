@@ -5,14 +5,13 @@ import { JournalApiService } from '../../journal/journal-api.service';
 import { TraceApiService } from '../../trace/overview/data-access/trace-api.service';
 import type { JournalEntry } from '../../journal/journal.models';
 
-function arm(arm_id: string, kind: string, net: number) {
-  return { arm_id, policy_id: 'p', label: arm_id, kind, start_date: '2026-09-22', end_date: null, closes: 3, sessions: 1,
-    net_dollars: net, net_per_close: net / 3, win_rate: 0.5, required_sessions: null, required_closes: null, status: 'control' };
+function policy(id: string, trades: { day: string; status: string; net: number | null }[]) {
+  return { id, label: id, summary: {}, versus_reference: null, trades };
 }
 
 describe('DashboardPageComponent', () => {
   let component: DashboardPageComponent;
-  let traceApi: { researchStatus: ReturnType<typeof vi.fn>; paperArms: ReturnType<typeof vi.fn> };
+  let traceApi: { researchStatus: ReturnType<typeof vi.fn>; paperBacktestScorecard: ReturnType<typeof vi.fn> };
 
   function create() {
     const journalApi = { list: () => of({ total: 0, items: [], skip: 0, limit: 3 }) } as unknown as JournalApiService;
@@ -24,8 +23,11 @@ describe('DashboardPageComponent', () => {
     localStorage.clear();
     traceApi = {
       researchStatus: vi.fn(() => of({ headline: 'Distance and time carry the signal.' })),
-      paperArms: vi.fn(() => of({ arms: [arm('credit-risk-to-close.v4:baseline', 'baseline', -120), arm('rotation-C0', 'rotation', 10),
-        arm('negative-pocket-shadow', 'shadow', 22)] })),
+      paperBacktestScorecard: vi.fn(() => of({ policies: [
+        policy('recorded-rules', [{ day: '2000-01-03', status: 'closed', net: 500 }, { day: '2999-01-04', status: 'closed', net: 40 },
+          { day: '2999-01-04', status: 'censored', net: null }]),
+        policy('H1-hold', [{ day: '2999-01-04', status: 'closed', net: 90 }, { day: '2999-01-05', status: 'closed', net: -30 }]),
+        policy('H4-target-75-no-stop', [{ day: '2999-01-04', status: 'closed', net: 75 }])] })),
     };
     create();
   });
@@ -37,13 +39,16 @@ describe('DashboardPageComponent', () => {
     expect(component.tradeGuidelines).toBe(tradeGuidelines);
   });
 
-  it('shows the research headline and this week for the bot and the negative-pocket test', () => {
-    expect(traceApi.paperArms).toHaveBeenCalledWith(component.today, component.weekFrom);
+  it('shows the research headline and this week for the live bot and the same entries held to expiry', () => {
+    expect(traceApi.paperBacktestScorecard).toHaveBeenCalled();
     expect(component.researchHeadline).toBe('Distance and time carry the signal.');
-    expect(component.deskArms.map(a => a.arm_id)).toEqual(['credit-risk-to-close.v4:baseline', 'negative-pocket-shadow']);
+    expect(component.deskRows).toEqual([
+      { id: 'recorded-rules', label: 'Paper bot (live rules)', net: 40, closes: 1 },
+      { id: 'H1-hold', label: 'Same entries, held to expiry', net: 60, closes: 2 },
+    ]);
     expect(component.deskTrackedCount).toBe(3);
     expect(component.deskStatus).toBe('ready');
-    traceApi.paperArms.mockReturnValue(throwError(() => new Error('down')));
+    traceApi.paperBacktestScorecard.mockReturnValue(throwError(() => new Error('down')));
     create();
     expect(component.deskStatus).toBe('unavailable');
   });

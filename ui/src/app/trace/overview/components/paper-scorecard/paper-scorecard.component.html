@@ -1,0 +1,28 @@
+@if (error()) {
+  <section class="paper-scorecard" role="status">Paper scorecard unavailable.</section>
+} @else if (scorecard(); as card) {
+  <section class="paper-scorecard" aria-labelledby="paper-scorecard-title">
+    <header>
+      <div><p class="eyebrow">Paper only · since {{ card.from_date }} · {{ card.sessions.length }} sessions</p><h3 id="paper-scorecard-title">Scorecard: exits on the bot's own entries</h3></div>
+      @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per trade</span> }
+    </header>
+    <p>Every row takes the same baseline entries; only the filters and exits differ. The first row is the live bot. The others were frozen on October 17 and are scored only on later sessions.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Rules</th><th>Trades</th><th>Net</th><th>Per trade</th><th>Win rate</th><th>Worst day</th><th>vs live</th>
+        @for (day of card.sessions; track day) { <th class="day">{{ day.slice(5) }}</th> }</tr></thead>
+      <tbody>@for (policy of card.policies; track policy.id) {
+        <tr [attr.data-reference]="policy.id === card.reference_policy">
+          <th>{{ policy.label }}@if (policy.summary.censored) { <small class="partial" title="Some trades' recorded paths end before a rule could resolve; totals cover resolved trades only.">{{ policy.summary.censored }} unresolved</small> }</th>
+          <td>{{ policy.summary.closed }}</td>
+          <td [attr.data-net]="tone(policy.summary.net_dollars)">{{ money(policy.summary.net_dollars) }}</td>
+          <td [attr.data-net]="tone(policy.summary.net_per_trade)">{{ money(policy.summary.net_per_trade) }}</td>
+          <td>{{ policy.summary.win_rate === null ? '—' : (policy.summary.win_rate | percent:'1.0-0') }}</td>
+          <td [attr.data-net]="tone(policy.summary.worst_session)">{{ money(policy.summary.worst_session) }}</td>
+          <td [attr.data-net]="tone(policy.versus_reference?.difference_dollars)">{{ policy.versus_reference ? money(policy.versus_reference.difference_dollars) : '—' }}</td>
+          @for (day of card.sessions; track day) { <td class="day" [attr.data-net]="tone(session(policy, day))">{{ money(session(policy, day)) }}</td> }
+        </tr>
+      }</tbody>
+    </table></div>
+    <small>Hold rows settle at the close. "vs live" compares sessions where both have results. A few sessions are not evidence; no rule changes automatically, and no orders are placed. Run <code>scripts/research.sh scorecard</code> for intervals.</small>
+  </section>
+}

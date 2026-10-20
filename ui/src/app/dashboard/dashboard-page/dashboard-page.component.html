@@ -35,17 +35,17 @@
       <p class="desk-note">Paper results are unavailable right now.</p>
     } @else {
       <div class="desk-arms">
-        @for (arm of deskArms; track arm.arm_id) {
+        @for (row of deskRows; track row.id) {
           <div class="desk-arm">
-            <span>{{ arm.label }}</span>
-            <strong [class.positive]="arm.net_dollars > 0" [class.negative]="arm.net_dollars < 0">{{ arm.net_dollars | currency:'USD':'symbol':'1.0-0' }}</strong>
-            <small>{{ arm.closes }} {{ arm.closes === 1 ? 'trade' : 'trades' }} this week@if (arm.net_per_close !== null && arm.net_per_close !== undefined) { · {{ arm.net_per_close | currency:'USD':'symbol':'1.0-0' }} each }</small>
+            <span>{{ row.label }}</span>
+            <strong [class.positive]="row.net > 0" [class.negative]="row.net < 0">{{ row.net | currency:'USD':'symbol':'1.0-0' }}</strong>
+            <small>{{ row.closes }} {{ row.closes === 1 ? 'trade' : 'trades' }} this week@if (row.closes) { · {{ row.net / row.closes | currency:'USD':'symbol':'1.0-0' }} each }</small>
           </div>
         }
         <a class="desk-arm desk-link" routerLink="/trace">
-          <span>All paper strategies</span>
+          <span>Paper scorecard</span>
           <strong>{{ deskTrackedCount }}</strong>
-          <small>tracked · net after assumed costs</small>
+          <small>rule sets on the same entries · net after costs</small>
         </a>
       </div>
     }

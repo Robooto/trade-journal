@@ -15,7 +15,7 @@ Tastytrade client.
   a daily checklist, and recent journal entries.
 - A TRACE workspace: session timeline, trade read, market snapshot, signed GEX
   structure map, shared chart annotations, what the research says, and the paper
-  experiments (scorecard, negative-pocket shadow, ledger and replay). TRACE data comes
+  bot (one backtest scorecard: live rules vs hold-to-expiry arms, ledger and replay). TRACE data comes
   from the market-data pipeline; this app owns the only user-facing view of it.
 - Research: FlowPatrol Flow Ideas (ranked queue, opened-vs-closed contract ledger,
   linked legs, Equity Hub links) and brokerage watchlist research.

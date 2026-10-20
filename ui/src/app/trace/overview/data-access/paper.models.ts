@@ -37,10 +37,20 @@ export interface ForwardExperiment {
   mean_session_difference: number | null;
   daily: { date: string; complete: boolean; collection?: PaperSessionCoverage; trial_net_scenario: number | null; control_net_scenario: number | null; net_scenario_difference: number | null }[];
 }
-export interface QuotePilotStatus {
-  status: string; date: string; expected_minutes: number; recorded_minutes: number;
-  missing_minutes: string[]; sample_states: Record<string, number>;
-  valid_observations: number; unavailable_observations: number; repeated_timestamp_observations: number;
-  maximum_quote_age_seconds: number | null; maximum_leg_skew_seconds: number | null;
-  maximum_response_seconds: number | null; authentication_blocked: boolean;
+
+/** Live baseline rules next to the frozen hold-family arms, scored by the pipeline backtester. */
+export interface BacktestPolicySummary {
+  admitted: number; closed: number; censored: number; net_dollars: number | null; net_per_trade: number | null;
+  win_rate: number | null; break_even_win_rate: number | null; worst_session: number | null;
+  session_totals: Record<string, number>; exit_reasons: Record<string, number>;
+}
+export interface BacktestScorecardPolicy {
+  id: string; label: string; summary: BacktestPolicySummary;
+  versus_reference: { sessions: number; difference_dollars: number } | null;
+  trades: { day: string; status: string; net: number | null }[];
+}
+export interface PaperBacktestScorecard {
+  schema_version: 'paper-backtest-scorecard.v1'; from_date: string; sessions: string[];
+  reference_policy: string; cost_per_trade_dollars: number | null; policies: BacktestScorecardPolicy[];
+  order_submission_enabled: false;
 }

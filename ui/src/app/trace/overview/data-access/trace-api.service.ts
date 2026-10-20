@@ -37,22 +37,8 @@ export class TraceApiService {
     return this.http.get<TraceSessionsResponse>(`${this.baseUrl}/sessions`);
   }
 
-  paperQuotePilot(date: string): Observable<import('./paper.models').QuotePilotStatus> {
-    return this.http.get<import('./paper.models').QuotePilotStatus>(`${this.baseUrl}/paper-quote-pilot`, { params: { date } });
-  }
-
-  paperResearchScorecard(date: string): Observable<import('./generated/research-contracts').PaperResearchScorecard> {
-    return this.http.get<import('./generated/research-contracts').PaperResearchScorecard>(`${this.baseUrl}/paper-research-scorecard`, { params: { date } });
-  }
-
-  paperArms(toDate: string, fromDate?: string): Observable<import('./generated/research-contracts').PaperArmScorecard> {
-    const params: Record<string, string> = { to_date: toDate };
-    if (fromDate) params['from_date'] = fromDate;
-    return this.http.get<import('./generated/research-contracts').PaperArmScorecard>(`${this.baseUrl}/paper-arms`, { params });
-  }
-
-  paperNegativePocket(toDate: string): Observable<import('./generated/research-contracts').NegativePocketReview> {
-    return this.http.get<import('./generated/research-contracts').NegativePocketReview>(`${this.baseUrl}/paper-negative-pocket`, { params: { to_date: toDate } });
+  paperBacktestScorecard(): Observable<import('./paper.models').PaperBacktestScorecard> {
+    return this.http.get<import('./paper.models').PaperBacktestScorecard>(`${this.baseUrl}/paper-backtest-scorecard`);
   }
 
   paperCatalog(date: string): Observable<PaperCatalog> {

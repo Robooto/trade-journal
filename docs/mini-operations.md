@@ -102,7 +102,9 @@ Do not deploy to it. See `raspberry-pi-operations.md` for the retirement guard.
 ## Paper research collectors
 
 The pipeline's paper collectors run on mini as systemd user timers and only read
-through this API; none can submit orders. As of October 17, 2026:
+through this API; none can submit orders. The experiments below ended October 18,
+2026 and their timers were archived October 20; only the baseline paper quotes (inside
+the TRACE cycle) and the SPX 0DTE chain grid still collect. As of October 17, 2026:
 
 | Collector (pipeline timer) | Window | Trade Journal routes |
 | --- | --- | --- |
@@ -115,5 +117,5 @@ authorization failure as 403 and other temporary failures as 503. The tastytrade
 client retries reads briefly and refreshes a rejected token once (see
 [brokerage API inventory](brokerage-api-inventory.md#client-behavior)). The pipeline
 owns the timers, stores, backups and stop procedures; see its
-`docs/operations/` runbooks. The TRACE page's paper tab shows the all-arm scorecard,
-the negative-pocket review, the ledger and quote-path replay.
+`docs/operations/` runbooks. The TRACE page's paper tab shows the backtest scorecard,
+the ledger and quote-path replay.

@@ -1,4 +1,3 @@
-import { researchScorecardForTest } from '../../data-access/paper-research-scorecard.fixture';
 import { TestBed } from '@angular/core/testing';
 import { NEVER, of, throwError } from 'rxjs';
 import { catalogForTest } from '../../data-access/paper-catalog.fixture';
@@ -25,8 +24,7 @@ const response = { status:'available', total:4, rows:[
   complete_eligible_sessions:0, eligible_trial_closes:0, mean_session_net_scenario:null, mean_session_net_interval_95:null, daily:[]} };
 
 function apiFixture() {
-  return { paperResearchScorecard:vi.fn((date: string) => of(researchScorecardForTest(date))), paperNegativePocket:vi.fn(() => NEVER), paperArms:vi.fn(() => NEVER), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
-    paperQuotePilot:vi.fn(()=>of({status:'no_evidence',recorded_minutes:0,expected_minutes:0,missing_minutes:[],valid_observations:0,unavailable_observations:0,sample_states:{}})),
+  return { paperBacktestScorecard:vi.fn(() => NEVER), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
     decisionJournal:vi.fn(()=>of({decision_status:'ready',decision:'pass',trade_type:null,grade:'D',quality_score:25,reason_codes:['entry_score_or_gate_failed']})) };
 }
 
@@ -103,20 +101,16 @@ describe('PaperNowComponent current strategy overview', () => {
     const fixture=TestBed.createComponent(PaperNowComponent);fixture.componentRef.setInput('date','2026-10-05');fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Paper session coverage has not been published for this date');
   });
-  it('refreshes daily health for date and refresh changes without reloading it for capture selection', () => {
+  it('reloads the scorecard on refresh but not for capture selection', () => {
     const fixture = TestBed.createComponent(PaperNowComponent);
     fixture.componentRef.setInput('date', '2026-10-13');
     fixture.detectChanges();
-    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(1);
+    expect(api.paperBacktestScorecard).toHaveBeenCalledTimes(1);
     fixture.componentRef.setInput('captureTs', '2026-10-13T08:10:00-07:00');
     fixture.detectChanges();
-    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(1);
+    expect(api.paperBacktestScorecard).toHaveBeenCalledTimes(1);
     fixture.componentRef.setInput('refreshAt', new Date());
     fixture.detectChanges();
-    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(2);
-    fixture.componentRef.setInput('date', '2026-10-14');
-    fixture.detectChanges();
-    expect(api.paperResearchScorecard).toHaveBeenLastCalledWith('2026-10-14');
-    expect(api.paperResearchScorecard).toHaveBeenCalledTimes(3);
+    expect(api.paperBacktestScorecard).toHaveBeenCalledTimes(2);
   });
 });

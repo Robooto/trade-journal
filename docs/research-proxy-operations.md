@@ -60,10 +60,10 @@ Stopping or blocking the market-data API should make the latter two fail
 without changing the first result. Research availability is intentionally not
 part of the Trade Journal container health check.
 
-## Spread research collection health
+## Paper scorecard
 
-The Paper view reads `/research-api/api/trace/paper-research-scorecard?date=YYYY-MM-DD`
-from the pipeline. This shows per-width collection integrity separately from P/L.
-Missing/unreadable evidence is explicit. The existing proxy needs no changes,
-and this read makes no brokerage calls. Pipeline owns the definitions and daily
-report timer; see the workspace API contracts and spread research review plan.
+The Paper view and the dashboard read `/research-api/api/trace/paper-backtest-scorecard`
+from the pipeline: the live baseline rules next to the frozen hold-family arms, scored
+by the backtester on request. The existing proxy needs no changes, and this read makes
+no brokerage calls. (The spread research collection-health read,
+`paper-research-scorecard`, was retired October 20, 2026 with its collectors.)

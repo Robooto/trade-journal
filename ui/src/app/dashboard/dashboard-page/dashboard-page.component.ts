@@ -1,11 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { JournalApiService } from '../../journal/journal-api.service';
 import { JournalEntry } from '../../journal/journal.models';
-import type { PaperArm } from '../../trace/overview/data-access/generated/research-contracts';
+import type { PaperBacktestScorecard } from '../../trace/overview/data-access/paper.models';
 import { TraceApiService } from '../../trace/overview/data-access/trace-api.service';
 import { dailyOverviewAnalysis, spotGammaToolLinks, ResourceLink, dailyGuidelines, tradeGuidelines } from '../dashboard-data';
 
 const CHECKLIST_KEY = 'dashboard-checklist:';
+/** The live bot's rules and the plain hold-to-expiry arm, from the backtest scorecard. */
+const DESK_POLICIES: Record<string, string> = { 'recorded-rules': 'Paper bot (live rules)', 'H1-hold': 'Same entries, held to expiry' };
+
+export interface DeskRow { id: string; label: string; net: number; closes: number; }
+
+/** This week's net and closed trades per desk policy; days before ``from`` are left out. */
+export function deskRows(card: PaperBacktestScorecard, from: string): DeskRow[] {
+  return card.policies.filter(policy => policy.id in DESK_POLICIES).map(policy => {
+    const week = policy.trades.filter(trade => trade.day >= from && trade.status === 'closed');
+    return { id: policy.id, label: DESK_POLICIES[policy.id], closes: week.length,
+             net: week.reduce((sum, trade) => sum + (trade.net ?? 0), 0) };
+  });
+}
 
 /** Pacific calendar date as YYYY-MM-DD; trading days follow the exchange's local session. */
 export function pacificDate(now = new Date()): string {
@@ -33,7 +46,7 @@ export class DashboardPageComponent implements OnInit {
   readonly tradeGuidelines = tradeGuidelines;
   recentEntries: JournalEntry[] = [];
   researchHeadline: string | null = null;
-  deskArms: PaperArm[] = [];
+  deskRows: DeskRow[] = [];
   deskTrackedCount = 0;
   deskStatus: 'loading' | 'ready' | 'unavailable' = 'loading';
   readonly today = pacificDate();
@@ -52,10 +65,10 @@ export class DashboardPageComponent implements OnInit {
       next: status => (this.researchHeadline = status.headline ?? null),
       error: () => (this.researchHeadline = null),
     });
-    this.traceApi.paperArms(this.today, this.weekFrom).subscribe({
+    this.traceApi.paperBacktestScorecard().subscribe({
       next: card => {
-        this.deskTrackedCount = card.arms.length;
-        this.deskArms = card.arms.filter(arm => arm.kind === 'baseline' || arm.arm_id === 'negative-pocket-shadow');
+        this.deskTrackedCount = card.policies.length;
+        this.deskRows = deskRows(card, this.weekFrom);
         this.deskStatus = 'ready';
       },
       error: () => (this.deskStatus = 'unavailable'),

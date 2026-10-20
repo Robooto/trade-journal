@@ -1,4 +1,3 @@
-import { researchScorecardForTest } from './data-access/paper-research-scorecard.fixture';
 import { catalogForTest } from './data-access/paper-catalog.fixture';
 import { By } from '@angular/platform-browser';
 import { PaperWorkspaceComponent } from './components/paper-workspace/paper-workspace.component';
@@ -27,11 +26,8 @@ import { ResearchSummaryComponent } from './components/research-summary/research
 import { StrikeLadderComponent } from './components/strike-ladder/strike-ladder.component';
 
 class TraceApiStub {
-  readonly paperResearchScorecard = vi.fn((date: string) => of(researchScorecardForTest(date)));
-  readonly paperNegativePocket = vi.fn(() => NEVER);
-  readonly paperArms = vi.fn(() => NEVER);
+  readonly paperBacktestScorecard = vi.fn(() => NEVER);
   readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
-  readonly paperQuotePilot = vi.fn(() => of({ status: 'no_evidence' }));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
   readonly strikeLadder = vi.fn(() => NEVER);
   readonly decisionJournal = vi.fn(() => of({

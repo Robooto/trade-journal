@@ -1,17 +1,15 @@
 import type { PaperCatalog } from '../../data-access/generated/research-contracts';
-import { PaperResearchHealthComponent } from '../paper-research-health/paper-research-health.component';
-import { PaperNegativePocketComponent } from '../paper-negative-pocket/paper-negative-pocket.component';
-import { PaperArmsComponent } from '../paper-arms/paper-arms.component';
+import { PaperScorecardComponent } from '../paper-scorecard/paper-scorecard.component';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
-import type { PaperLedgerResponse, PaperLedgerRow, QuotePilotStatus } from '../../data-access/paper.models';
+import type { PaperLedgerResponse, PaperLedgerRow } from '../../data-access/paper.models';
 
 @Component({
   selector: 'app-paper-now',
   standalone: true,
-  imports: [CommonModule, PaperResearchHealthComponent, PaperNegativePocketComponent, PaperArmsComponent],
+  imports: [CommonModule, PaperScorecardComponent],
   templateUrl: './paper-now.component.html',
   styleUrl: './paper-now.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,11 +35,8 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   readonly trialSession = signal<PaperLedgerResponse | null>(null);
   readonly trialError = signal(false);
   readonly trialSessionError = signal(false);
-  readonly pilot = signal<QuotePilotStatus | null>(null);
-  readonly pilotError = signal(false);
   private trialRequest?: Subscription;
   private trialSessionRequest?: Subscription;
-  private pilotRequest?: Subscription;
   private catalogRequest?: Subscription;
   private shadowRequest?: Subscription;
   private request?: Subscription;
@@ -61,9 +56,8 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
         error: () => { this.decisionError.set(true); this.decisionLoading.set(false); },
       });
     }
-    this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe();
+    this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe();
     this.trial.set(null); this.trialSession.set(null); this.trialError.set(false); this.trialSessionError.set(false);
-    this.pilot.set(null); this.pilotError.set(false);
     this.catalogRequest?.unsubscribe();
     this.catalog.set(null);
     this.catalogError.set(false);
@@ -116,12 +110,6 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
         next: response => this.trialSession.set(response), error: () => this.trialSessionError.set(true),
       });
     }
-    const pilot = catalog.quote_pilot;
-    if (pilot && this.date >= pilot.start_date && this.date <= pilot.end_date) {
-      this.pilotRequest = this.api.paperQuotePilot(this.date).subscribe({
-        next: response => this.pilot.set(response), error: () => this.pilotError.set(true),
-      });
-    }
     this.comparisonRequest = this.api.paperTrades(this.cohortStart, this.date, {
       policy_id: this.policyId, strategy_id: 'spx-directional-vertical.v1', width_points: width, active_only: 'true', limit: '1',
     }).subscribe({
@@ -130,7 +118,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.pilotRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.decisionRequest?.unsubscribe(); this.trialRequest?.unsubscribe(); this.trialSessionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.comparisonRequest?.unsubscribe(); this.shadowRequest?.unsubscribe(); }
 
   time(value: string | null | undefined): string {
     if (!value) return 'Not available';
