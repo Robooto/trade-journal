@@ -123,7 +123,7 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
     this.captureSelected.emit(column.ts);
   }
 
-  columnAt(event: MouseEvent, svg: SVGSVGElement): number {
+  columnAt(event: MouseEvent, svg: Element): number {
     const box = svg.getBoundingClientRect();
     const x = (event.clientX - box.left) * (WIDTH / box.width);
     return Math.floor((x - LEFT) / this.columnWidth());
