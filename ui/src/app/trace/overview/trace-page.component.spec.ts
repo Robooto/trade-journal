@@ -6,7 +6,7 @@ import { CommonModule } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { signal } from '@angular/core';
-import { NEVER, of } from 'rxjs';
+import { NEVER, Observable, of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -19,7 +19,7 @@ import { SessionTrendsComponent } from './components/session-trends/session-tren
 import { SignedGexMapComponent } from './components/signed-gex-map/signed-gex-map.component';
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceResearchStatusResponse, TraceStudyStatus } from './trace.models';
-import { TracePageComponent, nextTraceAutoRefreshAt } from './trace-page.component';
+import { TracePageComponent, isTraceSessionHours } from './trace-page.component';
 import { PaperLedgerComponent } from './components/paper-ledger/paper-ledger.component';
 import { PaperNowComponent } from './components/paper-now/paper-now.component';
 import { ResearchSummaryComponent } from './components/research-summary/research-summary.component';
@@ -89,6 +89,7 @@ class TraceFacadeStub {
   readonly selectCapture = vi.fn();
   readonly stepCapture = vi.fn();
   readonly reload = vi.fn();
+  readonly latestCaptureTs = vi.fn((_date: string) => NEVER as Observable<string | null>);
   readonly loadPaperScorecard = vi.fn();
   readonly loadPaperReplay = vi.fn();
   readonly loadPaperReplayEntries = vi.fn();
@@ -230,57 +231,79 @@ describe('TracePageComponent', () => {
     expect(panel.querySelector('app-paper-ledger')).not.toBeNull();
   });
 
-  it('aligns automatic updates one minute after each ten-minute TRACE capture', () => {
-    expect(nextTraceAutoRefreshAt(new Date('2026-07-24T12:00:30'))).toEqual(new Date('2026-07-24T12:02:00'));
-    expect(nextTraceAutoRefreshAt(new Date('2026-07-24T12:02:00'))).toEqual(new Date('2026-07-24T12:12:00'));
-    expect(nextTraceAutoRefreshAt(new Date('2026-07-24T12:08:45'))).toEqual(new Date('2026-07-24T12:12:00'));
+  it('checks for captures on weekdays from 6:15 AM to 1:20 PM Pacific', () => {
+    expect(isTraceSessionHours(new Date('2026-07-24T07:00:00-07:00'))).toBe(true);
+    expect(isTraceSessionHours(new Date('2026-07-24T06:10:00-07:00'))).toBe(false);
+    expect(isTraceSessionHours(new Date('2026-07-24T13:30:00-07:00'))).toBe(false);
+    expect(isTraceSessionHours(new Date('2026-07-25T09:00:00-07:00'))).toBe(false);
   });
 
-  it('automatically reloads at the next aligned update time', () => {
+  function liveFixture(now: string, rows: { ts: string }[], date = '2026-07-24') {
     fixture.destroy();
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-07-24T12:00:30'));
+    vi.setSystemTime(new Date(now));
+    facade.reload.mockClear();
     facade.loadSessions.mockClear();
-    facade.reload.mockClear();
-
+    facade.selectedDate.set(date);
+    facade.captureRows.set(rows as any);
     fixture = TestBed.createComponent(TracePageComponent);
     fixture.detectChanges();
-    expect(fixture.componentInstance.nextAutoRefreshAt()).toEqual(new Date('2026-07-24T12:02:00'));
-    expect(fixture.nativeElement.textContent).toContain('Automatic updates on');
+    return fixture.componentInstance;
+  }
 
-    vi.advanceTimersByTime(89_999);
+  it('reloads only when the pipeline reports a newer capture, keeping the page as it is otherwise', () => {
+    const page = liveFixture('2026-07-24T10:00:30-07:00', [{ ts: '2026-07-24T10:00:05-07:00' }]);
+    facade.latestCaptureTs.mockReturnValue(of('2026-07-24T10:00:05-07:00'));
+    vi.advanceTimersByTime(30_000);
+    expect(facade.latestCaptureTs).toHaveBeenCalledWith('2026-07-24');
     expect(facade.reload).not.toHaveBeenCalled();
-    vi.advanceTimersByTime(1);
+    expect(page.liveState()).toBe('live');
+    facade.latestCaptureTs.mockReturnValue(of('2026-07-24T10:05:05-07:00'));
+    vi.advanceTimersByTime(30_000);
     expect(facade.reload).toHaveBeenCalledOnce();
-    expect(fixture.componentInstance.nextAutoRefreshAt()).toEqual(new Date('2026-07-24T12:12:00'));
-
     fixture.destroy();
     vi.useRealTimers();
   });
 
-  it('defers a scheduled update while hidden and catches up when visible', () => {
-    fixture.destroy();
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-07-24T12:00:30'));
-    const visibilityState = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
-    facade.reload.mockClear();
-
-    fixture = TestBed.createComponent(TracePageComponent);
-    fixture.detectChanges();
-    vi.advanceTimersByTime(90_000);
-
-    expect(facade.reload).not.toHaveBeenCalled();
-    expect(fixture.componentInstance.nextAutoRefreshAt()).toBeNull();
-
-    visibilityState.mockReturnValue('visible');
-    fixture.componentInstance.handleVisibilityChange();
-
+  it('pauses while hidden, checks at once when visible, and rests after the close', () => {
+    const page = liveFixture('2026-07-24T10:00:30-07:00', [{ ts: '2026-07-24T10:00:05-07:00' }]);
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    vi.advanceTimersByTime(30_000);
+    expect(page.liveState()).toBe('paused');
+    expect(facade.latestCaptureTs).not.toHaveBeenCalled();
+    visibility.mockReturnValue('visible');
+    facade.latestCaptureTs.mockReturnValue(of('2026-07-24T10:05:05-07:00'));
+    page.handleVisibilityChange();
     expect(facade.reload).toHaveBeenCalledOnce();
-    expect(fixture.componentInstance.nextAutoRefreshAt()).toEqual(new Date('2026-07-24T12:12:00'));
-
-    visibilityState.mockRestore();
+    vi.setSystemTime(new Date('2026-07-24T14:00:00-07:00'));
+    page.liveCheck();
+    expect(page.liveState()).toBe('closed');
+    expect(page.liveLabel()).toContain('Market closed');
+    visibility.mockRestore();
     fixture.destroy();
     vi.useRealTimers();
+  });
+
+  it('reloads only the session catalog while an earlier session is selected', () => {
+    const page = liveFixture('2026-07-24T10:00:30-07:00', [{ ts: '2026-07-23T13:00:05-07:00' }], '2026-07-23');
+    facade.loadSessions.mockClear();  // ngOnInit loads the catalog once.
+    page.liveCheck();
+    expect(facade.loadSessions).toHaveBeenCalledOnce();
+    expect(facade.reload).not.toHaveBeenCalled();
+    expect(facade.latestCaptureTs).not.toHaveBeenCalled();
+    fixture.destroy();
+    vi.useRealTimers();
+  });
+
+  it('offers a jump to the latest capture when an earlier one is selected', () => {
+    facade.captureRows.set([{ ts: '2026-07-24T10:00:05-07:00' }, { ts: '2026-07-24T10:05:05-07:00' }] as any);
+    facade.selectedCapture.set({ ts: '2026-07-24T10:00:05-07:00' } as any);
+    facade.selectedCaptureIndex.set(0);
+    fixture.detectChanges();
+    const jump = fixture.nativeElement.querySelector('.trace-jump-latest');
+    expect(jump.textContent).toContain('Latest');
+    jump.click();
+    expect(facade.selectCapture).toHaveBeenCalledWith(1);
   });
 
   it('selects only dates present in the TRACE session catalog', () => {

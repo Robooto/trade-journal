@@ -114,12 +114,12 @@ export class TraceFacade implements OnDestroy {
     this.paper = new TracePaperState(api);
     this.subscriptions.add(
       merge(
-        this.selectedDateSubject.pipe(distinctUntilChanged()),
-        this.reloadSubject.pipe(map(() => this.selectedDateSubject.value)),
+        this.selectedDateSubject.pipe(distinctUntilChanged(), map(date => ({ date, quiet: false }))),
+        this.reloadSubject.pipe(map(() => ({ date: this.selectedDateSubject.value, quiet: true }))),
       )
         .pipe(
-          filter(date => Boolean(date)),
-          switchMap(date => this.loadSession(date)),
+          filter(request => Boolean(request.date)),
+          switchMap(request => this.loadSession(request.date, request.quiet)),
         )
         .subscribe(),
     );
@@ -227,7 +227,13 @@ export class TraceFacade implements OnDestroy {
     this.paper.destroy();
   }
 
+  /** The session's latest TRACE capture time, from the light collection-status read. */
+  latestCaptureTs(date: string): Observable<string | null> {
+    return this.api.collectionStatus(date).pipe(map(status => status.trace.latest_ts));
+  }
+
   private applySessions(response: TraceSessionsResponse): void {
+    const previousLatest = this.sessions().map(session => session.date).sort().at(-1);
     this.sessions.set(response.sessions);
     const orderedDates = response.sessions.map(session => session.date).sort();
     this.paper.loadForSessions(orderedDates);
@@ -241,20 +247,34 @@ export class TraceFacade implements OnDestroy {
     }
 
     const current = this.selectedDate();
-    const selected = response.sessions.some(session => session.date === current)
+    const newest = response.latest_date ?? response.sessions[0].date;
+    // Follow a new session only when the previous latest one was selected.
+    const selected = response.sessions.some(session => session.date === current) && !(current === previousLatest && newest > current)
       ? current
-      : response.latest_date ?? response.sessions[0].date;
+      : newest;
     if (selected === current && this.bundle()) return;
     this.selectDate(selected);
   }
 
-  private loadSession(date: string): Observable<TraceSessionBundle> {
+  /**
+   * Loads a session. A quiet reload (same date, new captures) keeps the current data on screen
+   * until the new data arrives, then follows the latest capture only if it was already selected;
+   * otherwise it stays on the same capture.
+   */
+  private loadSession(date: string, quiet = false): Observable<TraceSessionBundle> {
+    const previous = this.bundle();
+    const reloading = quiet && previous?.date === date;
+    const previousRows = previous?.timeseries?.rows ?? [];
+    const followLatest = !reloading || this.selectedCaptureIndex() >= previousRows.length - 1;
+    const pinnedTs = reloading ? previousRows[this.selectedCaptureIndex()]?.ts : undefined;
     this.sessionLoading.set(true);
     this.sessionError.set(null);
-    this.bundle.set(null);
-    this.resetPaperReplay();
-    this.selectedCaptureIndex.set(0);
-    this.resetGammaProfile();
+    if (!reloading) {
+      this.bundle.set(null);
+      this.resetPaperReplay();
+      this.selectedCaptureIndex.set(0);
+      this.resetGammaProfile();
+    }
     this.loadPaperReplayEntries(date);
 
     return forkJoin({
@@ -266,9 +286,14 @@ export class TraceFacade implements OnDestroy {
     }).pipe(
       map(resources => toBundle(date, resources)),
       tap(bundle => {
+        if (reloading && !hasAnyResource(bundle)) return;  // Keep what is on screen if the reload failed.
+        const rows = bundle.timeseries?.rows ?? [];
+        const pinned = followLatest ? -1 : rows.findIndex(row => row.ts === pinnedTs);
+        const index = pinned >= 0 ? pinned : Math.max(0, rows.length - 1);
+        const captureChanged = rows[index]?.ts !== previousRows[this.selectedCaptureIndex()]?.ts;
         this.bundle.set(bundle);
-        this.selectedCaptureIndex.set(Math.max(0, (bundle.timeseries?.rows.length ?? 1) - 1));
-        this.requestGammaProfile();
+        this.selectedCaptureIndex.set(index);
+        if (!reloading || captureChanged) this.requestGammaProfile();
         if (!hasAnyResource(bundle)) {
           this.sessionError.set('The selected TRACE session could not be loaded.');
         }

@@ -390,3 +390,8 @@
   color: #8fa1ba;
   font-size: 0.74rem;
 }
+
+.trace-auto-refresh[data-state='live'] strong mat-icon { color: #34d399; }
+.trace-auto-refresh[data-state='paused'] strong mat-icon,
+.trace-auto-refresh[data-state='closed'] strong mat-icon { color: #8fa1ba; }
+.trace-jump-latest { min-height: 2rem; font-size: .74rem; }

@@ -252,6 +252,31 @@ describe('TraceFacade', () => {
     facade.ngOnDestroy();
   });
 
+  it('reloads the same session in place: stays on a pinned capture, follows the latest otherwise', () => {
+    const api = new TraceApiStub();
+    const facade = new TraceFacade(api as unknown as TraceApiService);
+    facade.selectDate(date);
+    const rows = timeseriesFixture.rows;
+    const later = (n: number) => ({ ...rows[1], ts: `2026-07-24T13:0${n}:05-07:00`, capture_id: `capture-${n + 2}` });
+    const grow = (extra: number) => vi.spyOn(api, 'timeseries').mockReturnValue(of({ ...timeseriesFixture,
+      rows: [...rows, ...Array.from({ length: extra }, (_, i) => later(i + 1))] } as TraceTimeseriesResponse));
+
+    facade.selectCapture(0);
+    const before = facade.bundle();
+    grow(1);
+    facade.reload();
+    expect(facade.bundle()).not.toBe(before);
+    expect(facade.captureRows().length).toBe(3);
+    expect(facade.selectedCapture()?.capture_id).toBe(rows[0].capture_id);
+
+    facade.selectCapture(2);
+    grow(2);
+    facade.reload();
+    expect(facade.selectedCaptureIndex()).toBe(3);
+    expect(facade.selectedCapture()?.capture_id).toBe('capture-4');
+    facade.ngOnDestroy();
+  });
+
   it('clamps timeline navigation and reloads gamma for the selected capture', () => {
     const api = new TraceApiStub();
     const facade = new TraceFacade(api as unknown as TraceApiService);

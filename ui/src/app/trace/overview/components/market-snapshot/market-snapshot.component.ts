@@ -34,8 +34,11 @@ export class MarketSnapshotComponent {
   }
 
   get volatility(): TraceRealizedVolatilityRow | null {
-    const captureId = this.activeRow?.capture_id;
-    return this.realizedVolatility?.rows.find(row => row.capture_id === captureId) ?? null;
+    // Volatility is measured on ten-minute captures; a five-minute capture shows the latest one at or before it.
+    const ts = this.activeRow?.ts;
+    if (!ts) return null;
+    const rows = (this.realizedVolatility?.rows ?? []).filter(row => row.as_of <= ts);
+    return rows.length ? rows[rows.length - 1] : null;
   }
 
   valueTone(value: number | null | undefined): 'positive' | 'negative' | 'neutral' {

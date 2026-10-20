@@ -30,7 +30,7 @@ export interface Spx0DteDecisionJournalResponse {
     readonly profit_target_fraction_of_initial_credit: number;
     readonly forced_exit_time: string;
   };
-  readonly selection: 'exact' | 'latest';
+  readonly selection: 'exact' | 'latest' | 'latest_decision_capture';
   readonly protocol: {
     readonly id: 'spx-0dte-decision-journal-v1';
     readonly status: 'preregistered';

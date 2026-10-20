@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, computed, effect, signal } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subscription } from 'rxjs';
 
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus } from './trace.models';
@@ -11,9 +12,11 @@ import {
 } from './trace-price-levels';
 
 const ALERT_COOLDOWN_MS = 30 * 60 * 1000;
-const TRACE_CAPTURE_INTERVAL_MINUTES = 10;
-const TRACE_CAPTURE_MINUTE_OFFSET = 1;
-const TRACE_REFRESH_DELAY_MINUTES = 1;
+/** How often the page asks the pipeline whether a new TRACE capture has landed. */
+const LIVE_CHECK_MS = 30_000;
+/** Pacific hours with captures, padded for the first capture and the 13:00 close. */
+const SESSION_START = '06:15';
+const SESSION_END = '13:20';
 
 @Component({
   selector: 'app-trace-page',
@@ -30,11 +33,21 @@ export class TracePageComponent implements OnInit, OnDestroy {
   priceLevelColor = '#fbbf24';
 
   private readonly alertState = new Map<string, { armed: boolean; lastAlertedAt: number | null }>();
-  private autoRefreshTimer: ReturnType<typeof setTimeout> | null = null;
-  private autoRefreshPending = false;
+  private liveTimer: ReturnType<typeof setTimeout> | null = null;
+  private liveRequest?: Subscription;
 
   readonly lastRefreshRequestedAt = signal<Date | null>(null);
-  readonly nextAutoRefreshAt = signal<Date | null>(null);
+  readonly lastCheckedAt = signal<Date | null>(null);
+  /** live: checking every 30 s; paused: tab hidden; closed: outside session hours. */
+  readonly liveState = signal<'live' | 'paused' | 'closed'>('live');
+  readonly latestCapture = computed(() => {
+    const rows = this.facade.captureRows();
+    return rows.length ? rows[rows.length - 1] : null;
+  });
+  readonly behindLatest = computed(() => {
+    const rows = this.facade.captureRows();
+    return rows.length > 0 && this.facade.selectedCaptureIndex() < rows.length - 1;
+  });
 
   constructor(
     readonly facade: TraceFacade,
@@ -47,16 +60,21 @@ export class TracePageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.facade.loadSessions();
     this.lastRefreshRequestedAt.set(new Date());
-    this.scheduleNextAutoRefresh();
+    this.scheduleLiveCheck();
   }
 
   ngOnDestroy(): void {
-    this.clearAutoRefreshTimer();
+    this.clearLiveTimer();
+    this.liveRequest?.unsubscribe();
   }
 
   refreshNow(): void {
     this.requestRefresh();
-    this.scheduleNextAutoRefresh();
+    this.scheduleLiveCheck();
+  }
+
+  jumpToLatest(): void {
+    this.facade.selectCapture(this.facade.captureRows().length - 1);
   }
 
   readonly selectedSessionDate = computed(() => parseSessionDate(this.facade.selectedDate()));
@@ -161,12 +179,8 @@ export class TracePageComponent implements OnInit, OnDestroy {
   @HostListener('document:visibilitychange')
   handleVisibilityChange(): void {
     if (document.visibilityState === 'hidden') return;
-    const nextRefresh = this.nextAutoRefreshAt();
-    if (this.autoRefreshPending || !nextRefresh || Date.now() >= nextRefresh.getTime()) {
-      this.autoRefreshPending = false;
-      this.requestRefresh();
-      this.scheduleNextAutoRefresh();
-    }
+    // Coming back to the tab checks right away instead of waiting for the next tick.
+    this.liveCheck();
   }
 
   statusClass(status: TraceContractStatus | 'unavailable'): string {
@@ -185,8 +199,19 @@ export class TracePageComponent implements OnInit, OnDestroy {
     }).format(parsed);
   }
 
+  asDate(value: string): Date {
+    return new Date(value);
+  }
+
+  liveLabel(): string {
+    const state = this.liveState();
+    if (state === 'paused') return 'Paused while this tab is hidden';
+    if (state === 'closed') return 'Market closed · checks resume at 6:15 AM PT';
+    return 'Live · checking for new captures every 30 s';
+  }
+
   formatRefreshTime(value: Date | null): string {
-    if (!value) return 'Waiting for tab';
+    if (!value) return '—';
     return new Intl.DateTimeFormat('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -245,37 +270,61 @@ export class TracePageComponent implements OnInit, OnDestroy {
     this.facade.reload();
   }
 
-  private scheduleNextAutoRefresh(now = new Date()): void {
-    this.clearAutoRefreshTimer();
-    const nextRefresh = nextTraceAutoRefreshAt(now);
-    this.nextAutoRefreshAt.set(nextRefresh);
-    this.autoRefreshTimer = setTimeout(() => {
-      this.autoRefreshTimer = null;
-      if (document.visibilityState === 'hidden') {
-        this.autoRefreshPending = true;
-        this.nextAutoRefreshAt.set(null);
-        return;
-      }
-      this.requestRefresh();
-      this.scheduleNextAutoRefresh();
-    }, Math.max(0, nextRefresh.getTime() - now.getTime()));
+  /** Asks the pipeline for the session's latest capture and reloads only when it changed. */
+  liveCheck(now = new Date()): void {
+    this.clearLiveTimer();
+    if (document.visibilityState === 'hidden') {
+      this.liveState.set('paused');
+      return;  // handleVisibilityChange resumes.
+    }
+    if (!isTraceSessionHours(now)) {
+      this.liveState.set('closed');
+      this.scheduleLiveCheck();
+      return;
+    }
+    this.liveState.set('live');
+    const date = this.facade.selectedDate();
+    if (!date || date < pacificDate(now)) {
+      // A past session gets no new captures; reload only the catalog, so the page moves to
+      // today's session once its first capture lands (if the latest session was selected).
+      this.facade.loadSessions();
+      this.scheduleLiveCheck();
+      return;
+    }
+    this.liveRequest?.unsubscribe();
+    this.liveRequest = this.facade.latestCaptureTs(date).subscribe({
+      next: latest => {
+        this.lastCheckedAt.set(new Date());
+        if (latest && latest !== this.latestCapture()?.ts) this.requestRefresh();
+        this.scheduleLiveCheck();
+      },
+      error: () => this.scheduleLiveCheck(),
+    });
   }
 
-  private clearAutoRefreshTimer(): void {
-    if (this.autoRefreshTimer !== null) clearTimeout(this.autoRefreshTimer);
-    this.autoRefreshTimer = null;
+  private scheduleLiveCheck(): void {
+    this.clearLiveTimer();
+    this.liveTimer = setTimeout(() => this.liveCheck(), LIVE_CHECK_MS);
+  }
+
+  private clearLiveTimer(): void {
+    if (this.liveTimer !== null) clearTimeout(this.liveTimer);
+    this.liveTimer = null;
   }
 }
 
-export function nextTraceAutoRefreshAt(now: Date): Date {
-  const next = new Date(now);
-  next.setMilliseconds(0);
-  next.setSeconds(0);
-  const refreshMinuteOffset = TRACE_CAPTURE_MINUTE_OFFSET + TRACE_REFRESH_DELAY_MINUTES;
-  const minutesSinceRefreshOffset = next.getMinutes() - refreshMinuteOffset;
-  const intervalsElapsed = Math.floor(minutesSinceRefreshOffset / TRACE_CAPTURE_INTERVAL_MINUTES);
-  next.setMinutes(refreshMinuteOffset + (intervalsElapsed + 1) * TRACE_CAPTURE_INTERVAL_MINUTES);
-  return next;
+/** Weekdays, 6:15 AM to 1:20 PM Pacific. */
+export function isTraceSessionHours(now: Date): boolean {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(now);
+  const part = (type: string) => parts.find(p => p.type === type)?.value ?? '';
+  const clock = `${part('hour').replace('24', '00')}:${part('minute')}`;
+  return !['Sat', 'Sun'].includes(part('weekday')) && clock >= SESSION_START && clock <= SESSION_END;
+}
+
+function pacificDate(now: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Los_Angeles' }).format(now);
 }
 
 function isInteractiveTarget(target: EventTarget | null): boolean {

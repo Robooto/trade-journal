@@ -113,6 +113,13 @@ new session without trades does not prevent a needed service deployment.
   endpoint for this week's live-rules and hold-to-expiry results. Presentation only.
 - `ResearchSummaryComponent`: "What the research says" on the Research tab, rendered from the study
   registry's headline and per-study evidence tier/summary (`/api/trace/research-status`).
+- Live updates (`TracePageComponent`): during session hours (weekdays 6:15 AM-1:20 PM
+  Pacific) the page asks `/api/trace/{date}/collection-status` every 30 seconds for the
+  latest capture and reloads only when it changed. The reload is quiet: the current data
+  stays on screen, the latest capture is followed only if it was selected (otherwise a
+  "Latest" button jumps there), and the heat map updates in place. Checks pause while the
+  tab is hidden and run at once when it returns; viewing an earlier session reloads only
+  the catalog, so the page moves to today's session when it starts.
 - `CollectionStatusComponent`: one line under the workspace tabs with the session's
   TRACE captures, chain-grid snapshots and settlement (`/api/trace/{date}/collection-status`);
   flags a capture overdue by 12+ minutes during the session.

@@ -41,6 +41,8 @@ export function hiroStrip(column: ChainGridColumn, side: Side): HiroStrip {
 export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
   @Input() date = '';
   @Input() captureTs: string | null = null;
+  /** The session's latest capture; a new one reloads the grid in place. */
+  @Input() latestTs: string | null = null;
   @Output() readonly captureSelected = new EventEmitter<string>();
 
   readonly view = signal<ChainGridViewResponse | null>(null);
@@ -104,11 +106,13 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['captureTs']) this.selected.set(this.captureTs);
-    if (!changes['date']) return;
+    const newDate = !!changes['date'];
+    if (!newDate && !(changes['latestTs'] && !changes['latestTs'].firstChange)) return;
     this.request?.unsubscribe();
     this.error.set(false);
     if (!this.date) { this.view.set(null); return; }
-    this.loading.set(true);
+    // A new capture on the same date swaps the grid in place; a new date shows the loading state.
+    if (newDate || !this.view()) this.loading.set(true);
     this.request = this.api.chainGrid(this.date).subscribe({
       next: value => { this.view.set(value); this.loading.set(false); },
       error: () => { this.view.set(null); this.error.set(true); this.loading.set(false); },
