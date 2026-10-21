@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 from collections.abc import Iterable, Mapping, Sequence
+from zoneinfo import ZoneInfo
 
 from app.schemas.brokerage import (
     AssetClass,
@@ -8,6 +9,7 @@ from app.schemas.brokerage import (
     ExposureContextV1,
     HoldingSnapshotV1,
     PriceContextV1,
+    ProfileContextV1,
     ResearchSymbolContextV1,
     ResearchSymbolItemV1,
     SourceMetadataV1,
@@ -20,6 +22,14 @@ from app.tastytrade_schema import (
     TastyWatchlist,
 )
 from app.services.values import fraction_to_percent, tasty_dict, to_float
+
+
+_MARKET_TIMEZONE = ZoneInfo("America/New_York")
+_EARNINGS_TIMES = {"AMC": "after_close", "BMO": "before_open"}
+_UNVERIFIED_EARNINGS = EarningsContextV1(
+    status="unavailable",
+    detail="Upcoming earnings date has not been verified.",
+)
 
 
 def _normalize_symbols(symbols: Sequence[str]) -> list[str]:
@@ -154,6 +164,52 @@ def _holding_source(
     )
 
 
+def _date_or_none(value) -> date | None:
+    try:
+        return date.fromisoformat(str(value)[:10]) if value else None
+    except ValueError:
+        return None
+
+
+def _text_or_none(value) -> str | None:
+    text = str(value).strip() if value is not None else ""
+    return text or None
+
+
+def _metric_earnings(metric: Mapping, today: date) -> EarningsContextV1:
+    """Use tastytrade's expected report date only when it is still ahead."""
+    earnings = metric.get("earnings")
+    if not isinstance(earnings, Mapping) or earnings.get("visible") is False:
+        return _UNVERIFIED_EARNINGS.model_copy()
+    report_date = _date_or_none(earnings.get("expected-report-date"))
+    if report_date is None or report_date < today:
+        return EarningsContextV1(
+            status="unavailable",
+            detail="tastytrade has no upcoming report date.",
+        )
+    time_of_day = _text_or_none(earnings.get("time-of-day"))
+    return EarningsContextV1(
+        status="estimated" if earnings.get("estimated") else "confirmed",
+        earnings_date=report_date,
+        earnings_time=_EARNINGS_TIMES.get(time_of_day or "", time_of_day),
+        source="tastytrade /market-metrics",
+    )
+
+
+def _metric_profile(metric: Mapping) -> ProfileContextV1:
+    return ProfileContextV1(
+        sector=_text_or_none(metric.get("sector")),
+        industry=_text_or_none(metric.get("industry")),
+        market_cap=to_float(metric.get("market-cap")),
+        beta=to_float(metric.get("beta")),
+        dividend_yield_percent=fraction_to_percent(
+            metric.get("dividend-yield")
+        ),
+        dividend_ex_date=_date_or_none(metric.get("dividend-ex-date")),
+        lendability=_text_or_none(metric.get("lendability")),
+    )
+
+
 def build_research_symbol_context(
     symbols: Sequence[str],
     *,
@@ -177,6 +233,7 @@ def build_research_symbol_context(
         if item.get("symbol")
     }
     exposure_map = _exposure_by_symbol(holding_snapshot)
+    today = fetched_at.astimezone(_MARKET_TIMEZONE).date()
     holding_source = _holding_source(holding_snapshot)
     earnings_map = {
         symbol.upper(): value
@@ -190,12 +247,10 @@ def build_research_symbol_context(
         volatility = volatility_map.get(symbol)
         memberships = watchlist_map.get(symbol, [])
         exposure = exposure_map.get(symbol, ExposureContextV1())
-        earnings = earnings_map.get(
-            symbol,
-            EarningsContextV1(
-                status="unavailable",
-                detail="Upcoming earnings date has not been verified.",
-            ),
+        earnings = earnings_map.get(symbol) or (
+            _metric_earnings(volatility, today)
+            if volatility
+            else _UNVERIFIED_EARNINGS.model_copy()
         )
 
         mark = to_float(market.get("mark")) if market else None
@@ -276,12 +331,42 @@ def build_research_symbol_context(
                             "implied-volatility-index-5-day-change"
                         )
                     ) if volatility else None,
+                    iv_rank_source=_text_or_none(
+                        volatility.get("implied-volatility-index-rank-source")
+                    ) if volatility else None,
+                    iv_index_15_day_percent=fraction_to_percent(
+                        volatility.get("implied-volatility-index-15-day")
+                    ) if volatility else None,
+                    # tastytrade already reports these four in percentage points.
+                    iv_30_day_percent=to_float(
+                        volatility.get("implied-volatility-30-day")
+                    ) if volatility else None,
+                    hv_30_day_percent=to_float(
+                        volatility.get("historical-volatility-30-day")
+                    ) if volatility else None,
+                    hv_60_day_percent=to_float(
+                        volatility.get("historical-volatility-60-day")
+                    ) if volatility else None,
+                    hv_90_day_percent=to_float(
+                        volatility.get("historical-volatility-90-day")
+                    ) if volatility else None,
+                    iv_hv_30_day_difference_points=to_float(
+                        volatility.get("iv-hv-30-day-difference")
+                    ) if volatility else None,
                     liquidity_rating=to_float(
                         volatility.get("liquidity-rating")
+                    ) if volatility else None,
+                    liquidity_rank=to_float(
+                        volatility.get("liquidity-rank")
                     ) if volatility else None,
                     as_of=fetched_at if volatility else None,
                 ),
                 earnings=earnings,
+                profile=(
+                    _metric_profile(volatility)
+                    if volatility
+                    else ProfileContextV1()
+                ),
                 exposure=exposure,
                 source_status=source_status,
                 warnings=warnings,

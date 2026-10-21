@@ -4,10 +4,32 @@
       {
         "symbol": "AAPL",
         "implied-volatility-index": "0.285",
+        "implied-volatility-index-15-day": "0.316",
         "implied-volatility-index-rank": "0.440",
+        "implied-volatility-index-rank-source": "tos",
         "implied-volatility-percentile": "0.610",
         "implied-volatility-index-5-day-change": "0.018",
-        "liquidity-rating": "5"
+        "implied-volatility-30-day": "28.8",
+        "historical-volatility-30-day": "15.89",
+        "historical-volatility-60-day": "19.68",
+        "historical-volatility-90-day": "24.99",
+        "iv-hv-30-day-difference": "12.91",
+        "liquidity-rating": "5",
+        "liquidity-rank": "0.655",
+        "beta": "1.07",
+        "dividend-yield": "0.0032",
+        "dividend-ex-date": "2026-08-10",
+        "dividend-next-date": "2022-08-05",
+        "earnings": {
+          "visible": true,
+          "expected-report-date": "2026-07-30",
+          "estimated": false,
+          "time-of-day": "AMC"
+        },
+        "lendability": "Easy To Borrow",
+        "market-cap": 5012517062800,
+        "sector": "Technology",
+        "industry": "Communications Equipment"
       },
       {
         "symbol": "NVDA",
@@ -15,7 +37,12 @@
         "implied-volatility-index-rank": "0.720",
         "implied-volatility-percentile": "0.830",
         "implied-volatility-index-5-day-change": "-0.026",
-        "liquidity-rating": "5"
+        "liquidity-rating": "5",
+        "earnings": {
+          "visible": true,
+          "expected-report-date": "2026-05-20",
+          "estimated": false
+        }
       }
     ]
   }

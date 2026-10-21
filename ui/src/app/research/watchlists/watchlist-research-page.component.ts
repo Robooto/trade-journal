@@ -14,10 +14,18 @@ import { WatchlistResearchApiService } from './watchlist-research-api.service';
 
 interface WatchlistMetrics {
   total: number;
-  withIvRank: number;
+  earningsSoon: number;
   held: number;
   movingIvRank: number;
 }
+
+const EARNINGS_SOON_DAYS = 14;
+const EX_DIVIDEND_SOON_DAYS = 30;
+const EASY_TO_BORROW = 'Easy To Borrow';
+const EARNINGS_TIME_LABELS: Record<string, string> = {
+  after_close: 'AMC',
+  before_open: 'BMO',
+};
 
 @Component({
   selector: 'app-watchlist-research-page',
@@ -41,6 +49,8 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
 
   readonly sortOptions: readonly { value: WatchlistSort; label: string }[] = [
     { value: 'ivr-desc', label: 'Highest IV rank' },
+    { value: 'iv-hv-desc', label: 'IV richest vs 30-day HV' },
+    { value: 'earnings-soonest', label: 'Earnings soonest' },
     { value: 'ivr-change', label: 'Largest IVR change' },
     { value: 'price-change', label: 'Largest 5-day price move' },
     { value: 'iv-index-change', label: 'Largest 5-day IV move' },
@@ -149,7 +159,10 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
     const items = this.response?.items ?? [];
     return {
       total: items.length,
-      withIvRank: items.filter(item => item.volatility.iv_rank_percent != null).length,
+      earningsSoon: items.filter(item => {
+        const days = this.daysUntilEarnings(item);
+        return days != null && days <= EARNINGS_SOON_DAYS;
+      }).length,
       held: items.filter(item => item.exposure.is_held).length,
       movingIvRank: items.filter(
         item => Math.abs(item.volatility.iv_rank_5_day_change_percent ?? 0) >= 5,
@@ -213,12 +226,69 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
   }
 
   earningsLabel(item: WatchlistResearchItem): string {
-    if (item.earnings.earnings_date) {
-      return item.earnings.earnings_date;
+    const earningsDate = item.earnings.earnings_date;
+    if (!earningsDate) {
+      return item.earnings.status === 'unavailable'
+        ? 'Unavailable'
+        : item.earnings.status;
     }
-    return item.earnings.status === 'unavailable'
-      ? 'Unavailable'
-      : item.earnings.status;
+    const parts = [formatShortDate(earningsDate)];
+    const time = item.earnings.earnings_time;
+    if (time) {
+      parts.push(EARNINGS_TIME_LABELS[time] ?? time);
+    }
+    const days = this.daysUntilEarnings(item);
+    if (days != null) {
+      parts.push(days === 0 ? 'today' : days + 'd');
+    }
+    if (item.earnings.status === 'estimated') {
+      parts.push('est.');
+    }
+    return parts.join(' · ');
+  }
+
+  daysUntilEarnings(item: WatchlistResearchItem): number | null {
+    return daysUntil(item.earnings.earnings_date);
+  }
+
+  earningsTone(item: WatchlistResearchItem): string {
+    const days = this.daysUntilEarnings(item);
+    return days != null && days <= EARNINGS_SOON_DAYS ? 'soon' : '';
+  }
+
+  /** Front-month (15-day) IV minus the IV index: positive means the near term is bid, often for an event. */
+  frontIvPremium(item: WatchlistResearchItem): number | null {
+    const front = item.volatility.iv_index_15_day_percent;
+    const index = item.volatility.iv_index_percent;
+    return front == null || index == null ? null : front - index;
+  }
+
+  upcomingExDividend(item: WatchlistResearchItem): string | null {
+    const exDate = item.profile?.dividend_ex_date;
+    const days = daysUntil(exDate);
+    return exDate && days != null && days <= EX_DIVIDEND_SOON_DAYS
+      ? formatShortDate(exDate)
+      : null;
+  }
+
+  isHardToBorrow(item: WatchlistResearchItem): boolean {
+    const lendability = item.profile?.lendability;
+    return Boolean(lendability && lendability !== EASY_TO_BORROW);
+  }
+
+  formatMarketCap(value: number | null | undefined): string {
+    if (value == null) {
+      return 'Unavailable';
+    }
+    const units: [number, string][] = [[1e12, 'T'], [1e9, 'B'], [1e6, 'M']];
+    const unit = units.find(([size]) => value >= size);
+    return unit
+      ? '$' + (value / unit[0]).toFixed(1) + unit[1]
+      : '$' + Math.round(value).toLocaleString('en-US');
+  }
+
+  formatNumber(value: number | null | undefined, digits = 2): string {
+    return value == null ? 'Unavailable' : value.toFixed(digits);
   }
 
   warningCount(item: WatchlistResearchItem): number {
@@ -234,6 +304,16 @@ export class WatchlistResearchPageComponent implements OnInit, OnDestroy {
         return descending(
           left.volatility.iv_rank_percent,
           right.volatility.iv_rank_percent,
+        );
+      case 'iv-hv-desc':
+        return descending(
+          left.volatility.iv_hv_30_day_difference_points,
+          right.volatility.iv_hv_30_day_difference_points,
+        );
+      case 'earnings-soonest':
+        return ascending(
+          this.daysUntilEarnings(left),
+          this.daysUntilEarnings(right),
         );
       case 'ivr-change':
         return descendingAbsolute(
@@ -262,6 +342,37 @@ function descending(
 ): number {
   return (right ?? Number.NEGATIVE_INFINITY) -
     (left ?? Number.NEGATIVE_INFINITY);
+}
+
+function ascending(
+  left: number | null | undefined,
+  right: number | null | undefined,
+): number {
+  if (left == null || right == null) {
+    return left == null ? (right == null ? 0 : 1) : -1;
+  }
+  return left - right;
+}
+
+/** Whole calendar days from today to an ISO date; null when missing or already past. */
+function daysUntil(isoDate: string | null | undefined): number | null {
+  if (!isoDate) {
+    return null;
+  }
+  const [year, month, day] = isoDate.slice(0, 10).split('-').map(Number);
+  const target = new Date(year, month - 1, day);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const days = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  return Number.isFinite(days) && days >= 0 ? days : null;
+}
+
+function formatShortDate(isoDate: string): string {
+  const [year, month, day] = isoDate.slice(0, 10).split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 function descendingAbsolute(

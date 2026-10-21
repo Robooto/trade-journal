@@ -11,6 +11,14 @@ import { SharedMaterialModule } from '../../shared/material.module';
 import { WatchlistResearchPageComponent } from './watchlist-research-page.component';
 import { WatchlistResearchResponse } from './watchlist-research.models';
 
+function isoInDays(days: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return date.getFullYear() + '-' + month + '-' + day;
+}
+
 const responseFixture: WatchlistResearchResponse = {
   schema_version: 'broker-watchlist-research.v1',
   generated_at: '2026-07-23T12:00:00Z',
@@ -32,8 +40,22 @@ const responseFixture: WatchlistResearchResponse = {
       symbol: 'NVDA',
       watchlists: [{ name: 'Momentum', source: 'private' }],
       price: { mark: 180 },
-      volatility: { iv_rank_percent: null },
-      earnings: { status: 'unavailable' },
+      volatility: {
+        iv_rank_percent: null,
+        iv_index_percent: 43.3,
+        iv_index_15_day_percent: 38.2,
+        iv_hv_30_day_difference_points: 19.13,
+      },
+      earnings: {
+        status: 'estimated',
+        earnings_date: isoInDays(5),
+        earnings_time: 'before_open',
+      },
+      profile: {
+        sector: 'Technology',
+        lendability: 'Locate Required',
+        dividend_ex_date: isoInDays(-20),
+      },
       exposure: {
         is_held: false,
         account_numbers: [],
@@ -50,8 +72,14 @@ const responseFixture: WatchlistResearchResponse = {
       volatility: {
         iv_rank_percent: 44,
         iv_rank_5_day_change_percent: 6,
+        iv_hv_30_day_difference_points: 12.91,
       },
       earnings: { status: 'unavailable' },
+      profile: {
+        market_cap: 5_012_517_062_800,
+        lendability: 'Easy To Borrow',
+        dividend_ex_date: isoInDays(10),
+      },
       exposure: {
         is_held: true,
         account_numbers: [],
@@ -99,6 +127,34 @@ describe('WatchlistResearchPageComponent', () => {
       'AAPL',
       'NVDA',
     ]);
+  });
+
+  it('sorts by IV richness over realized and by nearest earnings', () => {
+    component.sort = 'iv-hv-desc';
+    expect(component.visibleItems.map(item => item.symbol)).toEqual(['NVDA', 'AAPL']);
+
+    component.sort = 'earnings-soonest';
+    expect(component.visibleItems.map(item => item.symbol)).toEqual(['NVDA', 'AAPL']);
+  });
+
+  it('labels upcoming earnings and counts them as soon', () => {
+    const [nvda, aapl] = responseFixture.items;
+
+    expect(component.earningsLabel(nvda)).toContain('BMO · 5d · est.');
+    expect(component.earningsTone(nvda)).toBe('soon');
+    expect(component.earningsLabel(aapl)).toBe('Unavailable');
+    expect(component.metrics.earningsSoon).toBe(1);
+  });
+
+  it('flags only upcoming ex-dividend dates and hard-to-borrow names', () => {
+    const [nvda, aapl] = responseFixture.items;
+
+    expect(component.upcomingExDividend(nvda)).toBeNull();
+    expect(component.upcomingExDividend(aapl)).not.toBeNull();
+    expect(component.isHardToBorrow(nvda)).toBe(true);
+    expect(component.isHardToBorrow(aapl)).toBe(false);
+    expect(component.frontIvPremium(nvda)).toBeCloseTo(-5.1);
+    expect(component.formatMarketCap(aapl.profile?.market_cap)).toBe('$5.0T');
   });
 
   it('flags IV rank above the provider 52-week range', () => {

@@ -145,8 +145,9 @@ Implemented backend foundations:
   symbols and whether explicit watchlist writes are enabled.
 - `GET /v1/broker/watchlist-research` de-duplicates those symbols and returns
   their current price, IV index/rank/percentile, five-session price and IV-rank
-  movement, broker five-day IV-index movement, exposure, earnings availability,
-  and source quality in one read-only UI contract.
+  movement, broker five-day IV-index movement, IV-30 vs realized volatility,
+  15-day IV, upcoming earnings, the sector/beta/dividend/lendability profile,
+  exposure, and source quality in one read-only UI contract.
 - `POST /v1/broker/watchlists/{watchlist_name}/symbols` performs an idempotent
   add only when `BROKERAGE_WATCHLIST_WRITES_ENABLED=true`. Because Tastytrade's
   update route replaces the complete watchlist, the client fetches the latest
@@ -200,7 +201,7 @@ Use this table while discovering routes.
 | Watchlists | `/watchlists` | GET | `GET /v1/broker/watchlists`, `POST /v1/broker/research-symbol-context` | No | Implemented | Private membership is available directly and joined per requested symbol. |
 | Watchlists | `/watchlists/{watchlist_name}` | PUT | `POST /v1/broker/watchlists/{watchlist_name}/symbols` | Yes | Implemented, gated | Idempotent equity add; fetches and preserves the complete list before replacement. |
 | Market data | `/market-data/by-type` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | Current mark and prior close; partial failures are explicit. |
-| Volatility | `/market-metrics` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | IV index/rank/percentile, broker five-day IV-index change, and liquidity. |
+| Volatility | `/market-metrics` | GET | `POST /v1/broker/research-symbol-context` | No | Implemented | IV index/rank/percentile, 15-day IV, IV-30 vs HV-30/60/90, broker five-day IV-index change, liquidity, upcoming earnings, and the sector/beta/dividend/lendability profile. |
 | Orders | `/accounts/{account_number}/orders` | GET | `GET /v1/broker/activity-inbox` | No | Implemented | Resolved prior session or exact requested date; matching metadata enriches normalized transaction groups. |
 | Transactions | `/accounts/{account_number}/transactions` | GET | `GET /v1/broker/activity-inbox` | No | Implemented | Resolved prior session or exact requested date; preserves broker transaction/order/group-fill identifiers. |
 | Historical earnings | `/market-metrics/historic-corporate-events/earnings-reports/{symbol}` | GET | Planned research context | No | Client implemented | Historical only; does not establish the next earnings date. |

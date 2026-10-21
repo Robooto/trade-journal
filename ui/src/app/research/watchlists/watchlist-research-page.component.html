@@ -46,11 +46,11 @@
         </div>
       </article>
       <article class="summary-card">
-        <mat-icon>speed</mat-icon>
+        <mat-icon>event</mat-icon>
         <div>
-          <span>IV rank coverage</span>
-          <strong>{{ metrics.withIvRank }}</strong>
-          <small>symbols with current IVR</small>
+          <span>Earnings soon</span>
+          <strong>{{ metrics.earningsSoon }}</strong>
+          <small>reporting within 14 days</small>
         </div>
       </article>
       <article class="summary-card">
@@ -237,7 +237,11 @@
             </div>
 
             <div class="volatility-cell">
-              <div class="ivr-block" [attr.data-tone]="ivRankTone(item.volatility.iv_rank_percent)">
+              <div
+                class="ivr-block"
+                [attr.data-tone]="ivRankTone(item.volatility.iv_rank_percent)"
+                [matTooltip]="item.volatility.iv_rank_source ? 'tastytrade rank source: ' + item.volatility.iv_rank_source : ''"
+              >
                 <span>IV rank</span>
                 <strong>{{ formatPercent(item.volatility.iv_rank_percent) }}</strong>
                 @if (isAboveRankRange(item.volatility.iv_rank_percent)) {
@@ -265,6 +269,24 @@
                   <dt>IV percentile</dt>
                   <dd>{{ formatPercent(item.volatility.iv_percentile_percent) }}</dd>
                 </div>
+                <div>
+                  <dt>IV − HV 30d</dt>
+                  <dd
+                    [class]="changeTone(item.volatility.iv_hv_30_day_difference_points)"
+                    [matTooltip]="'IV30 ' + formatPercent(item.volatility.iv_30_day_percent) + ' · HV30 ' + formatPercent(item.volatility.hv_30_day_percent) + ' · HV60 ' + formatPercent(item.volatility.hv_60_day_percent) + ' · HV90 ' + formatPercent(item.volatility.hv_90_day_percent)"
+                  >
+                    {{ formatChange(item.volatility.iv_hv_30_day_difference_points, true) }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>15d IV vs index</dt>
+                  <dd
+                    [class]="changeTone(frontIvPremium(item))"
+                    [matTooltip]="'15-day IV ' + formatPercent(item.volatility.iv_index_15_day_percent)"
+                  >
+                    {{ formatChange(frontIvPremium(item), true) }}
+                  </dd>
+                </div>
               </dl>
             </div>
 
@@ -275,6 +297,17 @@
                 }
                 @if (item.exposure.option_position_count) {
                   <span>{{ item.exposure.option_position_count }} option positions</span>
+                }
+                @if (item.profile?.sector) {
+                  <span [matTooltip]="item.profile?.industry ?? ''">{{ item.profile?.sector }}</span>
+                }
+                @if (upcomingExDividend(item); as exDate) {
+                  <span class="warning-chip" matTooltip="Short calls carry early-assignment risk before the ex-dividend date.">
+                    Ex-div {{ exDate }}
+                  </span>
+                }
+                @if (isHardToBorrow(item)) {
+                  <span class="warning-chip">{{ item.profile?.lendability }}</span>
                 }
                 @if (warningCount(item)) {
                   <span
@@ -288,11 +321,19 @@
               <dl>
                 <div>
                   <dt>Earnings</dt>
-                  <dd>{{ earningsLabel(item) }}</dd>
+                  <dd [class]="earningsTone(item)">{{ earningsLabel(item) }}</dd>
                 </div>
                 <div>
                   <dt>Liquidity</dt>
                   <dd>{{ item.volatility.liquidity_rating ?? 'Unavailable' }}</dd>
+                </div>
+                <div>
+                  <dt>Beta</dt>
+                  <dd>{{ formatNumber(item.profile?.beta) }}</dd>
+                </div>
+                <div>
+                  <dt>Market cap</dt>
+                  <dd>{{ formatMarketCap(item.profile?.market_cap) }}</dd>
                 </div>
               </dl>
             </div>
@@ -333,7 +374,7 @@
 
     <p class="research-note">
       IV rank and movement are research context, not trade probability or a recommendation.
-      Upcoming earnings remain unavailable unless a verified forward-looking source supplies them.
+      Earnings dates come from tastytrade; "est." marks a date tastytrade has not confirmed.
     </p>
   }
 </main>

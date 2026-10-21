@@ -38,7 +38,15 @@ export interface WatchlistResearchItem {
     readonly iv_percentile_percent?: number | null;
     readonly iv_index_5_day_change_percent?: number | null;
     readonly iv_rank_5_day_change_percent?: number | null;
+    readonly iv_rank_source?: string | null;
+    readonly iv_index_15_day_percent?: number | null;
+    readonly iv_30_day_percent?: number | null;
+    readonly hv_30_day_percent?: number | null;
+    readonly hv_60_day_percent?: number | null;
+    readonly hv_90_day_percent?: number | null;
+    readonly iv_hv_30_day_difference_points?: number | null;
     readonly liquidity_rating?: number | null;
+    readonly liquidity_rank?: number | null;
     readonly as_of?: string | null;
   };
   readonly earnings: {
@@ -47,6 +55,15 @@ export interface WatchlistResearchItem {
     readonly earnings_time?: string | null;
     readonly source?: string | null;
     readonly detail?: string | null;
+  };
+  readonly profile?: {
+    readonly sector?: string | null;
+    readonly industry?: string | null;
+    readonly market_cap?: number | null;
+    readonly beta?: number | null;
+    readonly dividend_yield_percent?: number | null;
+    readonly dividend_ex_date?: string | null;
+    readonly lendability?: string | null;
   };
   readonly exposure: {
     readonly is_held: boolean;
@@ -79,6 +96,8 @@ export interface WatchlistSymbolAddResponse {
 export type WatchlistSort =
   | 'symbol'
   | 'ivr-desc'
+  | 'iv-hv-desc'
+  | 'earnings-soonest'
   | 'ivr-change'
   | 'price-change'
   | 'iv-index-change';

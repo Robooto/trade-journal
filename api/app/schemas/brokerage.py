@@ -312,8 +312,26 @@ class VolatilityContextV1(BaseModel):
     iv_percentile_percent: float | None = None
     iv_index_5_day_change_percent: float | None = None
     iv_rank_5_day_change_percent: float | None = None
+    iv_rank_source: str | None = None
+    iv_index_15_day_percent: float | None = None
+    iv_30_day_percent: float | None = None
+    hv_30_day_percent: float | None = None
+    hv_60_day_percent: float | None = None
+    hv_90_day_percent: float | None = None
+    iv_hv_30_day_difference_points: float | None = None
     liquidity_rating: float | None = None
+    liquidity_rank: float | None = None
     as_of: datetime | None = None
+
+
+class ProfileContextV1(BaseModel):
+    sector: str | None = None
+    industry: str | None = None
+    market_cap: float | None = None
+    beta: float | None = None
+    dividend_yield_percent: float | None = None
+    dividend_ex_date: date | None = None
+    lendability: str | None = None
 
 
 class EarningsContextV1(BaseModel):
@@ -338,6 +356,7 @@ class ResearchSymbolItemV1(BaseModel):
     price: PriceContextV1 = Field(default_factory=PriceContextV1)
     volatility: VolatilityContextV1 = Field(default_factory=VolatilityContextV1)
     earnings: EarningsContextV1 = Field(default_factory=EarningsContextV1)
+    profile: ProfileContextV1 = Field(default_factory=ProfileContextV1)
     exposure: ExposureContextV1 = Field(default_factory=ExposureContextV1)
     source_status: list[SourceMetadataV1] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
