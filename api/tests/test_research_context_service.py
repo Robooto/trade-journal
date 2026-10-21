@@ -142,6 +142,41 @@ def test_research_context_surfaces_volatility_detail_and_profile():
     assert aapl.profile.lendability == "Easy To Borrow"
 
 
+def test_research_context_drops_placeholder_profile_values():
+    context = build_research_symbol_context(
+        ["TSLA", "SPX"],
+        watchlists=[],
+        market_data=[],
+        volatility_metrics=[
+            {
+                "symbol": "TSLA",
+                "listed-market": "XNAS",
+                "lendability": "Easy To Borrow",
+                "dividend-ex-date": "1970-01-01",
+                "dividend-rate-per-share": "0.0",
+                "market-cap": 1400983451599,
+            },
+            {
+                "symbol": "SPX",
+                "listed-market": "XCBO",
+                "lendability": "Locate Required",
+                "dividend-ex-date": "2020-05-30",
+                "dividend-rate-per-share": "0.0",
+                "market-cap": 0,
+            },
+        ],
+        holding_snapshot=holding_snapshot(),
+        fetched_at=FETCHED_AT,
+    )
+
+    tsla, spx = context.items
+    assert tsla.profile.dividend_ex_date is None
+    assert tsla.profile.lendability == "Easy To Borrow"
+    assert spx.profile.dividend_ex_date is None
+    assert spx.profile.market_cap is None
+    assert spx.profile.lendability is None
+
+
 def test_research_context_marks_estimated_earnings_and_ignores_hidden():
     context = build_research_symbol_context(
         ["AAPL", "NVDA"],

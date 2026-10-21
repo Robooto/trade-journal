@@ -197,16 +197,30 @@ def _metric_earnings(metric: Mapping, today: date) -> EarningsContextV1:
 
 
 def _metric_profile(metric: Mapping) -> ProfileContextV1:
+    # tastytrade fills non-payers with placeholder ex-dates (1970-01-01, or a
+    # years-old date for SPX) and ETFs or indexes with a zero market cap.
+    pays_dividend = bool(to_float(metric.get("dividend-rate-per-share")))
+    market_cap = to_float(metric.get("market-cap"))
+    # Cboe-listed indexes (SPX, VIX, XSP) have no shares to borrow.
+    is_cboe_index = metric.get("listed-market") == "XCBO"
     return ProfileContextV1(
         sector=_text_or_none(metric.get("sector")),
         industry=_text_or_none(metric.get("industry")),
-        market_cap=to_float(metric.get("market-cap")),
+        market_cap=market_cap or None,
         beta=to_float(metric.get("beta")),
         dividend_yield_percent=fraction_to_percent(
             metric.get("dividend-yield")
         ),
-        dividend_ex_date=_date_or_none(metric.get("dividend-ex-date")),
-        lendability=_text_or_none(metric.get("lendability")),
+        dividend_ex_date=(
+            _date_or_none(metric.get("dividend-ex-date"))
+            if pays_dividend
+            else None
+        ),
+        lendability=(
+            None
+            if is_cboe_index
+            else _text_or_none(metric.get("lendability"))
+        ),
     )
 
 
