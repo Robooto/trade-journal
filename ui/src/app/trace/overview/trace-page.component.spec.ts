@@ -29,6 +29,7 @@ import { CollectionStatusComponent } from './components/collection-status/collec
 
 class TraceApiStub {
   readonly paperBacktestScorecard = vi.fn(() => NEVER);
+  readonly paperStrategySpec = vi.fn(() => NEVER);
   readonly paperCatalog = vi.fn((date: string) => of(catalogForTest(date)));
   readonly paperTrades = vi.fn(() => of({ status: 'no_evidence', rows: [], total: 0, cohorts: [], sessions: [] }));
   readonly strikeLadder = vi.fn(() => NEVER);

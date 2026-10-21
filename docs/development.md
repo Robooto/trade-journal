@@ -114,6 +114,9 @@ new session without trades does not prevent a needed service deployment.
   arms on the same entries, with per-session totals (`/api/trace/paper-backtest-scorecard`,
   computed by the pipeline backtester). The dashboard's paper desk reads the same
   endpoint for this week's live-rules and hold-to-expiry results. Presentation only.
+- `PaperSpecComponent`: bot strategy spec v1 under the scorecard: each entry filter next to
+  the same exits without it, with the control each arm is paired against
+  (`/api/trace/paper-strategy-spec`, same schema plus `compared_to`). Presentation only.
 - `ResearchSummaryComponent`: "What the research says" on the Research tab, rendered from the study
   registry's headline and per-study evidence tier/summary (`/api/trace/research-status`).
 - Live updates (`TracePageComponent`): during session hours (weekdays 6:15 AM-1:20 PM

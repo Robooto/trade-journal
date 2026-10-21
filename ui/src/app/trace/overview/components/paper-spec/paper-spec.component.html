@@ -1,0 +1,37 @@
+@if (error) {
+  <section class="paper-scorecard" role="status">Strategy spec unavailable.</section>
+} @else if (card; as card) {
+  <section class="paper-scorecard" aria-labelledby="paper-spec-title">
+    <p class="test-banner" aria-label="What the spec tests">
+      <strong>Strategy spec v1: entry filters vs their controls</strong>
+      <span>{{ card.from_date | date:'MMM d' }} – {{ card.to_date | date:'MMM d' }}</span>
+      @if (card.sessions.length) {
+        <span>Session {{ card.sessions.length }} of {{ firstRead }} to the first read</span>
+      } @else {
+        <span>Starts {{ card.from_date | date:'EEE MMM d' }}</span>
+      }
+      <i class="progress" [style.--fill]="card.sessions.length / firstRead" aria-hidden="true"></i>
+    </p>
+    <header>
+      <div><h3 id="paper-spec-title">Strategy spec</h3></div>
+      @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per trade</span> }
+    </header>
+    <p>Same bot entries. Each filter skips some of them and is scored against the same exits without the filter. The hold-family read picks the exits; a filter joins only if it beats its control by a margin that holds across sessions.</p>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Arm</th><th>Trades</th><th>Net</th><th>Per trade</th><th>Win rate</th><th>vs control</th>
+        @for (day of card.sessions; track day) { <th class="day">{{ day.slice(5) }}</th> }</tr></thead>
+      <tbody>@for (policy of card.policies; track policy.id) {
+        <tr [attr.data-reference]="policy.id === card.reference_policy">
+          <th>{{ label(policy, card) }}@if (policy.summary.censored) { <small class="partial" title="Some trades' recorded paths end before a rule could resolve; totals cover resolved trades only.">{{ policy.summary.censored }} unresolved</small> }</th>
+          <td>{{ policy.summary.closed }}</td>
+          <td [attr.data-net]="tone(policy.summary.net_dollars)">{{ money(policy.summary.net_dollars) }}</td>
+          <td [attr.data-net]="tone(policy.summary.net_per_trade)">{{ money(policy.summary.net_per_trade) }}</td>
+          <td>{{ policy.summary.win_rate === null || policy.summary.win_rate === undefined ? '—' : (policy.summary.win_rate | percent:'1.0-0') }}</td>
+          <td [attr.data-net]="tone(policy.versus_reference?.difference_dollars)">@if (policy.versus_reference) { {{ money(policy.versus_reference.difference_dollars) }} <small class="control">vs {{ controlName(policy, card) }}</small> } @else { — }</td>
+          @for (day of card.sessions; track day) { <td class="day" [attr.data-net]="tone(session(policy, day))">{{ money(session(policy, day)) }}</td> }
+        </tr>
+      }</tbody>
+    </table></div>
+    <small>First read after {{ firstRead }} sessions, final read {{ card.to_date | date:'MMM d' }}. Filters: F1 skips a negative GEX node between spot and the short strike; F4 skips room under 5 points. A no-credit quote counts as a skip. No orders are placed.</small>
+  </section>
+}

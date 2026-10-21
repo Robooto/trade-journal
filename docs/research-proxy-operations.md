@@ -64,6 +64,7 @@ part of the Trade Journal container health check.
 
 The Paper view and the dashboard read `/research-api/api/trace/paper-backtest-scorecard`
 from the pipeline: the live baseline rules next to the frozen hold-family arms, scored
-by the backtester on request. The existing proxy needs no changes, and this read makes
-no brokerage calls. (The spread research collection-health read,
+by the backtester on request. The Paper view also reads
+`/research-api/api/trace/paper-strategy-spec` (bot strategy spec v1, same schema). The
+existing proxy needs no changes, and these reads make no brokerage calls. (The spread research collection-health read,
 `paper-research-scorecard`, was retired October 20, 2026 with its collectors.)

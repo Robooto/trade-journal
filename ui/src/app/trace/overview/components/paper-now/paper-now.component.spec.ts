@@ -24,7 +24,7 @@ const response = { status:'available', total:4, rows:[
   complete_eligible_sessions:0, eligible_trial_closes:0, mean_session_net_scenario:null, mean_session_net_interval_95:null, daily:[]} };
 
 function apiFixture() {
-  return { paperBacktestScorecard:vi.fn(() => NEVER), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
+  return { paperBacktestScorecard:vi.fn(() => NEVER), paperStrategySpec:vi.fn(() => NEVER), paperCatalog:vi.fn((date:string)=>of(catalogForTest(date))), paperTrades:vi.fn(()=>of(response)),
     decisionJournal:vi.fn(()=>of({decision_status:'ready',decision:'pass',trade_type:null,grade:'D',quality_score:25,reason_codes:['entry_score_or_gate_failed']})) };
 }
 
@@ -125,5 +125,6 @@ describe('PaperNowComponent current strategy overview', () => {
     fixture.componentRef.setInput('refreshAt', new Date());
     fixture.detectChanges();
     expect(api.paperBacktestScorecard).toHaveBeenCalledTimes(2);
+    expect(api.paperStrategySpec).toHaveBeenCalledTimes(2);
   });
 });

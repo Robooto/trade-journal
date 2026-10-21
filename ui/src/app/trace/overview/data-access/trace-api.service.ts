@@ -43,6 +43,11 @@ export class TraceApiService {
     return this.http.get<import('./paper.models').PaperBacktestScorecard>(`${this.baseUrl}/paper-backtest-scorecard`);
   }
 
+  /** Bot strategy spec v1: entry filters next to their controls (same schema as the scorecard). */
+  paperStrategySpec(): Observable<import('./paper.models').PaperBacktestScorecard> {
+    return this.http.get<import('./paper.models').PaperBacktestScorecard>(`${this.baseUrl}/paper-strategy-spec`);
+  }
+
   paperCatalog(date: string): Observable<PaperCatalog> {
     return this.http.get<PaperCatalog>(`${this.baseUrl}/paper-catalog`, { params: { as_of: date } });
   }

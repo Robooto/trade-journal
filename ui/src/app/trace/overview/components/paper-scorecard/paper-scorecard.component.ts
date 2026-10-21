@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import type { BacktestScorecardPolicy, PaperBacktestScorecard } from '../../data-access/paper.models';
+import { netTone, signedMoney } from './paper-format';
 
 /** Sessions to the hold-family's first read (docs/studies/hold-family-preregistration-2026-10-17.md). */
 export const FIRST_READ_SESSIONS = 20;
@@ -19,15 +20,9 @@ export class PaperScorecardComponent {
   @Input() error = false;
   readonly firstRead = FIRST_READ_SESSIONS;
 
-  money(value: number | null | undefined): string {
-    if (value === null || value === undefined) return '—';
-    const rounded = Math.round(value);
-    return `${rounded < 0 ? '−' : rounded > 0 ? '+' : ''}$${Math.abs(rounded).toLocaleString('en-US')}`;
-  }
+  money(value: number | null | undefined): string { return signedMoney(value); }
 
-  tone(value: number | null | undefined): string {
-    return value === null || value === undefined || Math.round(value) === 0 ? 'flat' : value < 0 ? 'loss' : 'gain';
-  }
+  tone(value: number | null | undefined): string { return netTone(value); }
 
   session(policy: BacktestScorecardPolicy, day: string): number | null {
     return policy.summary.session_totals[day] ?? null;

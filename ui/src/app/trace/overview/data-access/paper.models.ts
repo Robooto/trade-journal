@@ -38,7 +38,7 @@ export interface ForwardExperiment {
   daily: { date: string; complete: boolean; collection?: PaperSessionCoverage; trial_net_scenario: number | null; control_net_scenario: number | null; net_scenario_difference: number | null }[];
 }
 
-/** Live baseline rules next to the frozen hold-family arms, scored by the pipeline backtester. */
+/** Live baseline rules next to frozen arms (hold family, or strategy spec v1), scored by the pipeline backtester. */
 export interface BacktestPolicySummary {
   admitted: number; closed: number; censored: number; net_dollars: number | null; net_per_trade: number | null;
   win_rate: number | null; break_even_win_rate: number | null; worst_session: number | null;
@@ -47,7 +47,10 @@ export interface BacktestPolicySummary {
 export interface BacktestScorecardPolicy {
   id: string; label: string; summary: BacktestPolicySummary;
   versus_reference: { sessions: number; difference_dollars: number } | null;
-  trades: { day: string; onset?: string; status: string; reason?: string | null; gross?: number | null; net: number | null }[];
+  /** The policy versus_reference is paired against: the reference, or the arm's own control (spec). */
+  compared_to?: string | null;
+  trades: { day: string; onset?: string; status: string; reason?: string | null; gross?: number | null; net: number | null;
+    quality_score?: number | null }[];
 }
 export interface PaperBacktestScorecard {
   schema_version: 'paper-backtest-scorecard.v1'; from_date: string; to_date: string | null; sessions: string[];

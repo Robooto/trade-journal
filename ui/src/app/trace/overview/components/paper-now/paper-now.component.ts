@@ -1,5 +1,6 @@
 import type { PaperCatalog } from '../../data-access/generated/research-contracts';
 import { PaperScorecardComponent } from '../paper-scorecard/paper-scorecard.component';
+import { PaperSpecComponent } from '../paper-spec/paper-spec.component';
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
@@ -9,7 +10,7 @@ import type { PaperBacktestScorecard, PaperLedgerResponse, PaperLedgerRow } from
 @Component({
   selector: 'app-paper-now',
   standalone: true,
-  imports: [CommonModule, PaperScorecardComponent],
+  imports: [CommonModule, PaperScorecardComponent, PaperSpecComponent],
   templateUrl: './paper-now.component.html',
   styleUrl: './paper-now.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,9 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
   readonly scorecard = signal<PaperBacktestScorecard | null>(null);
   readonly scorecardError = signal(false);
   private scorecardRequest?: Subscription;
+  readonly spec = signal<PaperBacktestScorecard | null>(null);
+  readonly specError = signal(false);
+  private specRequest?: Subscription;
 
   constructor(private readonly api: TraceApiService) {}
 
@@ -76,7 +80,7 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     });
   }
 
-  ngOnDestroy(): void { this.scorecardRequest?.unsubscribe(); this.decisionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.resultsRequest?.unsubscribe(); }
+  ngOnDestroy(): void { this.scorecardRequest?.unsubscribe(); this.specRequest?.unsubscribe(); this.decisionRequest?.unsubscribe(); this.catalogRequest?.unsubscribe(); this.request?.unsubscribe(); this.resultsRequest?.unsubscribe(); }
 
   private loadScorecard(): void {
     this.scorecardRequest?.unsubscribe();
@@ -84,6 +88,12 @@ export class PaperNowComponent implements OnChanges, OnDestroy {
     this.scorecardRequest = this.api.paperBacktestScorecard().subscribe({
       next: card => this.scorecard.set(card),
       error: () => { this.scorecard.set(null); this.scorecardError.set(true); },
+    });
+    this.specRequest?.unsubscribe();
+    this.specError.set(false);
+    this.specRequest = this.api.paperStrategySpec().subscribe({
+      next: card => this.spec.set(card),
+      error: () => { this.spec.set(null); this.specError.set(true); },
     });
   }
 
