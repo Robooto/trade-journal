@@ -3,7 +3,8 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 export type FlowUploadState = 'idle' | 'pending' | 'success' | 'conflict' | 'validation' | 'error';
 
 const MAX_REPORT_BYTES = 20 * 1024 * 1024;
-const REPORT_FILENAME = /^flowpatrol_\d{4}[-_]\d{2}[-_]\d{2}\.pdf$/i;
+// Any .pdf name carrying the report date, e.g. flowpatrol_2026_10_21.pdf or 2026-10-21-flowpatrol.pdf.
+const REPORT_FILENAME = /(^|\D)\d{4}[-_]\d{2}[-_]\d{2}(\D.*)?\.pdf$/i;
 
 @Component({
   selector: 'app-flow-report-upload',
@@ -44,7 +45,7 @@ export function validateFlowPatrolPdf(file: File): string | null {
     return 'Choose a PDF report.';
   }
   if (!REPORT_FILENAME.test(file.name)) {
-    return 'Use a filename like flowpatrol_YYYY_MM_DD.pdf.';
+    return 'Include the report date in the filename, e.g. 2026-10-21-flowpatrol.pdf.';
   }
   if (file.size <= 0) {
     return 'The report file is empty.';
