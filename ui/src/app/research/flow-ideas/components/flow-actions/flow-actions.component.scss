@@ -5,3 +5,5 @@
 .actions p { margin: 0; color: var(--mat-sys-on-surface-variant); font-size: 0.8rem; }
 .compact { padding: 4px 0; border: 0; font-size: 0.78rem; gap: 4px; }
 .unavailable { color: var(--mat-sys-on-surface-variant); font-size: 0.8rem; }
+.closing { justify-self: start; padding: 1px 8px; border-radius: 999px; background: var(--mat-sys-surface-container-high); color: var(--mat-sys-on-surface-variant); font-weight: 500; }
+.closing.winning { background: var(--mat-sys-tertiary-container); color: var(--mat-sys-on-tertiary-container); }

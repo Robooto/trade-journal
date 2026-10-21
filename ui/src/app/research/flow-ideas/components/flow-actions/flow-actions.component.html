@@ -9,6 +9,9 @@
     @if (summary?.bought_share != null) {
       <span>Bought {{ summary!.bought_share | percent:'1.0-0' }} / Sold {{ 1 - summary!.bought_share! | percent:'1.0-0' }} · Opening {{ summary!.opening_share | percent:'1.0-0' }}</span>
     } @else { <span>No classified activity</span> }
+    @if (closingLabel; as label) {
+      <span class="closing" [class.winning]="summary?.closing_context === 'winning'" [title]="closingHint">{{ label }}</span>
+    }
     @if (summary?.status === 'partial') { <span>Partial action evidence</span> }
     @if (!compact) {
       <p>BTO buys to open long options; BTC buys to close shorts. STO sells to open shorts; STC sells to close longs.</p>

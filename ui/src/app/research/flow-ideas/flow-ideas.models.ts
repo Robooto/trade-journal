@@ -58,6 +58,9 @@ export interface FlowActionSummary {
   readonly bought_share: number | null;
   readonly opening_share: number | null;
   readonly dominant_action: string | null;
+  readonly prior_return_5d?: number | null;
+  readonly closed_bet?: 'bullish' | 'bearish' | 'mixed' | null;
+  readonly closing_context?: 'winning' | 'losing' | 'mixed_bets' | 'move_unavailable' | null;
 }
 
 export interface FlowCandidate {
