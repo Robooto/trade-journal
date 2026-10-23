@@ -227,9 +227,11 @@ export class TraceFacade implements OnDestroy {
     this.paper.destroy();
   }
 
-  /** The session's latest TRACE capture time, from the light collection-status read. */
-  latestCaptureTs(date: string): Observable<string | null> {
-    return this.api.collectionStatus(date).pipe(map(status => status.trace.latest_ts));
+  /** The session's latest TRACE capture and chain-grid snapshot times, from the light collection-status read. */
+  latestCaptures(date: string): Observable<{ trace: string | null; grid: string | null }> {
+    return this.api.collectionStatus(date).pipe(
+      map(status => ({ trace: status.trace.latest_ts, grid: status.chain_grid.latest_captured_at })),
+    );
   }
 
   private applySessions(response: TraceSessionsResponse): void {

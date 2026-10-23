@@ -43,6 +43,8 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
   @Input() captureTs: string | null = null;
   /** The session's latest capture; a new one reloads the grid in place. */
   @Input() latestTs: string | null = null;
+  /** The latest chain-grid snapshot; it lands after its capture, so a new one also reloads the grid. */
+  @Input() gridLatestAt: string | null = null;
   @Output() readonly captureSelected = new EventEmitter<string>();
 
   readonly view = signal<ChainGridViewResponse | null>(null);
@@ -107,7 +109,8 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['captureTs']) this.selected.set(this.captureTs);
     const newDate = !!changes['date'];
-    if (!newDate && !(changes['latestTs'] && !changes['latestTs'].firstChange)) return;
+    const refreshed = (key: string) => changes[key] && !changes[key].firstChange;
+    if (!newDate && !refreshed('latestTs') && !refreshed('gridLatestAt')) return;
     this.request?.unsubscribe();
     this.error.set(false);
     if (!this.date) { this.view.set(null); return; }

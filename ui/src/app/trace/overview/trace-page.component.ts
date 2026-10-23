@@ -38,6 +38,11 @@ export class TracePageComponent implements OnInit, OnDestroy {
 
   readonly lastRefreshRequestedAt = signal<Date | null>(null);
   readonly lastCheckedAt = signal<Date | null>(null);
+  /**
+   * The latest chain-grid snapshot time. The grid collector records a capture's snapshot a minute
+   * or so after the TRACE capture lands, so the grid reloads on this rather than on the capture.
+   */
+  readonly gridLatestAt = signal<string | null>(null);
   /** live: checking every 30 s; paused: tab hidden; closed: outside session hours. */
   readonly liveState = signal<'live' | 'paused' | 'closed'>('live');
   readonly latestCapture = computed(() => {
@@ -293,10 +298,11 @@ export class TracePageComponent implements OnInit, OnDestroy {
       return;
     }
     this.liveRequest?.unsubscribe();
-    this.liveRequest = this.facade.latestCaptureTs(date).subscribe({
+    this.liveRequest = this.facade.latestCaptures(date).subscribe({
       next: latest => {
         this.lastCheckedAt.set(new Date());
-        if (latest && latest !== this.latestCapture()?.ts) this.requestRefresh();
+        if (latest.trace && latest.trace !== this.latestCapture()?.ts) this.requestRefresh();
+        this.gridLatestAt.set(latest.grid);
         this.scheduleLiveCheck();
       },
       error: () => this.scheduleLiveCheck(),

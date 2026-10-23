@@ -77,7 +77,7 @@
     ><mat-icon>menu_book</mat-icon><span>Research</span></button>
   </nav>
 
-  <app-collection-status class="trace-collection-status" [date]="facade.selectedDate()" [refreshAt]="lastRefreshRequestedAt()" />
+  <app-collection-status class="trace-collection-status" [date]="facade.selectedDate()" [refreshAt]="lastRefreshRequestedAt()" [gridLatestAt]="gridLatestAt()" />
 
   <div
     class="trace-workspace-panel"
@@ -188,7 +188,7 @@
       </div>
     </section>
 
-    <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" />
+    <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" [gridLatestAt]="gridLatestAt()" />
 
   }
 
@@ -214,6 +214,7 @@
     <app-chain-grid-heatmap
       [date]="facade.selectedDate()"
       [latestTs]="latestCapture()?.ts ?? null"
+      [gridLatestAt]="gridLatestAt()"
       [captureTs]="facade.selectedCapture()?.ts ?? null"
       (captureSelected)="selectCaptureTimestamp($event)"
     />

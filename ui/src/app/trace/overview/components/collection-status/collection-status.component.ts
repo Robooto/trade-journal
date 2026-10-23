@@ -19,6 +19,8 @@ const STALE_MINUTES = 12;
 export class CollectionStatusComponent implements OnChanges, OnDestroy {
   @Input() date = '';
   @Input() refreshAt: Date | null = null;
+  /** The latest chain-grid snapshot; it lands after its capture, so a new one refreshes the line. */
+  @Input() gridLatestAt: string | null = null;
   /** Injected for tests; defaults to the current time. */
   @Input() now: () => Date = () => new Date();
   readonly status = signal<TraceCollectionStatus | null>(null);

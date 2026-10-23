@@ -64,6 +64,14 @@ describe('StrikeLadderComponent', () => {
     expect(el.textContent).toContain('Bot take: bear call short 7690');
   });
 
+  it('reloads the prices in place when the capture\'s chain-grid snapshot lands after it', () => {
+    const { fixture } = render();
+    fixture.componentRef.setInput('gridLatestAt', '2026-10-19T10:41:10-07:00');
+    fixture.detectChanges();
+    expect(api.strikeLadder).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.loading()).toBe(false);
+  });
+
   it('reveals far strikes on request', () => {
     const { fixture, el } = render();
     expect(el.textContent).not.toContain('7740');

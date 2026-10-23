@@ -71,6 +71,14 @@ describe('ChainGridHeatmapComponent', () => {
     expect(emitted).toEqual([view.captures[0].ts]);
   });
 
+  it('reloads in place when a later chain-grid snapshot lands for the same capture', () => {
+    const fixture = render();
+    fixture.componentRef.setInput('gridLatestAt', '2026-10-20T10:05:40-07:00');
+    fixture.detectChanges();
+    expect(api.chainGrid).toHaveBeenCalledTimes(2);
+    expect(fixture.componentInstance.loading()).toBe(false);
+  });
+
   it('reads the strip like the ladder tag and reports an unavailable grid', () => {
     expect(hiroStrip({ ...view.captures[0], hiro: { ...view.captures[0].hiro, state: 'flat' } }, 'put')).toBe('flat');
     api.chainGrid.mockReturnValue(throwError(() => new Error('offline')));

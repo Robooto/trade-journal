@@ -26,6 +26,8 @@ const READ_HINT: Record<string, string> = {
 export class StrikeLadderComponent implements OnChanges, OnDestroy {
   @Input() date = '';
   @Input() captureTs: string | null = null;
+  /** The latest chain-grid snapshot; it lands after its capture, so a new one reloads the prices in place. */
+  @Input() gridLatestAt: string | null = null;
 
   readonly ladder = signal<StrikeLadderResponse | null>(null);
   readonly loading = signal(false);
@@ -40,14 +42,15 @@ export class StrikeLadderComponent implements OnChanges, OnDestroy {
   constructor(private readonly api: TraceApiService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (!changes['date'] && !changes['captureTs']) return;
+    const gridOnly = !changes['date'] && !changes['captureTs'];
+    if (gridOnly && !(changes['gridLatestAt'] && !changes['gridLatestAt'].firstChange)) return;
     this.request?.unsubscribe();
     this.error.set(false);
     if (!this.date || !this.captureTs) {
       this.ladder.set(null);
       return;
     }
-    this.loading.set(true);
+    if (!gridOnly || !this.ladder()) this.loading.set(true);
     this.request = this.api.strikeLadder(this.date, this.captureTs).subscribe({
       next: value => { this.ladder.set(value); this.loading.set(false); },
       error: () => { this.ladder.set(null); this.error.set(true); this.loading.set(false); },

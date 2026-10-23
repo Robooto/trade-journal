@@ -90,7 +90,7 @@ class TraceFacadeStub {
   readonly selectCapture = vi.fn();
   readonly stepCapture = vi.fn();
   readonly reload = vi.fn();
-  readonly latestCaptureTs = vi.fn((_date: string) => NEVER as Observable<string | null>);
+  readonly latestCaptures = vi.fn((_date: string) => NEVER as Observable<{ trace: string | null; grid: string | null }>);
   readonly loadPaperScorecard = vi.fn();
   readonly loadPaperReplay = vi.fn();
   readonly loadPaperReplayEntries = vi.fn();
@@ -254,14 +254,24 @@ describe('TracePageComponent', () => {
 
   it('reloads only when the pipeline reports a newer capture, keeping the page as it is otherwise', () => {
     const page = liveFixture('2026-07-24T10:00:30-07:00', [{ ts: '2026-07-24T10:00:05-07:00' }]);
-    facade.latestCaptureTs.mockReturnValue(of('2026-07-24T10:00:05-07:00'));
+    facade.latestCaptures.mockReturnValue(of({ trace: '2026-07-24T10:00:05-07:00', grid: null }));
     vi.advanceTimersByTime(30_000);
-    expect(facade.latestCaptureTs).toHaveBeenCalledWith('2026-07-24');
+    expect(facade.latestCaptures).toHaveBeenCalledWith('2026-07-24');
     expect(facade.reload).not.toHaveBeenCalled();
     expect(page.liveState()).toBe('live');
-    facade.latestCaptureTs.mockReturnValue(of('2026-07-24T10:05:05-07:00'));
+    facade.latestCaptures.mockReturnValue(of({ trace: '2026-07-24T10:05:05-07:00', grid: null }));
     vi.advanceTimersByTime(30_000);
     expect(facade.reload).toHaveBeenCalledOnce();
+    fixture.destroy();
+    vi.useRealTimers();
+  });
+
+  it('hands the grid a chain-grid snapshot that lands after its capture without reloading the page', () => {
+    const page = liveFixture('2026-07-24T10:00:30-07:00', [{ ts: '2026-07-24T10:00:05-07:00' }]);
+    facade.latestCaptures.mockReturnValue(of({ trace: '2026-07-24T10:00:05-07:00', grid: '2026-07-24T10:01:10-07:00' }));
+    vi.advanceTimersByTime(30_000);
+    expect(page.gridLatestAt()).toBe('2026-07-24T10:01:10-07:00');
+    expect(facade.reload).not.toHaveBeenCalled();
     fixture.destroy();
     vi.useRealTimers();
   });
@@ -271,9 +281,9 @@ describe('TracePageComponent', () => {
     const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
     vi.advanceTimersByTime(30_000);
     expect(page.liveState()).toBe('paused');
-    expect(facade.latestCaptureTs).not.toHaveBeenCalled();
+    expect(facade.latestCaptures).not.toHaveBeenCalled();
     visibility.mockReturnValue('visible');
-    facade.latestCaptureTs.mockReturnValue(of('2026-07-24T10:05:05-07:00'));
+    facade.latestCaptures.mockReturnValue(of({ trace: '2026-07-24T10:05:05-07:00', grid: null }));
     page.handleVisibilityChange();
     expect(facade.reload).toHaveBeenCalledOnce();
     vi.setSystemTime(new Date('2026-07-24T14:00:00-07:00'));
@@ -291,7 +301,7 @@ describe('TracePageComponent', () => {
     page.liveCheck();
     expect(facade.loadSessions).toHaveBeenCalledOnce();
     expect(facade.reload).not.toHaveBeenCalled();
-    expect(facade.latestCaptureTs).not.toHaveBeenCalled();
+    expect(facade.latestCaptures).not.toHaveBeenCalled();
     fixture.destroy();
     vi.useRealTimers();
   });
