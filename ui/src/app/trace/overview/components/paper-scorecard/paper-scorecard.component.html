@@ -10,7 +10,7 @@
     </p>
     <header>
       <div><h3 id="paper-scorecard-title">Scorecard</h3></div>
-      @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per trade</span> }
+      @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per closed trade@if (card.cost_if_settled_dollars != null && card.cost_if_settled_dollars !== card.cost_per_trade_dollars) {, ${{ card.cost_if_settled_dollars | number:'1.2-2' }} held to settlement}</span> }
     </header>
     <p>Each rule takes the bot's own entries and changes only the exit or skips some entries. The question: does holding to expiry (H1) beat the bot's 50% target and 2× stop? Rules are frozen; nothing changes before the read.</p>
     <div class="table-scroll"><table>

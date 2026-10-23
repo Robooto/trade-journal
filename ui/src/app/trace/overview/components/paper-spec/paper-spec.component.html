@@ -14,7 +14,7 @@
     </p>
     <header>
       <div><h3 id="paper-spec-title">Strategy spec</h3></div>
-      @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per trade</span> }
+      @if (card.cost_per_trade_dollars !== null) { <span>Net after ${{ card.cost_per_trade_dollars | number:'1.2-2' }} per closed trade@if (card.cost_if_settled_dollars != null && card.cost_if_settled_dollars !== card.cost_per_trade_dollars) {, ${{ card.cost_if_settled_dollars | number:'1.2-2' }} held to settlement}</span> }
     </header>
     <p>Same bot entries. Each filter skips some of them and is scored against the same exits without the filter. The hold-family read picks the exits; a filter joins only if it beats its control by a margin that holds across sessions.</p>
     <div class="table-scroll"><table>

@@ -10,7 +10,7 @@ function policy(id: string, label: string, net: number, totals: Record<string, n
 
 const card: PaperBacktestScorecard = {
   schema_version: 'paper-backtest-scorecard.v1', from_date: '2026-10-19', to_date: '2026-12-11', sessions: ['2026-10-19', '2026-10-20'],
-  reference_policy: 'recorded-rules', cost_per_trade_dollars: 12.6, order_submission_enabled: false,
+  reference_policy: 'recorded-rules', cost_per_trade_dollars: 4.88, cost_if_settled_dollars: 3.44, order_submission_enabled: false,
   policies: [policy('recorded-rules', 'Reference: live baseline rules', 529, { '2026-10-19': -78, '2026-10-20': 607 }, { censored: 2 }),
              policy('H1-hold', 'H1 hold to expiry', 1514, { '2026-10-19': 402, '2026-10-20': 1112 })],
 };
@@ -41,7 +41,7 @@ describe('PaperScorecardComponent', () => {
     expect(rows[0]).toEqual(['Bot (live rules)2 unresolved', '5', '+$529', '+$106', '80%', '−$78', '—', '−$78', '+$607']);
     expect(rows[1]).toEqual(['H1 hold to expiry', '5', '+$1,514', '+$303', '80%', '+$402', '+$505', '+$402', '+$1,112']);
     expect(fixture.nativeElement.querySelector('tr[data-reference="true"] .partial').textContent).toBe('2 unresolved');
-    expect(fixture.nativeElement.textContent).toContain('Net after $12.60 per trade');
+    expect(fixture.nativeElement.textContent).toContain('Net after $4.88 per closed trade, $3.44 held to settlement');
   });
 
   it('says when the scorecard is unavailable', () => {

@@ -11,7 +11,7 @@ function policy(id: string, label: string, comparedTo: string | null, net: numbe
 }
 
 const base = { schema_version: 'paper-backtest-scorecard.v1' as const, from_date: '2026-10-22', to_date: '2026-12-11',
-  reference_policy: 'recorded-rules', cost_per_trade_dollars: 12.6, order_submission_enabled: false as const };
+  reference_policy: 'recorded-rules', cost_per_trade_dollars: 4.88, cost_if_settled_dollars: 3.44, order_submission_enabled: false as const };
 
 const card: PaperBacktestScorecard = { ...base, sessions: ['2026-10-22'], policies: [
   policy('recorded-rules', 'Reference and live-exit control: live baseline rules', null, -120, { '2026-10-22': -120 }),

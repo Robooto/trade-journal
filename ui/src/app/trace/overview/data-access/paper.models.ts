@@ -54,6 +54,6 @@ export interface BacktestScorecardPolicy {
 }
 export interface PaperBacktestScorecard {
   schema_version: 'paper-backtest-scorecard.v1'; from_date: string; to_date: string | null; sessions: string[];
-  reference_policy: string; cost_per_trade_dollars: number | null; policies: BacktestScorecardPolicy[];
+  reference_policy: string; cost_per_trade_dollars: number | null; cost_if_settled_dollars?: number | null; policies: BacktestScorecardPolicy[];
   order_submission_enabled: false;
 }
