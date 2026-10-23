@@ -42,6 +42,7 @@
                 <th scope="col" title="How often a later capture reached the strike (10-minute captures undercount brief touches)">Touched</th>
                 <th scope="col" class="nodes" title="Active GEX nodes between spot and the strike, or at the strike">Nodes</th>
                 @if (hasPrices()) { <th scope="col">Read</th> }
+                @if (tradeable) { <th scope="col"><span class="visually-hidden">Trade</span></th> }
               </tr>
             </thead>
             <tbody>
@@ -68,6 +69,10 @@
                   </td>
                   @if (hasPrices()) {
                     <td><span class="read" [title]="readHint(row)">{{ readLabel(row) }}</span></td>
+                  }
+                  @if (tradeable) {
+                    <td><button type="button" class="trade" (click)="tradeRequested.emit({ side: row.side, strike: row.short_strike })"
+                                [attr.aria-label]="'Sell the ' + row.short_strike + ' ' + row.side + ' 5-wide spread'">Sell 5w</button></td>
                   }
                 </tr>
               }

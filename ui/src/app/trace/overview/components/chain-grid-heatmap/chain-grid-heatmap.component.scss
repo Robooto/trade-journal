@@ -33,3 +33,8 @@
 .legend-strip { display:inline-block; width:.9rem; height:.55rem; border-radius:.15rem; }
 .grid-note { display:block; margin-top:.45rem; color:#8394ab; font-size:.66rem; }
 .grid-empty { display:flex; align-items:center; justify-content:center; min-height:6rem; color:#8fa1ba; font-size:.78rem; }
+
+.grid-trade { font: inherit; font-size: 12px; padding: 4px 12px; border-radius: 999px; border: 1px solid rgba(147,197,253,.5); background: transparent; color: #93c5fd; cursor: pointer; }
+.grid-trade.active { background: rgba(147,197,253,.18); color: #dbeafe; }
+.grid-chart--trade { cursor: crosshair; }
+.grid-trade-column { fill: none; stroke: #93c5fd; stroke-width: 1.5; stroke-dasharray: 4 3; pointer-events: none; }

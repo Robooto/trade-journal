@@ -1,0 +1,89 @@
+<h2 mat-dialog-title class="ticket-title">
+  {{ title() }} <small>SPXW 0DTE · 5 wide · 1 lot</small>
+</h2>
+
+<mat-dialog-content class="ticket">
+  @if (error(); as message) { <p class="ticket-error" role="alert">{{ message }}</p> }
+
+  @if (order(); as o) {
+    <section class="ticket-order" aria-live="polite">
+      <div class="ticket-status" [attr.data-status]="o.status">
+        <strong>{{ o.status }}</strong>
+        @if (o.working) { <span>Working at {{ money(o.limit_price) }} credit · checking every 2 s</span> }
+        @if (o.fill_credit !== null) { <span>Filled at {{ money(o.fill_credit) }} credit · max loss {{ dollars((5 - o.fill_credit) * 100) }}</span> }
+      </div>
+      <dl class="ticket-facts">
+        <div><dt>Account</dt><dd>{{ o.account_number }}</dd></div>
+        <div><dt>Order</dt><dd>{{ o.tasty_order_id ?? '—' }}</dd></div>
+        <div><dt>Short</dt><dd>{{ o.short_symbol }}</dd></div>
+        <div><dt>Long</dt><dd>{{ o.long_symbol }}</dd></div>
+      </dl>
+      <ol class="ticket-events">
+        @for (event of o.events; track $index) {
+          <li><time>{{ event.at | date:'h:mm:ss a' }}</time> {{ event.kind }}
+            @if (event['price'] !== undefined) { at {{ money($any(event['price'])) }} }
+            @if (event['status']) { · {{ event['status'] }} }
+            @if (event['reason'] || event['reject_reason']) { · {{ event['reason'] ?? event['reject_reason'] }} }
+          </li>
+        }
+      </ol>
+    </section>
+  } @else {
+    @if (quote(); as q) {
+      <table class="ticket-legs">
+        <thead><tr><th scope="col">Leg</th><th scope="col">Bid</th><th scope="col">Ask</th><th scope="col">Delta</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Sell {{ q.short_strike }} {{ q.side }}</th><td>{{ money(q.short.bid) }}</td><td>{{ money(q.short.ask) }}</td><td>{{ q.short.delta | number:'1.2-2' }}</td></tr>
+          <tr><th scope="row">Buy {{ q.long_strike }} {{ q.side }}</th><td>{{ money(q.long.bid) }}</td><td>{{ money(q.long.ask) }}</td><td>{{ q.long.delta | number:'1.2-2' }}</td></tr>
+        </tbody>
+      </table>
+      <p class="ticket-prices">Natural <strong>{{ money(q.natural) }}</strong> · Mid <strong>{{ money(q.mid) }}</strong>
+        <small>quotes {{ q.quoted_at | date:'h:mm:ss a' }}, refreshed every 5 s</small></p>
+    } @else if (busy()) {
+      <p class="ticket-muted">Loading quotes…</p>
+    }
+
+    <div class="ticket-price">
+      <label for="spread-price">Limit credit</label>
+      <button type="button" (click)="step(-1)" aria-label="Lower the credit by $0.05">−</button>
+      <input id="spread-price" type="number" step="0.05" min="0.05" max="4.95" [ngModel]="price()" (ngModelChange)="setPrice($event)" />
+      <button type="button" (click)="step(1)" aria-label="Raise the credit by $0.05">+</button>
+      <span class="ticket-muted">Max loss {{ dollars(maxLoss()) }} · held to the 13:00 settlement</span>
+    </div>
+
+    @if (preview(); as p) {
+      <div class="ticket-preview" [class.stale]="!previewCurrent()">
+        <span>tastytrade preview at {{ money(previewedPrice()) }}: buying power {{ dollars(p.buying_power_change) }} · fees {{ dollars(p.fees) }}</span>
+        @for (warning of p.warnings; track warning) { <span class="ticket-warning">{{ warning }}</span> }
+        @if (!previewCurrent()) { <span class="ticket-muted">The price changed; preview again before sending.</span> }
+      </div>
+    }
+
+    @if (config(); as c) {
+      @if (!c.account_number) {
+        <p class="ticket-muted">No spread account is configured on the server, so orders can't be previewed or sent.</p>
+      } @else if (!c.live_enabled) {
+        <p class="ticket-muted">Live sending is switched off on the server. Preview works; sending needs LIVE_TRADING_ENABLED=true.</p>
+      } @else {
+        <label class="ticket-confirm">
+          <input type="checkbox" [checked]="confirmed()" (change)="confirmed.set($any($event.target).checked)" [disabled]="!previewCurrent()" />
+          Send this 1-lot to {{ c.account_number }} as a live order
+        </label>
+      }
+    }
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="ticket-actions">
+  @if (order(); as o) {
+    @if (o.working) {
+      <button type="button" class="ticket-button" (click)="lowerCredit()" [disabled]="busy() || o.limit_price <= 0.05">Lower to {{ money(o.limit_price - 0.05) }}</button>
+      <button type="button" class="ticket-button ticket-button--danger" (click)="cancel()" [disabled]="busy()">Cancel order</button>
+    }
+    <button type="button" class="ticket-button" (click)="close()">{{ o.working ? 'Close (order keeps working)' : 'Close' }}</button>
+  } @else {
+    <button type="button" class="ticket-button" (click)="close()">Close</button>
+    <button type="button" class="ticket-button" (click)="runPreview()" [disabled]="busy() || price() === null || !config()?.account_number">Preview</button>
+    <button type="button" class="ticket-button ticket-button--primary" (click)="send()" [disabled]="!canSend()">Send order</button>
+  }
+</mat-dialog-actions>

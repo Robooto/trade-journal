@@ -14,6 +14,10 @@
         <button type="button" [class.active]="metric() === 'credit'" (click)="metric.set('credit')">Credit</button>
         <button type="button" [class.active]="metric() === 'delta'" (click)="metric.set('delta')">Delta</button>
       </div>
+      @if (tradeable) {
+        <button type="button" class="grid-trade" [class.active]="tradeMode()" [attr.aria-pressed]="tradeMode()"
+                (click)="tradeMode.set(!tradeMode())" title="Click a strike in the latest column to sell a 5-wide spread">Trade</button>
+      }
     </div>
   </header>
 
@@ -28,9 +32,13 @@
       <div class="grid-scroll">
         <svg #chart class="grid-chart" [attr.viewBox]="'0 0 ' + width + ' ' + height()"
              role="img" [attr.aria-label]="'Chain grid heat map for ' + grid.date + ', ' + (side() === 'call' ? 'calls above' : 'puts below') + ' spot'"
-             (click)="select(columnAt($event, chart))">
+             [class.grid-chart--trade]="trading()"
+             (click)="chartClick($event, chart)">
           @for (cell of cells(); track $index) {
             <rect class="grid-cell" [attr.x]="cell.x" [attr.y]="cell.y" [attr.width]="cell.w" [attr.height]="cell.h" rx="2" [attr.fill]="cell.fill"><title>{{ cell.title }}</title></rect>
+          }
+          @if (trading() && columns().length) {
+            <rect class="grid-trade-column" [attr.x]="52 + (columns().length - 1) * columnWidth()" y="4" [attr.width]="columnWidth()" [attr.height]="plotHeight() + 8" rx="3" />
           }
           @if (selectedIndex() >= 0) {
             <rect class="grid-selected" [attr.x]="52 + selectedIndex() * columnWidth()" y="4" [attr.width]="columnWidth()" [attr.height]="stripY() + 14" rx="3" />
@@ -68,7 +76,7 @@
         <span><i class="legend-strip" data-state="opposes"></i>HIRO opposes</span>
         <span><i class="legend-strip" data-state="flat"></i>HIRO flat</span>
       </div>
-      <small class="grid-note">Credit is the conservative fill (short bid minus long ask), per 1-lot. The HIRO strip reads like the ladder's tag for the side shown. The 13:00 column is after the bell and has no prices. Research only; no orders.</small>
+      <small class="grid-note">Credit is the conservative fill (short bid minus long ask), per 1-lot. The HIRO strip reads like the ladder's tag for the side shown. The 13:00 column is after the bell and has no prices. @if (trading()) { Trade mode: click a strike in the latest column to sell that 5-wide spread. } @else { Research only; no orders. }</small>
     }
   }
 </section>

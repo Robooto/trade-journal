@@ -140,6 +140,9 @@ Current:
 - Position chart expansion and a safeguarded bracket-order workflow: dry-run by
   default, mandatory UI review, explicit confirmation, and a server-side live
   trading enable flag.
+- Manual SPXW 0DTE 5-wide credit spreads from the Trace page's strike ladder and
+  chain-grid heat map (Oct 2026): live quotes, tastytrade dry-run preview, confirmed
+  1-lot send, fill tracking, reprice by $0.05 and cancel, with an order log.
 
 Next:
 

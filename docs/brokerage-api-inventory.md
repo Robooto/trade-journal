@@ -87,7 +87,19 @@ POST /v1/broker/option-quote-snapshots  (include_model_values adds IV, theo pric
 GET  /v1/broker/market-metrics?symbols=SPX
 GET  /v1/trades, GET /v1/trades/summary, POST /v1/trades/market-data[/summary],
 POST /v1/trades/volatility-data[/summary], POST /v1/trades/bracket-orders
+GET  /v1/spread-orders/config, POST /v1/spread-orders/quote, POST /v1/spread-orders/preview
+POST /v1/spread-orders, GET /v1/spread-orders[/{id}], PUT /v1/spread-orders/{id}/price,
+DELETE /v1/spread-orders/{id}
 ```
+
+Manual SPXW spreads (Trace page ladder and chain grid): same-day PM SPXW, 5 wide, 1 lot,
+Day limit credit in $0.05 steps (Cboe's SPX complex-order increment), legs from the
+broker's own nested chain. Preview is tastytrade's dry run and places nothing. Sending
+and repricing need `LIVE_TRADING_ENABLED=true`, `SPREAD_ORDER_ACCOUNT` and a confirmed
+request; one order may be working at a time; cancelling is always allowed. A send whose
+answer is lost stays "Submit unknown" (blocking new sends) until a refresh finds it in
+the account's live orders or records it as not placed. Every order, its leg quotes at
+submission and each status change are kept in `manual_spread_orders`.
 
 Candidates, not built: generic accounts, balances summary, all-asset positions,
 orders, fills/trades, quotes and full option-chain reads. See
@@ -188,6 +200,8 @@ forward-looking source is added.
   samples.
 - Update `/home/boots/code/trading/docs/api-contracts.md` when a route becomes
   a cross-project contract.
+- Money-moving routes (`/v1/spread-orders`, bracket orders) are for this project's
+  UI only; order POST/PUT/DELETE calls are never retried automatically.
 
 ## Route Inventory
 

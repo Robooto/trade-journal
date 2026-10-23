@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, HostListener, OnDestroy, OnInit, computed, effect, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Subscription } from 'rxjs';
 
+import { SpreadTicketComponent, SpreadTicketData } from './components/spread-ticket/spread-ticket.component';
 import { TraceFacade } from './data-access/trace.facade';
 import { TraceContractStatus } from './trace.models';
 import {
@@ -58,6 +60,7 @@ export class TracePageComponent implements OnInit, OnDestroy {
     readonly facade: TraceFacade,
     readonly priceLevels: TracePriceLevelsStore,
     private readonly snackBar: MatSnackBar,
+    private readonly dialog: MatDialog,
   ) {
     effect(() => this.updateProximityAlerts(this.priceLevelProximities()));
   }
@@ -77,6 +80,15 @@ export class TracePageComponent implements OnInit, OnDestroy {
   refreshNow(): void {
     this.requestRefresh();
     this.scheduleLiveCheck();
+  }
+
+  /** Manual 5-wide spreads are offered only on today's session with the latest capture selected. */
+  readonly tradeable = computed(() => this.facade.selectedDate() === pacificDate(new Date()) && !this.behindLatest());
+
+  openSpreadTicket(request: SpreadTicketData): void {
+    this.dialog.open(SpreadTicketComponent, {
+      data: request, width: '560px', maxWidth: 'calc(100vw - 24px)', disableClose: true, autoFocus: 'dialog',
+    });
   }
 
   jumpToLatest(): void {

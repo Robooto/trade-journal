@@ -17,6 +17,8 @@ class Settings:
     tastytrade_user_agent: str = "trade-journal/0.1"
     live_trading_enabled: bool = _env_bool("LIVE_TRADING_ENABLED", False)
     brokerage_watchlist_writes_enabled: bool = _env_bool("BROKERAGE_WATCHLIST_WRITES_ENABLED", False)
+    # The one account manual SPX spreads from the Trace page may trade; unset means preview only.
+    spread_order_account: str = os.getenv("SPREAD_ORDER_ACCOUNT", "").strip()
     cors_origins: tuple[str, ...] = tuple(
         origin.strip()
         for origin in os.getenv(

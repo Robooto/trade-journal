@@ -44,3 +44,7 @@ footer small { color: #a2b3c9; font-size: .72rem; }
 .hiro-tag { display: block; width: max-content; margin-top: .1rem; padding: 0 .35rem; border-radius: .3rem; font-size: .65rem; font-weight: 650; cursor: help; }
 .hiro-tag[data-tone='lead'] { background: rgba(147,197,253,.16); color: #93c5fd; }
 .hiro-tag[data-tone='caution'] { background: rgba(252,211,77,.14); color: #fcd34d; }
+
+.trade { font: inherit; font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(147,197,253,.5); background: transparent; color: #93c5fd; cursor: pointer; white-space: nowrap; }
+.trade:hover, .trade:focus-visible { background: rgba(147,197,253,.15); outline: none; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

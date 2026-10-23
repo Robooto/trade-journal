@@ -15,6 +15,7 @@ from app.routers.v1 import (
     charts as charts_v1,
     pivots as pivots_v1,
     spx_0dte_decisions as spx_0dte_decisions_v1,
+    spread_orders as spread_orders_v1,
 )
 
 
@@ -41,6 +42,7 @@ app.include_router(trades_v1.router)
 app.include_router(charts_v1.router)
 app.include_router(pivots_v1.router)
 app.include_router(spx_0dte_decisions_v1.router)
+app.include_router(spread_orders_v1.router)
 
 @app.exception_handler(Exception)
 async def log_exceptions(request: Request, exc: Exception):

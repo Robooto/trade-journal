@@ -123,4 +123,15 @@ describe('StrikeLadderComponent', () => {
     expect(el.querySelector('.flow')?.textContent).toContain('SPX +12.0 pts / 30m · HIRO +920M / 30m · HIRO confirms the move · puts below sit against it');
     expect(el.querySelector('.flow')?.textContent).toContain('unproven (H4)');
   });
+
+  it('offers a 5-wide sell on each row only when the capture is tradeable', () => {
+    expect(render().el.querySelector('button.trade')).toBeNull();
+    const { fixture, el } = render({ tradeable: true });
+    const requests: unknown[] = [];
+    fixture.componentInstance.tradeRequested.subscribe(r => requests.push(r));
+    const button = el.querySelector('button.trade') as HTMLButtonElement;
+    button.click();
+    expect(requests).toHaveLength(1);
+    expect(button.getAttribute('aria-label')).toMatch(/^Sell the \d+ (put|call) 5-wide spread$/);
+  });
 });

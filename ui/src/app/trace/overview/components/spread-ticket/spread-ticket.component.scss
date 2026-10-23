@@ -1,0 +1,32 @@
+.ticket-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.ticket-title small { font-size: 12px; color: #94a3b8; font-weight: 400; }
+.ticket { display: grid; gap: 12px; min-width: min(440px, 80vw); font-size: 13px; }
+.ticket-legs { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ticket-legs th, .ticket-legs td { padding: 4px 8px; text-align: right; border-bottom: 1px solid rgba(148,163,184,.18); }
+.ticket-legs th:first-child { text-align: left; font-weight: 500; }
+.ticket-legs thead th { font-size: 11px; color: #94a3b8; font-weight: 500; }
+.ticket-prices { margin: 0; display: flex; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+.ticket-prices small, .ticket-muted { color: #94a3b8; font-size: 12px; }
+.ticket-price { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ticket-price label { font-weight: 500; margin-right: 4px; }
+.ticket-price input { width: 80px; padding: 4px 6px; font: inherit; font-variant-numeric: tabular-nums; background: transparent; color: inherit; border: 1px solid rgba(148,163,184,.4); border-radius: 6px; }
+.ticket-price button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid rgba(148,163,184,.4); background: transparent; color: inherit; cursor: pointer; }
+.ticket-preview { display: grid; gap: 4px; padding: 8px 10px; border-radius: 8px; background: rgba(147,197,253,.08); }
+.ticket-preview.stale { opacity: .6; }
+.ticket-warning { color: #fbbf24; }
+.ticket-error { margin: 0; padding: 8px 10px; border-radius: 8px; background: rgba(248,113,113,.12); color: #fca5a5; }
+.ticket-confirm { display: flex; gap: 8px; align-items: center; }
+.ticket-status { display: grid; gap: 2px; padding: 10px; border-radius: 8px; background: rgba(148,163,184,.1); }
+.ticket-status strong { font-size: 15px; }
+.ticket-status[data-status='Filled'] { background: rgba(110,231,183,.12); }
+.ticket-status[data-status='Rejected'], .ticket-status[data-status='Cancelled'] { background: rgba(248,113,113,.1); }
+.ticket-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; margin: 0; }
+.ticket-facts dt { font-size: 11px; color: #94a3b8; }
+.ticket-facts dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.ticket-events { margin: 0; padding-left: 18px; color: #cbd5e1; font-size: 12px; display: grid; gap: 2px; }
+.ticket-events time { color: #94a3b8; font-variant-numeric: tabular-nums; }
+.ticket-actions { gap: 8px; flex-wrap: wrap; }
+.ticket-button { font: inherit; padding: 6px 14px; border-radius: 8px; border: 1px solid rgba(148,163,184,.4); background: transparent; color: inherit; cursor: pointer; }
+.ticket-button:disabled { opacity: .45; cursor: default; }
+.ticket-button--primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.ticket-button--danger { border-color: rgba(248,113,113,.6); color: #fca5a5; }

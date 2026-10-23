@@ -213,3 +213,29 @@ class Spx0DteHumanDecisionORM(Base):
     trade_type = Column(String(32), nullable=True)
     notes = Column(String(2000), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+
+class ManualSpreadOrderORM(Base):
+    """A manual SPXW credit spread sent from the Trace page, with the quotes it was priced from."""
+
+    __tablename__ = "manual_spread_orders"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    session_date = Column(Date, nullable=False, index=True)
+    account_number = Column(String(32), nullable=False)
+    side = Column(String(8), nullable=False)
+    short_strike = Column(Float, nullable=False)
+    long_strike = Column(Float, nullable=False)
+    width = Column(Integer, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    short_symbol = Column(String(64), nullable=False)
+    long_symbol = Column(String(64), nullable=False)
+    limit_price = Column(Float, nullable=False)
+    tasty_order_id = Column(String(64), nullable=True, index=True)
+    status = Column(String(32), nullable=False)
+    fill_credit = Column(Float, nullable=True)
+    # JSON text: the leg quotes at submission, and every submit/replace/cancel/status change.
+    quote_at_submit = Column(String, nullable=True)
+    events = Column(String, nullable=False, default="[]")
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now(), onupdate=func.now())

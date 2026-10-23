@@ -84,4 +84,23 @@ describe('ChainGridHeatmapComponent', () => {
     api.chainGrid.mockReturnValue(throwError(() => new Error('offline')));
     expect(render().nativeElement.textContent).toContain('Chain grid unavailable');
   });
+
+  it('in trade mode, a click on the latest column sells that strike instead of moving the page', () => {
+    const fixture = render();
+    fixture.componentRef.setInput('tradeable', true);
+    const component = fixture.componentInstance;
+    const trades: unknown[] = [];
+    const moves: string[] = [];
+    component.tradeRequested.subscribe(t => trades.push(t));
+    component.captureSelected.subscribe(ts => moves.push(ts));
+    const svg = { getBoundingClientRect: () => ({ left: 0, top: 0, width: component.width, height: component.height() }) } as unknown as Element;
+    const latestX = component.cx(1), firstX = component.cx(0), rowY = component.y(7710);
+    component.chartClick({ clientX: latestX, clientY: rowY } as MouseEvent, svg);
+    expect(moves).toEqual([view.captures[1].ts]);
+    component.tradeMode.set(true);
+    component.chartClick({ clientX: firstX, clientY: rowY } as MouseEvent, svg);
+    component.chartClick({ clientX: latestX, clientY: rowY } as MouseEvent, svg);
+    expect(trades).toEqual([{ side: 'call', strike: 7710 }]);
+    expect(component.strikeAt({ clientX: latestX, clientY: 2 } as MouseEvent, svg)).toBeNull();
+  });
 });

@@ -307,6 +307,50 @@ def place_complex_order(token: str, account_number: str, payload: dict) -> Tasty
     )
     return TastyComplexOrderResponse.model_validate(data.get("data", data))
 
+def _order_path(account_number: str, order_id: str | int | None = None, *, dry_run: bool = False) -> str:
+    path = f"/accounts/{quote(account_number, safe='')}/orders"
+    if dry_run:
+        return path + "/dry-run"
+    return path if order_id is None else f"{path}/{quote(str(order_id), safe='')}"
+
+
+def dry_run_order(token: str, account_number: str, payload: dict) -> dict:
+    """Validate an order without placing it; returns buying-power effect, fees and warnings."""
+    data = _request_json("POST", _order_path(account_number, dry_run=True),
+                         headers=_headers(token, content_type="application/json"), json=payload)
+    return data.get("data", data)
+
+
+def place_order(token: str, account_number: str, payload: dict) -> dict:
+    """Place an order. Money-moving: POSTs are never retried (see _RETRY)."""
+    data = _request_json("POST", _order_path(account_number),
+                         headers=_headers(token, content_type="application/json"), json=payload)
+    return data.get("data", data)
+
+
+def fetch_order(token: str, account_number: str, order_id: str | int) -> dict:
+    data = _request_json("GET", _order_path(account_number, order_id), headers=_headers(token))
+    return data.get("data", data)
+
+
+def fetch_live_orders(token: str, account_number: str) -> list[dict]:
+    """Orders that are working or finished within the last day."""
+    data = _request_json("GET", _order_path(account_number) + "/live", headers=_headers(token))
+    return list(_items_from_response(data))
+
+
+def replace_order(token: str, account_number: str, order_id: str | int, payload: dict) -> dict:
+    """Cancel-replace a working order; only price, order type and time in force may differ."""
+    data = _request_json("PUT", _order_path(account_number, order_id),
+                         headers=_headers(token, content_type="application/json"), json=payload)
+    return data.get("data", data)
+
+
+def cancel_order(token: str, account_number: str, order_id: str | int) -> dict:
+    data = _request_json("DELETE", _order_path(account_number, order_id), headers=_headers(token))
+    return data.get("data", data)
+
+
 PageItem = TypeVar("PageItem")
 
 

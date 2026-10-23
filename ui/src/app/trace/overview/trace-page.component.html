@@ -188,7 +188,8 @@
       </div>
     </section>
 
-    <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" [gridLatestAt]="gridLatestAt()" />
+    <app-strike-ladder [date]="facade.selectedDate()" [captureTs]="capture.ts" [gridLatestAt]="gridLatestAt()"
+                       [tradeable]="tradeable()" (tradeRequested)="openSpreadTicket($event)" />
 
   }
 
@@ -215,6 +216,8 @@
       [date]="facade.selectedDate()"
       [latestTs]="latestCapture()?.ts ?? null"
       [gridLatestAt]="gridLatestAt()"
+      [tradeable]="tradeable()"
+      (tradeRequested)="openSpreadTicket($event)"
       [captureTs]="facade.selectedCapture()?.ts ?? null"
       (captureSelected)="selectCaptureTimestamp($event)"
     />

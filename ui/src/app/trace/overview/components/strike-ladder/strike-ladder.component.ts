@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, OnChanges, OnDestroy, SimpleChanges, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnDestroy, Output, SimpleChanges, computed, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { TraceApiService } from '../../data-access/trace-api.service';
 import type { StrikeLadderNode, StrikeLadderResponse, StrikeLadderRow } from '../../trace.models';
@@ -26,6 +26,9 @@ const READ_HINT: Record<string, string> = {
 export class StrikeLadderComponent implements OnChanges, OnDestroy {
   @Input() date = '';
   @Input() captureTs: string | null = null;
+  /** Today's latest capture: rows offer a manual 5-wide spread. */
+  @Input() tradeable = false;
+  @Output() readonly tradeRequested = new EventEmitter<{ side: 'put' | 'call'; strike: number }>();
   /** The latest chain-grid snapshot; it lands after its capture, so a new one reloads the prices in place. */
   @Input() gridLatestAt: string | null = null;
 

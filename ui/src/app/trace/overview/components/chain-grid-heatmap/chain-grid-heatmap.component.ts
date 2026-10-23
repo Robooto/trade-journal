@@ -45,7 +45,10 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
   @Input() latestTs: string | null = null;
   /** The latest chain-grid snapshot; it lands after its capture, so a new one also reloads the grid. */
   @Input() gridLatestAt: string | null = null;
+  /** Today's latest capture: a Trade toggle lets a click in the latest column sell a 5-wide spread. */
+  @Input() tradeable = false;
   @Output() readonly captureSelected = new EventEmitter<string>();
+  @Output() readonly tradeRequested = new EventEmitter<{ side: Side; strike: number }>();
 
   readonly view = signal<ChainGridViewResponse | null>(null);
   readonly loading = signal(false);
@@ -53,6 +56,7 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
   readonly side = signal<Side>('call');
   readonly metric = signal<Metric>('credit');
   readonly selected = signal<string | null>(null);
+  readonly tradeMode = signal(false);
   readonly width = WIDTH;
   private request?: Subscription;
 
@@ -129,6 +133,26 @@ export class ChainGridHeatmapComponent implements OnChanges, OnDestroy {
     if (!column) return;
     this.selected.set(column.ts);
     this.captureSelected.emit(column.ts);
+  }
+
+  trading(): boolean { return this.tradeable && this.tradeMode(); }
+
+  chartClick(event: MouseEvent, svg: Element): void {
+    const index = this.columnAt(event, svg);
+    if (!this.trading()) { this.select(index); return; }
+    if (index !== this.columns().length - 1) return;
+    const strike = this.strikeAt(event, svg);
+    if (strike !== null) this.tradeRequested.emit({ side: this.side(), strike });
+  }
+
+  /** The strike row under the pointer, or null between rows and outside the plot. */
+  strikeAt(event: MouseEvent, svg: Element): number | null {
+    const box = svg.getBoundingClientRect();
+    const y = (event.clientY - box.top) * (this.height() / box.height);
+    const top = this.strikes()[0];
+    if (top === undefined || y < TOP) return null;
+    const strike = top - Math.floor((y - TOP) / ROW) * STEP;
+    return this.strikes().includes(strike) ? strike : null;
   }
 
   columnAt(event: MouseEvent, svg: Element): number {
