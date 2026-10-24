@@ -60,7 +60,8 @@ def test_prices_move_in_nickels_below_the_width():
 
 def test_quote_natural_mid_and_suggested_limit():
     q = rules.spread_quote(quote("s", 2.10, 2.30), quote("l", 1.00, 1.15))
-    assert q["natural"] == 0.95 and q["mid"] == pytest.approx(1.125) and q["suggested_price"] == 1.1
+    assert q["natural"] == 0.95 and q["mid"] == pytest.approx(1.125) and q["suggested_price"] == 1.15
+    assert rules.spread_quote(quote("s", 2.10, 2.30), quote("l", 1.00, 1.17))["suggested_price"] == 1.1  # mid 1.115
     assert rules.spread_quote(quote("s", None, 2.3), quote("l", 1, 1.1))["suggested_price"] is None
 
 
@@ -132,7 +133,7 @@ async def test_quote_and_preview_never_place(client, broker, monkeypatch):
     response = await client.post("/v1/spread-orders/quote", json={"side": "call", "short_strike": 7650})
     assert response.status_code == 200
     body = response.json()
-    assert body["long_strike"] == 7655 and body["natural"] == 0.95 and body["suggested_price"] == 1.1
+    assert body["long_strike"] == 7655 and body["natural"] == 0.95 and body["suggested_price"] == 1.15
     broker.use("dry_run_order", lambda token, account, payload: {"buying-power-effect": {"change-in-buying-power": "390", "change-in-buying-power-effect": "Debit"}})
     response = await client.post("/v1/spread-orders/preview", json=ORDER)
     assert response.status_code == 200 and response.json()["buying_power_change"] == -390

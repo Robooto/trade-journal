@@ -6,7 +6,7 @@ the configured account and explicit confirmation.
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import ROUND_FLOOR, Decimal
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -58,8 +58,8 @@ def find_legs(chain: list[dict], expiration: date, side: str, short_strike: floa
     return legs[0], legs[1]
 
 
-def floor_tick(value: float) -> Decimal:
-    return (Decimal(str(value)) / TICK).to_integral_value(rounding=ROUND_FLOOR) * TICK
+def nearest_tick(value: float) -> Decimal:
+    return (Decimal(str(value)) / TICK).to_integral_value(rounding=ROUND_HALF_UP) * TICK
 
 
 def validate_price(price: float, width: int = WIDTH) -> Decimal:
@@ -72,7 +72,7 @@ def validate_price(price: float, width: int = WIDTH) -> Decimal:
 
 
 def spread_quote(short: Any, long: Any, width: int = WIDTH) -> dict[str, Any]:
-    """Natural (sell the bid, buy the ask) and mid credit, and a limit at the mid rounded down to the tick."""
+    """Natural (sell the bid, buy the ask) and mid credit, and a limit at the mid rounded to the nearest tick (halves round up)."""
     short_bid, short_ask = to_float(getattr(short, "bid", None)), to_float(getattr(short, "ask", None))
     long_bid, long_ask = to_float(getattr(long, "bid", None)), to_float(getattr(long, "ask", None))
     quoted = None not in (short_bid, short_ask, long_bid, long_ask)
@@ -80,7 +80,7 @@ def spread_quote(short: Any, long: Any, width: int = WIDTH) -> dict[str, Any]:
     mid = round((short_bid + short_ask) / 2 - (long_bid + long_ask) / 2, 3) if quoted else None
     suggested = None
     if mid is not None:
-        rounded = floor_tick(mid)
+        rounded = nearest_tick(mid)
         suggested = float(rounded) if TICK <= rounded < width else None
     return {
         "short": {"bid": short_bid, "ask": short_ask, "delta": to_float(getattr(short, "delta", None))},
